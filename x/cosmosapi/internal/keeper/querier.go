@@ -3,13 +3,13 @@ package keeper
 import (
         "fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/yzhanginwa/rcv-chain/x/rcvchain/internal/types"
+	"github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// query endpoints supported by the rcvservice Querier
+// query endpoints supported by the cosmosapi service Querier
 const (
 	QueryTable   = "table"
 )

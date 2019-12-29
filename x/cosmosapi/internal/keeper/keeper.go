@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"os"
-	"fmt"
+	//"fmt"
 	"errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,9 +50,9 @@ func (k Keeper) CreateTable(ctx sdk.Context, owner sdk.AccAddress, name string, 
 	store := ctx.KVStore(k.storeKey)
 	var table types.Table = types.NewTable()
 	table.Owner = owner
-        table.Name = types.NewPollId(title, owner)
+        table.Name = name
         table.Fields = fields 
-	store.Set([]byte(types.Tablekey(table.Name)), k.cdc.MustMarshalBinaryBare(table))
+	store.Set([]byte(types.TableKey(table.Name)), k.cdc.MustMarshalBinaryBare(table))
 }
 
 
@@ -61,7 +61,7 @@ func (k Keeper) GetTable(ctx sdk.Context, name string) (types.Table, error) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get([]byte(types.TableKey(name)))
 	if bz == nil {
-		return types.Poll{}, errors.New("not found table")
+		return types.Table{}, errors.New("not found table")
 	}
 	var table types.Table
 	k.cdc.MustUnmarshalBinaryBare(bz, &table)

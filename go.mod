@@ -1,4 +1,4 @@
-module github.com/yzhanginwa/rcv-chain
+module github.com/yzhanginwa/cosmos-api
 
 go 1.13
 

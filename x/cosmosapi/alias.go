@@ -20,11 +20,6 @@ var (
 
 type (
 	Keeper          = keeper.Keeper
-	MsgCreatePoll   = types.MsgCreatePoll
-	MsgAddChoice    = types.MsgAddChoice
-	MsgInviteVoter  = types.MsgInviteVoter
-	MsgBeginVoting  = types.MsgBeginVoting
-	MsgCreateBallot = types.MsgCreateBallot
-	MsgEndVoting    = types.MsgEndVoting
-	Poll            = types.Poll
+	MsgCreateTable  = types.MsgCreateTable
+	Table           = types.Table
 )

@@ -8,20 +8,20 @@ import (
 )
 
 type GenesisState struct {
-	PollRecords []Poll  `json:"poll_records"`
+	TablesRecords []Table  `json:"table_records"`
 }
 
-func NewGenesisState(pollRecords []Poll) GenesisState {
-	return GenesisState{PollRecords: pollRecords}
+func NewGenesisState(tablesRecords []Table) GenesisState {
+	return GenesisState{TablesRecords: tablesRecords}
 }
 
 func ValidateGenesis(data GenesisState) error {
-	for _, record := range data.PollRecords {
+	for _, record := range data.TablesRecords {
 		if record.Owner == nil {
-			return fmt.Errorf("invalid PollRecord: Title: %s. Error: Missing Owner", record.Title)
+			return fmt.Errorf("invalid TablesRecord: Owner: %s. Error: Missing Owner", record.Owner)
 		}
-		if record.Title == "" {
-			return fmt.Errorf("invalid PollRecord: Owner: %s. Error: Missing Value", record.Owner)
+		if record.Name == "" {
+			return fmt.Errorf("invalid TablesRecord: Name: %s. Error: Missing Value", record.Name)
 		}
 	}
 	return nil
@@ -29,19 +29,19 @@ func ValidateGenesis(data GenesisState) error {
 
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		PollRecords: []Poll{},
+		TablesRecords: []Table{},
 	}
 }
 
 func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) []abci.ValidatorUpdate {
-	for _, record := range data.PollRecords {
-		keeper.CreatePoll(ctx, record.Title, record.Owner)
+	for _, record := range data.TablesRecords {
+		keeper.CreateTable(ctx, record.Owner, record.Name, record.Fields)
 	}
 	return []abci.ValidatorUpdate{}
 }
 
 func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
-	var records []Poll
+	var records []Table
 // TODO: update the following after implementing k.GetPollsIterator(ctx)
 //	iterator := k.GetNamesIterator(ctx)
 //	for ; iterator.Valid(); iterator.Next() {
@@ -51,5 +51,5 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 //		records = append(records, whois)
 //
 //	}
-	return GenesisState{PollRecords: records}
+	return GenesisState{TablesRecords: records}
 }

@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 	"strings"
-	"crypto/sha256"
+//	"crypto/sha256"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -31,8 +31,8 @@ func TableKey(name string) string {
 	return fmt.Sprintf("%s:tn:%s", KeyPrefixMeta, name)
 }
 
-func NewTable() Poll {
-	return Poll {}
+func NewTable() Table {
+	return Table {}
 }
 
 // implement fmt.Stringer

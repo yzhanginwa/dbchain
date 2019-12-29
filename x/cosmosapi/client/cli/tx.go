@@ -2,7 +2,7 @@ package cli
 
 import (
 	"strings"
-	"strconv"
+	//"strconv"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-	"github.com/yzhanginwa/rcv-chain/x/rcvchain/internal/types"
+	"github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 )
 
 func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
@@ -24,12 +24,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	}
 
 	nameserviceTxCmd.AddCommand(client.PostCommands(
-		GetCmdCreatePoll(cdc),
-		GetCmdAddChoice(cdc),
-		GetCmdInviteVoter(cdc),
-		GetCmdBeginVoting(cdc),
-		GetCmdVote(cdc),
-		GetCmdEndVoting(cdc),
+		GetCmdCreateTable(cdc),
 	)...)
 
 	return nameserviceTxCmd
@@ -47,7 +42,7 @@ func GetCmdCreateTable(cdc *codec.Codec) *cobra.Command {
 
                         name := args[0]
                         fields := strings.Split(args[1], ",")
-			msg := types.NewMsgCreatePoll(cliCtx.GetFromAddress(), name, fields)
+			msg := types.NewMsgCreateTable(cliCtx.GetFromAddress(), name, fields)
 			err := msg.ValidateBasic()
 			if err != nil {
 				return err

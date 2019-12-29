@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/yzhanginwa/rcv-chain/x/rcvchain/internal/types"
+	"github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -12,9 +12,10 @@ import (
 )
 
 type createTableReq struct  {
-	BaseReq rest.BaseReq `json:"base_req"`
-	Name    string       `json:"title"`
-	Fields  []string     `json:"fields"`
+	BaseReq rest.BaseReq   `json:"base_req"`
+        Owner   string         `json:"owner"`
+	Name    string         `json:"title"`
+	Fields  []string       `json:"fields"`
 }
 
 func createTableHandler(cliCtx context.CLIContext) http.HandlerFunc {
@@ -37,7 +38,7 @@ func createTableHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewMsgCreateTable(addr, req.Title, req.Fields)
+		msg := types.NewMsgCreateTable(addr, req.Name, req.Fields)
 		err = msg.ValidateBasic()
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

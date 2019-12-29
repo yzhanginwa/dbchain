@@ -20,10 +20,6 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 	}
 	cosmosapiQueryCmd.AddCommand(client.GetCommands(
 		GetCmdTable(storeKey, cdc),
-		GetCmdPollStatus(storeKey, cdc),
-		GetCmdTitles(storeKey, cdc),
-		GetCmdBallot(storeKey, cdc),
-		GetCmdUserPolls(storeKey, cdc),
 	)...)
 	return cosmosapiQueryCmd
 }

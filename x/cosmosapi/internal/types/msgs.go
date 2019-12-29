@@ -15,16 +15,17 @@ const RouterKey = ModuleName // this was defined in your key.go file
 
 // MsgCreatePoll defines a CreatePoll message
 type MsgCreateTable struct {
-        Owner sdk.AccAddres  `json:"owner"`
+        Owner sdk.AccAddress `json:"owner"`
 	Name string          `json:"name"`
 	Fields []string      `json:"fields"`
 }
 
 // NewMsgCreatePoll is a constructor function for MsgCreatPoll
-func NewMsgCreatePoll(name string, fields string[]) MsgCreatePoll {
-	return MsgCreatePoll {
+func NewMsgCreateTable(owner sdk.AccAddress, name string, fields []string) MsgCreateTable {
+	return MsgCreateTable {
+                Owner: owner,
 		Name: name,
-		Fields: fields
+		Fields: fields,
 	}
 }
 
