@@ -1,8 +1,8 @@
-package rcvchain
+package cosmosapi
 
 import (
-	"github.com/yzhanginwa/rcv-chain/x/rcvchain/internal/keeper"
-	"github.com/yzhanginwa/rcv-chain/x/rcvchain/internal/types"
+	"github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/keeper"
+	"github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 )
 
 const (

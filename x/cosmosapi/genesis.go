@@ -1,4 +1,4 @@
-package rcvchain
+package cosmosapi
 
 import (
 	"fmt"

@@ -13,7 +13,7 @@ import (
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-	app "github.com/yzhanginwa/rcv-chain"
+	app "github.com/yzhanginwa/cosmos-api"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	amino "github.com/tendermint/go-amino"
@@ -33,8 +33,8 @@ func main() {
 	config.Seal()
 
 	rootCmd := &cobra.Command{
-		Use:   "rcvccli",
-		Short: "rcvchain Client",
+		Use:   "cosmosapicli",
+		Short: "cosmosapi Client",
 	}
 
 	// Add --chain-id to persistent flags and mark it required

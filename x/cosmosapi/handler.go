@@ -1,9 +1,9 @@
-package rcvchain
+package cosmosapi
 
 import (
 	"fmt"
 
-	"github.com/yzhanginwa/rcv-chain/x/rcvchain/internal/types"
+	"github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -25,7 +25,7 @@ func NewHandler(keeper Keeper) sdk.Handler {
 		case MsgEndVoting:
 			return handleMsgEndVoting(ctx, keeper, msg)
 		default:
-			errMsg := fmt.Sprintf("Unrecognized rcvchain Msg type: %v", msg.Type())
+			errMsg := fmt.Sprintf("Unrecognized cosmosapi Msg type: %v", msg.Type())
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}

@@ -1,4 +1,4 @@
-package rcvchain 
+package cosmosapi
 
 import (
 	"encoding/json"
@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/yzhanginwa/rcv-chain/x/rcvchain/client/cli"
-	"github.com/yzhanginwa/rcv-chain/x/rcvchain/client/rest"
+	"github.com/yzhanginwa/cosmos-api/x/cosmosapi/client/cli"
+	"github.com/yzhanginwa/cosmos-api/x/cosmosapi/client/rest"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"

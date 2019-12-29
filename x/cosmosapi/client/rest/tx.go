@@ -11,16 +11,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 )
 
-type createPollReq struct  {
+type createTableReq struct  {
 	BaseReq rest.BaseReq `json:"base_req"`
-	Title   string       `json:"title"`
-	Price   string       `json:"price"`
-	Owner   string       `json:"owner"`
+	Name    string       `json:"title"`
+	Fields  []string     `json:"fields"`
 }
 
-func createPollHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func createTableHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req createPollReq
+		var req createTableReq
 
 		if !rest.ReadRESTReq(w, r, cliCtx.Codec,  &req)  {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
@@ -38,7 +37,7 @@ func createPollHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewMsgCreatePoll(req.Title, addr)
+		msg := types.NewMsgCreateTable(addr, req.Title, req.Fields)
 		err = msg.ValidateBasic()
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

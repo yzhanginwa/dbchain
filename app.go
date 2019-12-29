@@ -25,17 +25,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 
-	"github.com/yzhanginwa/rcv-chain/x/rcvchain"
+	"github.com/yzhanginwa/cosmos-api/x/cosmosapi"
 )
 
-const appName = "rcvchain"
+const appName = "cosmosapi"
 
 var (
 	// default home directories for the application CLI
-	DefaultCLIHome = os.ExpandEnv("$HOME/.rcvccli")
+	DefaultCLIHome = os.ExpandEnv("$HOME/.cosmosapicli")
 
 	// DefaultNodeHome sets the folder where the applcation data and configuration will be stored
-	DefaultNodeHome = os.ExpandEnv("$HOME/.rcvcd")
+	DefaultNodeHome = os.ExpandEnv("$HOME/.cosmosapid")
 
 	// NewBasicManager is in charge of setting up basic module elemnets
 	ModuleBasics = module.NewBasicManager(
@@ -49,7 +49,7 @@ var (
 		slashing.AppModuleBasic{},
 		supply.AppModuleBasic{},
 
-		rcvchain.AppModule{},
+		cosmosapi.AppModule{},
 	)
 	// account permissions
 	maccPerms = map[string][]string{
@@ -69,7 +69,7 @@ func MakeCodec() *codec.Codec {
 	return cdc
 }
 
-type rcvChainApp struct {
+type cosmosApiApp struct {
 	*bam.BaseApp
 	cdc *codec.Codec
 
@@ -85,16 +85,16 @@ type rcvChainApp struct {
 	distrKeeper    distr.Keeper
 	supplyKeeper   supply.Keeper
 	paramsKeeper   params.Keeper
-	rcvChainKeeper rcvchain.Keeper
+	cosmosApiKeeper cosmosapi.Keeper
 
 	// Module Manager
 	mm *module.Manager
 }
 
 // NewNameServiceApp is a constructor function for nameServiceApp
-func NewRcvChainApp(
+func NewCosmosApiApp(
 	logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseApp),
-) *rcvChainApp {
+) *cosmosApiApp {
 
 	// First define the top level codec that will be shared by the different modules
 	cdc := MakeCodec()
@@ -105,12 +105,12 @@ func NewRcvChainApp(
 	bApp.SetAppVersion(version.Version)
 
 	keys := sdk.NewKVStoreKeys(bam.MainStoreKey, auth.StoreKey, staking.StoreKey,
-		supply.StoreKey, distr.StoreKey, slashing.StoreKey, params.StoreKey, rcvchain.StoreKey)
+		supply.StoreKey, distr.StoreKey, slashing.StoreKey, params.StoreKey, cosmosapi.StoreKey)
 
 	tkeys := sdk.NewTransientStoreKeys(staking.TStoreKey, params.TStoreKey)
 
 	// Here you initialize your application with the store keys it requires
-	var app = &rcvChainApp{
+	var app = &cosmosApiApp{
 		BaseApp: bApp,
 		cdc:     cdc,
 		keys:    keys,
@@ -188,11 +188,11 @@ func NewRcvChainApp(
 			app.slashingKeeper.Hooks()),
 	)
 
-	// The RcvChainKeeper is the Keeper from module rcvchain
+	// The CosmosApiKeeper is the Keeper from module cosmosapi
 	// It handles interactions with the namestore
-	app.rcvChainKeeper = rcvchain.NewKeeper(
+	app.cosmosApiKeeper = cosmosapi.NewKeeper(
 		app.bankKeeper,
-		keys[rcvchain.StoreKey],
+		keys[cosmosapi.StoreKey],
 		app.cdc,
 	)
 
@@ -201,7 +201,7 @@ func NewRcvChainApp(
 		genutil.NewAppModule(app.accountKeeper, app.stakingKeeper, app.BaseApp.DeliverTx),
 		auth.NewAppModule(app.accountKeeper),
 		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
-		rcvchain.NewAppModule(app.rcvChainKeeper, app.bankKeeper),
+		cosmosapi.NewAppModule(app.cosmosApiKeeper, app.bankKeeper),
 		supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
 		distr.NewAppModule(app.distrKeeper, app.supplyKeeper),
 		slashing.NewAppModule(app.slashingKeeper, app.stakingKeeper),
@@ -221,7 +221,7 @@ func NewRcvChainApp(
 		auth.ModuleName,
 		bank.ModuleName,
 		slashing.ModuleName,
-		rcvchain.ModuleName,
+		cosmosapi.ModuleName,
 		supply.ModuleName,
 		genutil.ModuleName,
 	)
@@ -262,7 +262,7 @@ func NewDefaultGenesisState() GenesisState {
 	return ModuleBasics.DefaultGenesis()
 }
 
-func (app *rcvChainApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *cosmosApiApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 
 	err := app.cdc.UnmarshalJSON(req.AppStateBytes, &genesisState)
@@ -273,18 +273,18 @@ func (app *rcvChainApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) 
 	return app.mm.InitGenesis(ctx, genesisState)
 }
 
-func (app *rcvChainApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *cosmosApiApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
 }
-func (app *rcvChainApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+func (app *cosmosApiApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	return app.mm.EndBlock(ctx, req)
 }
-func (app *rcvChainApp) LoadHeight(height int64) error {
+func (app *cosmosApiApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height, app.keys[bam.MainStoreKey])
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
-func (app *rcvChainApp) ModuleAccountAddrs() map[string]bool {
+func (app *cosmosApiApp) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		modAccAddrs[supply.NewModuleAddress(acc).String()] = true
@@ -295,7 +295,7 @@ func (app *rcvChainApp) ModuleAccountAddrs() map[string]bool {
 
 //_________________________________________________________
 
-func (app *rcvChainApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhiteList []string,
+func (app *cosmosApiApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhiteList []string,
 ) (appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
 
 	// as if they could withdraw from the start of the next block
