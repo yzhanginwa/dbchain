@@ -20,10 +20,10 @@ func NewHandler(keeper Keeper) sdk.Handler {
 
 // Handle a message to create poll
 func handleMsgCreateTable(ctx sdk.Context, keeper Keeper, msg MsgCreateTable) sdk.Result {
-        if keeper.IsTablePresent(ctx, msg.Name) {
+	if keeper.IsTablePresent(ctx, msg.Name) {
 		return sdk.ErrUnknownRequest("Poll name existed already!").Result()
 	}
-        keeper.CreateTable(ctx, msg.Owner, msg.Name, msg.Fields)
+	keeper.CreateTable(ctx, msg.Owner, msg.Name, msg.Fields)
 	return sdk.Result{}
 }
 

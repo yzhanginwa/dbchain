@@ -13,7 +13,7 @@ import (
 
 type createTableReq struct  {
 	BaseReq rest.BaseReq   `json:"base_req"`
-        Owner   string         `json:"owner"`
+	Owner   string         `json:"owner"`
 	Name    string         `json:"title"`
 	Fields  []string       `json:"fields"`
 }

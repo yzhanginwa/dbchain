@@ -1,7 +1,7 @@
 package keeper
 
 import (
-        "fmt"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 

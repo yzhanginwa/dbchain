@@ -8,13 +8,13 @@ import (
 
 // QueryResPoll Queries Result Payload for a poll query
 type QueryResPoll struct {
-        Id string                 `json:"id"`
-        Title string              `json:"title"`
-        Owner sdk.AccAddress      `json:"owner"`
-        Status string             `json:"status"`
-        Choices []string          `json:"choices"`
-        Voters  []sdk.AccAddress  `json:"voters"`
-        Winner string             `json:"winner"`
+	Id string                 `json:"id"`
+	Title string              `json:"title"`
+	Owner sdk.AccAddress      `json:"owner"`
+	Status string             `json:"status"`
+	Choices []string          `json:"choices"`
+	Voters  []sdk.AccAddress  `json:"voters"`
+	Winner string             `json:"winner"`
 }
 
 // implement fmt.Stringer

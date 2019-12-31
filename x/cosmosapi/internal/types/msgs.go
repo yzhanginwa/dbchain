@@ -15,7 +15,7 @@ const RouterKey = ModuleName // this was defined in your key.go file
 
 // MsgCreatePoll defines a CreatePoll message
 type MsgCreateTable struct {
-        Owner sdk.AccAddress `json:"owner"`
+	Owner sdk.AccAddress `json:"owner"`
 	Name string          `json:"name"`
 	Fields []string      `json:"fields"`
 }
@@ -23,7 +23,7 @@ type MsgCreateTable struct {
 // NewMsgCreatePoll is a constructor function for MsgCreatPoll
 func NewMsgCreateTable(owner sdk.AccAddress, name string, fields []string) MsgCreateTable {
 	return MsgCreateTable {
-                Owner: owner,
+		Owner: owner,
 		Name: name,
 		Fields: fields,
 	}
@@ -37,15 +37,15 @@ func (msg MsgCreateTable) Type() string { return "create_table" }
 
 // ValidateBasic runs stateless checks on the message
 func (msg MsgCreateTable) ValidateBasic() sdk.Error {
-        if msg.Owner.Empty() {
-                return sdk.ErrInvalidAddress(msg.Owner.String())
-        }
+	if msg.Owner.Empty() {
+		return sdk.ErrInvalidAddress(msg.Owner.String())
+	}
 	if len(msg.Name) == 0 {
 		return sdk.ErrUnknownRequest("Name cannot be empty")
 	}
 	if len(msg.Fields) ==0 {
 		return sdk.ErrUnknownRequest("Fields cannot be empty")
-        }
+	}
 	return nil
 }
 

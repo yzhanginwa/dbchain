@@ -16,7 +16,7 @@ var (
 )
 
 func defaultLogger() log.Logger {
-        return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("ethan1", "ethan2")
+	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("ethan1", "ethan2")
 }
 
 // Keeper maintains the link to storage and exposes getter/setter methods for the various parts of the state machine
@@ -50,8 +50,8 @@ func (k Keeper) CreateTable(ctx sdk.Context, owner sdk.AccAddress, name string, 
 	store := ctx.KVStore(k.storeKey)
 	var table types.Table = types.NewTable()
 	table.Owner = owner
-        table.Name = name
-        table.Fields = fields 
+	table.Name = name
+	table.Fields = fields 
 	store.Set([]byte(types.TableKey(table.Name)), k.cdc.MustMarshalBinaryBare(table))
 }
 

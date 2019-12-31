@@ -40,8 +40,8 @@ func GetCmdCreateTable(cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-                        name := args[0]
-                        fields := strings.Split(args[1], ",")
+			name := args[0]
+			fields := strings.Split(args[1], ",")
 			msg := types.NewMsgCreateTable(cliCtx.GetFromAddress(), name, fields)
 			err := msg.ValidateBasic()
 			if err != nil {

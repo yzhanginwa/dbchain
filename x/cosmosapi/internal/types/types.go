@@ -23,8 +23,8 @@ const (
 // the key would be like "poll:[name]"
 type Table struct {
 	Owner sdk.AccAddress      `json:"owner"`
-        Name string               `json:"name"`
-        Fields []string           `json:"fields"`
+	Name string               `json:"name"`
+	Fields []string           `json:"fields"`
 }
 
 func TableKey(name string) string {

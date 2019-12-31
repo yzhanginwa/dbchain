@@ -16,7 +16,7 @@ func GetNextId(k Keeper, ctx sdk.Context, tableName string) uint {
 	defer mutex.Unlock()
 
 	var nextIdKey = getNextIdKey(tableName)
-        var nextId uint
+	var nextId uint
 
 	if nextId = NextIds[tableName] {
 	} else if bz := store.Get([]byte(nextIdKey)) {
