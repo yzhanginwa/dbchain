@@ -3,10 +3,10 @@ package keeper
 import (
     "fmt"
     "github.com/cosmos/cosmos-sdk/codec"
-    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 
     sdk "github.com/cosmos/cosmos-sdk/types"
     abci "github.com/tendermint/tendermint/abci/types"
+    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 )
 
 // query endpoints supported by the cosmosapi service Querier

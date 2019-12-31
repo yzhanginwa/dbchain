@@ -1,14 +1,13 @@
-package db
+package keeper
 
 import (
-    "fmtp"
-    "sync"
+    "fmt"
     "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 )
 
-func (r *Row) Find(k Keeper, ctx sdk.Context) (TableFields, error){
+func (r *Row) Find(k Keeper, ctx sdk.Context) (types.RowFields, error){
     store := ctx.KVStore(k.storeKey)
     tableName := r.TableName
 
@@ -17,17 +16,16 @@ func (r *Row) Find(k Keeper, ctx sdk.Context) (TableFields, error){
     return nil, errors.New(fmt.Sprintf("Failed to get fields for table %s", tableName))
     }
 
-    if r.Id == nil {
+    if r.Id == 0 {
     return nil, errors.New("Id cannot be empty")
     }
 
-    var fields TableFields
-    var value interface{}
+    var fields types.RowFields
 
     for _, fieldName := range fieldNames {
     if value, ok := fields[fieldName]; ok {
-        key := getDataKey(tableName, id, fieldName)
-        bz := Store.Get([]byte(key)) 
+        key := getDataKey(tableName, r.Id, fieldName)
+        bz := store.Get([]byte(key)) 
         if bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &value)
         fields[key] = value
@@ -39,7 +37,7 @@ func (r *Row) Find(k Keeper, ctx sdk.Context) (TableFields, error){
 }
 
 // Find by the attributes in the r.Fields
-func (r *Row) FindBy(k Keeper, ctx sdk.Context) (TableFields, error){
+//func (r *Row) FindBy(k Keeper, ctx sdk.Context) (types.RowFields, error){
 
-}
+//}
 
