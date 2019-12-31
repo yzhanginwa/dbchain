@@ -8,15 +8,15 @@ type TableFields map[string]interface{}
 
 type Row struct {
     TableName: string   `json:"table_name"`
-	Id: uint            `json:"id"`
+    Id: uint            `json:"id"`
     Fields: TableFields `json:"columns"`
 }
 
 func NewRow(tableName string, id uint, fields TableFields) {
     return Row {
-	TableName: tableName,
-	Id: id,
-	Fields: fields,
+    TableName: tableName,
+    Id: id,
+    Fields: fields,
     }
 }
 
@@ -33,11 +33,11 @@ func getNextId(k Keeper, ctx sdk.Context, tableName string) (uint, errors) {
 
     if nextId = NextIds[tableName] {
     } else if bz := store.Get([]byte(nextIdKey)) {
-	k.cdc.MustUnmarshalBinaryBare(bz, &nextId)
+    k.cdc.MustUnmarshalBinaryBare(bz, &nextId)
     } else if store.get([]byte(getTableKey(tableName))) {
-	nextId = 1
+    nextId = 1
     } else {
-	return -1, errors.New(fmt.Sprintf("Invalid table name %s", tableName))
+    return -1, errors.New(fmt.Sprintf("Invalid table name %s", tableName))
     }
 
     store.Set([]byte(nextIdKey), nextId + 1)
@@ -51,9 +51,9 @@ func getTableFields(k Keeper, ctx sdk.Context, tableName string) []string {
     tableKey := getTableKey(tableName)
     bz := store.Get([]byte(tableKey)) {
     if bz == nil {
-	return nil, errors.New(fmt.SprintF("Table %s does not exist", tableName))
+    return nil, errors.New(fmt.SprintF("Table %s does not exist", tableName))
     }
     var fieldNames []string
-	k.cdc.MustUnmarshalBinaryBare(bz, &fieldNames)
+    k.cdc.MustUnmarshalBinaryBare(bz, &fieldNames)
     return fieldNames
 }
