@@ -11,7 +11,7 @@ func (r *Row) Find(k Keeper, ctx sdk.Context) (types.RowFields, error){
     store := ctx.KVStore(k.storeKey)
     tableName := r.TableName
 
-    fieldNames, err := getTableFields(k, ctx, tableName)
+    fieldNames, err := k.getTableFields(ctx, tableName)
     if err != nil {
     return nil, errors.New(fmt.Sprintf("Failed to get fields for table %s", tableName))
     }

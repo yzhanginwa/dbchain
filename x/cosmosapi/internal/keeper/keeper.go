@@ -2,13 +2,10 @@ package keeper
 
 import (
     "os"
-    //"fmt"
-    "errors"
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/cosmos/cosmos-sdk/x/bank"
     "github.com/tendermint/tendermint/libs/log"
-    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 )
 
 var (
@@ -38,35 +35,6 @@ func NewKeeper(coinKeeper bank.Keeper, storeKey sdk.StoreKey, cdc *codec.Codec) 
     }
 }
 
-// Check if the poll id is present in the store or not
-func (k Keeper) IsTablePresent(ctx sdk.Context, name string) bool {
-    store := ctx.KVStore(k.storeKey)
-    return store.Has([]byte(getTableKey(name)))
-}
-
-
-// Create a new table
-func (k Keeper) CreateTable(ctx sdk.Context, owner sdk.AccAddress, name string, fields []string) {
-    store := ctx.KVStore(k.storeKey)
-    table := types.NewTable()
-    table.Owner = owner
-    table.Name = name
-    table.Fields = fields 
-    store.Set([]byte(getTableKey(table.Name)), k.cdc.MustMarshalBinaryBare(table))
-}
-
-
-// Gets a poll for an id
-func (k Keeper) GetTable(ctx sdk.Context, name string) (types.Table, error) {
-    store := ctx.KVStore(k.storeKey)
-    bz := store.Get([]byte(getTableKey(name)))
-    if bz == nil {
-        return types.Table{}, errors.New("not found table")
-    }
-    var table types.Table
-    k.cdc.MustUnmarshalBinaryBare(bz, &table)
-    return table, nil
-}
 
 //////////////////////
 //                  //

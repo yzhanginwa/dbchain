@@ -2,7 +2,6 @@ package cli
 
 import (
     "fmt"
-
     "github.com/cosmos/cosmos-sdk/client"
     "github.com/cosmos/cosmos-sdk/client/context"
     "github.com/cosmos/cosmos-sdk/codec"
@@ -19,30 +18,41 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         RunE:                       client.ValidateCmd,
     }
     cosmosapiQueryCmd.AddCommand(client.GetCommands(
-        GetCmdTable(storeKey, cdc),
+        GetCmdTables(storeKey, cdc),
     )...)
     return cosmosapiQueryCmd
 }
 
-// GetCmdTable queries information about a table
-func GetCmdTable(queryRoute string, cdc *codec.Codec) *cobra.Command {
+// GetCmdTables lists all table names
+func GetCmdTables(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "table [name]",
-        Short: "query table",
-        Args: cobra.ExactArgs(1),
+        Use: "tables",
+        Short: "query tables",
+        Args: cobra.MaximumNArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
-            name := args[0]
+            var path string
+            if len(args) == 1 {
+                path = fmt.Sprintf("custom/%s/tables/%s", queryRoute, args[0])
+            } else {
+                path = fmt.Sprintf("custom/%s/tables", queryRoute)
+            }
 
-            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/tables/%s", queryRoute, name), nil)
+            res, _, err := cliCtx.QueryWithData(path, nil)
             if err != nil {
-                fmt.Printf("could not get table %s \n", name)
+                fmt.Printf("could not get table names")
                 return nil
             }
 
-            var out types.Table
-            cdc.MustUnmarshalJSON(res, &out)
-            return cliCtx.PrintOutput(out)
+            if len(args) == 1 {
+                var out types.Table
+                cdc.MustUnmarshalJSON(res, &out)
+                return cliCtx.PrintOutput(out)
+            } else {
+                var out types.QueryTables
+                cdc.MustUnmarshalJSON(res, &out)
+                return cliCtx.PrintOutput(out)
+            }
         },
     }
 }

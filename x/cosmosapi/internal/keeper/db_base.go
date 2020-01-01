@@ -6,11 +6,7 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-
-///////////
-///////////
-
-func getTableFields(k Keeper, ctx sdk.Context, tableName string) ([]string, error) {
+func (k Keeper) getTableFields(ctx sdk.Context, tableName string) ([]string, error) {
     store := ctx.KVStore(k.storeKey)
     tableKey := getTableKey(tableName)
     bz := store.Get([]byte(tableKey))

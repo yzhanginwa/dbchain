@@ -10,6 +10,10 @@ const (
     KeyPrefixIndex = "ix"
 )
 
+func getTablesKey() string {
+    return fmt.Sprintf("%s:tables", KeyPrefixMeta)
+}
+
 func getNextIdKey(tableName string) string {
     return fmt.Sprintf("%s:nextId:%s", KeyPrefixMeta, tableName)
 }

@@ -27,7 +27,7 @@ func (k Keeper) Update(ctx sdk.Context, tableName string, id uint, fields types.
 func (k Keeper) Write(ctx sdk.Context, tableName string, id uint, fields types.RowFields) (uint, error){
     store := ctx.KVStore(k.storeKey)
 
-    fieldNames, err := getTableFields(k, ctx, tableName)
+    fieldNames, err := k.getTableFields(ctx, tableName)
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get fields for table %s", tableName))
     }
@@ -49,7 +49,7 @@ func (k Keeper) Write(ctx sdk.Context, tableName string, id uint, fields types.R
 func (k Keeper) Delete(ctx sdk.Context, tableName string, id uint) (uint, error){
     store := ctx.KVStore(k.storeKey)
 
-    fieldNames, err := getTableFields(k, ctx, tableName)
+    fieldNames, err := k.getTableFields(ctx, tableName)
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get fields for table %s", tableName))
     }
