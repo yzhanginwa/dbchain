@@ -10,4 +10,5 @@ import (
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) {
     r.HandleFunc(fmt.Sprintf("/%s/tables", storeName), createTableHandler(cliCtx)).Methods("POST")
     r.HandleFunc(fmt.Sprintf("/%s/tables/{%s}", storeName, "name"), showTableHandler(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/tables", storeName), showTablesHandler(cliCtx, storeName)).Methods("GET")
 }
