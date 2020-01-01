@@ -2,6 +2,7 @@ package cosmosapi
 
 import (
     "fmt"
+    "encoding/json"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 )
@@ -35,6 +36,12 @@ func handleMsgInsertRow(ctx sdk.Context, keeper Keeper, msg types.MsgInsertRow) 
     if keeper.IsTablePresent(ctx, msg.TableName) {
         return sdk.ErrUnknownRequest("Poll name existed already!").Result()
     }
-    keeper.Insert(ctx, msg.TableName, msg.Fields)
+    
+    var rowFields types.RowFields
+    if err := json.Unmarshal(msg.Fields, &rowFields); err != nil {
+        return sdk.ErrUnknownRequest("Failed to parse row fields!").Result()
+    }
+
+    keeper.Insert(ctx, msg.TableName, rowFields)
     return sdk.Result{}
 }

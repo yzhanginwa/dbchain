@@ -1,8 +1,10 @@
 package cli
 
 import (
+    "fmt"
+    "errors"
     "strings"
-    //"strconv"
+    "encoding/json"
     "github.com/spf13/cobra"
 
     "github.com/cosmos/cosmos-sdk/client"
@@ -25,6 +27,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
     nameserviceTxCmd.AddCommand(client.PostCommands(
         GetCmdCreateTable(cdc),
+        GetCmdInsertRow(cdc),
     )...)
 
     return nameserviceTxCmd
@@ -34,7 +37,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 func GetCmdCreateTable(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use:   "create-table [name] [fields]",
-        Short: "create a new poll",
+        Short: "create a new table",
         Args:  cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -46,6 +49,39 @@ func GetCmdCreateTable(cdc *codec.Codec) *cobra.Command {
             err := msg.ValidateBasic()
             if err != nil {
                 return err
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+func GetCmdInsertRow(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "insert-row [tableName] [fields] [values]",
+        Short: "create a new row",
+        Args:  cobra.ExactArgs(3),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            name := args[0]
+            fields := strings.Split(args[1], ",")
+            values := strings.Split(args[2], ",")
+            rowFields := make(types.RowFields)
+            for i, field := range fields {
+                if i < len(values) {
+                    rowFields[field] = values[i]
+                }
+            }
+
+            rowFieldsJson, err := json.Marshal(rowFields)
+            if err != nil { return err } 
+
+            msg := types.NewMsgInsertRow(cliCtx.GetFromAddress(), name, rowFieldsJson)
+            err = msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err)) 
             }
 
             return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})

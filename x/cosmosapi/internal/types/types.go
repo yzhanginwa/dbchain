@@ -6,7 +6,8 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type RowFields map[string]interface{}
+type RowFields map[string]string
+type RowFieldsJson []byte
 
 ///////////
 //       //

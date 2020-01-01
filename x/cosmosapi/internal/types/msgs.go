@@ -69,15 +69,15 @@ func (msg MsgCreateTable) GetSigners() []sdk.AccAddress {
 type MsgInsertRow struct {
     Owner sdk.AccAddress `json:"owner"`
     TableName string     `json:"table_name"`
-    Fields RowFields     `json:"fields"`
+    Fields RowFieldsJson `json:"fields"`
 }
 
 // NewMsgCreatePoll is a constructor function for MsgCreatPoll
-func NewMsgInsertRow(owner sdk.AccAddress, tableName string, fields RowFields) MsgInsertRow {
+func NewMsgInsertRow(owner sdk.AccAddress, tableName string, fieldsJson RowFieldsJson) MsgInsertRow {
     return MsgInsertRow{
         Owner: owner,
         TableName: tableName,
-        Fields: fields,
+        Fields: fieldsJson,
     }
 }
 
