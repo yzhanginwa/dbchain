@@ -7,14 +7,11 @@ import (
 )
 
 func (k Keeper) getTableFields(ctx sdk.Context, tableName string) ([]string, error) {
-    store := ctx.KVStore(k.storeKey)
-    tableKey := getTableKey(tableName)
-    bz := store.Get([]byte(tableKey))
-    if bz == nil {
-        return nil, errors.New(fmt.Sprintf("Table %s does not exist", tableName))
+    table, err := k.GetTable(ctx, tableName)
+    if err != nil {
+        return nil, errors.New(fmt.Sprintf("Failed to access table %s", tableName))
     }
-    var fieldNames []string
-    k.cdc.MustUnmarshalBinaryBare(bz, &fieldNames)
+    fieldNames := table.Fields
     return fieldNames, nil
 }
 

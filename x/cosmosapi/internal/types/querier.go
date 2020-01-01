@@ -2,6 +2,7 @@ package types
 
 import (
     "strings"
+    "fmt"
 )
 
 
@@ -17,3 +18,14 @@ func (t QueryTables) String() string {
 
 ////////////////
 
+type QueryRowFields map[string]string
+
+func (rf QueryRowFields) String() string {
+    var result = ""
+    for k, v := range rf {
+        result = fmt.Sprintf("%s%s: %s\n", result, k, v)
+    }
+    return result
+}
+
+////////////////

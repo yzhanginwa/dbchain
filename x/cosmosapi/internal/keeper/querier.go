@@ -2,6 +2,7 @@ package keeper
 
 import (
     "fmt"
+    "strconv"
     "github.com/cosmos/cosmos-sdk/codec"
 
     sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,6 +13,7 @@ import (
 // query endpoints supported by the cosmosapi service Querier
 const (
     QueryTables   = "tables"
+    QueryRow      = "find"
 )
 
 // NewQuerier is the module level router for state queries
@@ -24,6 +26,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             } else {
                 return queryTables(ctx, req, keeper)
             }
+        case QueryRow:
+            return queryRow(ctx, path[1:], req, keeper)
         default:
             return nil, sdk.ErrUnknownRequest("unknown cosmosapi query endpoint")
         }
@@ -53,6 +57,22 @@ func queryTable(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, table)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+    u32, err := strconv.ParseUint(path[1], 10, 32)
+    fields, err := keeper.Find(ctx, path[0], uint(u32))
+
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not exist",  path[0]))
+    }
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, fields)
     if err != nil {
         panic("could not marshal result to JSON")
     }

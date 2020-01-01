@@ -33,8 +33,8 @@ func handleMsgCreateTable(ctx sdk.Context, keeper Keeper, msg MsgCreateTable) sd
 
 // TODO
 func handleMsgInsertRow(ctx sdk.Context, keeper Keeper, msg types.MsgInsertRow) sdk.Result {
-    if keeper.IsTablePresent(ctx, msg.TableName) {
-        return sdk.ErrUnknownRequest("Poll name existed already!").Result()
+    if !keeper.IsTablePresent(ctx, msg.TableName) {
+        return sdk.ErrUnknownRequest(fmt.Sprintf("Table % does not exist!", msg.TableName)).Result()
     }
     
     var rowFields types.RowFields
