@@ -13,6 +13,7 @@ import (
 // query endpoints supported by the cosmosapi service Querier
 const (
     QueryTables   = "tables"
+    QueryIndex    = "index"
     QueryRow      = "find"
 )
 
@@ -26,6 +27,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             } else {
                 return queryTables(ctx, req, keeper)
             }
+        case QueryIndex:
+            return queryIndex(ctx, path[1:], req, keeper)
         case QueryRow:
             return queryRow(ctx, path[1:], req, keeper)
         default:
@@ -57,6 +60,21 @@ func queryTable(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, table)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryIndex(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+    index, err := keeper.GetIndex(ctx, path[0])
+
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not exist",  path[0]))
+    }
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, index)
     if err != nil {
         panic("could not marshal result to JSON")
     }

@@ -99,6 +99,17 @@ func (k Keeper) CreateIndex(ctx sdk.Context, owner sdk.AccAddress, tableName str
     // TODO: to create index data for the existing records of the table
 }
 
+func (k Keeper) GetIndex(ctx sdk.Context, tableName string) ([]string, error) {
+    store := ctx.KVStore(k.storeKey)
+    key := getMetaTableIndexKey(tableName)
+    bz := store.Get([]byte(key))
+    if bz == nil {
+        return []string{}, errors.New(fmt.Sprintf("Index of table %s not found", tableName))
+    }
+    var index_fields []string
+    k.cdc.MustUnmarshalBinaryBare(bz, &index_fields)
+    return index_fields, nil
+}
 ////////////////////
 //                //
 // helper methods //
