@@ -21,6 +21,7 @@ var (
 type (
     Keeper          = keeper.Keeper
     MsgCreateTable  = types.MsgCreateTable
+    MsgCreateIndex  = types.MsgCreateIndex
     MsgInsertRow    = types.MsgInsertRow
     Table           = types.Table
 )

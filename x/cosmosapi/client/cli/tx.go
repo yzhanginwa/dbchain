@@ -27,6 +27,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
     nameserviceTxCmd.AddCommand(client.PostCommands(
         GetCmdCreateTable(cdc),
+        GetCmdCreateIndex(cdc),
         GetCmdInsertRow(cdc),
     )...)
 
@@ -55,6 +56,30 @@ func GetCmdCreateTable(cdc *codec.Codec) *cobra.Command {
         },
     }
 }
+
+// GetCmdCreateIndex is the CLI command for sending a CreateIndex transaction
+func GetCmdCreateIndex(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "create-index [tableName] [field]",
+        Short: "create a new index",
+        Args:  cobra.ExactArgs(2),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            tableName := args[0]
+            field := args[1]
+            msg := types.NewMsgCreateIndex(cliCtx.GetFromAddress(), tableName, field)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return err
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
 
 func GetCmdInsertRow(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{

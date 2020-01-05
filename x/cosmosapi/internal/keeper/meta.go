@@ -7,6 +7,12 @@ import (
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 )
 
+/////////////////////////////
+//                         //
+// table related functions //
+//                         //
+/////////////////////////////
+
 func (k Keeper) getTables(ctx sdk.Context) ([]string, error) {
     store := ctx.KVStore(k.storeKey)
     tablesKey := getTablesKey()
@@ -26,6 +32,18 @@ func (k Keeper) IsTablePresent(ctx sdk.Context, name string) bool {
     return store.Has([]byte(getTableKey(name)))
 }
 
+func (k Keeper) IsFieldPresent(ctx sdk.Context, tableName string, field string) bool {
+    table, err := k.GetTable(ctx, tableName)
+    if err != nil {
+        return false
+    }
+    for _, f := range(table.Fields) {
+        if f == field {
+            return true
+        }
+    }
+    return false
+}
 
 // Create a new table
 func (k Keeper) CreateTable(ctx sdk.Context, owner sdk.AccAddress, name string, fields []string) {
@@ -58,6 +76,27 @@ func (k Keeper) GetTable(ctx sdk.Context, name string) (types.Table, error) {
     var table types.Table
     k.cdc.MustUnmarshalBinaryBare(bz, &table)
     return table, nil
+}
+
+/////////////////////////////
+//                         //
+// index related functions //
+//                         //
+/////////////////////////////
+
+// for now we only support indexes on single field
+func (k Keeper) CreateIndex(ctx sdk.Context, owner sdk.AccAddress, tableName string, field string) {
+    store := ctx.KVStore(k.storeKey)
+    key := getMetaTableIndexKey(tableName)
+    var index_fields []string
+
+    bz := store.Get([]byte(key))
+    if bz != nil {
+        k.cdc.MustUnmarshalBinaryBare(bz, &index_fields)
+    }
+    index_fields = append(index_fields, field)
+    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(index_fields))
+    // TODO: to create index data for the existing records of the table
 }
 
 ////////////////////

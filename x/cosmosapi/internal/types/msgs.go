@@ -13,14 +13,14 @@ const RouterKey = ModuleName // this was defined in your key.go file
 //                //
 ////////////////////
 
-// MsgCreatePoll defines a CreatePoll message
+// MsgCreateTable defines a CreateTable message
 type MsgCreateTable struct {
     Owner sdk.AccAddress `json:"owner"`
     TableName string     `json:"table_name"`
     Fields []string      `json:"fields"`
 }
 
-// NewMsgCreatePoll is a constructor function for MsgCreatPoll
+// NewMsgCreateTable is a constructor function for MsgCreatTable
 func NewMsgCreateTable(owner sdk.AccAddress, tableName string, fields []string) MsgCreateTable {
     return MsgCreateTable {
         Owner: owner,
@@ -56,6 +56,57 @@ func (msg MsgCreateTable) GetSignBytes() []byte {
 
 // GetSigners defines whose signature is required
 func (msg MsgCreateTable) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
+
+////////////////////
+//                //
+// MsgCreateIndex //
+//                //
+////////////////////
+
+type MsgCreateIndex struct {
+    Owner sdk.AccAddress `json:"owner"`
+    TableName string     `json:"table_name"`
+    Field string         `json:"field"`
+}
+
+// NewMsgCreatePoll is a constructor function for MsgCreatPoll
+func NewMsgCreateIndex(owner sdk.AccAddress, tableName string, field string) MsgCreateIndex {
+    return MsgCreateIndex {
+        Owner: owner,
+        TableName: tableName,
+        Field: field,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgCreateIndex) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgCreateIndex) Type() string { return "create_index" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgCreateIndex) ValidateBasic() sdk.Error {
+    if msg.Owner.Empty() {
+        return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.TableName) == 0 {
+        return sdk.ErrUnknownRequest("Table name cannot be empty")
+    }
+    if len(msg.Field) ==0 {
+        return sdk.ErrUnknownRequest("Field cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgCreateIndex) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgCreateIndex) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 

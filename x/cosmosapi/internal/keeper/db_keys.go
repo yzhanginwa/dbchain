@@ -10,18 +10,27 @@ const (
     KeyPrefixIndex = "ix"
 )
 
+// to store name of all tables
 func getTablesKey() string {
     return fmt.Sprintf("%s:tables", KeyPrefixMeta)
 }
 
+// to store the id for next new record of a table
 func getNextIdKey(tableName string) string {
     return fmt.Sprintf("%s:nextId:%s", KeyPrefixMeta, tableName)
 }
 
+// to store the name of fields for a table
 func getTableKey(tableName string) string {
     return fmt.Sprintf("%s:tn:%s", KeyPrefixMeta, tableName)
 }
 
+// to store table fields which have index on
+func getMetaTableIndexKey(tableName string) string {
+    return fmt.Sprintf("%s:idx:%s", KeyPrefixMeta, tableName)
+}
+
+// to store the value of a fields on a record of a table.
 func getDataKey(tableName string, id uint, fieldName string) string {
     return fmt.Sprintf("%s:%s:%d:%s", KeyPrefixData, tableName, id, fieldName)
 }
