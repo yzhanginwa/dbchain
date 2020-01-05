@@ -14,12 +14,14 @@ func (k Keeper) Insert(ctx sdk.Context, tableName string, fields types.RowFields
         return 0, errors.New(fmt.Sprintf("Failed to get id for table %s", tableName))
     }
     k.Write(ctx, tableName, id, fields)
+    k.updateIndex(ctx, tableName, id, fields)
     return id, nil
 }
 
 
 func (k Keeper) Update(ctx sdk.Context, tableName string, id uint, fields types.RowFields) (uint, error){
     k.Write(ctx, tableName, id, fields)
+    k.updateIndex(ctx, tableName, id, fields)
     return id, nil
 }
 

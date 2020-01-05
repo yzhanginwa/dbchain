@@ -35,3 +35,7 @@ func getDataKey(tableName string, id uint, fieldName string) string {
     return fmt.Sprintf("%s:%s:%d:%s", KeyPrefixData, tableName, id, fieldName)
 }
 
+// to store the id of a indexed field
+func getIndexKey(tableName string, fieldName string, value string) string {
+    return fmt.Sprintf("%s:%s:%s:%s", KeyPrefixIndex, tableName, fieldName, value)
+}
