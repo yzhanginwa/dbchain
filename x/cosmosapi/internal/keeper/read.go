@@ -34,8 +34,52 @@ func (k Keeper) Find(ctx sdk.Context, tableName string, id uint) (types.RowField
     return fields, nil
 }
 
-// Find by the attributes in the r.Fields
-//func (r *Row) FindBy(k Keeper, ctx sdk.Context) (types.RowFields, error){
+// Find by an attribute in the r.Fields
+func (k Keeper) FindBy(ctx sdk.Context, tableName string, field string,  value string) []string  {
+    store := ctx.KVStore(k.storeKey)
 
-//}
+    var hasIndex bool
+    indexFields, err := k.GetIndex(ctx, tableName)
+    if err == nil {
+        for _, item := range(indexFields) {
+            if item == field {
+                hasIndex = true
+                break
+            }
+        }
+    }
+
+    if hasIndex {
+        var mold []string
+        key := getIndexKey(tableName, field, value)
+        bz := store.Get([]byte(key))
+        if bz == nil {
+            return []string{}
+        } else {
+            k.cdc.MustUnmarshalBinaryBare(bz, &mold)
+            return mold
+        }
+    }
+
+    // so-called full table scanning
+    var result []string
+    start, end := getDataIteratorStartAndEndKey(tableName)
+    iter := store.Iterator([]byte(start), []byte(end))
+    var mold string
+    for ; iter.Valid(); iter.Next() {
+        key := iter.Key()
+        k.cdc.MustUnmarshalBinaryBare(key, &mold)
+        keyString := fmt.Sprint(mold)
+        fn := getFieldNameFromDataKey(keyString)
+        if fn == field {
+	    val := iter.Value()
+            k.cdc.MustUnmarshalBinaryBare(val, &mold)
+            if mold == value {
+                id := getIdFromDataKey(keyString)
+                result = append(result, id)
+            }
+        }
+    }
+    return result
+}
 
