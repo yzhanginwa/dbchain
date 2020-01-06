@@ -15,6 +15,7 @@ const (
     QueryTables   = "tables"
     QueryIndex    = "index"
     QueryRow      = "find"
+    QueryIdsBy    = "find_by"
 )
 
 // NewQuerier is the module level router for state queries
@@ -31,6 +32,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryIndex(ctx, path[1:], req, keeper)
         case QueryRow:
             return queryRow(ctx, path[1:], req, keeper)
+        case QueryIdsBy:
+            return queryIdsBy(ctx, path[1:], req, keeper)
         default:
             return nil, sdk.ErrUnknownRequest("unknown cosmosapi query endpoint")
         }
@@ -91,6 +94,17 @@ func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keep
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, fields)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryIdsBy(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+    ids := keeper.FindBy(ctx, path[0], path[1], path[2])
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, ids)
     if err != nil {
         panic("could not marshal result to JSON")
     }

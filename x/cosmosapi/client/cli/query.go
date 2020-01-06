@@ -21,6 +21,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdTables(storeKey, cdc),
         GetCmdIndex(storeKey, cdc),
         GetCmdFindRow(storeKey, cdc),
+        GetCmdFindIdsBy(storeKey, cdc),
     )...)
     return cosmosapiQueryCmd
 }
@@ -95,6 +96,28 @@ func GetCmdFindRow(queryRoute string, cdc *codec.Codec) *cobra.Command {
             }
 
             var out types.QueryRowFields
+            cdc.MustUnmarshalJSON(res, &out)
+            return cliCtx.PrintOutput(out)
+        },
+    }
+}
+
+func GetCmdFindIdsBy(queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "find-by",
+        Short: "find by",
+        Args: cobra.ExactArgs(3),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            // args are tableName, fieldName, and value respectively
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find_by/%s/%s/%s", queryRoute, args[0], args[1], args[2]), nil)
+            if err != nil {
+                fmt.Printf("could not find ids")
+                return nil
+            }
+
+            var out types.QuerySliceOfString
             cdc.MustUnmarshalJSON(res, &out)
             return cliCtx.PrintOutput(out)
         },

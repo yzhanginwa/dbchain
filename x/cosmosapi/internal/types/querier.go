@@ -29,3 +29,13 @@ func (rf QueryRowFields) String() string {
 }
 
 ////////////////
+
+// QueryTables Result table names
+type QuerySliceOfString []string
+
+// implement fmt.Stringer
+func (t QuerySliceOfString) String() string {
+    return strings.Join(t, "\n")
+}
+
+////////////////
