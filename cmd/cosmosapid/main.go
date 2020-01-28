@@ -16,6 +16,8 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
     genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
     app "github.com/yzhanginwa/cosmos-api"
+    cosmosapicli "github.com/yzhanginwa/cosmos-api/x/cosmosapi/client/cli"
+
     abci "github.com/tendermint/tendermint/abci/types"
     tmtypes "github.com/tendermint/tendermint/types"
     dbm "github.com/tendermint/tm-db"
@@ -50,6 +52,7 @@ func main() {
         genutilcli.ValidateGenesisCmd(ctx, cdc, app.ModuleBasics),
         // AddGenesisAccountCmd allows users to add accounts to the genesis file
         genaccscli.AddGenesisAccountCmd(ctx, cdc, app.DefaultNodeHome, app.DefaultCLIHome),
+        cosmosapicli.AddGenesisAdminAccountCmd(ctx, cdc, app.DefaultNodeHome, app.DefaultCLIHome),
     )
 
     server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)

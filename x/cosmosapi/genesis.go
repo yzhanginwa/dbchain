@@ -1,47 +1,34 @@
 package cosmosapi
 
 import (
-    "fmt"
-
+    "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
     abci "github.com/tendermint/tendermint/abci/types"
+    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 )
 
-type GenesisState struct {
-    TablesRecords []Table  `json:"table_records"`
-}
-
-func NewGenesisState(tablesRecords []Table) GenesisState {
-    return GenesisState{TablesRecords: tablesRecords}
-}
-
 func ValidateGenesis(data GenesisState) error {
-    for _, record := range data.TablesRecords {
-        if record.Owner == nil {
-            return fmt.Errorf("invalid TablesRecord: Owner: %s. Error: Missing Owner", record.Owner)
-        }
-        if record.Name == "" {
-            return fmt.Errorf("invalid TablesRecord: Name: %s. Error: Missing Value", record.Name)
-        }
+    adminAddresses := data.AdminAddresses
+    if len(adminAddresses) < 1 {
+        return errors.New("At least one admin address is needed")
     }
+
+    //for _, address := range data {
+    // TODO: validate address
+    //}
     return nil
 }
 
 func DefaultGenesisState() GenesisState {
-    return GenesisState{
-        TablesRecords: []Table{},
-    }
+    return types.GenesisState{} 
 }
 
 func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) []abci.ValidatorUpdate {
-    for _, record := range data.TablesRecords {
-        keeper.CreateTable(ctx, record.Owner, record.Name, record.Fields)
-    }
+    keeper.CreateGenesisAdminGroup(ctx, data)
     return []abci.ValidatorUpdate{}
 }
 
 func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
-    var records []Table
 // TODO: update the following after implementing k.GetPollsIterator(ctx)
 //	iterator := k.GetNamesIterator(ctx)
 //	for ; iterator.Valid(); iterator.Next() {
@@ -51,5 +38,5 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 //		records = append(records, whois)
 //
 //	}
-    return GenesisState{TablesRecords: records}
+    return types.GenesisState{}
 }

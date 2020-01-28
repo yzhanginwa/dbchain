@@ -24,4 +24,6 @@ type (
     MsgCreateIndex  = types.MsgCreateIndex
     MsgInsertRow    = types.MsgInsertRow
     Table           = types.Table
+
+    GenesisState    = types.GenesisState
 )

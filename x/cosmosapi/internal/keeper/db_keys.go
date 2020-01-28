@@ -9,6 +9,7 @@ const (
     KeyPrefixMeta  = "mt"
     KeyPrefixData  = "dt"
     KeyPrefixIndex = "ix"
+    KeyPrefixGroup = "grp"
 )
 
 // to store name of all tables
@@ -62,4 +63,18 @@ func getIdFromDataKey(key string) string {
 func getFieldNameFromDataKey(key string) string {
     arr := strings.Split(key, ":")
     return arr[3]
+}
+
+///////////////////
+//               //
+// group related //
+//               //
+///////////////////
+
+func getGroupKey(groupName string) string {
+    return fmt.Sprintf("%s:%s", KeyPrefixGroup, groupName)
+}
+
+func getAdminGroupKey() string {
+    return getGroupKey("admin")
 }
