@@ -17,21 +17,21 @@ import (
 )
 
 func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-    nameserviceTxCmd := &cobra.Command{
+    cosmosapiTxCmd := &cobra.Command{
         Use:                        types.ModuleName,
-        Short:                      "Nameservice transaction subcommands",
+        Short:                      "Cosmosapi transaction subcommands",
         DisableFlagParsing:         true,
         SuggestionsMinimumDistance: 2,
         RunE:                       client.ValidateCmd,
     }
 
-    nameserviceTxCmd.AddCommand(client.PostCommands(
+    cosmosapiTxCmd.AddCommand(client.PostCommands(
         GetCmdCreateTable(cdc),
         GetCmdCreateIndex(cdc),
         GetCmdInsertRow(cdc),
     )...)
 
-    return nameserviceTxCmd
+    return cosmosapiTxCmd
 }
 
 // GetCmdCreatePoll is the CLI command for sending a CreatePoll transaction
