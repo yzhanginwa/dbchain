@@ -16,6 +16,7 @@ const (
     QueryIndex    = "index"
     QueryRow      = "find"
     QueryIdsBy    = "find_by"
+    QueryAdminGroup = "admin_group"
 )
 
 // NewQuerier is the module level router for state queries
@@ -34,6 +35,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryRow(ctx, path[1:], req, keeper)
         case QueryIdsBy:
             return queryIdsBy(ctx, path[1:], req, keeper)
+        case QueryAdminGroup:
+            return queryAdminGroup(ctx, path[1:], req, keeper)
         default:
             return nil, sdk.ErrUnknownRequest("unknown cosmosapi query endpoint")
         }
@@ -105,6 +108,17 @@ func queryIdsBy(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
     ids := keeper.FindBy(ctx, path[0], path[1], path[2])
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, ids)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryAdminGroup(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+    adminAddresses := keeper.ShowAdminGroup(ctx)
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, adminAddresses)
     if err != nil {
         panic("could not marshal result to JSON")
     }

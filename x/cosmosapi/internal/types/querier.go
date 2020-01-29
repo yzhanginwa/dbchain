@@ -3,6 +3,7 @@ package types
 import (
     "strings"
     "fmt"
+    sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 
@@ -39,3 +40,16 @@ func (t QuerySliceOfString) String() string {
 }
 
 ////////////////
+
+type QueryAdminGroup []sdk.AccAddress
+
+func (ag QueryAdminGroup) String() string {
+    var buf []string
+    for index, addr := range ag {
+        buf[index] = fmt.Sprintf("%s", addr)
+    }
+    return strings.Join(buf, "\n")
+}
+
+////////////////
+
