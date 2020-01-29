@@ -29,6 +29,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdCreateTable(cdc),
         GetCmdCreateIndex(cdc),
         GetCmdInsertRow(cdc),
+        GetCmdAddAdminAccount(cdc),
     )...)
 
     return cosmosapiTxCmd
@@ -113,6 +114,33 @@ func GetCmdInsertRow(cdc *codec.Codec) *cobra.Command {
         },
     }
 }
+
+
+func GetCmdAddAdminAccount(cdc * codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "add-admin [address]",
+        Short: "add an account into admin group",
+        Args:  cobra.ExactArgs(1),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            addr, err := sdk.AccAddressFromBech32(args[0]) // args[0] is the new admin address
+
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+
+            msg := types.NewMsgAddAdminAccount(addr, cliCtx.GetFromAddress())
+            err = msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
 
 
 //////////////////////

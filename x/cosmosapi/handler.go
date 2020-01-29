@@ -17,6 +17,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgCreateIndex(ctx, keeper, msg)
         case MsgInsertRow:
             return handleMsgInsertRow(ctx, keeper, msg)
+        case MsgAddAdminAccount:
+            return handleMsgAddAdminAccount(ctx, keeper, msg)
         default:
             errMsg := fmt.Sprintf("Unrecognized cosmosapi Msg type: %v", msg.Type())
             return sdk.ErrUnknownRequest(errMsg).Result()
@@ -52,5 +54,13 @@ func handleMsgInsertRow(ctx sdk.Context, keeper Keeper, msg types.MsgInsertRow) 
     }
 
     keeper.Insert(ctx, msg.TableName, rowFields)
+    return sdk.Result{}
+}
+
+func handleMsgAddAdminAccount(ctx sdk.Context, keeper Keeper, msg MsgAddAdminAccount) sdk.Result {
+    _, err := keeper.AddAdminAccount(ctx, msg.AdminAddress, msg.Owner)
+    if err != nil {
+        return sdk.ErrUnknownRequest(fmt.Sprintf("%v", err)).Result()
+    }
     return sdk.Result{}
 }

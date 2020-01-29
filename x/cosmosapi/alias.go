@@ -23,6 +23,9 @@ type (
     MsgCreateTable  = types.MsgCreateTable
     MsgCreateIndex  = types.MsgCreateIndex
     MsgInsertRow    = types.MsgInsertRow
+
+    MsgAddAdminAccount = types.MsgAddAdminAccount
+
     Table           = types.Table
 
     GenesisState    = types.GenesisState
