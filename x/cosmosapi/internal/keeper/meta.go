@@ -3,6 +3,7 @@ package keeper
 import (
     "fmt"
     "errors"
+    "strings"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 )
@@ -51,7 +52,7 @@ func (k Keeper) CreateTable(ctx sdk.Context, owner sdk.AccAddress, name string, 
     table := types.NewTable()
     table.Owner = owner
     table.Name = name
-    table.Fields = fields 
+    table.Fields = preProcessFields(fields)
     store.Set([]byte(getTableKey(table.Name)), k.cdc.MustMarshalBinaryBare(table))
 
     var tables []string
@@ -116,3 +117,16 @@ func (k Keeper) GetIndex(ctx sdk.Context, tableName string) ([]string, error) {
 //                //
 ////////////////////
 
+// to preprocess the new table field names
+// to make sure the fields be lowercase
+// to make sure field id be in place
+func preProcessFields(fields []string) []string {
+    var result = []string{"id"}
+    for _, field := range fields {
+        newName := strings.ToLower(field)
+        if newName != "id" {
+            result = append(result, newName)
+        }
+    }
+    return result
+}
