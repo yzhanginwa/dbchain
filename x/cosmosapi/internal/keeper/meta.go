@@ -79,6 +79,96 @@ func (k Keeper) GetTable(ctx sdk.Context, name string) (types.Table, error) {
     return table, nil
 }
 
+// Add a field
+func (k Keeper) AddField(ctx sdk.Context, name string, field string) (bool, error) {
+    table, err := k.GetTable(ctx, name)
+    if err != nil {
+        return false, err
+    }
+
+    for _, fld := range table.Fields {
+        if field == fld {
+            return false, errors.New(fmt.Sprintf("field %s existed already", field))
+        }
+    }
+
+    table.Fields = append(table.Fields, field)
+
+    store := ctx.KVStore(k.storeKey)
+    store.Set([]byte(getTableKey(table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    return true, nil
+}
+
+// Remove a field
+func (k Keeper) RemoveField(ctx sdk.Context, name string, field string) (bool, error){
+    table, err := k.GetTable(ctx, name)
+    if err != nil {
+        return false, err
+    }
+
+    if field == "id" {
+        return false, errors.New(fmt.Sprintf("cannot remove field id"))
+    }
+
+    var foundField = false 
+    for i, fld := range table.Fields {
+        if field == fld {
+            foundField = true
+            table.Fields = append(table.Fields[:i], table.Fields[i+1:]...)
+            break
+        }
+    }
+    if !foundField {
+        return false, errors.New(fmt.Sprintf("field %s not existed", field))
+    }
+
+    store := ctx.KVStore(k.storeKey)
+    store.Set([]byte(getTableKey(table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    return true, nil
+}
+
+// Rename a field
+func (k Keeper) RenameField(ctx sdk.Context, name string, oldField string, newField string) (bool, error) {
+    table, err := k.GetTable(ctx, name)
+    if err != nil {
+        return false, err
+    }
+
+    if oldField == "" || newField == "" {
+        return false, errors.New(fmt.Sprintf("cannot have empty field name"))
+    }
+
+    oldField = strings.ToLower(oldField)
+    newField = strings.ToLower(newField)
+
+    if oldField == "id" || newField == "id" {
+        return false, errors.New(fmt.Sprintf("cannot rename field id"))
+    }
+
+
+    var foundField = false
+    var index = 0
+    for i, fld := range table.Fields {
+        if oldField == fld {
+            foundField = true
+            index = i
+            break
+        }
+        if newField == fld {
+            return false, errors.New(fmt.Sprintf("cannot rename to field %s", newField))
+        }
+    }
+    if !foundField {
+        return false, errors.New(fmt.Sprintf("field %s not found", oldField))
+    }
+
+    table.Fields[index] = newField
+
+    store := ctx.KVStore(k.storeKey)
+    store.Set([]byte(getTableKey(table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    return true, nil
+}
+
 /////////////////////////////
 //                         //
 // index related functions //
@@ -111,6 +201,7 @@ func (k Keeper) GetIndex(ctx sdk.Context, tableName string) ([]string, error) {
     k.cdc.MustUnmarshalBinaryBare(bz, &index_fields)
     return index_fields, nil
 }
+
 ////////////////////
 //                //
 // helper methods //
@@ -122,10 +213,19 @@ func (k Keeper) GetIndex(ctx sdk.Context, tableName string) ([]string, error) {
 // to make sure field id be in place
 func preProcessFields(fields []string) []string {
     var result = []string{"id"}
+    m := make(map[string]bool)
+    m["id"] = true
+
     for _, field := range fields {
         newName := strings.ToLower(field)
-        if newName != "id" {
-            result = append(result, newName)
+        if newName == "" {
+            continue
+        }
+        if m[newName] {
+            continue
+        } else {
+           m[newName] = true
+           result = append(result, newName)
         }
     }
     return result
