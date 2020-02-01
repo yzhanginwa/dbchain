@@ -18,6 +18,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgAddField(ctx, keeper, msg)
         case MsgRemoveField:
             return handleMsgRemoveField(ctx, keeper, msg)
+        case MsgRenameField:
+            return handleMsgRenameField(ctx, keeper, msg)
         case MsgCreateIndex:
             return handleMsgCreateIndex(ctx, keeper, msg)
         case MsgInsertRow:
@@ -63,6 +65,20 @@ func handleMsgRemoveField(ctx sdk.Context, keeper Keeper, msg MsgRemoveField) sd
         return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s does not exist yet!", msg.Field, msg.TableName)).Result()
     }
     keeper.RemoveField(ctx, msg.TableName, msg.Field)
+    return sdk.Result{}
+}
+
+func handleMsgRenameField(ctx sdk.Context, keeper Keeper, msg MsgRenameField) sdk.Result {
+    if !isAdmin(ctx, keeper, msg.Owner) {
+        return sdk.ErrUnknownRequest("Not authorized").Result()
+    }
+    if !keeper.IsFieldPresent(ctx, msg.TableName, msg.OldField) {
+        return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s does not exist yet!", msg.OldField, msg.TableName)).Result()
+    }
+    if keeper.IsFieldPresent(ctx, msg.TableName, msg.NewField) {
+        return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s exists already!", msg.NewField, msg.TableName)).Result()
+    }
+    keeper.RenameField(ctx, msg.TableName, msg.OldField, msg.NewField)
     return sdk.Result{}
 }
 

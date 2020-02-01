@@ -23,6 +23,7 @@ type (
     MsgCreateTable  = types.MsgCreateTable
     MsgAddField     = types.MsgAddField
     MsgRemoveField  = types.MsgRemoveField
+    MsgRenameField  = types.MsgRenameField
     MsgCreateIndex  = types.MsgCreateIndex
     MsgInsertRow    = types.MsgInsertRow
 

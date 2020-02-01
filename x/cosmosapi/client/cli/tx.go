@@ -29,6 +29,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdCreateTable(cdc),
         GetCmdAddField(cdc),
         GetCmdRemoveField(cdc),
+        GetCmdRenameField(cdc),
         GetCmdCreateIndex(cdc),
         GetCmdInsertRow(cdc),
         GetCmdAddAdminAccount(cdc),
@@ -100,6 +101,29 @@ func GetCmdRemoveField(cdc *codec.Codec) *cobra.Command {
             name := args[0]
             field := args[1]
             msg := types.NewMsgRemoveField(cliCtx.GetFromAddress(), name, field)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return err
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+func GetCmdRenameField(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "rename-field [name] [old-field] [new-field",
+        Short: "rename a field in a table",
+        Args:  cobra.ExactArgs(3),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            name := args[0]
+            oldField := args[1]
+            newField := args[2]
+            msg := types.NewMsgRenameField(cliCtx.GetFromAddress(), name, oldField, newField)
             err := msg.ValidateBasic()
             if err != nil {
                 return err

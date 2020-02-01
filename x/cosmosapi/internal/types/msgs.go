@@ -110,11 +110,11 @@ func (msg MsgAddField) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
-/////////////////
-//             //
+////////////////////
+//                //
 // MsgRemoveField //
-//             //
-/////////////////
+//                //
+////////////////////
 
 type MsgRemoveField struct {
     Owner sdk.AccAddress `json:"owner"`
@@ -157,6 +157,61 @@ func (msg MsgRemoveField) GetSignBytes() []byte {
 
 // GetSigners defines whose signature is required
 func (msg MsgRemoveField) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
+
+////////////////////
+//                //
+// MsgRenameField //
+//                //
+////////////////////
+
+type MsgRenameField struct {
+    Owner sdk.AccAddress `json:"owner"`
+    TableName string     `json:"table_name"`
+    OldField string      `json:"old_field"`
+    NewField string      `json:"new_field"`
+}
+
+func NewMsgRenameField(owner sdk.AccAddress, tableName string, oldField string, newField string) MsgRenameField {
+    return MsgRenameField {
+        Owner: owner,
+        TableName: tableName,
+        OldField: oldField,
+        NewField: newField,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgRenameField) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgRenameField) Type() string { return "rename_field" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgRenameField) ValidateBasic() sdk.Error {
+    if msg.Owner.Empty() {
+        return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.TableName) == 0 {
+        return sdk.ErrUnknownRequest("Table name cannot be empty")
+    }
+    if len(msg.OldField) ==0 {
+        return sdk.ErrUnknownRequest("Old field cannot be empty")
+    }
+    if len(msg.NewField) ==0 {
+        return sdk.ErrUnknownRequest("New field cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgRenameField) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgRenameField) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
