@@ -59,6 +59,53 @@ func (msg MsgCreateTable) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
+////////////////////
+//                //
+// MsgRemoveTable //
+//                //
+////////////////////
+
+// MsgRemoveTable defines a RemoveTable message
+type MsgRemoveTable struct {
+    Owner sdk.AccAddress `json:"owner"`
+    TableName string     `json:"table_name"`
+}
+
+// NewMsgRemoveTable is a constructor function for MsgCreatTable
+func NewMsgRemoveTable(owner sdk.AccAddress, tableName string) MsgRemoveTable {
+    return MsgRemoveTable {
+        Owner: owner,
+        TableName: tableName,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgRemoveTable) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgRemoveTable) Type() string { return "remove_table" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgRemoveTable) ValidateBasic() sdk.Error {
+    if msg.Owner.Empty() {
+        return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.TableName) == 0 {
+        return sdk.ErrUnknownRequest("Table name cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgRemoveTable) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgRemoveTable) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
+
 /////////////////
 //             //
 // MsgAddField //

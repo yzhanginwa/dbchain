@@ -66,6 +66,27 @@ func (k Keeper) CreateTable(ctx sdk.Context, owner sdk.AccAddress, name string, 
     store.Set([]byte(getTablesKey()), k.cdc.MustMarshalBinaryBare(tables))
 }
 
+// Remove a table
+func (k Keeper) RemoveTable(ctx sdk.Context, owner sdk.AccAddress, name string) {
+    store := ctx.KVStore(k.storeKey)
+    var tables []string
+    bz :=store.Get([]byte(getTablesKey()))
+    if bz != nil {
+        k.cdc.MustUnmarshalBinaryBare(bz, &tables)
+        for i, tbl := range tables {
+            if name == tbl {
+                tables = append(tables[:i], tables[i+1:]...)
+                if len(tables) < 1 {
+                    store.Delete([]byte(getTablesKey()))
+                } else {
+                    store.Set([]byte(getTablesKey()), k.cdc.MustMarshalBinaryBare(tables))
+                }
+                store.Delete([]byte(getTableKey(name)))
+                break
+            }
+        }
+    }
+}
 
 // Get a table 
 func (k Keeper) GetTable(ctx sdk.Context, name string) (types.Table, error) {
