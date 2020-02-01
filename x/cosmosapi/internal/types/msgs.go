@@ -59,6 +59,57 @@ func (msg MsgCreateTable) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
+/////////////////
+//             //
+// MsgAddField //
+//             //
+/////////////////
+
+type MsgAddField struct {
+    Owner sdk.AccAddress `json:"owner"`
+    TableName string     `json:"table_name"`
+    Field string         `json:"field"`
+}
+
+// NewMsgCreatePoll is a constructor function for MsgCreatPoll
+func NewMsgAddField(owner sdk.AccAddress, tableName string, field string) MsgAddField {
+    return MsgAddField {
+        Owner: owner,
+        TableName: tableName,
+        Field: field,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgAddField) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgAddField) Type() string { return "add_field" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgAddField) ValidateBasic() sdk.Error {
+    if msg.Owner.Empty() {
+        return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.TableName) == 0 {
+        return sdk.ErrUnknownRequest("Table name cannot be empty")
+    }
+    if len(msg.Field) ==0 {
+        return sdk.ErrUnknownRequest("Field cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgAddField) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgAddField) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
+
 ////////////////////
 //                //
 // MsgCreateIndex //

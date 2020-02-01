@@ -14,6 +14,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
         switch msg := msg.(type) {
         case MsgCreateTable:
             return handleMsgCreateTable(ctx, keeper, msg)
+        case MsgAddField:
+            return handleMsgAddField(ctx, keeper, msg)
         case MsgCreateIndex:
             return handleMsgCreateIndex(ctx, keeper, msg)
         case MsgInsertRow:
@@ -37,6 +39,17 @@ func handleMsgCreateTable(ctx sdk.Context, keeper Keeper, msg MsgCreateTable) sd
         return sdk.ErrUnknownRequest("Table name existed already!").Result()
     }
     keeper.CreateTable(ctx, msg.Owner, msg.TableName, msg.Fields)
+    return sdk.Result{}
+}
+
+func handleMsgAddField(ctx sdk.Context, keeper Keeper, msg MsgAddField) sdk.Result {
+    if !isAdmin(ctx, keeper, msg.Owner) {
+        return sdk.ErrUnknownRequest("Not authorized").Result()
+    }
+    if keeper.IsFieldPresent(ctx, msg.TableName, msg.Field) {
+        return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s exists already!", msg.Field, msg.TableName)).Result()
+    }
+    keeper.AddField(ctx, msg.TableName, msg.Field)
     return sdk.Result{}
 }
 

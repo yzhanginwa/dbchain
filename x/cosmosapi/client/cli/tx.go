@@ -27,6 +27,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
     cosmosapiTxCmd.AddCommand(client.PostCommands(
         GetCmdCreateTable(cdc),
+        GetCmdAddField(cdc),
         GetCmdCreateIndex(cdc),
         GetCmdInsertRow(cdc),
         GetCmdAddAdminAccount(cdc),
@@ -54,6 +55,28 @@ func GetCmdCreateTable(cdc *codec.Codec) *cobra.Command {
             name := args[0]
             fields := strings.Split(args[1], ",")
             msg := types.NewMsgCreateTable(cliCtx.GetFromAddress(), name, fields)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return err
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+func GetCmdAddField(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "add-field [name] [field]",
+        Short: "add a new field onto a table",
+        Args:  cobra.ExactArgs(2),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            name := args[0]
+            field := args[1]
+            msg := types.NewMsgAddField(cliCtx.GetFromAddress(), name, field)
             err := msg.ValidateBasic()
             if err != nil {
                 return err
