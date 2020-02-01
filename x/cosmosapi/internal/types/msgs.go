@@ -110,6 +110,56 @@ func (msg MsgAddField) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
+/////////////////
+//             //
+// MsgRemoveField //
+//             //
+/////////////////
+
+type MsgRemoveField struct {
+    Owner sdk.AccAddress `json:"owner"`
+    TableName string     `json:"table_name"`
+    Field string         `json:"field"`
+}
+
+func NewMsgRemoveField(owner sdk.AccAddress, tableName string, field string) MsgRemoveField {
+    return MsgRemoveField {
+        Owner: owner,
+        TableName: tableName,
+        Field: field,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgRemoveField) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgRemoveField) Type() string { return "remove_field" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgRemoveField) ValidateBasic() sdk.Error {
+    if msg.Owner.Empty() {
+        return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.TableName) == 0 {
+        return sdk.ErrUnknownRequest("Table name cannot be empty")
+    }
+    if len(msg.Field) ==0 {
+        return sdk.ErrUnknownRequest("Field cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgRemoveField) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgRemoveField) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
+
 ////////////////////
 //                //
 // MsgCreateIndex //

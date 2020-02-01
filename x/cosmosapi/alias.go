@@ -22,6 +22,7 @@ type (
     Keeper          = keeper.Keeper
     MsgCreateTable  = types.MsgCreateTable
     MsgAddField     = types.MsgAddField
+    MsgRemoveField  = types.MsgRemoveField
     MsgCreateIndex  = types.MsgCreateIndex
     MsgInsertRow    = types.MsgInsertRow
 

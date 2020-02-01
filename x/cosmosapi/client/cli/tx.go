@@ -28,6 +28,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
     cosmosapiTxCmd.AddCommand(client.PostCommands(
         GetCmdCreateTable(cdc),
         GetCmdAddField(cdc),
+        GetCmdRemoveField(cdc),
         GetCmdCreateIndex(cdc),
         GetCmdInsertRow(cdc),
         GetCmdAddAdminAccount(cdc),
@@ -77,6 +78,28 @@ func GetCmdAddField(cdc *codec.Codec) *cobra.Command {
             name := args[0]
             field := args[1]
             msg := types.NewMsgAddField(cliCtx.GetFromAddress(), name, field)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return err
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+func GetCmdRemoveField(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "remove-field [name] [field]",
+        Short: "remove a field from a table",
+        Args:  cobra.ExactArgs(2),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            name := args[0]
+            field := args[1]
+            msg := types.NewMsgRemoveField(cliCtx.GetFromAddress(), name, field)
             err := msg.ValidateBasic()
             if err != nil {
                 return err
