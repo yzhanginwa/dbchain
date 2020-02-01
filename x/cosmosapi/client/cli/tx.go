@@ -35,6 +35,12 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
     return cosmosapiTxCmd
 }
 
+////////////////////
+//                //
+// schema related //
+//                //
+////////////////////
+
 // GetCmdCreatePoll is the CLI command for sending a CreatePoll transaction
 func GetCmdCreateTable(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
@@ -81,6 +87,11 @@ func GetCmdCreateIndex(cdc *codec.Codec) *cobra.Command {
     }
 }
 
+///////////////////////////////
+//                           //
+// data manipulation related //
+//                           //
+///////////////////////////////
 
 func GetCmdInsertRow(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
@@ -115,6 +126,11 @@ func GetCmdInsertRow(cdc *codec.Codec) *cobra.Command {
     }
 }
 
+/////////////////////////
+//                     //
+// admin group related //
+//                     //
+/////////////////////////
 
 func GetCmdAddAdminAccount(cdc * codec.Codec) *cobra.Command {
     return &cobra.Command{
