@@ -14,10 +14,10 @@ func SaveCurrentBlockInfo(height int64, timeStamp time.Time) {
     blockTime = timeStamp
 }
 
-func GetcurrentBlockHeight() int64 {
+func GetCurrentBlockHeight() int64 {
     return blockHeight
 }
 
-func GetcurrentBlockTime() time.Time {
+func GetCurrentBlockTime() time.Time {
     return blockTime
 }

@@ -233,7 +233,7 @@ func (k Keeper) GetIndex(ctx sdk.Context, tableName string) ([]string, error) {
 // to make sure the fields be lowercase
 // to make sure field id be in place
 func preProcessFields(fields []string) []string {
-    var result = []string{"id"}
+    var result = []string{"id", "created_by", "created_at"}
     m := make(map[string]bool)
     m["id"] = true
 

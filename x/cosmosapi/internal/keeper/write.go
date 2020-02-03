@@ -2,8 +2,10 @@ package keeper
 
 import (
     "fmt"
+    "strconv"
     "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
+    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/other"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 )
 
@@ -13,6 +15,12 @@ func (k Keeper) Insert(ctx sdk.Context, tableName string, fields types.RowFields
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get id for table %s", tableName))
     }
+
+    // to set the 2 special fields
+    fields["id"] = strconv.Itoa(int(id))
+    fields["created_by"] = owner.String()
+    fields["created_at"] = other.GetCurrentBlockTime().String()
+
     k.Write(ctx, tableName, id, fields, owner)
     k.updateIndex(ctx, tableName, id, fields)
     return id, nil
