@@ -1,6 +1,7 @@
 package cosmosapi
 
 import (
+    "time"
     "encoding/json"
 
     "github.com/gorilla/mux"
@@ -24,7 +25,10 @@ var (
 )
 
 // app module Basics object
-type AppModuleBasic struct{}
+type AppModuleBasic struct{
+    blockHeight int64
+    blockTime   time.Time
+}
 
 func (AppModuleBasic) Name() string {
     return ModuleName
@@ -100,7 +104,12 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
     return NewQuerier(am.keeper)
 }
 
-func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
+// the request contains block header info from tendermint 
+// we can use the height and/or time as time stamp for the application
+func (am AppModule) BeginBlock(_ sdk.Context, rbb abci.RequestBeginBlock) {
+    header := rbb.Header
+    SaveCurrentBlockInfo(header.Height, header.Time)
+}
 
 func (am AppModule) EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate {
     return []abci.ValidatorUpdate{}
