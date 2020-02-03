@@ -12,6 +12,7 @@ import (
     "github.com/cosmos/cosmos-sdk/x/bank"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/client/cli"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/client/rest"
+    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/other"
 
     "github.com/cosmos/cosmos-sdk/client/context"
     sdk "github.com/cosmos/cosmos-sdk/types"
@@ -108,7 +109,7 @@ func (am AppModule) NewQuerierHandler() sdk.Querier {
 // we can use the height and/or time as time stamp for the application
 func (am AppModule) BeginBlock(_ sdk.Context, rbb abci.RequestBeginBlock) {
     header := rbb.Header
-    SaveCurrentBlockInfo(header.Height, header.Time)
+    other.SaveCurrentBlockInfo(header.Height, header.Time)
 }
 
 func (am AppModule) EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate {

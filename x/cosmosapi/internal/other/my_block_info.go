@@ -1,4 +1,4 @@
-package cosmosapi
+package other
 
 import (
     "time"
