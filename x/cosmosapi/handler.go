@@ -2,6 +2,7 @@ package cosmosapi
 
 import (
     "fmt"
+    "strings"
     "bytes"
     "encoding/json"
     sdk "github.com/cosmos/cosmos-sdk/types"
@@ -64,10 +65,12 @@ func handleMsgAddField(ctx sdk.Context, keeper Keeper, msg MsgAddField) sdk.Resu
     if !isAdmin(ctx, keeper, msg.Owner) {
         return sdk.ErrUnknownRequest("Not authorized").Result()
     }
-    if keeper.IsFieldPresent(ctx, msg.TableName, msg.Field) {
+
+    field := strings.ToLower(msg.Field)
+    if keeper.IsFieldPresent(ctx, msg.TableName, field) {
         return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s exists already!", msg.Field, msg.TableName)).Result()
     }
-    keeper.AddField(ctx, msg.TableName, msg.Field)
+    keeper.AddField(ctx, msg.TableName, field)
     return sdk.Result{}
 }
 
@@ -89,10 +92,12 @@ func handleMsgRenameField(ctx sdk.Context, keeper Keeper, msg MsgRenameField) sd
     if !keeper.IsFieldPresent(ctx, msg.TableName, msg.OldField) {
         return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s does not exist yet!", msg.OldField, msg.TableName)).Result()
     }
-    if keeper.IsFieldPresent(ctx, msg.TableName, msg.NewField) {
+
+    newField := strings.ToLower(msg.NewField)
+    if keeper.IsFieldPresent(ctx, msg.TableName, newField) {
         return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s exists already!", msg.NewField, msg.TableName)).Result()
     }
-    keeper.RenameField(ctx, msg.TableName, msg.OldField, msg.NewField)
+    keeper.RenameField(ctx, msg.TableName, msg.OldField, newField)
     return sdk.Result{}
 }
 
