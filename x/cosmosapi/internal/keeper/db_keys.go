@@ -38,6 +38,11 @@ func getMetaTableIndexKey(tableName string) string {
     return fmt.Sprintf("%s:idx:%s", KeyPrefixMeta, tableName)
 }
 
+// to store the options for a table
+func getTableOptionsKey(tableName string) string {
+    return fmt.Sprintf("%s:opt:%s", KeyPrefixMeta, tableName)
+}
+
 //////////////////
 //              //
 // data related //
