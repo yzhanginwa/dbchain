@@ -20,6 +20,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
     cosmosapiQueryCmd.AddCommand(client.GetCommands(
         GetCmdTables(storeKey, cdc),
         GetCmdIndex(storeKey, cdc),
+        GetCmdOption(storeKey, cdc),
         GetCmdFindRow(storeKey, cdc),
         GetCmdFindIdsBy(storeKey, cdc),
         GetCmdShowAdminGroup(storeKey, cdc),
@@ -72,6 +73,28 @@ func GetCmdIndex(queryRoute string, cdc *codec.Codec) *cobra.Command {
             res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/index/%s", queryRoute, args[0]), nil)
             if err != nil {
                 fmt.Printf("could not index index of table %s", args[0])
+                return nil
+            }
+
+            var out types.QueryTables // QueryTables is a []string. It could be reused here
+            cdc.MustUnmarshalJSON(res, &out)
+            return cliCtx.PrintOutput(out)
+        },
+    }
+}
+
+func GetCmdOption(queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "option",
+        Short: "show table options",
+        Args: cobra.ExactArgs(1),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            // args[0] is table name
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/option/%s", queryRoute, args[0]), nil)
+            if err != nil {
+                fmt.Printf("could not get options of table %s", args[0])
                 return nil
             }
 

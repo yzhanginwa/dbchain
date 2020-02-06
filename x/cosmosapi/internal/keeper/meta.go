@@ -217,6 +217,19 @@ func (k Keeper) ModifyOption(ctx sdk.Context, owner sdk.AccAddress, tableName st
     }
 }
 
+func (k Keeper) GetOption(ctx sdk.Context, tableName string) ([]string, error) {
+    store := ctx.KVStore(k.storeKey)
+    key := getTableOptionsKey(tableName)
+    bz := store.Get([]byte(key))
+    if bz == nil {
+        return []string{}, errors.New(fmt.Sprintf("Option of table %s not found", tableName))
+    }
+    var options []string
+    k.cdc.MustUnmarshalBinaryBare(bz, &options)
+    return options, nil
+}
+
+
 /////////////////////////////
 //                         //
 // index related functions //

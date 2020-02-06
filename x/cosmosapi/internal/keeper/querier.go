@@ -14,6 +14,7 @@ import (
 const (
     QueryTables   = "tables"
     QueryIndex    = "index"
+    QueryOption   = "option"
     QueryRow      = "find"
     QueryIdsBy    = "find_by"
     QueryAdminGroup = "admin_group"
@@ -31,6 +32,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             }
         case QueryIndex:
             return queryIndex(ctx, path[1:], req, keeper)
+        case QueryOption:
+            return queryOption(ctx, path[1:], req, keeper)
         case QueryRow:
             return queryRow(ctx, path[1:], req, keeper)
         case QueryIdsBy:
@@ -81,6 +84,21 @@ func queryIndex(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, index)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+    options, err := keeper.GetOption(ctx, path[0])
+
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not exist",  path[0]))
+    }
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, options)
     if err != nil {
         panic("could not marshal result to JSON")
     }
