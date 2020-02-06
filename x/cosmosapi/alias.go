@@ -25,6 +25,7 @@ type (
     MsgAddField     = types.MsgAddField
     MsgRemoveField  = types.MsgRemoveField
     MsgRenameField  = types.MsgRenameField
+    MsgModifyOption = types.MsgModifyOption
     MsgCreateIndex  = types.MsgCreateIndex
     MsgInsertRow    = types.MsgInsertRow
 

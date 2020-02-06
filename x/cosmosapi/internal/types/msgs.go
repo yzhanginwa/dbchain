@@ -313,6 +313,68 @@ func (msg MsgCreateIndex) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
+
+/////////////////////
+//                 //
+// MsgModifyOption //
+//                 //
+/////////////////////
+
+type MsgModifyOption struct {
+    Owner sdk.AccAddress `json:"owner"`
+    TableName string     `json:"table_name"`
+    Action string        `json:"action"`
+    Option string        `json:"option"`
+}
+
+// NewMsgCreatePoll is a constructor function for MsgCreatPoll
+func NewMsgModifyOption(owner sdk.AccAddress, tableName string, action string, option string) MsgModifyOption {
+    return MsgModifyOption {
+        Owner: owner,
+        TableName: tableName,
+        Action: action,
+        Option: option,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgModifyOption) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgModifyOption) Type() string { return "modify_option" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgModifyOption) ValidateBasic() sdk.Error {
+    if msg.Owner.Empty() {
+        return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.TableName) == 0 {
+        return sdk.ErrUnknownRequest("Table name cannot be empty")
+    }
+    if len(msg.Action) ==0 {
+        return sdk.ErrUnknownRequest("Action cannot be empty")
+    }
+
+    if !(msg.Action == "add" || msg.Action == "remove") {
+        return sdk.ErrUnknownRequest("Action has to be either add or remove")
+    }
+
+    if len(msg.Option) ==0 {
+        return sdk.ErrUnknownRequest("Option cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgModifyOption) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgModifyOption) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
+
 //////////////////
 //              //
 // MsgInsertRow //

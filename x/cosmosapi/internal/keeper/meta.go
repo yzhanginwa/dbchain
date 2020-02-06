@@ -190,6 +190,33 @@ func (k Keeper) RenameField(ctx sdk.Context, name string, oldField string, newFi
     return true, nil
 }
 
+func (k Keeper) ModifyOption(ctx sdk.Context, owner sdk.AccAddress, tableName string, action string, option string) {
+    store := ctx.KVStore(k.storeKey)
+    key := getTableOptionsKey(tableName)
+    var options []string
+    var result []string
+
+    bz := store.Get([]byte(key))
+    if bz != nil {
+        k.cdc.MustUnmarshalBinaryBare(bz, &options)
+    }
+    if action == "add" {
+        result = append(options, option)
+    } else {
+        for _, opt := range options {
+            if opt == option {
+                continue
+            }
+            result = append(result, opt)
+        }
+    }
+    if len(result) > 0 {
+        store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(result))
+    } else {
+        store.Delete([]byte(key))
+    }
+}
+
 /////////////////////////////
 //                         //
 // index related functions //

@@ -32,6 +32,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdRemoveField(cdc),
         GetCmdRenameField(cdc),
         GetCmdCreateIndex(cdc),
+        GetCmdModifyOption(cdc),
         GetCmdInsertRow(cdc),
         GetCmdAddAdminAccount(cdc),
     )...)
@@ -169,6 +170,30 @@ func GetCmdCreateIndex(cdc *codec.Codec) *cobra.Command {
             tableName := args[0]
             field := args[1]
             msg := types.NewMsgCreateIndex(cliCtx.GetFromAddress(), tableName, field)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return err
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+func GetCmdModifyOption(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "modify-option [tableName] [action] [option]",
+        Short: "create a new index",
+        Args:  cobra.ExactArgs(3),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            tableName := args[0]
+            action := args[1]
+            option := args[2]
+
+            msg := types.NewMsgModifyOption(cliCtx.GetFromAddress(), tableName, action, option)
             err := msg.ValidateBasic()
             if err != nil {
                 return err

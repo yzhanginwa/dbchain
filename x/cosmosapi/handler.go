@@ -25,6 +25,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgRenameField(ctx, keeper, msg)
         case MsgCreateIndex:
             return handleMsgCreateIndex(ctx, keeper, msg)
+        case MsgModifyOption:
+            return handleMsgModifyOption(ctx, keeper, msg)
         case MsgInsertRow:
             return handleMsgInsertRow(ctx, keeper, msg)
         case MsgAddAdminAccount:
@@ -109,6 +111,18 @@ func handleMsgCreateIndex(ctx sdk.Context, keeper Keeper, msg MsgCreateIndex) sd
         return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s does not exist yet!", msg.Field, msg.TableName)).Result()
     }
     keeper.CreateIndex(ctx, msg.Owner, msg.TableName, msg.Field)
+    return sdk.Result{}
+}
+
+func handleMsgModifyOption(ctx sdk.Context, keeper Keeper, msg MsgModifyOption) sdk.Result {
+    if !isAdmin(ctx, keeper, msg.Owner) {
+        return sdk.ErrUnknownRequest("Not authorized").Result()
+    }
+    if !keeper.IsTablePresent(ctx, msg.TableName) {
+        return sdk.ErrUnknownRequest("Table name does not exist!").Result()
+    }
+
+    keeper.ModifyOption(ctx, msg.Owner, msg.TableName, msg.Action, msg.Option)
     return sdk.Result{}
 }
 
