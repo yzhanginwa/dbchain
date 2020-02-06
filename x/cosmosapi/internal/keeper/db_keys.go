@@ -12,6 +12,12 @@ const (
     KeyPrefixGroup = "grp"
 )
 
+//////////////////
+//              //
+// meta related //
+//              //
+//////////////////
+
 // to store name of all tables
 func getTablesKey() string {
     return fmt.Sprintf("%s:tables", KeyPrefixMeta)
@@ -32,16 +38,16 @@ func getMetaTableIndexKey(tableName string) string {
     return fmt.Sprintf("%s:idx:%s", KeyPrefixMeta, tableName)
 }
 
-// to store the id of a indexed field
-func getIndexKey(tableName string, fieldName string, value string) string {
-    return fmt.Sprintf("%s:%s:%s:%s", KeyPrefixIndex, tableName, fieldName, value)
-}
-
 //////////////////
 //              //
 // data related //
 //              //
 //////////////////
+
+// to store the id of a indexed field
+func getIndexKey(tableName string, fieldName string, value string) string {
+    return fmt.Sprintf("%s:%s:%s:%s", KeyPrefixIndex, tableName, fieldName, value)
+}
 
 // to store the value of a fields on a record of a table.
 func getDataKey(tableName string, id uint, fieldName string) string {
