@@ -69,8 +69,7 @@ func (k Keeper) FindBy(ctx sdk.Context, tableName string, field string,  value s
     var mold string
     for ; iter.Valid(); iter.Next() {
         key := iter.Key()
-        k.cdc.MustUnmarshalBinaryBare(key, &mold)
-        keyString := fmt.Sprint(mold)
+        keyString := string(key)
         fn := getFieldNameFromDataKey(keyString)
         if fn == field {
 	    val := iter.Value()
