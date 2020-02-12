@@ -49,7 +49,7 @@ func showRowHandler(cliCtx context.CLIContext, storeName string) http.HandlerFun
 func showIdsByHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
-        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find_by/%s/%s/%s", storeName, vars["name"], vars["field"], vars["value"]), nil)
+        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find_by/%s/%s/%s/%s", storeName, vars["accessToken"], vars["name"], vars["field"], vars["value"]), nil)
         if err != nil {
             rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
             return
