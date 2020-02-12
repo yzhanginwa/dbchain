@@ -135,6 +135,8 @@ func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keep
 func queryIdsBy(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     accessCode:= path[0]
     addr, err := verifyAccessCode(accessCode)
+    fmt.Printf("Address is %s", addr)  // to make program compile
+
     if err != nil {
         return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
     }

@@ -222,7 +222,7 @@ func (k Keeper) GetOption(ctx sdk.Context, tableName string) ([]string, error) {
     key := getTableOptionsKey(tableName)
     bz := store.Get([]byte(key))
     if bz == nil {
-        return []string{}, errors.New(fmt.Sprintf("Option of table %s not found", tableName))
+        return []string{}, nil
     }
     var options []string
     k.cdc.MustUnmarshalBinaryBare(bz, &options)
