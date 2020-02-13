@@ -33,6 +33,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdRenameField(cdc),
         GetCmdCreateIndex(cdc),
         GetCmdModifyOption(cdc),
+        GetCmdModifyFieldOption(cdc),
         GetCmdInsertRow(cdc),
         GetCmdAddAdminAccount(cdc),
     )...)
@@ -182,8 +183,8 @@ func GetCmdCreateIndex(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdModifyOption(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "modify-option [tableName] [action] [option]",
-        Short: "create a new index",
+        Use:   "modify-table-option [tableName] [action] [option]",
+        Short: "modify table options",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -203,6 +204,32 @@ func GetCmdModifyOption(cdc *codec.Codec) *cobra.Command {
         },
     }
 }
+
+func GetCmdModifyFieldOption(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "modify-field-option [tableName] [fieldName] [action] [option]",
+        Short: "modify field options",
+        Args:  cobra.ExactArgs(4),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            tableName := args[0]
+            fieldName := args[1]
+            action := args[2]
+            option := args[3]
+
+            msg := types.NewMsgModifyFieldOption(cliCtx.GetFromAddress(), tableName, fieldName, action, option)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return err
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
 
 ///////////////////////////////
 //                           //

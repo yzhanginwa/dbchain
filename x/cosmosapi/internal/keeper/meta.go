@@ -229,6 +229,44 @@ func (k Keeper) GetOption(ctx sdk.Context, tableName string) ([]string, error) {
     return options, nil
 }
 
+func (k Keeper) ModifyFieldOption(ctx sdk.Context, owner sdk.AccAddress, tableName string, fieldName string, action string, option string) {
+    store := ctx.KVStore(k.storeKey)
+    key := getFieldOptionsKey(tableName, fieldName)
+    var options []string
+    var result []string
+
+    bz := store.Get([]byte(key))
+    if bz != nil {
+        k.cdc.MustUnmarshalBinaryBare(bz, &options)
+    }
+    if action == "add" {
+        result = append(options, option)
+    } else {
+        for _, opt := range options {
+            if opt == option {
+                continue
+            }
+            result = append(result, opt)
+        }
+    }
+    if len(result) > 0 {
+        store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(result))
+    } else {
+        store.Delete([]byte(key))
+    }
+}
+
+func (k Keeper) GetFieldOption(ctx sdk.Context, tableName string, fieldName string) ([]string, error) {
+    store := ctx.KVStore(k.storeKey)
+    key := getFieldOptionsKey(tableName, fieldName)
+    bz := store.Get([]byte(key))
+    if bz == nil {
+        return []string{}, nil
+    }
+    var options []string
+    k.cdc.MustUnmarshalBinaryBare(bz, &options)
+    return options, nil
+}
 
 /////////////////////////////
 //                         //

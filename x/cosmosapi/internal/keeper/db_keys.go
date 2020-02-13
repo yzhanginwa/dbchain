@@ -43,6 +43,11 @@ func getTableOptionsKey(tableName string) string {
     return fmt.Sprintf("%s:opt:%s", KeyPrefixMeta, tableName)
 }
 
+func getFieldOptionsKey(tableName string, fieldName string) string {
+    return fmt.Sprintf("%s:fldopt:%s:%s", KeyPrefixMeta, tableName, fieldName)
+}
+
+
 //////////////////
 //              //
 // data related //

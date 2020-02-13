@@ -313,7 +313,6 @@ func (msg MsgCreateIndex) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
-
 /////////////////////
 //                 //
 // MsgModifyOption //
@@ -372,6 +371,73 @@ func (msg MsgModifyOption) GetSignBytes() []byte {
 
 // GetSigners defines whose signature is required
 func (msg MsgModifyOption) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
+
+
+//////////////////////////
+//                      //
+// MsgModifyFieldOption //
+//                      //
+//////////////////////////
+
+type MsgModifyFieldOption struct {
+    Owner sdk.AccAddress `json:"owner"`
+    TableName string     `json:"table_name"`
+    FieldName string     `json:"field_name"`
+    Action string        `json:"action"`
+    Option string        `json:"option"`
+}
+
+// NewMsgCreatePoll is a constructor function for MsgCreatPoll
+func NewMsgModifyFieldOption(owner sdk.AccAddress, tableName string, fieldName string, action string, option string) MsgModifyFieldOption {
+    return MsgModifyFieldOption {
+        Owner: owner,
+        TableName: tableName,
+        FieldName: fieldName,
+        Action: action,
+        Option: option,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgModifyFieldOption) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgModifyFieldOption) Type() string { return "modify_field_option" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgModifyFieldOption) ValidateBasic() sdk.Error {
+    if msg.Owner.Empty() {
+        return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.TableName) == 0 {
+        return sdk.ErrUnknownRequest("Table name cannot be empty")
+    }
+    if len(msg.FieldName) == 0 {
+        return sdk.ErrUnknownRequest("Field name cannot be empty")
+    }
+    if len(msg.Action) ==0 {
+        return sdk.ErrUnknownRequest("Action cannot be empty")
+    }
+
+    if !(msg.Action == "add" || msg.Action == "remove") {
+        return sdk.ErrUnknownRequest("Action has to be either add or remove")
+    }
+
+    if len(msg.Option) ==0 {
+        return sdk.ErrUnknownRequest("Option cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgModifyFieldOption) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgModifyFieldOption) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
