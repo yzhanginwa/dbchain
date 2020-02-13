@@ -22,6 +22,7 @@ const (
     QueryTables   = "tables"
     QueryIndex    = "index"
     QueryOption   = "option"
+    QueryFieldOption   = "field_option"
     QueryRow      = "find"
     QueryIdsBy    = "find_by"
     QueryAdminGroup = "admin_group"
@@ -44,6 +45,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryIndex(ctx, path[1:], req, keeper)
         case QueryOption:
             return queryOption(ctx, path[1:], req, keeper)
+        case QueryFieldOption:
+            return queryFieldOption(ctx, path[1:], req, keeper)
         case QueryRow:
             return queryRow(ctx, path[1:], req, keeper)
         case QueryIdsBy:
@@ -116,6 +119,20 @@ func queryOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
     return res, nil
 }
 
+func queryFieldOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+    options, err := keeper.GetFieldOption(ctx, path[0], path[1])
+
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Field %s.%s does not exist",  path[0], path[1]))
+    }
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, options)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
 func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     u32, err := strconv.ParseUint(path[1], 10, 32)
     fields, err := keeper.Find(ctx, path[0], uint(u32))
