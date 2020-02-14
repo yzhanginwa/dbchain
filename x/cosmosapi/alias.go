@@ -22,7 +22,7 @@ type (
     Keeper          = keeper.Keeper
     MsgCreateTable  = types.MsgCreateTable
     MsgDropTable    = types.MsgDropTable
-    MsgAddField     = types.MsgAddField
+    MsgAddColumn    = types.MsgAddColumn
     MsgRemoveField  = types.MsgRemoveField
     MsgRenameField  = types.MsgRenameField
     MsgModifyOption = types.MsgModifyOption

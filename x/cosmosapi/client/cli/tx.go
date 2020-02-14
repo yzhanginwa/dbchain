@@ -29,7 +29,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
     cosmosapiTxCmd.AddCommand(client.PostCommands(
         GetCmdCreateTable(cdc),
         GetCmdDropTable(cdc),
-        GetCmdAddField(cdc),
+        GetCmdAddColumn(cdc),
         GetCmdRemoveField(cdc),
         GetCmdRenameField(cdc),
         GetCmdCreateIndex(cdc),
@@ -94,10 +94,10 @@ func GetCmdDropTable(cdc *codec.Codec) *cobra.Command {
     }
 }
 
-func GetCmdAddField(cdc *codec.Codec) *cobra.Command {
+func GetCmdAddColumn(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "add-field [name] [field]",
-        Short: "add a new field onto a table",
+        Use:   "add-column [name] [field]",
+        Short: "add a new column onto a table",
         Args:  cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -105,7 +105,7 @@ func GetCmdAddField(cdc *codec.Codec) *cobra.Command {
 
             name := args[0]
             field := args[1]
-            msg := types.NewMsgAddField(cliCtx.GetFromAddress(), name, field)
+            msg := types.NewMsgAddColumn(cliCtx.GetFromAddress(), name, field)
             err := msg.ValidateBasic()
             if err != nil {
                 return err

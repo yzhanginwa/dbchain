@@ -15,7 +15,7 @@ func init() {
 func RegisterCodec(cdc *codec.Codec) {
     cdc.RegisterConcrete(MsgCreateTable{}, "cosmosapi/CreateTable", nil)
     cdc.RegisterConcrete(MsgDropTable{}, "cosmosapi/DropTable", nil)
-    cdc.RegisterConcrete(MsgAddField{}, "cosmosapi/AddField", nil)
+    cdc.RegisterConcrete(MsgAddColumn{}, "cosmosapi/AddColumn", nil)
     cdc.RegisterConcrete(MsgRemoveField{}, "cosmosapi/RemoveField", nil)
     cdc.RegisterConcrete(MsgRenameField{}, "cosmosapi/RenameField", nil)
     cdc.RegisterConcrete(MsgModifyOption{}, "cosmosapi/ModifyOption", nil)

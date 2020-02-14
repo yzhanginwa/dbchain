@@ -103,21 +103,21 @@ func (msg MsgDropTable) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
-/////////////////
-//             //
-// MsgAddField //
-//             //
-/////////////////
+//////////////////
+//              //
+// MsgAddColumn //
+//              //
+//////////////////
 
-type MsgAddField struct {
+type MsgAddColumn struct {
     Owner sdk.AccAddress `json:"owner"`
     TableName string     `json:"table_name"`
     Field string         `json:"field"`
 }
 
 // NewMsgCreatePoll is a constructor function for MsgCreatPoll
-func NewMsgAddField(owner sdk.AccAddress, tableName string, field string) MsgAddField {
-    return MsgAddField {
+func NewMsgAddColumn(owner sdk.AccAddress, tableName string, field string) MsgAddColumn {
+    return MsgAddColumn {
         Owner: owner,
         TableName: tableName,
         Field: field,
@@ -125,13 +125,13 @@ func NewMsgAddField(owner sdk.AccAddress, tableName string, field string) MsgAdd
 }
 
 // Route should return the name of the module
-func (msg MsgAddField) Route() string { return RouterKey }
+func (msg MsgAddColumn) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgAddField) Type() string { return "add_field" }
+func (msg MsgAddColumn) Type() string { return "add_field" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgAddField) ValidateBasic() sdk.Error {
+func (msg MsgAddColumn) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
     }
@@ -145,12 +145,12 @@ func (msg MsgAddField) ValidateBasic() sdk.Error {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgAddField) GetSignBytes() []byte {
+func (msg MsgAddColumn) GetSignBytes() []byte {
     return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg MsgAddField) GetSigners() []sdk.AccAddress {
+func (msg MsgAddColumn) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 

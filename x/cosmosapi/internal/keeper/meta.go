@@ -101,7 +101,7 @@ func (k Keeper) GetTable(ctx sdk.Context, name string) (types.Table, error) {
 }
 
 // Add a field
-func (k Keeper) AddField(ctx sdk.Context, name string, field string) (bool, error) {
+func (k Keeper) AddColumn(ctx sdk.Context, name string, field string) (bool, error) {
     table, err := k.GetTable(ctx, name)
     if err != nil {
         return false, err
