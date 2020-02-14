@@ -31,6 +31,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgModifyFieldOption(ctx, keeper, msg)
         case MsgInsertRow:
             return handleMsgInsertRow(ctx, keeper, msg)
+        case MsgDeleteRow:
+            return handleMsgDeleteRow(ctx, keeper, msg)
         case MsgAddAdminAccount:
             return handleMsgAddAdminAccount(ctx, keeper, msg)
         default:
@@ -151,6 +153,15 @@ func handleMsgInsertRow(ctx sdk.Context, keeper Keeper, msg types.MsgInsertRow) 
     }
 
     keeper.Insert(ctx, msg.TableName, rowFields, msg.Owner)
+    return sdk.Result{}
+}
+
+func handleMsgDeleteRow(ctx sdk.Context, keeper Keeper, msg types.MsgDeleteRow) sdk.Result {
+    if !keeper.IsTablePresent(ctx, msg.TableName) {
+        return sdk.ErrUnknownRequest(fmt.Sprintf("Table % does not exist!", msg.TableName)).Result()
+    }
+
+    keeper.Delete(ctx, msg.TableName, msg.Id, msg.Owner)
     return sdk.Result{}
 }
 

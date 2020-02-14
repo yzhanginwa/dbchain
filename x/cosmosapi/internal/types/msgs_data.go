@@ -57,3 +57,53 @@ func (msg MsgInsertRow) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
+//////////////////
+//              //
+// MsgDeleteRow //
+//              //
+//////////////////
+
+type MsgDeleteRow struct {
+    Owner sdk.AccAddress `json:"owner"`
+    TableName string     `json:"table_name"`
+    Id uint              `json:"id"`
+}
+
+func NewMsgDeleteRow(owner sdk.AccAddress, tableName string, id uint) MsgDeleteRow {
+    return MsgDeleteRow{
+        Owner: owner,
+        TableName: tableName,
+        Id: id,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgDeleteRow) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgDeleteRow) Type() string { return "delete_row" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgDeleteRow) ValidateBasic() sdk.Error {
+    if msg.Owner.Empty() {
+        return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.TableName) == 0 {
+        return sdk.ErrUnknownRequest("Table name cannot be empty")
+    }
+    if msg.Id ==0 {
+        return sdk.ErrUnknownRequest("Id cannot be zero")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgDeleteRow) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgDeleteRow) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
+

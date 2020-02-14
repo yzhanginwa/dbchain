@@ -63,7 +63,7 @@ func (k Keeper) Write(ctx sdk.Context, tableName string, id uint, fields types.R
     return id, nil
 }
 
-func (k Keeper) Delete(ctx sdk.Context, tableName string, id uint) (uint, error){
+func (k Keeper) Delete(ctx sdk.Context, tableName string, id uint, owner sdk.AccAddress) (uint, error){
     store := ctx.KVStore(k.storeKey)
 
     fieldNames, err := k.getTableFields(ctx, tableName)
@@ -77,9 +77,10 @@ func (k Keeper) Delete(ctx sdk.Context, tableName string, id uint) (uint, error)
 
     for _, fieldName := range fieldNames {
         key := getDataKey(tableName, id, fieldName)
-    store.Delete([]byte(key)) 
+        store.Delete([]byte(key)) 
     }
 
+    // TODO: to remove the related indexes
     return id, nil
 }
 

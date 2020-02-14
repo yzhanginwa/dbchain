@@ -4,6 +4,7 @@ import (
     "fmt"
     "errors"
     "strings"
+    "strconv"
     "encoding/json"
     "github.com/spf13/cobra"
 
@@ -35,6 +36,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdModifyOption(cdc),
         GetCmdModifyFieldOption(cdc),
         GetCmdInsertRow(cdc),
+        GetCmdDeleteRow(cdc),
         GetCmdAddAdminAccount(cdc),
     )...)
 
@@ -279,9 +281,12 @@ func GetCmdDeleteRow(cdc *codec.Codec) *cobra.Command {
             txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
             name := args[0]
-            id   := args[1]
+            id, err := strconv.ParseUint(args[1], 10, 0)
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
 
-            msg := types.NewMsgDeleteRow(cliCtx.GetFromAddress(), name, id)
+            msg := types.NewMsgDeleteRow(cliCtx.GetFromAddress(), name, uint(id))
             err = msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
