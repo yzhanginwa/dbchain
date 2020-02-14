@@ -156,18 +156,18 @@ func (msg MsgAddColumn) GetSigners() []sdk.AccAddress {
 
 ////////////////////
 //                //
-// MsgRemoveField //
+// MsgDropColumn //
 //                //
 ////////////////////
 
-type MsgRemoveField struct {
+type MsgDropColumn struct {
     Owner sdk.AccAddress `json:"owner"`
     TableName string     `json:"table_name"`
     Field string         `json:"field"`
 }
 
-func NewMsgRemoveField(owner sdk.AccAddress, tableName string, field string) MsgRemoveField {
-    return MsgRemoveField {
+func NewMsgDropColumn(owner sdk.AccAddress, tableName string, field string) MsgDropColumn {
+    return MsgDropColumn {
         Owner: owner,
         TableName: tableName,
         Field: field,
@@ -175,13 +175,13 @@ func NewMsgRemoveField(owner sdk.AccAddress, tableName string, field string) Msg
 }
 
 // Route should return the name of the module
-func (msg MsgRemoveField) Route() string { return RouterKey }
+func (msg MsgDropColumn) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgRemoveField) Type() string { return "remove_field" }
+func (msg MsgDropColumn) Type() string { return "drop_column" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgRemoveField) ValidateBasic() sdk.Error {
+func (msg MsgDropColumn) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
     }
@@ -195,12 +195,12 @@ func (msg MsgRemoveField) ValidateBasic() sdk.Error {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgRemoveField) GetSignBytes() []byte {
+func (msg MsgDropColumn) GetSignBytes() []byte {
     return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg MsgRemoveField) GetSigners() []sdk.AccAddress {
+func (msg MsgDropColumn) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 

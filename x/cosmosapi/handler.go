@@ -19,8 +19,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgDropTable(ctx, keeper, msg)
         case MsgAddColumn:
             return handleMsgAddColumn(ctx, keeper, msg)
-        case MsgRemoveField:
-            return handleMsgRemoveField(ctx, keeper, msg)
+        case MsgDropColumn:
+            return handleMsgDropColumn(ctx, keeper, msg)
         case MsgRenameField:
             return handleMsgRenameField(ctx, keeper, msg)
         case MsgCreateIndex:
@@ -82,14 +82,14 @@ func handleMsgAddColumn(ctx sdk.Context, keeper Keeper, msg MsgAddColumn) sdk.Re
     return sdk.Result{}
 }
 
-func handleMsgRemoveField(ctx sdk.Context, keeper Keeper, msg MsgRemoveField) sdk.Result {
+func handleMsgDropColumn(ctx sdk.Context, keeper Keeper, msg MsgDropColumn) sdk.Result {
     if !isAdmin(ctx, keeper, msg.Owner) {
         return sdk.ErrUnknownRequest("Not authorized").Result()
     }
     if !keeper.IsFieldPresent(ctx, msg.TableName, msg.Field) {
         return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s does not exist yet!", msg.Field, msg.TableName)).Result()
     }
-    keeper.RemoveField(ctx, msg.TableName, msg.Field)
+    keeper.DropColumn(ctx, msg.TableName, msg.Field)
     return sdk.Result{}
 }
 

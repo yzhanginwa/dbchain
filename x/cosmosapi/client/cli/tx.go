@@ -30,7 +30,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdCreateTable(cdc),
         GetCmdDropTable(cdc),
         GetCmdAddColumn(cdc),
-        GetCmdRemoveField(cdc),
+        GetCmdDropColumn(cdc),
         GetCmdRenameField(cdc),
         GetCmdCreateIndex(cdc),
         GetCmdModifyOption(cdc),
@@ -116,10 +116,10 @@ func GetCmdAddColumn(cdc *codec.Codec) *cobra.Command {
     }
 }
 
-func GetCmdRemoveField(cdc *codec.Codec) *cobra.Command {
+func GetCmdDropColumn(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "remove-field [name] [field]",
-        Short: "remove a field from a table",
+        Use:   "drop-column [name] [field]",
+        Short: "drop a column from a table",
         Args:  cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -127,7 +127,7 @@ func GetCmdRemoveField(cdc *codec.Codec) *cobra.Command {
 
             name := args[0]
             field := args[1]
-            msg := types.NewMsgRemoveField(cliCtx.GetFromAddress(), name, field)
+            msg := types.NewMsgDropColumn(cliCtx.GetFromAddress(), name, field)
             err := msg.ValidateBasic()
             if err != nil {
                 return err

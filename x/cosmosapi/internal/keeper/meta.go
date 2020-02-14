@@ -121,7 +121,7 @@ func (k Keeper) AddColumn(ctx sdk.Context, name string, field string) (bool, err
 }
 
 // Remove a field
-func (k Keeper) RemoveField(ctx sdk.Context, name string, field string) (bool, error){
+func (k Keeper) DropColumn(ctx sdk.Context, name string, field string) (bool, error){
     table, err := k.GetTable(ctx, name)
     if err != nil {
         return false, err

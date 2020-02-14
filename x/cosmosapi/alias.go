@@ -23,7 +23,7 @@ type (
     MsgCreateTable  = types.MsgCreateTable
     MsgDropTable    = types.MsgDropTable
     MsgAddColumn    = types.MsgAddColumn
-    MsgRemoveField  = types.MsgRemoveField
+    MsgDropColumn   = types.MsgDropColumn
     MsgRenameField  = types.MsgRenameField
     MsgModifyOption = types.MsgModifyOption
     MsgModifyFieldOption = types.MsgModifyFieldOption
