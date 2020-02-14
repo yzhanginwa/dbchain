@@ -18,7 +18,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         RunE:                       client.ValidateCmd,
     }
     cosmosapiQueryCmd.AddCommand(client.GetCommands(
-        GetCmdTables(storeKey, cdc),
+        GetCmdTable(storeKey, cdc),
         GetCmdIndex(storeKey, cdc),
         GetCmdOption(storeKey, cdc),
         GetCmdFieldOption(storeKey, cdc),
@@ -30,9 +30,9 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdTables lists all table names
-func GetCmdTables(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdTable(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "tables",
+        Use: "table",
         Short: "query tables",
         Args: cobra.MaximumNArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
