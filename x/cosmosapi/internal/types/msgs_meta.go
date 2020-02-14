@@ -80,7 +80,7 @@ func NewMsgDropTable(owner sdk.AccAddress, tableName string) MsgDropTable {
 func (msg MsgDropTable) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgDropTable) Type() string { return "remove_table" }
+func (msg MsgDropTable) Type() string { return "drop_table" }
 
 // ValidateBasic runs stateless checks on the message
 func (msg MsgDropTable) ValidateBasic() sdk.Error {
@@ -128,7 +128,7 @@ func NewMsgAddColumn(owner sdk.AccAddress, tableName string, field string) MsgAd
 func (msg MsgAddColumn) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgAddColumn) Type() string { return "add_field" }
+func (msg MsgAddColumn) Type() string { return "add_column" }
 
 // ValidateBasic runs stateless checks on the message
 func (msg MsgAddColumn) ValidateBasic() sdk.Error {
