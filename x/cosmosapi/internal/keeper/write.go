@@ -7,10 +7,15 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/other"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
+    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/utils"
 )
 
 
 func (k Keeper) Insert(ctx sdk.Context, tableName string, fields types.RowFields, owner sdk.AccAddress) (uint, error){
+    if(!validateInsertion(k, ctx, tableName, fields)) {
+        return 0, errors.New(fmt.Sprintf("Failed validation when inserting table %s", tableName))
+    }
+
     id, err := getNextId(k, ctx, tableName)
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get id for table %s", tableName))
@@ -77,3 +82,39 @@ func (k Keeper) Delete(ctx sdk.Context, tableName string, id uint) (uint, error)
 
     return id, nil
 }
+
+//////////////////
+//              //
+// helper funcs //
+//              //
+//////////////////
+func isSystemField(fieldName string) bool {
+    systemFields := []string{"id", "created_by", "created_at"}
+    return utils.ItemExists(systemFields, fieldName)
+}
+
+// for now, we check the filed non-null option
+func validateInsertion(k Keeper, ctx sdk.Context, tableName string, fields types.RowFields) bool {
+    fieldNames, err := k.getTableFields(ctx, tableName)
+    if err != nil {
+        return(false)
+    }
+
+    for _, fieldName := range fieldNames {
+        if(isSystemField(fieldName)) {
+            continue
+        }
+        fieldOptions, _ := k.GetFieldOption(ctx, tableName, fieldName)
+        // TODO: use a constant for the possible options
+        if(utils.ItemExists(fieldOptions, "not-null")) {
+            if value, ok := fields[fieldName]; ok {
+                if(len(value)>0) {
+                    continue
+                }
+            }
+            return(false)
+        }
+    }
+    return(true)
+}
+
