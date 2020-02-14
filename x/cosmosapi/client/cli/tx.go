@@ -269,6 +269,28 @@ func GetCmdInsertRow(cdc *codec.Codec) *cobra.Command {
         },
     }
 }
+func GetCmdDeleteRow(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "delete-row [tableName] [id]",
+        Short: "delete a row",
+        Args:  cobra.ExactArgs(2),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            name := args[0]
+            id   := args[1]
+
+            msg := types.NewMsgDeleteRow(cliCtx.GetFromAddress(), name, id)
+            err = msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
 
 /////////////////////////
 //                     //
