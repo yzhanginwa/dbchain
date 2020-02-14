@@ -318,8 +318,9 @@ func (k Keeper) GetIndex(ctx sdk.Context, tableName string) ([]string, error) {
     key := getMetaTableIndexKey(tableName)
     bz := store.Get([]byte(key))
     if bz == nil {
-        return []string{}, errors.New(fmt.Sprintf("Index of table %s not found", tableName))
+        return []string{}, nil
     }
+
     var index_fields []string
     k.cdc.MustUnmarshalBinaryBare(bz, &index_fields)
     return index_fields, nil
