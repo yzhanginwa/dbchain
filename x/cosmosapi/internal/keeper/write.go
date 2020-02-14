@@ -32,13 +32,13 @@ func (k Keeper) Insert(ctx sdk.Context, tableName string, fields types.RowFields
 }
 
 
-//  // TODO: need to think over how and when to allow updating
-//  func (k Keeper) Update(ctx sdk.Context, tableName string, id uint, fields types.RowFields) (uint, error){
-//      // TODO: need to check the ownership of the record
-//      k.Write(ctx, tableName, id, fields)
-//      k.updateIndex(ctx, tableName, id, fields)
-//      return id, nil
-//  }
+// TODO: need to think over how and when to allow updating
+func (k Keeper) Update(ctx sdk.Context, tableName string, id uint, fields types.RowFields, owner sdk.AccAddress) (uint, error){
+    // TODO: need to check the ownership of the record
+    k.Write(ctx, tableName, id, fields, owner)
+    k.updateIndex(ctx, tableName, id, fields)
+    return id, nil
+}
 
 
 func (k Keeper) Write(ctx sdk.Context, tableName string, id uint, fields types.RowFields, owner sdk.AccAddress) (uint, error){

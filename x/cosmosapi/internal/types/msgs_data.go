@@ -59,6 +59,61 @@ func (msg MsgInsertRow) GetSigners() []sdk.AccAddress {
 
 //////////////////
 //              //
+// MsgUpdateRow //
+//              //
+//////////////////
+
+type MsgUpdateRow struct {
+    Owner sdk.AccAddress `json:"owner"`
+    TableName string     `json:"table_name"`
+    Id uint              `json:"id"`
+    Fields RowFieldsJson `json:"fields"`
+}
+
+func NewMsgUpdateRow(owner sdk.AccAddress, tableName string, id uint, fieldsJson RowFieldsJson) MsgUpdateRow {
+    return MsgUpdateRow{
+        Owner: owner,
+        TableName: tableName,
+        Id: id,
+        Fields: fieldsJson,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgUpdateRow) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgUpdateRow) Type() string { return "update_row" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgUpdateRow) ValidateBasic() sdk.Error {
+    if msg.Owner.Empty() {
+        return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.TableName) == 0 {
+        return sdk.ErrUnknownRequest("Table name cannot be empty")
+    }
+    if msg.Id ==0 {
+        return sdk.ErrUnknownRequest("Id cannot be zero")
+    }
+    if len(msg.Fields) ==0 {
+        return sdk.ErrUnknownRequest("Fields cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgUpdateRow) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgUpdateRow) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
+
+//////////////////
+//              //
 // MsgDeleteRow //
 //              //
 //////////////////

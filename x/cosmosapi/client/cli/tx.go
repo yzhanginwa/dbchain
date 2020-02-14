@@ -36,6 +36,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdModifyOption(cdc),
         GetCmdModifyFieldOption(cdc),
         GetCmdInsertRow(cdc),
+        GetCmdUpdateRow(cdc),
         GetCmdDeleteRow(cdc),
         GetCmdAddAdminAccount(cdc),
     )...)
@@ -271,6 +272,44 @@ func GetCmdInsertRow(cdc *codec.Codec) *cobra.Command {
         },
     }
 }
+
+func GetCmdUpdateRow(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "update-row [tableName] [id] [fields] [values]",
+        Short: "update a row",
+        Args:  cobra.ExactArgs(4),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            name := args[0]
+            id, err := strconv.ParseUint(args[1], 10, 0)
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+            fields := strings.Split(args[2], ",")
+            values := strings.Split(args[3], ",")
+            rowFields := make(types.RowFields)
+            for i, field := range fields {
+                if i < len(values) {
+                    rowFields[field] = values[i]
+                }
+            }
+
+            rowFieldsJson, err := json.Marshal(rowFields)
+            if err != nil { return err }
+
+            msg := types.NewMsgUpdateRow(cliCtx.GetFromAddress(), name, uint(id), rowFieldsJson)
+            err = msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
 func GetCmdDeleteRow(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use:   "delete-row [tableName] [id]",

@@ -22,6 +22,7 @@ func RegisterCodec(cdc *codec.Codec) {
     cdc.RegisterConcrete(MsgModifyFieldOption{}, "cosmosapi/ModifyFieldOption", nil)
     cdc.RegisterConcrete(MsgCreateIndex{}, "cosmosapi/CreateIndex", nil)
     cdc.RegisterConcrete(MsgInsertRow{}, "cosmosapi/InsertRow", nil)
+    cdc.RegisterConcrete(MsgUpdateRow{}, "cosmosapi/UpdateRow", nil)
     cdc.RegisterConcrete(MsgDeleteRow{}, "cosmosapi/DeleteRow", nil)
     cdc.RegisterConcrete(MsgAddAdminAccount{}, "cosmosapi/AddAdminAccount", nil)
 }
