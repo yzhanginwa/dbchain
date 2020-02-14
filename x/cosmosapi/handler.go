@@ -7,6 +7,7 @@ import (
     "encoding/json"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
+    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/utils"
 )
 
 // NewHandler returns a handler for "nameservice" type messages.
@@ -25,6 +26,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgRenameColumn(ctx, keeper, msg)
         case MsgCreateIndex:
             return handleMsgCreateIndex(ctx, keeper, msg)
+        case MsgDropIndex:
+            return handleMsgDropIndex(ctx, keeper, msg)
         case MsgModifyOption:
             return handleMsgModifyOption(ctx, keeper, msg)
         case MsgModifyFieldOption:
@@ -117,6 +120,27 @@ func handleMsgCreateIndex(ctx sdk.Context, keeper Keeper, msg MsgCreateIndex) sd
         return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s does not exist yet!", msg.Field, msg.TableName)).Result()
     }
     keeper.CreateIndex(ctx, msg.Owner, msg.TableName, msg.Field)
+    return sdk.Result{}
+}
+
+func handleMsgDropIndex(ctx sdk.Context, keeper Keeper, msg MsgDropIndex) sdk.Result {
+    if !isAdmin(ctx, keeper, msg.Owner) {
+        return sdk.ErrUnknownRequest("Not authorized").Result()
+    }
+    if ! keeper.IsFieldPresent(ctx, msg.TableName, msg.Field) {
+        return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s does not exist yet!", msg.Field, msg.TableName)).Result()
+    }
+
+    existingIndex, err := keeper.GetIndex(ctx, msg.TableName)
+    if err != nil {
+        return sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not have any index yet!", msg.TableName)).Result()
+    }
+ 
+    if !utils.ItemExists(existingIndex, msg.Field) {
+        return sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not have index on %s yet!", msg.TableName, msg.Field)).Result()
+    }
+
+    keeper.DropIndex(ctx, msg.Owner, msg.TableName, msg.Field)
     return sdk.Result{}
 }
 

@@ -310,6 +310,57 @@ func (msg MsgCreateIndex) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
+//////////////////
+//              //
+// MsgDropIndex //
+//              //
+//////////////////
+
+type MsgDropIndex struct {
+    Owner sdk.AccAddress `json:"owner"`
+    TableName string     `json:"table_name"`
+    Field string         `json:"field"`
+}
+
+// NewMsgCreatePoll is a constructor function for MsgCreatPoll
+func NewMsgDropIndex(owner sdk.AccAddress, tableName string, field string) MsgDropIndex {
+    return MsgDropIndex {
+        Owner: owner,
+        TableName: tableName,
+        Field: field,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgDropIndex) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgDropIndex) Type() string { return "drop_index" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgDropIndex) ValidateBasic() sdk.Error {
+    if msg.Owner.Empty() {
+        return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.TableName) == 0 {
+        return sdk.ErrUnknownRequest("Table name cannot be empty")
+    }
+    if len(msg.Field) ==0 {
+        return sdk.ErrUnknownRequest("Field cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgDropIndex) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgDropIndex) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
+
 /////////////////////
 //                 //
 // MsgModifyOption //

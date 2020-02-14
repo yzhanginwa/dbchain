@@ -289,6 +289,30 @@ func (k Keeper) CreateIndex(ctx sdk.Context, owner sdk.AccAddress, tableName str
     // TODO: to create index data for the existing records of the table
 }
 
+func (k Keeper) DropIndex(ctx sdk.Context, owner sdk.AccAddress, tableName string, field string) {
+    store := ctx.KVStore(k.storeKey)
+    key := getMetaTableIndexKey(tableName)
+    var indexFields []string
+
+    bz := store.Get([]byte(key))
+    if bz != nil {
+        k.cdc.MustUnmarshalBinaryBare(bz, &indexFields)
+        for i, fld := range indexFields {
+            if field == fld {
+                indexFields = append(indexFields[:i], indexFields[i+1:]...)
+                if len(indexFields) < 1 {
+                    store.Delete([]byte(key))
+                } else {
+                    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(indexFields))
+                }
+                break
+            }
+        }
+    }
+
+    // TODO: to delete index data for the existing records of the table
+}
+
 func (k Keeper) GetIndex(ctx sdk.Context, tableName string) ([]string, error) {
     store := ctx.KVStore(k.storeKey)
     key := getMetaTableIndexKey(tableName)
