@@ -67,7 +67,7 @@ func (k Keeper) CreateTable(ctx sdk.Context, owner sdk.AccAddress, name string, 
 }
 
 // Remove a table
-func (k Keeper) RemoveTable(ctx sdk.Context, owner sdk.AccAddress, name string) {
+func (k Keeper) DropTable(ctx sdk.Context, owner sdk.AccAddress, name string) {
     store := ctx.KVStore(k.storeKey)
     var tables []string
     bz :=store.Get([]byte(getTablesKey()))

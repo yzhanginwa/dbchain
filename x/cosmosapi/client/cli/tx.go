@@ -28,7 +28,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
     cosmosapiTxCmd.AddCommand(client.PostCommands(
         GetCmdCreateTable(cdc),
-        GetCmdRemoveTable(cdc),
+        GetCmdDropTable(cdc),
         GetCmdAddField(cdc),
         GetCmdRemoveField(cdc),
         GetCmdRenameField(cdc),
@@ -73,17 +73,17 @@ func GetCmdCreateTable(cdc *codec.Codec) *cobra.Command {
     }
 }
 
-func GetCmdRemoveTable(cdc *codec.Codec) *cobra.Command {
+func GetCmdDropTable(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "remove-table [name]",
-        Short: "remove a table",
+        Use:   "drop-table [name]",
+        Short: "drop a table",
         Args:  cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
             name := args[0]
-            msg := types.NewMsgRemoveTable(cliCtx.GetFromAddress(), name)
+            msg := types.NewMsgDropTable(cliCtx.GetFromAddress(), name)
             err := msg.ValidateBasic()
             if err != nil {
                 return err

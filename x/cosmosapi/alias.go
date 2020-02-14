@@ -21,7 +21,7 @@ var (
 type (
     Keeper          = keeper.Keeper
     MsgCreateTable  = types.MsgCreateTable
-    MsgRemoveTable  = types.MsgRemoveTable
+    MsgDropTable    = types.MsgDropTable
     MsgAddField     = types.MsgAddField
     MsgRemoveField  = types.MsgRemoveField
     MsgRenameField  = types.MsgRenameField

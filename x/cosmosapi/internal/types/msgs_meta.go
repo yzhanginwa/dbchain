@@ -58,32 +58,32 @@ func (msg MsgCreateTable) GetSigners() []sdk.AccAddress {
 
 ////////////////////
 //                //
-// MsgRemoveTable //
+// MsgDropTable //
 //                //
 ////////////////////
 
-// MsgRemoveTable defines a RemoveTable message
-type MsgRemoveTable struct {
+// MsgDropTable defines a DropTable message
+type MsgDropTable struct {
     Owner sdk.AccAddress `json:"owner"`
     TableName string     `json:"table_name"`
 }
 
-// NewMsgRemoveTable is a constructor function for MsgCreatTable
-func NewMsgRemoveTable(owner sdk.AccAddress, tableName string) MsgRemoveTable {
-    return MsgRemoveTable {
+// NewMsgDropTable is a constructor function for MsgDropTable
+func NewMsgDropTable(owner sdk.AccAddress, tableName string) MsgDropTable {
+    return MsgDropTable {
         Owner: owner,
         TableName: tableName,
     }
 }
 
 // Route should return the name of the module
-func (msg MsgRemoveTable) Route() string { return RouterKey }
+func (msg MsgDropTable) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgRemoveTable) Type() string { return "remove_table" }
+func (msg MsgDropTable) Type() string { return "remove_table" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgRemoveTable) ValidateBasic() sdk.Error {
+func (msg MsgDropTable) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
     }
@@ -94,12 +94,12 @@ func (msg MsgRemoveTable) ValidateBasic() sdk.Error {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgRemoveTable) GetSignBytes() []byte {
+func (msg MsgDropTable) GetSignBytes() []byte {
     return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg MsgRemoveTable) GetSigners() []sdk.AccAddress {
+func (msg MsgDropTable) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 

@@ -15,8 +15,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
         switch msg := msg.(type) {
         case MsgCreateTable:
             return handleMsgCreateTable(ctx, keeper, msg)
-        case MsgRemoveTable:
-            return handleMsgRemoveTable(ctx, keeper, msg)
+        case MsgDropTable:
+            return handleMsgDropTable(ctx, keeper, msg)
         case MsgAddField:
             return handleMsgAddField(ctx, keeper, msg)
         case MsgRemoveField:
@@ -57,7 +57,7 @@ func handleMsgCreateTable(ctx sdk.Context, keeper Keeper, msg MsgCreateTable) sd
     return sdk.Result{}
 }
 
-func handleMsgRemoveTable(ctx sdk.Context, keeper Keeper, msg MsgRemoveTable) sdk.Result {
+func handleMsgDropTable(ctx sdk.Context, keeper Keeper, msg MsgDropTable) sdk.Result {
     if !isAdmin(ctx, keeper, msg.Owner) {
         return sdk.ErrUnknownRequest("Not authorized").Result()
     }
@@ -65,7 +65,7 @@ func handleMsgRemoveTable(ctx sdk.Context, keeper Keeper, msg MsgRemoveTable) sd
     if !keeper.IsTablePresent(ctx, msg.TableName) {
         return sdk.ErrUnknownRequest("Table name does not exist!").Result()
     }
-    keeper.RemoveTable(ctx, msg.Owner, msg.TableName)
+    keeper.DropTable(ctx, msg.Owner, msg.TableName)
     return sdk.Result{}
 }
 
