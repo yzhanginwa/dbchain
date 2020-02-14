@@ -21,8 +21,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgAddColumn(ctx, keeper, msg)
         case MsgDropColumn:
             return handleMsgDropColumn(ctx, keeper, msg)
-        case MsgRenameField:
-            return handleMsgRenameField(ctx, keeper, msg)
+        case MsgRenameColumn:
+            return handleMsgRenameColumn(ctx, keeper, msg)
         case MsgCreateIndex:
             return handleMsgCreateIndex(ctx, keeper, msg)
         case MsgModifyOption:
@@ -93,7 +93,7 @@ func handleMsgDropColumn(ctx sdk.Context, keeper Keeper, msg MsgDropColumn) sdk.
     return sdk.Result{}
 }
 
-func handleMsgRenameField(ctx sdk.Context, keeper Keeper, msg MsgRenameField) sdk.Result {
+func handleMsgRenameColumn(ctx sdk.Context, keeper Keeper, msg MsgRenameColumn) sdk.Result {
     if !isAdmin(ctx, keeper, msg.Owner) {
         return sdk.ErrUnknownRequest("Not authorized").Result()
     }
@@ -105,7 +105,7 @@ func handleMsgRenameField(ctx sdk.Context, keeper Keeper, msg MsgRenameField) sd
     if keeper.IsFieldPresent(ctx, msg.TableName, newField) {
         return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s exists already!", msg.NewField, msg.TableName)).Result()
     }
-    keeper.RenameField(ctx, msg.TableName, msg.OldField, newField)
+    keeper.RenameColumn(ctx, msg.TableName, msg.OldField, newField)
     return sdk.Result{}
 }
 

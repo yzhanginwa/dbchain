@@ -204,21 +204,21 @@ func (msg MsgDropColumn) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
-////////////////////
-//                //
-// MsgRenameField //
-//                //
-////////////////////
+/////////////////////
+//                 //
+// MsgRenameColumn //
+//                 //
+/////////////////////
 
-type MsgRenameField struct {
+type MsgRenameColumn struct {
     Owner sdk.AccAddress `json:"owner"`
     TableName string     `json:"table_name"`
     OldField string      `json:"old_field"`
     NewField string      `json:"new_field"`
 }
 
-func NewMsgRenameField(owner sdk.AccAddress, tableName string, oldField string, newField string) MsgRenameField {
-    return MsgRenameField {
+func NewMsgRenameColumn(owner sdk.AccAddress, tableName string, oldField string, newField string) MsgRenameColumn {
+    return MsgRenameColumn {
         Owner: owner,
         TableName: tableName,
         OldField: oldField,
@@ -227,13 +227,13 @@ func NewMsgRenameField(owner sdk.AccAddress, tableName string, oldField string, 
 }
 
 // Route should return the name of the module
-func (msg MsgRenameField) Route() string { return RouterKey }
+func (msg MsgRenameColumn) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgRenameField) Type() string { return "rename_field" }
+func (msg MsgRenameColumn) Type() string { return "rename_column" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgRenameField) ValidateBasic() sdk.Error {
+func (msg MsgRenameColumn) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
     }
@@ -250,12 +250,12 @@ func (msg MsgRenameField) ValidateBasic() sdk.Error {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgRenameField) GetSignBytes() []byte {
+func (msg MsgRenameColumn) GetSignBytes() []byte {
     return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg MsgRenameField) GetSigners() []sdk.AccAddress {
+func (msg MsgRenameColumn) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 

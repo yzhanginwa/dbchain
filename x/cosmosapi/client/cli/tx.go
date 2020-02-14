@@ -31,7 +31,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdDropTable(cdc),
         GetCmdAddColumn(cdc),
         GetCmdDropColumn(cdc),
-        GetCmdRenameField(cdc),
+        GetCmdRenameColumn(cdc),
         GetCmdCreateIndex(cdc),
         GetCmdModifyOption(cdc),
         GetCmdModifyFieldOption(cdc),
@@ -138,10 +138,10 @@ func GetCmdDropColumn(cdc *codec.Codec) *cobra.Command {
     }
 }
 
-func GetCmdRenameField(cdc *codec.Codec) *cobra.Command {
+func GetCmdRenameColumn(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "rename-field [name] [old-field] [new-field",
-        Short: "rename a field in a table",
+        Use:   "rename-column [name] [old-field] [new-field",
+        Short: "rename a column in a table",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -150,7 +150,7 @@ func GetCmdRenameField(cdc *codec.Codec) *cobra.Command {
             name := args[0]
             oldField := args[1]
             newField := args[2]
-            msg := types.NewMsgRenameField(cliCtx.GetFromAddress(), name, oldField, newField)
+            msg := types.NewMsgRenameColumn(cliCtx.GetFromAddress(), name, oldField, newField)
             err := msg.ValidateBasic()
             if err != nil {
                 return err

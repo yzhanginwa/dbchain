@@ -24,7 +24,7 @@ type (
     MsgDropTable    = types.MsgDropTable
     MsgAddColumn    = types.MsgAddColumn
     MsgDropColumn   = types.MsgDropColumn
-    MsgRenameField  = types.MsgRenameField
+    MsgRenameColumn = types.MsgRenameColumn
     MsgModifyOption = types.MsgModifyOption
     MsgModifyFieldOption = types.MsgModifyFieldOption
     MsgCreateIndex  = types.MsgCreateIndex

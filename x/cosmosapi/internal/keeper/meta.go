@@ -149,7 +149,7 @@ func (k Keeper) DropColumn(ctx sdk.Context, name string, field string) (bool, er
 }
 
 // Rename a field
-func (k Keeper) RenameField(ctx sdk.Context, name string, oldField string, newField string) (bool, error) {
+func (k Keeper) RenameColumn(ctx sdk.Context, name string, oldField string, newField string) (bool, error) {
     table, err := k.GetTable(ctx, name)
     if err != nil {
         return false, err
