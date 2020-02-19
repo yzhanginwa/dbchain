@@ -402,8 +402,8 @@ func (msg MsgModifyOption) ValidateBasic() sdk.Error {
         return sdk.ErrUnknownRequest("Action cannot be empty")
     }
 
-    if !(msg.Action == "add" || msg.Action == "remove") {
-        return sdk.ErrUnknownRequest("Action has to be either add or remove")
+    if !(msg.Action == "add" || msg.Action == "drop") {
+        return sdk.ErrUnknownRequest("Action has to be either add or drop")
     }
 
     if len(msg.Option) ==0 {
@@ -469,8 +469,8 @@ func (msg MsgModifyFieldOption) ValidateBasic() sdk.Error {
         return sdk.ErrUnknownRequest("Action cannot be empty")
     }
 
-    if !(msg.Action == "add" || msg.Action == "remove") {
-        return sdk.ErrUnknownRequest("Action has to be either add or remove")
+    if !(msg.Action == "add" || msg.Action == "drop") {
+        return sdk.ErrUnknownRequest("Action has to be either add or drop")
     }
 
     if len(msg.Option) ==0 {
