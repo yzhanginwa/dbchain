@@ -82,3 +82,25 @@ func (k Keeper) FindBy(ctx sdk.Context, tableName string, field string,  value s
     return result
 }
 
+func (k Keeper) FindAll(ctx sdk.Context, tableName string) []uint {
+    store := ctx.KVStore(k.storeKey)
+
+    var result []uint
+
+    // full table scanning
+    start, end := getDataIteratorStartAndEndKey(tableName)
+    iter := store.Iterator([]byte(start), []byte(end))
+    var currentId = "0"
+    for ; iter.Valid(); iter.Next() {
+        key := iter.Key()
+        keyString := string(key)
+        id := getIdFromDataKey(keyString)
+        if id != currentId {
+            currentId = id
+            u64, _ := strconv.ParseUint(id, 10, 64)
+            result = append(result, uint(u64))
+        }
+    }
+    return result
+}
+

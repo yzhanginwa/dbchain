@@ -25,6 +25,7 @@ const (
     QueryColumnOption   = "column_option"
     QueryRow      = "find"
     QueryIdsBy    = "find_by"
+    QueryAllIds   = "find_all"
     QueryAdminGroup = "admin_group"
 
     MaxAllowedTimeDiff = 15 * 1000   // 15 seconds
@@ -51,6 +52,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryRow(ctx, path[1:], req, keeper)
         case QueryIdsBy:
             return queryIdsBy(ctx, path[1:], req, keeper)
+        case QueryAllIds:
+            return queryAllIds(ctx, path[1:], req, keeper)
         case QueryAdminGroup:
             return queryAdminGroup(ctx, path[1:], req, keeper)
         default:
@@ -159,6 +162,25 @@ func queryIdsBy(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
     }
 
     ids := keeper.FindBy(ctx, path[1], path[2], path[3])
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, ids)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryAllIds(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+    accessCode:= path[0]
+    addr, err := verifyAccessCode(accessCode)
+    fmt.Printf("Address is %s", addr)  // to make program compile
+
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+    }
+
+    ids := keeper.FindAll(ctx, path[1])
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, ids)
     if err != nil {

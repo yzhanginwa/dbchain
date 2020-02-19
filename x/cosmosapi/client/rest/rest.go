@@ -13,4 +13,5 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/tables", storeName), showTablesHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/find/{%s}/{%s}", storeName, "name", "id"), showRowHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/find_by/{%s}/{%s}/{%s}/{%s}", storeName, "accessToken", "name", "field", "value"), showIdsByHandler(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/find_all/{%s}/{%s}", storeName, "accessToken", "name"), showAllIdsHandler(cliCtx, storeName)).Methods("GET")
 }
