@@ -240,7 +240,7 @@ func (k Keeper) GetOption(ctx sdk.Context, tableName string) ([]string, error) {
     return options, nil
 }
 
-func (k Keeper) ModifyFieldOption(ctx sdk.Context, owner sdk.AccAddress, tableName string, fieldName string, action string, option string) {
+func (k Keeper) ModifyColumnOption(ctx sdk.Context, owner sdk.AccAddress, tableName string, fieldName string, action string, option string) {
     store := ctx.KVStore(k.storeKey)
     key := getFieldOptionsKey(tableName, fieldName)
     var options []string

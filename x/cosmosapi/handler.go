@@ -30,8 +30,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgDropIndex(ctx, keeper, msg)
         case MsgModifyOption:
             return handleMsgModifyOption(ctx, keeper, msg)
-        case MsgModifyFieldOption:
-            return handleMsgModifyFieldOption(ctx, keeper, msg)
+        case MsgModifyColumnOption:
+            return handleMsgModifyColumnOption(ctx, keeper, msg)
         case MsgInsertRow:
             return handleMsgInsertRow(ctx, keeper, msg)
         case MsgUpdateRow:
@@ -156,7 +156,7 @@ func handleMsgModifyOption(ctx sdk.Context, keeper Keeper, msg MsgModifyOption) 
     return sdk.Result{}
 }
 
-func handleMsgModifyFieldOption(ctx sdk.Context, keeper Keeper, msg MsgModifyFieldOption) sdk.Result {
+func handleMsgModifyColumnOption(ctx sdk.Context, keeper Keeper, msg MsgModifyColumnOption) sdk.Result {
     if !isAdmin(ctx, keeper, msg.Owner) {
         return sdk.ErrUnknownRequest("Not authorized").Result()
     }
@@ -164,7 +164,7 @@ func handleMsgModifyFieldOption(ctx sdk.Context, keeper Keeper, msg MsgModifyFie
         return sdk.ErrUnknownRequest("Table name does not exist!").Result()
     }
 
-    keeper.ModifyFieldOption(ctx, msg.Owner, msg.TableName, msg.FieldName, msg.Action, msg.Option)
+    keeper.ModifyColumnOption(ctx, msg.Owner, msg.TableName, msg.FieldName, msg.Action, msg.Option)
     return sdk.Result{}
 }
 

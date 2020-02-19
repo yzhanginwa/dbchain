@@ -19,7 +19,7 @@ func RegisterCodec(cdc *codec.Codec) {
     cdc.RegisterConcrete(MsgDropColumn{}, "cosmosapi/DropColumn", nil)
     cdc.RegisterConcrete(MsgRenameColumn{}, "cosmosapi/RenameColumn", nil)
     cdc.RegisterConcrete(MsgModifyOption{}, "cosmosapi/ModifyOption", nil)
-    cdc.RegisterConcrete(MsgModifyFieldOption{}, "cosmosapi/ModifyFieldOption", nil)
+    cdc.RegisterConcrete(MsgModifyColumnOption{}, "cosmosapi/ModifyColumnOption", nil)
     cdc.RegisterConcrete(MsgCreateIndex{}, "cosmosapi/CreateIndex", nil)
     cdc.RegisterConcrete(MsgDropIndex{}, "cosmosapi/DropIndex", nil)
     cdc.RegisterConcrete(MsgInsertRow{}, "cosmosapi/InsertRow", nil)

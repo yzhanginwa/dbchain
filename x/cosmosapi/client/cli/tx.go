@@ -35,7 +35,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdCreateIndex(cdc),
         GetCmdDropIndex(cdc),
         GetCmdModifyOption(cdc),
-        GetCmdModifyFieldOption(cdc),
+        GetCmdModifyColumnOption(cdc),
         GetCmdInsertRow(cdc),
         GetCmdUpdateRow(cdc),
         GetCmdDeleteRow(cdc),
@@ -231,10 +231,10 @@ func GetCmdModifyOption(cdc *codec.Codec) *cobra.Command {
     }
 }
 
-func GetCmdModifyFieldOption(cdc *codec.Codec) *cobra.Command {
+func GetCmdModifyColumnOption(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "modify-field-option [tableName] [fieldName] [action] [option]",
-        Short: "modify field options",
+        Use:   "modify-column-option [tableName] [fieldName] [action] [option]",
+        Short: "modify column options",
         Args:  cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -245,7 +245,7 @@ func GetCmdModifyFieldOption(cdc *codec.Codec) *cobra.Command {
             action := args[2]
             option := args[3]
 
-            msg := types.NewMsgModifyFieldOption(cliCtx.GetFromAddress(), tableName, fieldName, action, option)
+            msg := types.NewMsgModifyColumnOption(cliCtx.GetFromAddress(), tableName, fieldName, action, option)
             err := msg.ValidateBasic()
             if err != nil {
                 return err

@@ -56,11 +56,11 @@ func (msg MsgCreateTable) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
-////////////////////
-//                //
+//////////////////
+//              //
 // MsgDropTable //
-//                //
-////////////////////
+//              //
+//////////////////
 
 // MsgDropTable defines a DropTable message
 type MsgDropTable struct {
@@ -423,13 +423,13 @@ func (msg MsgModifyOption) GetSigners() []sdk.AccAddress {
 }
 
 
-//////////////////////////
-//                      //
-// MsgModifyFieldOption //
-//                      //
-//////////////////////////
+///////////////////////////
+//                       //
+// MsgModifyColumnOption //
+//                       //
+///////////////////////////
 
-type MsgModifyFieldOption struct {
+type MsgModifyColumnOption struct {
     Owner sdk.AccAddress `json:"owner"`
     TableName string     `json:"table_name"`
     FieldName string     `json:"field_name"`
@@ -438,8 +438,8 @@ type MsgModifyFieldOption struct {
 }
 
 // NewMsgCreatePoll is a constructor function for MsgCreatPoll
-func NewMsgModifyFieldOption(owner sdk.AccAddress, tableName string, fieldName string, action string, option string) MsgModifyFieldOption {
-    return MsgModifyFieldOption {
+func NewMsgModifyColumnOption(owner sdk.AccAddress, tableName string, fieldName string, action string, option string) MsgModifyColumnOption {
+    return MsgModifyColumnOption {
         Owner: owner,
         TableName: tableName,
         FieldName: fieldName,
@@ -449,13 +449,13 @@ func NewMsgModifyFieldOption(owner sdk.AccAddress, tableName string, fieldName s
 }
 
 // Route should return the name of the module
-func (msg MsgModifyFieldOption) Route() string { return RouterKey }
+func (msg MsgModifyColumnOption) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgModifyFieldOption) Type() string { return "modify_field_option" }
+func (msg MsgModifyColumnOption) Type() string { return "modify_column_option" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgModifyFieldOption) ValidateBasic() sdk.Error {
+func (msg MsgModifyColumnOption) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
     }
@@ -480,12 +480,12 @@ func (msg MsgModifyFieldOption) ValidateBasic() sdk.Error {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgModifyFieldOption) GetSignBytes() []byte {
+func (msg MsgModifyColumnOption) GetSignBytes() []byte {
     return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg MsgModifyFieldOption) GetSigners() []sdk.AccAddress {
+func (msg MsgModifyColumnOption) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
