@@ -6,6 +6,7 @@ import (
     "strings"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
+    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/utils"
 )
 
 /////////////////////////////
@@ -200,14 +201,24 @@ func (k Keeper) ModifyOption(ctx sdk.Context, owner sdk.AccAddress, tableName st
     if bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &options)
     }
+
+    optionExisted := utils.ItemExists(options, option)
     if action == "add" {
-        result = append(options, option)
+        if optionExisted {
+            return
+        } else {
+            result = append(options, option)
+        }
     } else {
-        for _, opt := range options {
-            if opt == option {
-                continue
+        if optionExisted {
+            for _, opt := range options {
+                if opt == option {
+                    continue
+                }
+                result = append(result, opt)
             }
-            result = append(result, opt)
+        } else {
+            return
         }
     }
     if len(result) > 0 {
