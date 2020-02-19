@@ -206,6 +206,11 @@ func handleMsgDeleteRow(ctx sdk.Context, keeper Keeper, msg types.MsgDeleteRow) 
         return sdk.ErrUnknownRequest(fmt.Sprintf("Table % does not exist!", msg.TableName)).Result()
     }
 
+    options, _ := keeper.GetOption(ctx, msg.TableName)
+    if ! utils.ItemExists(options, string(types.TBLOPT_DELETABLE)) {
+        return sdk.ErrUnknownRequest(fmt.Sprintf("Table % is not updatable!", msg.TableName)).Result()
+    }
+
     keeper.Delete(ctx, msg.TableName, msg.Id, msg.Owner)
     return sdk.Result{}
 }
