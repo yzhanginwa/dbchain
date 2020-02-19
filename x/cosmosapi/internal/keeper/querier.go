@@ -62,6 +62,12 @@ func NewQuerier(keeper Keeper) sdk.Querier {
     }
 }
 
+////////////////
+//            //
+// query meta //
+//            //
+////////////////
+
 func queryTables(ctx sdk.Context, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     tables, err := keeper.getTables(ctx)
 
@@ -136,12 +142,25 @@ func queryColumnOption(ctx sdk.Context, path []string, req abci.RequestQuery, ke
 
     return res, nil
 }
+
+////////////////
+//            //
+// query data //
+//            //
+////////////////
+
 func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
-    u32, err := strconv.ParseUint(path[1], 10, 32)
-    fields, err := keeper.Find(ctx, path[0], uint(u32))
+    accessCode:= path[0]
+    addr, err := verifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+    }
+
+    u32, err := strconv.ParseUint(path[2], 10, 32)
+    fields, err := keeper.Find(ctx, path[1], uint(u32), addr)
 
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not exist",  path[0]))
+        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not exist",  path[1]))
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, fields)
@@ -155,13 +174,11 @@ func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keep
 func queryIdsBy(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     accessCode:= path[0]
     addr, err := verifyAccessCode(accessCode)
-    fmt.Printf("Address is %s", addr)  // to make program compile
-
     if err != nil {
         return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
     }
 
-    ids := keeper.FindBy(ctx, path[1], path[2], path[3])
+    ids := keeper.FindBy(ctx, path[1], path[2], path[3], addr)
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, ids)
     if err != nil {
@@ -174,13 +191,11 @@ func queryIdsBy(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 func queryAllIds(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     accessCode:= path[0]
     addr, err := verifyAccessCode(accessCode)
-    fmt.Printf("Address is %s", addr)  // to make program compile
-
     if err != nil {
         return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
     }
 
-    ids := keeper.FindAll(ctx, path[1])
+    ids := keeper.FindAll(ctx, path[1], addr)
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, ids)
     if err != nil {
@@ -189,6 +204,12 @@ func queryAllIds(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
 
     return res, nil
 }
+
+/////////////////
+//             //
+// query group //
+//             //
+/////////////////
 
 func queryAdminGroup(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     adminAddresses := keeper.ShowAdminGroup(ctx)

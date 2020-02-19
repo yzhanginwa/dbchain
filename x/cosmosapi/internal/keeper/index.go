@@ -10,7 +10,7 @@ import (
 func (k Keeper) updateIndex(ctx sdk.Context, tableName string, id uint, fields types.RowFields) (uint, error){
     store := ctx.KVStore(k.storeKey)
 
-    oldRecord, _ := k.Find(ctx, tableName, id)
+    oldRecord, _ := k.DoFind(ctx, tableName, id)
 
     indexFields, err := k.GetIndex(ctx, tableName)
     if err != nil {

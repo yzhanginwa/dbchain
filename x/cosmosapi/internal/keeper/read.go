@@ -6,9 +6,11 @@ import (
     "strconv"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
+    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/utils"
 )
 
-func (k Keeper) Find(ctx sdk.Context, tableName string, id uint) (types.RowFields, error){
+
+func (k Keeper) DoFind(ctx sdk.Context, tableName string, id uint) (types.RowFields, error){
     store := ctx.KVStore(k.storeKey)
 
     fieldNames, err := k.getTableFields(ctx, tableName)
@@ -35,8 +37,23 @@ func (k Keeper) Find(ctx sdk.Context, tableName string, id uint) (types.RowField
     return fields, nil
 }
 
+func (k Keeper) Find(ctx sdk.Context, tableName string, id uint, owner sdk.AccAddress) (types.RowFields, error){
+    var ids []uint
+    ids = append(ids, id)
+
+    // if public table, return all ids
+    if !k.isTablePublic(ctx, tableName) {
+        ids = k.filterOwnIds(ctx, tableName, ids, owner)
+        if len(ids) < 1 {
+            return nil, errors.New(fmt.Sprintf("Failed to get fields for id %d", id))
+        }
+    }
+
+    return k.DoFind(ctx, tableName, id)
+}
+
 // Find by an attribute in the r.Fields
-func (k Keeper) FindBy(ctx sdk.Context, tableName string, field string,  value string) []uint {
+func (k Keeper) FindBy(ctx sdk.Context, tableName string, field string,  value string, owner sdk.AccAddress) []uint {
     store := ctx.KVStore(k.storeKey)
 
     var hasIndex bool
@@ -79,12 +96,17 @@ func (k Keeper) FindBy(ctx sdk.Context, tableName string, field string,  value s
             }
         }
     }
-    return result
+
+    // if public table, return all ids
+    if k.isTablePublic(ctx, tableName) {
+        return result
+    } else {
+        return k.filterOwnIds(ctx, tableName, result, owner)
+    }
 }
 
-func (k Keeper) FindAll(ctx sdk.Context, tableName string) []uint {
+func (k Keeper) FindAll(ctx sdk.Context, tableName string, owner sdk.AccAddress) []uint {
     store := ctx.KVStore(k.storeKey)
-
     var result []uint
 
     // full table scanning
@@ -101,6 +123,41 @@ func (k Keeper) FindAll(ctx sdk.Context, tableName string) []uint {
             result = append(result, uint(u64))
         }
     }
-    return result
+
+    // if public table, return all ids
+    if k.isTablePublic(ctx, tableName) {
+        return result
+    } else {
+        return k.filterOwnIds(ctx, tableName, result, owner)
+    }
 }
 
+//////////////////
+//              //
+// helper funcs //
+//              //
+//////////////////
+
+func (k Keeper) isTablePublic(ctx sdk.Context, tableName string) bool {
+    tableOptions, _ := k.GetOption(ctx, tableName)
+    return utils.ItemExists(tableOptions, string(types.TBLOPT_PUBLIC))
+}
+
+func (k Keeper) filterOwnIds(ctx sdk.Context, tableName string, ids []uint, owner sdk.AccAddress) []uint {
+    store := ctx.KVStore(k.storeKey)
+    var ownerString string = owner.String()
+
+    var result = []uint{}
+    var mold string
+    for _, id := range ids {
+        key := getDataKey(tableName, uint(id), "created_by")
+        bz := store.Get([]byte(key))
+        if bz != nil {
+            k.cdc.MustUnmarshalBinaryBare(bz, &mold)
+            if mold == ownerString {
+                result = append(result, uint(id))
+            }
+        }
+    }
+    return result
+}
