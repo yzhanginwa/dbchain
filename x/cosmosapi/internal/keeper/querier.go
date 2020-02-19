@@ -22,7 +22,7 @@ const (
     QueryTables   = "tables"
     QueryIndex    = "index"
     QueryOption   = "option"
-    QueryFieldOption   = "field_option"
+    QueryColumnOption   = "column_option"
     QueryRow      = "find"
     QueryIdsBy    = "find_by"
     QueryAdminGroup = "admin_group"
@@ -45,8 +45,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryIndex(ctx, path[1:], req, keeper)
         case QueryOption:
             return queryOption(ctx, path[1:], req, keeper)
-        case QueryFieldOption:
-            return queryFieldOption(ctx, path[1:], req, keeper)
+        case QueryColumnOption:
+            return queryColumnOption(ctx, path[1:], req, keeper)
         case QueryRow:
             return queryRow(ctx, path[1:], req, keeper)
         case QueryIdsBy:
@@ -119,8 +119,8 @@ func queryOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
     return res, nil
 }
 
-func queryFieldOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
-    options, err := keeper.GetFieldOption(ctx, path[0], path[1])
+func queryColumnOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+    options, err := keeper.GetColumnOption(ctx, path[0], path[1])
 
     if err != nil {
         return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Field %s.%s does not exist",  path[0], path[1]))

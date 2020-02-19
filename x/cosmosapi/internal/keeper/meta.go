@@ -242,7 +242,7 @@ func (k Keeper) GetOption(ctx sdk.Context, tableName string) ([]string, error) {
 
 func (k Keeper) ModifyColumnOption(ctx sdk.Context, owner sdk.AccAddress, tableName string, fieldName string, action string, option string) {
     store := ctx.KVStore(k.storeKey)
-    key := getFieldOptionsKey(tableName, fieldName)
+    key := getColumnOptionsKey(tableName, fieldName)
     var options []string
     var result []string
 
@@ -279,9 +279,9 @@ func (k Keeper) ModifyColumnOption(ctx sdk.Context, owner sdk.AccAddress, tableN
     }
 }
 
-func (k Keeper) GetFieldOption(ctx sdk.Context, tableName string, fieldName string) ([]string, error) {
+func (k Keeper) GetColumnOption(ctx sdk.Context, tableName string, fieldName string) ([]string, error) {
     store := ctx.KVStore(k.storeKey)
-    key := getFieldOptionsKey(tableName, fieldName)
+    key := getColumnOptionsKey(tableName, fieldName)
     bz := store.Get([]byte(key))
     if bz == nil {
         return []string{}, nil
