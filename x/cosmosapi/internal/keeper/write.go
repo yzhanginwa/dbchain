@@ -107,7 +107,7 @@ func validateInsertion(k Keeper, ctx sdk.Context, tableName string, fields types
         }
         fieldOptions, _ := k.GetFieldOption(ctx, tableName, fieldName)
         // TODO: use a constant for the possible options
-        if(utils.ItemExists(fieldOptions, "not-null")) {
+        if(utils.ItemExists(fieldOptions, types.FLDOPT_NOTNULL)) {
             if value, ok := fields[fieldName]; ok {
                 if(len(value)>0) {
                     continue

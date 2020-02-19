@@ -31,3 +31,24 @@ func (t Table) String() string {
     return strings.TrimSpace(fmt.Sprintf(`Name: %s`, t.Name))
 }
 
+//////////////////
+//              //
+// option types //
+//              //
+//////////////////
+
+type TableOption string
+
+const (
+    TBLOPT_PUBLIC     TableOption = "public"
+    TBLOPT_UPDATABLE  TableOption = "updatable"
+    TBLOPT_DELETABLE  TableOption = "deletable"
+)
+
+type FieldOption string
+
+const (
+    FLDOPT_NOTNULL    FieldOption = "not-null"
+)
+
+
