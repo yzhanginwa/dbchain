@@ -187,6 +187,11 @@ func handleMsgUpdateRow(ctx sdk.Context, keeper Keeper, msg types.MsgUpdateRow) 
         return sdk.ErrUnknownRequest(fmt.Sprintf("Table % does not exist!", msg.TableName)).Result()
     }
 
+    options, _ := keeper.GetOption(ctx, msg.TableName)
+    if ! utils.ItemExists(options, string(types.TBLOPT_UPDATABLE)) {
+        return sdk.ErrUnknownRequest(fmt.Sprintf("Table % is not updatable!", msg.TableName)).Result()
+    }
+
     var rowFields types.RowFields
     if err := json.Unmarshal(msg.Fields, &rowFields); err != nil {
         return sdk.ErrUnknownRequest("Failed to parse row fields!").Result()
