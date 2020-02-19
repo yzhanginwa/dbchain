@@ -50,34 +50,32 @@ func (k Keeper) FindBy(ctx sdk.Context, tableName string, field string,  value s
         }
     }
 
+    var result []uint
     if hasIndex {
-        var mold []uint
         key := getIndexKey(tableName, field, value)
         bz := store.Get([]byte(key))
         if bz == nil {
-            return []uint{}
+            result = []uint{}
         } else {
-            k.cdc.MustUnmarshalBinaryBare(bz, &mold)
-            return mold
+            k.cdc.MustUnmarshalBinaryBare(bz, &result)
         }
-    }
-
-    // so-called full table scanning
-    var result []uint
-    start, end := getDataIteratorStartAndEndKey(tableName)
-    iter := store.Iterator([]byte(start), []byte(end))
-    var mold string
-    for ; iter.Valid(); iter.Next() {
-        key := iter.Key()
-        keyString := string(key)
-        fn := getFieldNameFromDataKey(keyString)
-        if fn == field {
-	    val := iter.Value()
-            k.cdc.MustUnmarshalBinaryBare(val, &mold)
-            if mold == value {
-                id := getIdFromDataKey(keyString)
-                u64, _ := strconv.ParseUint(id, 10, 64)
-                result = append(result, uint(u64))
+    } else {
+        // partial table scanning
+        start, end := getDataIteratorStartAndEndKey(tableName)
+        iter := store.Iterator([]byte(start), []byte(end))
+        var mold string
+        for ; iter.Valid(); iter.Next() {
+            key := iter.Key()
+            keyString := string(key)
+            fn := getFieldNameFromDataKey(keyString)
+            if fn == field {
+                val := iter.Value()
+                k.cdc.MustUnmarshalBinaryBare(val, &mold)
+                if mold == value {
+                    id := getIdFromDataKey(keyString)
+                    u64, _ := strconv.ParseUint(id, 10, 64)
+                    result = append(result, uint(u64))
+                }
             }
         }
     }
