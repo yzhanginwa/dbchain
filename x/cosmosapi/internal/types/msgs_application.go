@@ -1,0 +1,52 @@
+package types
+
+import (
+    sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+//////////////////////////
+//                      //
+// MsgCreateApplication //
+//                      //
+//////////////////////////
+
+// MsgCreateApplication defines a CreateTable message
+type MsgCreateApplication struct {
+    Owner sdk.AccAddress `json:"owner"`
+    Description string   `json:"description"`
+}
+
+// NewMsgCreateApplication is a constructor function for MsgCreatTable
+func NewMsgCreateApplication(owner sdk.AccAddress, description string) MsgCreateApplication {
+    return MsgCreateApplication {
+        Owner: owner,
+        Description: description,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgCreateApplication) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgCreateApplication) Type() string { return "create_application" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgCreateApplication) ValidateBasic() sdk.Error {
+    if msg.Owner.Empty() {
+        return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.Description) == 0 {
+        return sdk.ErrUnknownRequest("Application description cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgCreateApplication) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgCreateApplication) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}

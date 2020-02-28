@@ -14,6 +14,8 @@ import (
 func NewHandler(keeper Keeper) sdk.Handler {
     return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
         switch msg := msg.(type) {
+        case MsgCreateApplication:
+            return handleMsgCreateApplication(ctx, keeper, msg)
         case MsgCreateTable:
             return handleMsgCreateTable(ctx, keeper, msg)
         case MsgDropTable:
@@ -45,6 +47,17 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return sdk.ErrUnknownRequest(errMsg).Result()
         }
     }
+}
+
+// Handle a message to create application
+func handleMsgCreateApplication(ctx sdk.Context, keeper Keeper, msg MsgCreateApplication) sdk.Result {
+    // for now, we allow anybody to create application
+    // TODO: Add a system paramter "allow-creating-application", which is controlled by genesis admin
+    //       If it's false, nobody can create application
+
+    // We use the term database for internal use. To outside we use application to make users understand easily
+    keeper.CreateDatabase(ctx, msg.Owner, msg.Description)
+    return sdk.Result{}
 }
 
 // Handle a message to create table 

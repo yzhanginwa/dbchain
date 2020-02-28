@@ -10,6 +10,7 @@ import (
 
 var mutex = &sync.Mutex{}
 var NextIds = make(map[string]uint)
+var nextAppId uint
 
 func getNextId(k Keeper, ctx sdk.Context, tableName string) (uint, error) {
     store := ctx.KVStore(k.storeKey)
@@ -32,5 +33,26 @@ func getNextId(k Keeper, ctx sdk.Context, tableName string) (uint, error) {
     NextIds[tableName] = nextId + 1
 
     return nextId, nil
+}
+
+func getDatabaseId(k Keeper, ctx sdk.Context, appCode string) (uint, error) {
+    store := ctx.KVStore(k.storeKey)
+    mutex.Lock()
+    defer mutex.Unlock()
+
+    var nextAppIdKey = getDatabaseNextIdKey()
+    if nextAppId < 1 {
+        bz := store.Get([]byte(nextAppIdKey))
+        if bz == nil {
+            nextAppId = 1
+        } else {
+            k.cdc.MustUnmarshalBinaryBare(bz, &nextAppId)
+        }
+    }
+
+    store.Set([]byte(nextAppIdKey), k.cdc.MustMarshalBinaryBare(nextAppId + 1))
+    currentAppId := nextAppId
+    nextAppId += 1
+    return currentAppId, nil
 }
 

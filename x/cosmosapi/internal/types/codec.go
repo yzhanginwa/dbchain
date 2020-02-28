@@ -13,6 +13,7 @@ func init() {
 
 // RegisterCodec registers concrete types on the Amino codec
 func RegisterCodec(cdc *codec.Codec) {
+    cdc.RegisterConcrete(MsgCreateApplication{}, "cosmosapi/CreateApplication", nil)
     cdc.RegisterConcrete(MsgCreateTable{}, "cosmosapi/CreateTable", nil)
     cdc.RegisterConcrete(MsgDropTable{}, "cosmosapi/DropTable", nil)
     cdc.RegisterConcrete(MsgAddColumn{}, "cosmosapi/AddColumn", nil)

@@ -9,6 +9,23 @@ import (
 type RowFields map[string]string
 type RowFieldsJson []byte
 
+/////////////////
+//             //
+// application //
+//             //
+/////////////////
+
+type Database struct {
+    Owner sdk.AccAddress  `json:"owner"`
+    AppCode string        `json:"appcode"`
+    AppId uint            `json:"appid"`
+    Description string    `json:"description"`
+}
+
+func NewDatabase() Database {
+    return Database{}
+}
+
 ///////////
 //       //
 // table //

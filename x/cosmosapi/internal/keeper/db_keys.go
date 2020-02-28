@@ -6,11 +6,26 @@ import (
 )
 
 const (
+    KeyPrefixDb    = "db"
     KeyPrefixMeta  = "mt"
     KeyPrefixData  = "dt"
     KeyPrefixIndex = "ix"
     KeyPrefixGroup = "grp"
 )
+
+//////////////////////////////////
+//                              //
+// application/database related //
+//                              //
+//////////////////////////////////
+
+func getDatabaseKey(appCode string) string {
+    return fmt.Sprintf("%s:code:%s", KeyPrefixDb, appCode)
+}
+
+func getDatabaseNextIdKey() string {
+    return fmt.Sprintf("%s:nextId", KeyPrefixDb)
+}
 
 //////////////////
 //              //

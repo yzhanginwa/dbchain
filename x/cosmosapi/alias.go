@@ -20,6 +20,7 @@ var (
 
 type (
     Keeper          = keeper.Keeper
+    MsgCreateApplication = types.MsgCreateApplication
     MsgCreateTable  = types.MsgCreateTable
     MsgDropTable    = types.MsgDropTable
     MsgAddColumn    = types.MsgAddColumn

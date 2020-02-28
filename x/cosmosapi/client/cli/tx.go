@@ -27,6 +27,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
     }
 
     cosmosapiTxCmd.AddCommand(client.PostCommands(
+        GetCmdCreateApplication(cdc),
         GetCmdCreateTable(cdc),
         GetCmdDropTable(cdc),
         GetCmdAddColumn(cdc),
@@ -51,7 +52,27 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 //                //
 ////////////////////
 
-// GetCmdCreatePoll is the CLI command for sending a CreatePoll transaction
+func GetCmdCreateApplication(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "create-application",
+        Short: "create a new application",
+        Args:  cobra.ExactArgs(1),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            description := args[0]
+            msg := types.NewMsgCreateApplication(cliCtx.GetFromAddress(), description)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return err
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
 func GetCmdCreateTable(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use:   "create-table [name] [fields]",
