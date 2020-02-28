@@ -18,6 +18,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         RunE:                       client.ValidateCmd,
     }
     cosmosapiQueryCmd.AddCommand(client.GetCommands(
+        GetCmdApplication(storeKey, cdc),
         GetCmdTable(storeKey, cdc),
         GetCmdIndex(storeKey, cdc),
         GetCmdOption(storeKey, cdc),
@@ -28,6 +29,27 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdShowAdminGroup(storeKey, cdc),
     )...)
     return cosmosapiQueryCmd
+}
+
+func GetCmdApplication(queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "application",
+        Short: "query applications",
+        Args: cobra.ExactArgs(0),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/application", queryRoute), nil)
+            if err != nil {
+                fmt.Print("could not get applications!")
+                return nil
+            }
+
+            var out types.QueryTables // QueryTables is a []string. It could be reused here
+            cdc.MustUnmarshalJSON(res, &out)
+            return cliCtx.PrintOutput(out)
+        },
+    }
 }
 
 // GetCmdTables lists all table names

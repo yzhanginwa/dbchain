@@ -10,6 +10,23 @@ import (
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/other"
 )
 
+
+func (k Keeper) getDatabases(ctx sdk.Context) ([]string) {
+    store := ctx.KVStore(k.storeKey)
+    start, end := getDatabaseIteratorStartAndEndKey()
+    iter := store.Iterator([]byte(start), []byte(end))
+    var result []string
+
+    for ; iter.Valid(); iter.Next() {
+        key := iter.Key()
+        keyString := string(key)
+        appCode := getAppCodeFromDatabaseKey(keyString)
+        result = append(result, appCode)
+    }
+
+    return result
+}
+
 func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, description string) error {
     store := ctx.KVStore(k.storeKey)
     newAppCode := generateNewAppCode(owner)

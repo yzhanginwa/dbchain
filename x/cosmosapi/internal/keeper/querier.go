@@ -19,6 +19,7 @@ import (
 
 // query endpoints supported by the cosmosapi service Querier
 const (
+    QueryApplication   = "application"
     QueryTables   = "tables"
     QueryIndex    = "index"
     QueryOption   = "option"
@@ -36,6 +37,8 @@ const (
 func NewQuerier(keeper Keeper) sdk.Querier {
     return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
         switch path[0] {
+        case QueryApplication:
+            return queryApplications(ctx, req, keeper)
         case QueryTables:
             if len(path) > 1 {
                 return queryTable(ctx, path[1:], req, keeper)
@@ -67,6 +70,19 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 // query meta //
 //            //
 ////////////////
+
+// the the list of app code in the system
+func queryApplications(ctx sdk.Context, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+    // we use the term database in the code
+    applications := keeper.getDatabases(ctx)
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, applications)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
 
 func queryTables(ctx sdk.Context, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     tables, err := keeper.getTables(ctx)

@@ -27,6 +27,18 @@ func getDatabaseNextIdKey() string {
     return fmt.Sprintf("%s:nextId", KeyPrefixDb)
 }
 
+func getDatabaseIteratorStartAndEndKey() (string, string) {
+    start := fmt.Sprintf("%s:code:", KeyPrefixDb)
+    end   := fmt.Sprintf("%s:code;", KeyPrefixDb)
+    return start, end
+}
+
+func getAppCodeFromDatabaseKey(key string) string {
+    arr := strings.Split(key, ":")
+    return arr[2]
+}
+
+
 //////////////////
 //              //
 // meta related //
