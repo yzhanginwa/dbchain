@@ -11,12 +11,14 @@ import (
 ////////////////////////
 
 type MsgAddAdminAccount struct {
+    AppCode string              `json:"app_code"`
     AdminAddress sdk.AccAddress `json:"admin_address"`
     Owner sdk.AccAddress        `json:"owner"`
 }
 
-func NewMsgAddAdminAccount(adminAddress sdk.AccAddress, owner sdk.AccAddress) MsgAddAdminAccount {
+func NewMsgAddAdminAccount(appCode string, adminAddress sdk.AccAddress, owner sdk.AccAddress) MsgAddAdminAccount {
     return MsgAddAdminAccount {
+        AppCode: appCode,
         AdminAddress: adminAddress,
         Owner: owner,
     }
@@ -30,6 +32,9 @@ func (msg MsgAddAdminAccount) Type() string { return "add_admin_account" }
 
 // ValidateBasic runs stateless checks on the message
 func (msg MsgAddAdminAccount) ValidateBasic() sdk.Error {
+    if len(msg.AppCode) == 0 {
+        return sdk.ErrUnknownRequest("App code cannot be empty")
+    }
     if msg.AdminAddress.Empty() {
         return sdk.ErrInvalidAddress(msg.AdminAddress.String())
     }

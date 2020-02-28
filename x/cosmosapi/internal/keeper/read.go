@@ -10,10 +10,10 @@ import (
 )
 
 
-func (k Keeper) DoFind(ctx sdk.Context, tableName string, id uint) (types.RowFields, error){
+func (k Keeper) DoFind(ctx sdk.Context, appId uint, tableName string, id uint) (types.RowFields, error){
     store := ctx.KVStore(k.storeKey)
 
-    fieldNames, err := k.getTableFields(ctx, tableName)
+    fieldNames, err := k.getTableFields(ctx, appId, tableName)
     if err != nil {
         return nil, errors.New(fmt.Sprintf("Failed to get fields for table %s", tableName))
     }
@@ -26,7 +26,7 @@ func (k Keeper) DoFind(ctx sdk.Context, tableName string, id uint) (types.RowFie
     var value string
 
     for _, fieldName := range fieldNames {
-        key := getDataKey(tableName, id, fieldName)
+        key := getDataKey(appId, tableName, id, fieldName)
         bz := store.Get([]byte(key)) 
         if bz != nil {
             k.cdc.MustUnmarshalBinaryBare(bz, &value)
@@ -37,27 +37,27 @@ func (k Keeper) DoFind(ctx sdk.Context, tableName string, id uint) (types.RowFie
     return fields, nil
 }
 
-func (k Keeper) Find(ctx sdk.Context, tableName string, id uint, owner sdk.AccAddress) (types.RowFields, error){
+func (k Keeper) Find(ctx sdk.Context, appId uint, tableName string, id uint, owner sdk.AccAddress) (types.RowFields, error){
     var ids []uint
     ids = append(ids, id)
 
     // if public table, return all ids
-    if !k.isTablePublic(ctx, tableName) {
-        ids = k.filterOwnIds(ctx, tableName, ids, owner)
+    if !k.isTablePublic(ctx, appId, tableName) {
+        ids = k.filterOwnIds(ctx, appId, tableName, ids, owner)
         if len(ids) < 1 {
             return nil, errors.New(fmt.Sprintf("Failed to get fields for id %d", id))
         }
     }
 
-    return k.DoFind(ctx, tableName, id)
+    return k.DoFind(ctx, appId, tableName, id)
 }
 
 // Find by an attribute in the r.Fields
-func (k Keeper) FindBy(ctx sdk.Context, tableName string, field string,  value string, owner sdk.AccAddress) []uint {
+func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field string,  value string, owner sdk.AccAddress) []uint {
     store := ctx.KVStore(k.storeKey)
 
     var hasIndex bool
-    indexFields, err := k.GetIndex(ctx, tableName)
+    indexFields, err := k.GetIndex(ctx, appId, tableName)
     if err == nil {
         for _, item := range(indexFields) {
             if item == field {
@@ -69,7 +69,7 @@ func (k Keeper) FindBy(ctx sdk.Context, tableName string, field string,  value s
 
     var result []uint
     if hasIndex {
-        key := getIndexKey(tableName, field, value)
+        key := getIndexKey(appId, tableName, field, value)
         bz := store.Get([]byte(key))
         if bz == nil {
             result = []uint{}
@@ -78,7 +78,7 @@ func (k Keeper) FindBy(ctx sdk.Context, tableName string, field string,  value s
         }
     } else {
         // partial table scanning
-        start, end := getDataIteratorStartAndEndKey(tableName)
+        start, end := getDataIteratorStartAndEndKey(appId, tableName)
         iter := store.Iterator([]byte(start), []byte(end))
         var mold string
         for ; iter.Valid(); iter.Next() {
@@ -98,19 +98,19 @@ func (k Keeper) FindBy(ctx sdk.Context, tableName string, field string,  value s
     }
 
     // if public table, return all ids
-    if k.isTablePublic(ctx, tableName) {
+    if k.isTablePublic(ctx, appId, tableName) {
         return result
     } else {
-        return k.filterOwnIds(ctx, tableName, result, owner)
+        return k.filterOwnIds(ctx, appId, tableName, result, owner)
     }
 }
 
-func (k Keeper) FindAll(ctx sdk.Context, tableName string, owner sdk.AccAddress) []uint {
+func (k Keeper) FindAll(ctx sdk.Context, appId uint, tableName string, owner sdk.AccAddress) []uint {
     store := ctx.KVStore(k.storeKey)
     var result []uint
 
     // full table scanning
-    start, end := getDataIteratorStartAndEndKey(tableName)
+    start, end := getDataIteratorStartAndEndKey(appId, tableName)
     iter := store.Iterator([]byte(start), []byte(end))
     var currentId = "0"
     for ; iter.Valid(); iter.Next() {
@@ -125,10 +125,10 @@ func (k Keeper) FindAll(ctx sdk.Context, tableName string, owner sdk.AccAddress)
     }
 
     // if public table, return all ids
-    if k.isTablePublic(ctx, tableName) {
+    if k.isTablePublic(ctx, appId, tableName) {
         return result
     } else {
-        return k.filterOwnIds(ctx, tableName, result, owner)
+        return k.filterOwnIds(ctx, appId, tableName, result, owner)
     }
 }
 
@@ -138,19 +138,19 @@ func (k Keeper) FindAll(ctx sdk.Context, tableName string, owner sdk.AccAddress)
 //              //
 //////////////////
 
-func (k Keeper) isTablePublic(ctx sdk.Context, tableName string) bool {
-    tableOptions, _ := k.GetOption(ctx, tableName)
+func (k Keeper) isTablePublic(ctx sdk.Context, appId uint, tableName string) bool {
+    tableOptions, _ := k.GetOption(ctx, appId, tableName)
     return utils.ItemExists(tableOptions, string(types.TBLOPT_PUBLIC))
 }
 
-func (k Keeper) filterOwnIds(ctx sdk.Context, tableName string, ids []uint, owner sdk.AccAddress) []uint {
+func (k Keeper) filterOwnIds(ctx sdk.Context, appId uint,  tableName string, ids []uint, owner sdk.AccAddress) []uint {
     store := ctx.KVStore(k.storeKey)
     var ownerString string = owner.String()
 
     var result = []uint{}
     var mold string
     for _, id := range ids {
-        key := getDataKey(tableName, uint(id), "created_by")
+        key := getDataKey(appId, tableName, uint(id), "created_by")
         bz := store.Get([]byte(key))
         if bz != nil {
             k.cdc.MustUnmarshalBinaryBare(bz, &mold)

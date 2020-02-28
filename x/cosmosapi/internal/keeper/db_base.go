@@ -6,8 +6,8 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) getTableFields(ctx sdk.Context, tableName string) ([]string, error) {
-    table, err := k.GetTable(ctx, tableName)
+func (k Keeper) getTableFields(ctx sdk.Context, appId uint, tableName string) ([]string, error) {
+    table, err := k.GetTable(ctx, appId, tableName)
     if err != nil {
         return nil, errors.New(fmt.Sprintf("Failed to access table %s", tableName))
     }

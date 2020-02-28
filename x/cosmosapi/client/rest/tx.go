@@ -14,6 +14,7 @@ import (
 type createTableReq struct  {
     BaseReq rest.BaseReq   `json:"base_req"`
     Owner   string         `json:"owner"`
+    AppCode string         `json:"app_code"`
     Name    string         `json:"title"`
     Fields  []string       `json:"fields"`
 }
@@ -38,7 +39,7 @@ func createTableHandler(cliCtx context.CLIContext) http.HandlerFunc {
             return
         }
 
-        msg := types.NewMsgCreateTable(addr, req.Name, req.Fields)
+        msg := types.NewMsgCreateTable(addr, req.AppCode, req.Name, req.Fields)
         err = msg.ValidateBasic()
         if err != nil {
             rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

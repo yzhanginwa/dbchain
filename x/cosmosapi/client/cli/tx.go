@@ -75,16 +75,17 @@ func GetCmdCreateApplication(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdCreateTable(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "create-table [name] [fields]",
+        Use:   "create-table [appCode] [name] [fields]",
         Short: "create a new table",
-        Args:  cobra.ExactArgs(2),
+        Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            name := args[0]
-            fields := strings.Split(args[1], ",")
-            msg := types.NewMsgCreateTable(cliCtx.GetFromAddress(), name, fields)
+            appCode := args[0]
+            name := args[1]
+            fields := strings.Split(args[2], ",")
+            msg := types.NewMsgCreateTable(cliCtx.GetFromAddress(), appCode, name, fields)
             err := msg.ValidateBasic()
             if err != nil {
                 return err
@@ -97,15 +98,16 @@ func GetCmdCreateTable(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdDropTable(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "drop-table [name]",
+        Use:   "drop-table [appCode] [name]",
         Short: "drop a table",
-        Args:  cobra.ExactArgs(1),
+        Args:  cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            name := args[0]
-            msg := types.NewMsgDropTable(cliCtx.GetFromAddress(), name)
+            appCode := args[0]
+            name := args[1]
+            msg := types.NewMsgDropTable(cliCtx.GetFromAddress(), appCode, name)
             err := msg.ValidateBasic()
             if err != nil {
                 return err
@@ -118,16 +120,17 @@ func GetCmdDropTable(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdAddColumn(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "add-column [name] [field]",
+        Use:   "add-column [appCode] [name] [field]",
         Short: "add a new column onto a table",
-        Args:  cobra.ExactArgs(2),
+        Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            name := args[0]
-            field := args[1]
-            msg := types.NewMsgAddColumn(cliCtx.GetFromAddress(), name, field)
+            appCode:= args[0]
+            name   := args[2]
+            field  := args[3]
+            msg := types.NewMsgAddColumn(cliCtx.GetFromAddress(), appCode, name, field)
             err := msg.ValidateBasic()
             if err != nil {
                 return err
@@ -140,16 +143,17 @@ func GetCmdAddColumn(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdDropColumn(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "drop-column [name] [field]",
+        Use:   "drop-column [appCode] [name] [field]",
         Short: "drop a column from a table",
-        Args:  cobra.ExactArgs(2),
+        Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            name := args[0]
-            field := args[1]
-            msg := types.NewMsgDropColumn(cliCtx.GetFromAddress(), name, field)
+            appCode := args[0]
+            name    := args[1]
+            field   := args[2]
+            msg := types.NewMsgDropColumn(cliCtx.GetFromAddress(), appCode, name, field)
             err := msg.ValidateBasic()
             if err != nil {
                 return err
@@ -162,17 +166,18 @@ func GetCmdDropColumn(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdRenameColumn(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "rename-column [name] [old-field] [new-field",
+        Use:   "rename-column [appCode] [name] [old-field] [new-field",
         Short: "rename a column in a table",
-        Args:  cobra.ExactArgs(3),
+        Args:  cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            name := args[0]
-            oldField := args[1]
-            newField := args[2]
-            msg := types.NewMsgRenameColumn(cliCtx.GetFromAddress(), name, oldField, newField)
+            appCode  := args[0]
+            name     := args[1]
+            oldField := args[2]
+            newField := args[3]
+            msg := types.NewMsgRenameColumn(cliCtx.GetFromAddress(), appCode, name, oldField, newField)
             err := msg.ValidateBasic()
             if err != nil {
                 return err
@@ -186,16 +191,17 @@ func GetCmdRenameColumn(cdc *codec.Codec) *cobra.Command {
 // GetCmdCreateIndex is the CLI command for sending a CreateIndex transaction
 func GetCmdCreateIndex(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "create-index [tableName] [field]",
+        Use:   "create-index [appCode] [tableName] [field]",
         Short: "create a new index",
-        Args:  cobra.ExactArgs(2),
+        Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            tableName := args[0]
-            field := args[1]
-            msg := types.NewMsgCreateIndex(cliCtx.GetFromAddress(), tableName, field)
+            appCode   := args[0]
+            tableName := args[1]
+            field     := args[2]
+            msg := types.NewMsgCreateIndex(cliCtx.GetFromAddress(), appCode, tableName, field)
             err := msg.ValidateBasic()
             if err != nil {
                 return err
@@ -208,16 +214,17 @@ func GetCmdCreateIndex(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdDropIndex(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "drop-index [tableName] [field]",
+        Use:   "drop-index [appCode] [tableName] [field]",
         Short: "drop an index",
-        Args:  cobra.ExactArgs(2),
+        Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            tableName := args[0]
-            field := args[1]
-            msg := types.NewMsgDropIndex(cliCtx.GetFromAddress(), tableName, field)
+            appCode   := args[0]
+            tableName := args[1]
+            field     := args[2]
+            msg := types.NewMsgDropIndex(cliCtx.GetFromAddress(), appCode, tableName, field)
             err := msg.ValidateBasic()
             if err != nil {
                 return err
@@ -230,18 +237,19 @@ func GetCmdDropIndex(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdModifyOption(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "modify-table-option [tableName] [action] [option]",
+        Use:   "modify-table-option [appCode] [tableName] [action] [option]",
         Short: "modify table options",
-        Args:  cobra.ExactArgs(3),
+        Args:  cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            tableName := args[0]
-            action := args[1]
-            option := args[2]
+            appCode   := args[0]
+            tableName := args[1]
+            action    := args[2]
+            option    := args[3]
 
-            msg := types.NewMsgModifyOption(cliCtx.GetFromAddress(), tableName, action, option)
+            msg := types.NewMsgModifyOption(cliCtx.GetFromAddress(), appCode, tableName, action, option)
             err := msg.ValidateBasic()
             if err != nil {
                 return err
@@ -254,19 +262,20 @@ func GetCmdModifyOption(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdModifyColumnOption(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "modify-column-option [tableName] [fieldName] [action] [option]",
+        Use:   "modify-column-option [appCode] [tableName] [fieldName] [action] [option]",
         Short: "modify column options",
-        Args:  cobra.ExactArgs(4),
+        Args:  cobra.ExactArgs(5),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            tableName := args[0]
-            fieldName := args[1]
-            action := args[2]
-            option := args[3]
+            appCode   := args[0]
+            tableName := args[1]
+            fieldName := args[2]
+            action    := args[3]
+            option    := args[4]
 
-            msg := types.NewMsgModifyColumnOption(cliCtx.GetFromAddress(), tableName, fieldName, action, option)
+            msg := types.NewMsgModifyColumnOption(cliCtx.GetFromAddress(), appCode, tableName, fieldName, action, option)
             err := msg.ValidateBasic()
             if err != nil {
                 return err
@@ -286,16 +295,17 @@ func GetCmdModifyColumnOption(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdInsertRow(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "insert-row [tableName] [fields] [values]",
+        Use:   "insert-row [appCode] [tableName] [fields] [values]",
         Short: "create a new row",
-        Args:  cobra.ExactArgs(3),
+        Args:  cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            name := args[0]
-            fields := strings.Split(args[1], ",")
-            values := strings.Split(args[2], ",")
+            appCode := args[0]
+            name    := args[1]
+            fields  := strings.Split(args[2], ",")
+            values  := strings.Split(args[3], ",")
             rowFields := make(types.RowFields)
             for i, field := range fields {
                 if i < len(values) {
@@ -306,7 +316,7 @@ func GetCmdInsertRow(cdc *codec.Codec) *cobra.Command {
             rowFieldsJson, err := json.Marshal(rowFields)
             if err != nil { return err } 
 
-            msg := types.NewMsgInsertRow(cliCtx.GetFromAddress(), name, rowFieldsJson)
+            msg := types.NewMsgInsertRow(cliCtx.GetFromAddress(), appCode, name, rowFieldsJson)
             err = msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err)) 
@@ -319,20 +329,21 @@ func GetCmdInsertRow(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdUpdateRow(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "update-row [tableName] [id] [fields] [values]",
+        Use:   "update-row [appCode] [tableName] [id] [fields] [values]",
         Short: "update a row",
-        Args:  cobra.ExactArgs(4),
+        Args:  cobra.ExactArgs(5),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            name := args[0]
-            id, err := strconv.ParseUint(args[1], 10, 0)
+            appCode := args[0]
+            name    := args[1]
+            id, err := strconv.ParseUint(args[2], 10, 0)
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            fields := strings.Split(args[2], ",")
-            values := strings.Split(args[3], ",")
+            fields := strings.Split(args[3], ",")
+            values := strings.Split(args[4], ",")
             rowFields := make(types.RowFields)
             for i, field := range fields {
                 if i < len(values) {
@@ -343,7 +354,7 @@ func GetCmdUpdateRow(cdc *codec.Codec) *cobra.Command {
             rowFieldsJson, err := json.Marshal(rowFields)
             if err != nil { return err }
 
-            msg := types.NewMsgUpdateRow(cliCtx.GetFromAddress(), name, uint(id), rowFieldsJson)
+            msg := types.NewMsgUpdateRow(cliCtx.GetFromAddress(), appCode, name, uint(id), rowFieldsJson)
             err = msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
@@ -356,20 +367,21 @@ func GetCmdUpdateRow(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdDeleteRow(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "delete-row [tableName] [id]",
+        Use:   "delete-row [appCode] [tableName] [id]",
         Short: "delete a row",
-        Args:  cobra.ExactArgs(2),
+        Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            name := args[0]
-            id, err := strconv.ParseUint(args[1], 10, 0)
+            appCode := args[0]
+            name    := args[1]
+            id, err := strconv.ParseUint(args[2], 10, 0)
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
 
-            msg := types.NewMsgDeleteRow(cliCtx.GetFromAddress(), name, uint(id))
+            msg := types.NewMsgDeleteRow(cliCtx.GetFromAddress(), appCode, name, uint(id))
             err = msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
@@ -388,20 +400,22 @@ func GetCmdDeleteRow(cdc *codec.Codec) *cobra.Command {
 
 func GetCmdAddAdminAccount(cdc * codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "add-admin [address]",
+        Use:   "add-admin [appCode] [address]",
         Short: "add an account into admin group",
-        Args:  cobra.ExactArgs(1),
+        Args:  cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            addr, err := sdk.AccAddressFromBech32(args[0]) // args[0] is the new admin address
+            appCode := args[0]
+            adminAddress := args[1]
+            addr, err := sdk.AccAddressFromBech32(adminAddress)
 
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
 
-            msg := types.NewMsgAddAdminAccount(addr, cliCtx.GetFromAddress())
+            msg := types.NewMsgAddAdminAccount(appCode, addr, cliCtx.GetFromAddress())
             err = msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))

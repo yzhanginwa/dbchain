@@ -15,9 +15,9 @@ import (
 //                         //
 /////////////////////////////
 
-func (k Keeper) getTables(ctx sdk.Context) ([]string, error) {
+func (k Keeper) getTables(ctx sdk.Context, appId uint) ([]string, error) {
     store := ctx.KVStore(k.storeKey)
-    tablesKey := getTablesKey()
+    tablesKey := getTablesKey(appId)
     bz := store.Get([]byte(tablesKey))
     if bz == nil {
         return nil, errors.New("No tables found")
@@ -29,13 +29,13 @@ func (k Keeper) getTables(ctx sdk.Context) ([]string, error) {
 
 
 // Check if the table is present in the store or not
-func (k Keeper) IsTablePresent(ctx sdk.Context, name string) bool {
+func (k Keeper) IsTablePresent(ctx sdk.Context, appId uint, name string) bool {
     store := ctx.KVStore(k.storeKey)
-    return store.Has([]byte(getTableKey(name)))
+    return store.Has([]byte(getTableKey(appId, name)))
 }
 
-func (k Keeper) IsFieldPresent(ctx sdk.Context, tableName string, field string) bool {
-    table, err := k.GetTable(ctx, tableName)
+func (k Keeper) IsFieldPresent(ctx sdk.Context, appId uint, tableName string, field string) bool {
+    table, err := k.GetTable(ctx, appId, tableName)
     if err != nil {
         return false
     }
@@ -48,41 +48,41 @@ func (k Keeper) IsFieldPresent(ctx sdk.Context, tableName string, field string) 
 }
 
 // Create a new table
-func (k Keeper) CreateTable(ctx sdk.Context, owner sdk.AccAddress, name string, fields []string) {
+func (k Keeper) CreateTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, name string, fields []string) {
     store := ctx.KVStore(k.storeKey)
     table := types.NewTable()
     table.Owner = owner
     table.Name = name
     table.Fields = preProcessFields(fields)
-    store.Set([]byte(getTableKey(table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
 
     var tables []string
-    bz :=store.Get([]byte(getTablesKey()))
+    bz :=store.Get([]byte(getTablesKey(appId)))
     if bz == nil {
         tables = append(tables, table.Name)
     } else {
         k.cdc.MustUnmarshalBinaryBare(bz, &tables)
         tables = append(tables, table.Name)
     }
-    store.Set([]byte(getTablesKey()), k.cdc.MustMarshalBinaryBare(tables))
+    store.Set([]byte(getTablesKey(appId)), k.cdc.MustMarshalBinaryBare(tables))
 }
 
 // Remove a table
-func (k Keeper) DropTable(ctx sdk.Context, owner sdk.AccAddress, name string) {
+func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, name string) {
     store := ctx.KVStore(k.storeKey)
     var tables []string
-    bz :=store.Get([]byte(getTablesKey()))
+    bz :=store.Get([]byte(getTablesKey(appId)))
     if bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &tables)
         for i, tbl := range tables {
             if name == tbl {
                 tables = append(tables[:i], tables[i+1:]...)
                 if len(tables) < 1 {
-                    store.Delete([]byte(getTablesKey()))
+                    store.Delete([]byte(getTablesKey(appId)))
                 } else {
-                    store.Set([]byte(getTablesKey()), k.cdc.MustMarshalBinaryBare(tables))
+                    store.Set([]byte(getTablesKey(appId)), k.cdc.MustMarshalBinaryBare(tables))
                 }
-                store.Delete([]byte(getTableKey(name)))
+                store.Delete([]byte(getTableKey(appId, name)))
                 break
             }
         }
@@ -90,9 +90,9 @@ func (k Keeper) DropTable(ctx sdk.Context, owner sdk.AccAddress, name string) {
 }
 
 // Get a table 
-func (k Keeper) GetTable(ctx sdk.Context, name string) (types.Table, error) {
+func (k Keeper) GetTable(ctx sdk.Context, appId uint, name string) (types.Table, error) {
     store := ctx.KVStore(k.storeKey)
-    bz := store.Get([]byte(getTableKey(name)))
+    bz := store.Get([]byte(getTableKey(appId, name)))
     if bz == nil {
         return types.Table{}, errors.New(fmt.Sprintf("table %s not found", name))
     }
@@ -102,8 +102,8 @@ func (k Keeper) GetTable(ctx sdk.Context, name string) (types.Table, error) {
 }
 
 // Add a field
-func (k Keeper) AddColumn(ctx sdk.Context, name string, field string) (bool, error) {
-    table, err := k.GetTable(ctx, name)
+func (k Keeper) AddColumn(ctx sdk.Context, appId uint, name string, field string) (bool, error) {
+    table, err := k.GetTable(ctx, appId, name)
     if err != nil {
         return false, err
     }
@@ -117,13 +117,13 @@ func (k Keeper) AddColumn(ctx sdk.Context, name string, field string) (bool, err
     table.Fields = append(table.Fields, field)
 
     store := ctx.KVStore(k.storeKey)
-    store.Set([]byte(getTableKey(table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
     return true, nil
 }
 
 // Remove a field
-func (k Keeper) DropColumn(ctx sdk.Context, name string, field string) (bool, error){
-    table, err := k.GetTable(ctx, name)
+func (k Keeper) DropColumn(ctx sdk.Context, appId uint, name string, field string) (bool, error){
+    table, err := k.GetTable(ctx, appId, name)
     if err != nil {
         return false, err
     }
@@ -145,13 +145,13 @@ func (k Keeper) DropColumn(ctx sdk.Context, name string, field string) (bool, er
     }
 
     store := ctx.KVStore(k.storeKey)
-    store.Set([]byte(getTableKey(table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
     return true, nil
 }
 
 // Rename a field
-func (k Keeper) RenameColumn(ctx sdk.Context, name string, oldField string, newField string) (bool, error) {
-    table, err := k.GetTable(ctx, name)
+func (k Keeper) RenameColumn(ctx sdk.Context, appId uint, name string, oldField string, newField string) (bool, error) {
+    table, err := k.GetTable(ctx, appId, name)
     if err != nil {
         return false, err
     }
@@ -187,13 +187,13 @@ func (k Keeper) RenameColumn(ctx sdk.Context, name string, oldField string, newF
     table.Fields[index] = newField
 
     store := ctx.KVStore(k.storeKey)
-    store.Set([]byte(getTableKey(table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
     return true, nil
 }
 
-func (k Keeper) ModifyOption(ctx sdk.Context, owner sdk.AccAddress, tableName string, action string, option string) {
+func (k Keeper) ModifyOption(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, action string, option string) {
     store := ctx.KVStore(k.storeKey)
-    key := getTableOptionsKey(tableName)
+    key := getTableOptionsKey(appId, tableName)
     var options []string
     var result []string
 
@@ -228,9 +228,9 @@ func (k Keeper) ModifyOption(ctx sdk.Context, owner sdk.AccAddress, tableName st
     }
 }
 
-func (k Keeper) GetOption(ctx sdk.Context, tableName string) ([]string, error) {
+func (k Keeper) GetOption(ctx sdk.Context, appId uint, tableName string) ([]string, error) {
     store := ctx.KVStore(k.storeKey)
-    key := getTableOptionsKey(tableName)
+    key := getTableOptionsKey(appId, tableName)
     bz := store.Get([]byte(key))
     if bz == nil {
         return []string{}, nil
@@ -240,9 +240,9 @@ func (k Keeper) GetOption(ctx sdk.Context, tableName string) ([]string, error) {
     return options, nil
 }
 
-func (k Keeper) ModifyColumnOption(ctx sdk.Context, owner sdk.AccAddress, tableName string, fieldName string, action string, option string) {
+func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldName string, action string, option string) {
     store := ctx.KVStore(k.storeKey)
-    key := getColumnOptionsKey(tableName, fieldName)
+    key := getColumnOptionsKey(appId, tableName, fieldName)
     var options []string
     var result []string
 
@@ -279,9 +279,9 @@ func (k Keeper) ModifyColumnOption(ctx sdk.Context, owner sdk.AccAddress, tableN
     }
 }
 
-func (k Keeper) GetColumnOption(ctx sdk.Context, tableName string, fieldName string) ([]string, error) {
+func (k Keeper) GetColumnOption(ctx sdk.Context, appId uint, tableName string, fieldName string) ([]string, error) {
     store := ctx.KVStore(k.storeKey)
-    key := getColumnOptionsKey(tableName, fieldName)
+    key := getColumnOptionsKey(appId, tableName, fieldName)
     bz := store.Get([]byte(key))
     if bz == nil {
         return []string{}, nil
@@ -298,9 +298,9 @@ func (k Keeper) GetColumnOption(ctx sdk.Context, tableName string, fieldName str
 /////////////////////////////
 
 // for now we only support indexes on single field
-func (k Keeper) CreateIndex(ctx sdk.Context, owner sdk.AccAddress, tableName string, field string) {
+func (k Keeper) CreateIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, field string) {
     store := ctx.KVStore(k.storeKey)
-    key := getMetaTableIndexKey(tableName)
+    key := getMetaTableIndexKey(appId, tableName)
     var index_fields []string
 
     bz := store.Get([]byte(key))
@@ -312,9 +312,9 @@ func (k Keeper) CreateIndex(ctx sdk.Context, owner sdk.AccAddress, tableName str
     // TODO: to create index data for the existing records of the table
 }
 
-func (k Keeper) DropIndex(ctx sdk.Context, owner sdk.AccAddress, tableName string, field string) {
+func (k Keeper) DropIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, field string) {
     store := ctx.KVStore(k.storeKey)
-    key := getMetaTableIndexKey(tableName)
+    key := getMetaTableIndexKey(appId, tableName)
     var indexFields []string
 
     bz := store.Get([]byte(key))
@@ -336,9 +336,9 @@ func (k Keeper) DropIndex(ctx sdk.Context, owner sdk.AccAddress, tableName strin
     // TODO: to delete index data for the existing records of the table
 }
 
-func (k Keeper) GetIndex(ctx sdk.Context, tableName string) ([]string, error) {
+func (k Keeper) GetIndex(ctx sdk.Context, appId uint, tableName string) ([]string, error) {
     store := ctx.KVStore(k.storeKey)
-    key := getMetaTableIndexKey(tableName)
+    key := getMetaTableIndexKey(appId, tableName)
     bz := store.Get([]byte(key))
     if bz == nil {
         return []string{}, nil

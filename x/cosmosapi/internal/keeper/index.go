@@ -7,12 +7,12 @@ import (
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 )
 
-func (k Keeper) updateIndex(ctx sdk.Context, tableName string, id uint, fields types.RowFields) (uint, error){
+func (k Keeper) updateIndex(ctx sdk.Context, appId uint, tableName string, id uint, fields types.RowFields) (uint, error){
     store := ctx.KVStore(k.storeKey)
 
-    oldRecord, _ := k.DoFind(ctx, tableName, id)
+    oldRecord, _ := k.DoFind(ctx, appId, tableName, id)
 
-    indexFields, err := k.GetIndex(ctx, tableName)
+    indexFields, err := k.GetIndex(ctx, appId, tableName)
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get index for table %s", tableName))
     }
@@ -27,7 +27,7 @@ func (k Keeper) updateIndex(ctx sdk.Context, tableName string, id uint, fields t
         if value, ok := fields[indexField]; ok {
             if oldRecord != nil {
                 if oldValue, oldOk := oldRecord[indexField]; oldOk {
-                    oldKey := getIndexKey(tableName, indexField, oldValue)
+                    oldKey := getIndexKey(appId, tableName, indexField, oldValue)
                     bz := store.Get([]byte(oldKey))
                     if bz != nil {
                         k.cdc.MustUnmarshalBinaryBare(bz, &mold)
@@ -40,7 +40,7 @@ func (k Keeper) updateIndex(ctx sdk.Context, tableName string, id uint, fields t
                     }
                 }
             }
-            key := getIndexKey(tableName, indexField, value)
+            key := getIndexKey(appId, tableName, indexField, value)
             store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(id)) 
         }
     }

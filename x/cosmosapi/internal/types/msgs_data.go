@@ -14,14 +14,16 @@ import (
 // MsgCreatePoll defines a CreatePoll message
 type MsgInsertRow struct {
     Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
     TableName string     `json:"table_name"`
     Fields RowFieldsJson `json:"fields"`
 }
 
 // NewMsgCreatePoll is a constructor function for MsgCreatPoll
-func NewMsgInsertRow(owner sdk.AccAddress, tableName string, fieldsJson RowFieldsJson) MsgInsertRow {
+func NewMsgInsertRow(owner sdk.AccAddress, appCode string, tableName string, fieldsJson RowFieldsJson) MsgInsertRow {
     return MsgInsertRow{
         Owner: owner,
+        AppCode: appCode,
         TableName: tableName,
         Fields: fieldsJson,
     }
@@ -37,6 +39,9 @@ func (msg MsgInsertRow) Type() string { return "insert_row" }
 func (msg MsgInsertRow) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdk.ErrUnknownRequest("App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
         return sdk.ErrUnknownRequest("Table name cannot be empty")
@@ -65,14 +70,16 @@ func (msg MsgInsertRow) GetSigners() []sdk.AccAddress {
 
 type MsgUpdateRow struct {
     Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
     TableName string     `json:"table_name"`
     Id uint              `json:"id"`
     Fields RowFieldsJson `json:"fields"`
 }
 
-func NewMsgUpdateRow(owner sdk.AccAddress, tableName string, id uint, fieldsJson RowFieldsJson) MsgUpdateRow {
+func NewMsgUpdateRow(owner sdk.AccAddress, appCode string, tableName string, id uint, fieldsJson RowFieldsJson) MsgUpdateRow {
     return MsgUpdateRow{
         Owner: owner,
+        AppCode: appCode,
         TableName: tableName,
         Id: id,
         Fields: fieldsJson,
@@ -89,6 +96,9 @@ func (msg MsgUpdateRow) Type() string { return "update_row" }
 func (msg MsgUpdateRow) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdk.ErrUnknownRequest("App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
         return sdk.ErrUnknownRequest("Table name cannot be empty")
@@ -120,13 +130,15 @@ func (msg MsgUpdateRow) GetSigners() []sdk.AccAddress {
 
 type MsgDeleteRow struct {
     Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
     TableName string     `json:"table_name"`
     Id uint              `json:"id"`
 }
 
-func NewMsgDeleteRow(owner sdk.AccAddress, tableName string, id uint) MsgDeleteRow {
+func NewMsgDeleteRow(owner sdk.AccAddress, appCode string, tableName string, id uint) MsgDeleteRow {
     return MsgDeleteRow{
         Owner: owner,
+        AppCode: appCode,
         TableName: tableName,
         Id: id,
     }
@@ -142,6 +154,9 @@ func (msg MsgDeleteRow) Type() string { return "delete_row" }
 func (msg MsgDeleteRow) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdk.ErrUnknownRequest("App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
         return sdk.ErrUnknownRequest("Table name cannot be empty")

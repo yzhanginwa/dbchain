@@ -10,6 +10,15 @@ import (
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/other"
 )
 
+func (k Keeper) GetDatabaseAdmins(ctx sdk.Context, appCode string) []sdk.AccAddress {
+    // TODO: we'll have a better way to maintain and retrive a group of database specific admins
+    database, err := k.getDatabase(ctx, appCode)
+    if err != nil {
+        return []sdk.AccAddress{}
+    } else {
+        return []sdk.AccAddress{database.Owner}
+    }
+}
 
 func (k Keeper) getDatabases(ctx sdk.Context) ([]string) {
     store := ctx.KVStore(k.storeKey)
@@ -20,11 +29,20 @@ func (k Keeper) getDatabases(ctx sdk.Context) ([]string) {
     for ; iter.Valid(); iter.Next() {
         key := iter.Key()
         keyString := string(key)
-        appCode := getAppCodeFromDatabaseKey(keyString)
-        result = append(result, appCode)
+        appId := getAppCodeFromDatabaseKey(keyString)
+        result = append(result, appId)
     }
 
     return result
+}
+
+func (k Keeper) GetDatabaseId(ctx sdk.Context, appCode string) (uint, error) {
+    db, err := k.getDatabase(ctx, appCode)
+    if err != nil {
+        return 0, err
+    } else {
+        return db.AppId, nil
+    }
 }
 
 func (k Keeper) getDatabase(ctx sdk.Context, appCode string) (types.Database, error) {
@@ -48,7 +66,7 @@ func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, descriptio
         return errors.New(fmt.Sprintf("Application code %s existed already!", newAppCode))
     }
 
-    appId, _ := getDatabaseId(k, ctx, newAppCode)
+    appId, _ := registerDatabaseId(k, ctx, newAppCode)
     db := types.NewDatabase()
     db.Owner = owner
     db.Description = description

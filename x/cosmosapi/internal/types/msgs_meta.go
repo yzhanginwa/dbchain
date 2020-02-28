@@ -13,14 +13,16 @@ import (
 // MsgCreateTable defines a CreateTable message
 type MsgCreateTable struct {
     Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
     TableName string     `json:"table_name"`
     Fields []string      `json:"fields"`
 }
 
 // NewMsgCreateTable is a constructor function for MsgCreatTable
-func NewMsgCreateTable(owner sdk.AccAddress, tableName string, fields []string) MsgCreateTable {
+func NewMsgCreateTable(owner sdk.AccAddress, appCode string, tableName string, fields []string) MsgCreateTable {
     return MsgCreateTable {
         Owner: owner,
+        AppCode: appCode,
         TableName: tableName,
         Fields: fields,
     }
@@ -36,6 +38,9 @@ func (msg MsgCreateTable) Type() string { return "create_table" }
 func (msg MsgCreateTable) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdk.ErrUnknownRequest("App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
         return sdk.ErrUnknownRequest("Table name cannot be empty")
@@ -65,13 +70,15 @@ func (msg MsgCreateTable) GetSigners() []sdk.AccAddress {
 // MsgDropTable defines a DropTable message
 type MsgDropTable struct {
     Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
     TableName string     `json:"table_name"`
 }
 
 // NewMsgDropTable is a constructor function for MsgDropTable
-func NewMsgDropTable(owner sdk.AccAddress, tableName string) MsgDropTable {
+func NewMsgDropTable(owner sdk.AccAddress, appCode string, tableName string) MsgDropTable {
     return MsgDropTable {
         Owner: owner,
+        AppCode: appCode,
         TableName: tableName,
     }
 }
@@ -86,6 +93,9 @@ func (msg MsgDropTable) Type() string { return "drop_table" }
 func (msg MsgDropTable) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdk.ErrUnknownRequest("App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
         return sdk.ErrUnknownRequest("Table name cannot be empty")
@@ -111,14 +121,16 @@ func (msg MsgDropTable) GetSigners() []sdk.AccAddress {
 
 type MsgAddColumn struct {
     Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
     TableName string     `json:"table_name"`
     Field string         `json:"field"`
 }
 
 // NewMsgCreatePoll is a constructor function for MsgCreatPoll
-func NewMsgAddColumn(owner sdk.AccAddress, tableName string, field string) MsgAddColumn {
+func NewMsgAddColumn(owner sdk.AccAddress, appCode string, tableName string, field string) MsgAddColumn {
     return MsgAddColumn {
         Owner: owner,
+        AppCode: appCode,
         TableName: tableName,
         Field: field,
     }
@@ -134,6 +146,9 @@ func (msg MsgAddColumn) Type() string { return "add_column" }
 func (msg MsgAddColumn) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdk.ErrUnknownRequest("App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
         return sdk.ErrUnknownRequest("Table name cannot be empty")
@@ -162,13 +177,15 @@ func (msg MsgAddColumn) GetSigners() []sdk.AccAddress {
 
 type MsgDropColumn struct {
     Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
     TableName string     `json:"table_name"`
     Field string         `json:"field"`
 }
 
-func NewMsgDropColumn(owner sdk.AccAddress, tableName string, field string) MsgDropColumn {
+func NewMsgDropColumn(owner sdk.AccAddress, appCode string, tableName string, field string) MsgDropColumn {
     return MsgDropColumn {
         Owner: owner,
+        AppCode: appCode,
         TableName: tableName,
         Field: field,
     }
@@ -184,6 +201,9 @@ func (msg MsgDropColumn) Type() string { return "drop_column" }
 func (msg MsgDropColumn) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdk.ErrUnknownRequest("App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
         return sdk.ErrUnknownRequest("Table name cannot be empty")
@@ -212,14 +232,16 @@ func (msg MsgDropColumn) GetSigners() []sdk.AccAddress {
 
 type MsgRenameColumn struct {
     Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
     TableName string     `json:"table_name"`
     OldField string      `json:"old_field"`
     NewField string      `json:"new_field"`
 }
 
-func NewMsgRenameColumn(owner sdk.AccAddress, tableName string, oldField string, newField string) MsgRenameColumn {
+func NewMsgRenameColumn(owner sdk.AccAddress, appCode string, tableName string, oldField string, newField string) MsgRenameColumn {
     return MsgRenameColumn {
         Owner: owner,
+        AppCode: appCode,
         TableName: tableName,
         OldField: oldField,
         NewField: newField,
@@ -236,6 +258,9 @@ func (msg MsgRenameColumn) Type() string { return "rename_column" }
 func (msg MsgRenameColumn) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdk.ErrUnknownRequest("App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
         return sdk.ErrUnknownRequest("Table name cannot be empty")
@@ -267,14 +292,16 @@ func (msg MsgRenameColumn) GetSigners() []sdk.AccAddress {
 
 type MsgCreateIndex struct {
     Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
     TableName string     `json:"table_name"`
     Field string         `json:"field"`
 }
 
 // NewMsgCreatePoll is a constructor function for MsgCreatPoll
-func NewMsgCreateIndex(owner sdk.AccAddress, tableName string, field string) MsgCreateIndex {
+func NewMsgCreateIndex(owner sdk.AccAddress, appCode string, tableName string, field string) MsgCreateIndex {
     return MsgCreateIndex {
         Owner: owner,
+        AppCode: appCode,
         TableName: tableName,
         Field: field,
     }
@@ -290,6 +317,9 @@ func (msg MsgCreateIndex) Type() string { return "create_index" }
 func (msg MsgCreateIndex) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdk.ErrUnknownRequest("App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
         return sdk.ErrUnknownRequest("Table name cannot be empty")
@@ -318,14 +348,16 @@ func (msg MsgCreateIndex) GetSigners() []sdk.AccAddress {
 
 type MsgDropIndex struct {
     Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
     TableName string     `json:"table_name"`
     Field string         `json:"field"`
 }
 
 // NewMsgCreatePoll is a constructor function for MsgCreatPoll
-func NewMsgDropIndex(owner sdk.AccAddress, tableName string, field string) MsgDropIndex {
+func NewMsgDropIndex(owner sdk.AccAddress, appCode string, tableName string, field string) MsgDropIndex {
     return MsgDropIndex {
         Owner: owner,
+        AppCode: appCode,
         TableName: tableName,
         Field: field,
     }
@@ -341,6 +373,9 @@ func (msg MsgDropIndex) Type() string { return "drop_index" }
 func (msg MsgDropIndex) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdk.ErrUnknownRequest("App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
         return sdk.ErrUnknownRequest("Table name cannot be empty")
@@ -369,15 +404,17 @@ func (msg MsgDropIndex) GetSigners() []sdk.AccAddress {
 
 type MsgModifyOption struct {
     Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
     TableName string     `json:"table_name"`
     Action string        `json:"action"`
     Option string        `json:"option"`
 }
 
 // NewMsgCreatePoll is a constructor function for MsgCreatPoll
-func NewMsgModifyOption(owner sdk.AccAddress, tableName string, action string, option string) MsgModifyOption {
+func NewMsgModifyOption(owner sdk.AccAddress, appCode string, tableName string, action string, option string) MsgModifyOption {
     return MsgModifyOption {
         Owner: owner,
+        AppCode: appCode,
         TableName: tableName,
         Action: action,
         Option: option,
@@ -394,6 +431,9 @@ func (msg MsgModifyOption) Type() string { return "modify_option" }
 func (msg MsgModifyOption) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdk.ErrUnknownRequest("App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
         return sdk.ErrUnknownRequest("Table name cannot be empty")
@@ -431,6 +471,7 @@ func (msg MsgModifyOption) GetSigners() []sdk.AccAddress {
 
 type MsgModifyColumnOption struct {
     Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
     TableName string     `json:"table_name"`
     FieldName string     `json:"field_name"`
     Action string        `json:"action"`
@@ -438,9 +479,10 @@ type MsgModifyColumnOption struct {
 }
 
 // NewMsgCreatePoll is a constructor function for MsgCreatPoll
-func NewMsgModifyColumnOption(owner sdk.AccAddress, tableName string, fieldName string, action string, option string) MsgModifyColumnOption {
+func NewMsgModifyColumnOption(owner sdk.AccAddress, appCode string, tableName string, fieldName string, action string, option string) MsgModifyColumnOption {
     return MsgModifyColumnOption {
         Owner: owner,
+        AppCode: appCode,
         TableName: tableName,
         FieldName: fieldName,
         Action: action,
@@ -458,6 +500,9 @@ func (msg MsgModifyColumnOption) Type() string { return "modify_column_option" }
 func (msg MsgModifyColumnOption) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdk.ErrUnknownRequest("App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
         return sdk.ErrUnknownRequest("Table name cannot be empty")

@@ -11,12 +11,12 @@ import (
 )
 
 
-func (k Keeper) Insert(ctx sdk.Context, tableName string, fields types.RowFields, owner sdk.AccAddress) (uint, error){
-    if(!validateInsertion(k, ctx, tableName, fields)) {
+func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) (uint, error){
+    if(!validateInsertion(k, ctx, appId, tableName, fields)) {
         return 0, errors.New(fmt.Sprintf("Failed validation when inserting table %s", tableName))
     }
 
-    id, err := getNextId(k, ctx, tableName)
+    id, err := getNextId(k, ctx, appId, tableName)
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get id for table %s", tableName))
     }
@@ -26,25 +26,25 @@ func (k Keeper) Insert(ctx sdk.Context, tableName string, fields types.RowFields
     fields["created_by"] = owner.String()
     fields["created_at"] = other.GetCurrentBlockTime().String()
 
-    k.Write(ctx, tableName, id, fields, owner)
-    k.updateIndex(ctx, tableName, id, fields)
+    k.Write(ctx, appId, tableName, id, fields, owner)
+    k.updateIndex(ctx, appId, tableName, id, fields)
     return id, nil
 }
 
 
 // TODO: need to think over how and when to allow updating
-func (k Keeper) Update(ctx sdk.Context, tableName string, id uint, fields types.RowFields, owner sdk.AccAddress) (uint, error){
+func (k Keeper) Update(ctx sdk.Context, appId uint, tableName string, id uint, fields types.RowFields, owner sdk.AccAddress) (uint, error){
     // TODO: need to check the ownership of the record
-    k.Write(ctx, tableName, id, fields, owner)
-    k.updateIndex(ctx, tableName, id, fields)
+    k.Write(ctx, appId, tableName, id, fields, owner)
+    k.updateIndex(ctx, appId, tableName, id, fields)
     return id, nil
 }
 
 
-func (k Keeper) Write(ctx sdk.Context, tableName string, id uint, fields types.RowFields, owner sdk.AccAddress) (uint, error){
+func (k Keeper) Write(ctx sdk.Context, appId uint, tableName string, id uint, fields types.RowFields, owner sdk.AccAddress) (uint, error){
     store := ctx.KVStore(k.storeKey)
 
-    fieldNames, err := k.getTableFields(ctx, tableName)
+    fieldNames, err := k.getTableFields(ctx, appId, tableName)
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get fields for table %s", tableName))
     }
@@ -55,7 +55,7 @@ func (k Keeper) Write(ctx sdk.Context, tableName string, id uint, fields types.R
 
     for _, fieldName := range fieldNames {
         if value, ok := fields[fieldName]; ok {
-            key := getDataKey(tableName, id, fieldName)
+            key := getDataKey(appId, tableName, id, fieldName)
             store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(value)) 
         }
     }
@@ -63,10 +63,10 @@ func (k Keeper) Write(ctx sdk.Context, tableName string, id uint, fields types.R
     return id, nil
 }
 
-func (k Keeper) Delete(ctx sdk.Context, tableName string, id uint, owner sdk.AccAddress) (uint, error){
+func (k Keeper) Delete(ctx sdk.Context, appId uint, tableName string, id uint, owner sdk.AccAddress) (uint, error){
     store := ctx.KVStore(k.storeKey)
 
-    fieldNames, err := k.getTableFields(ctx, tableName)
+    fieldNames, err := k.getTableFields(ctx, appId, tableName)
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get fields for table %s", tableName))
     }
@@ -76,7 +76,7 @@ func (k Keeper) Delete(ctx sdk.Context, tableName string, id uint, owner sdk.Acc
     }
 
     for _, fieldName := range fieldNames {
-        key := getDataKey(tableName, id, fieldName)
+        key := getDataKey(appId, tableName, id, fieldName)
         store.Delete([]byte(key)) 
     }
 
@@ -95,8 +95,8 @@ func isSystemField(fieldName string) bool {
 }
 
 // for now, we check the filed non-null option
-func validateInsertion(k Keeper, ctx sdk.Context, tableName string, fields types.RowFields) bool {
-    fieldNames, err := k.getTableFields(ctx, tableName)
+func validateInsertion(k Keeper, ctx sdk.Context, appId uint, tableName string, fields types.RowFields) bool {
+    fieldNames, err := k.getTableFields(ctx, appId, tableName)
     if err != nil {
         return(false)
     }
@@ -105,7 +105,7 @@ func validateInsertion(k Keeper, ctx sdk.Context, tableName string, fields types
         if(isSystemField(fieldName)) {
             continue
         }
-        fieldOptions, _ := k.GetColumnOption(ctx, tableName, fieldName)
+        fieldOptions, _ := k.GetColumnOption(ctx, appId, tableName, fieldName)
         // TODO: use a constant for the possible options
         if(utils.ItemExists(fieldOptions, types.FLDOPT_NOTNULL)) {
             if value, ok := fields[fieldName]; ok {

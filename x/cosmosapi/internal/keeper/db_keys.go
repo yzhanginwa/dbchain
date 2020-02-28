@@ -6,7 +6,9 @@ import (
 )
 
 const (
-    KeyPrefixDb    = "db"
+    KeyPrefixDb       = "db"
+    KeyPrefixSysGroup = "sysgrp"
+
     KeyPrefixMeta  = "mt"
     KeyPrefixData  = "dt"
     KeyPrefixIndex = "ix"
@@ -46,32 +48,32 @@ func getAppCodeFromDatabaseKey(key string) string {
 //////////////////
 
 // to store name of all tables
-func getTablesKey() string {
-    return fmt.Sprintf("%s:tables", KeyPrefixMeta)
+func getTablesKey(appId uint) string {
+    return fmt.Sprintf("%s:%s:%s:tables", KeyPrefixDb, appId, KeyPrefixMeta)
 }
 
 // to store the id for next new record of a table
-func getNextIdKey(tableName string) string {
-    return fmt.Sprintf("%s:nextId:%s", KeyPrefixMeta, tableName)
+func getNextIdKey(appId uint, tableName string) string {
+    return fmt.Sprintf("%s:%s:%s:nextId:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName)
 }
 
 // to store the name of fields for a table
-func getTableKey(tableName string) string {
-    return fmt.Sprintf("%s:tn:%s", KeyPrefixMeta, tableName)
+func getTableKey(appId uint, tableName string) string {
+    return fmt.Sprintf("%s:%s:%s:tn:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName)
 }
 
 // to store table fields which have index on
-func getMetaTableIndexKey(tableName string) string {
-    return fmt.Sprintf("%s:idx:%s", KeyPrefixMeta, tableName)
+func getMetaTableIndexKey(appId uint, tableName string) string {
+    return fmt.Sprintf("%s:%s:%s:idx:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName)
 }
 
 // to store the options for a table
-func getTableOptionsKey(tableName string) string {
-    return fmt.Sprintf("%s:opt:%s", KeyPrefixMeta, tableName)
+func getTableOptionsKey(appId uint, tableName string) string {
+    return fmt.Sprintf("%s:%s:%s:opt:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName)
 }
 
-func getColumnOptionsKey(tableName string, fieldName string) string {
-    return fmt.Sprintf("%s:fldopt:%s:%s", KeyPrefixMeta, tableName, fieldName)
+func getColumnOptionsKey(appId uint, tableName string, fieldName string) string {
+    return fmt.Sprintf("%s:%s:%s:fldopt:%s:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName, fieldName)
 }
 
 
@@ -82,30 +84,30 @@ func getColumnOptionsKey(tableName string, fieldName string) string {
 //////////////////
 
 // to store the id of a indexed field
-func getIndexKey(tableName string, fieldName string, value string) string {
-    return fmt.Sprintf("%s:%s:%s:%s", KeyPrefixIndex, tableName, fieldName, value)
+func getIndexKey(appId uint, tableName string, fieldName string, value string) string {
+    return fmt.Sprintf("%s:%s:%s:%s:%s:%s", KeyPrefixDb, appId, KeyPrefixIndex, tableName, fieldName, value)
 }
 
 // to store the value of a fields on a record of a table.
-func getDataKey(tableName string, id uint, fieldName string) string {
-    return fmt.Sprintf("%s:%s:%d:%s", KeyPrefixData, tableName, id, fieldName)
+func getDataKey(appId uint,tableName string, id uint, fieldName string) string {
+    return fmt.Sprintf("%s:%s:%s:%s:%d:%s", KeyPrefixDb, appId, KeyPrefixData, tableName, id, fieldName)
 }
 
 // to get the start and end parameters of iterator which seeks certain value of a field
-func getDataIteratorStartAndEndKey(tableName string) (string, string) {
-    start := fmt.Sprintf("%s:%s:", KeyPrefixData, tableName)
-    end   := fmt.Sprintf("%s:%s;", KeyPrefixData, tableName)
+func getDataIteratorStartAndEndKey(appId uint, tableName string) (string, string) {
+    start := fmt.Sprintf("%s:%s:%s:%s:", KeyPrefixDb, appId, KeyPrefixData, tableName)
+    end   := fmt.Sprintf("%s:%s:%s:%s;", KeyPrefixDb, appId, KeyPrefixData, tableName)
     return start, end
 }
 
 func getIdFromDataKey(key string) string {
     arr := strings.Split(key, ":")
-    return arr[2]
+    return arr[4]
 }
 
 func getFieldNameFromDataKey(key string) string {
     arr := strings.Split(key, ":")
-    return arr[3]
+    return arr[5]
 }
 
 ///////////////////
@@ -114,10 +116,24 @@ func getFieldNameFromDataKey(key string) string {
 //               //
 ///////////////////
 
-func getGroupKey(groupName string) string {
-    return fmt.Sprintf("%s:%s", KeyPrefixGroup, groupName)
+func getGroupKey(appId uint, groupName string) string {
+    return fmt.Sprintf("%s:%s:%s:%s", KeyPrefixDb, appId, KeyPrefixGroup, groupName)
 }
 
-func getAdminGroupKey() string {
-    return getGroupKey("admin")
+func getAdminGroupKey(appId uint) string {
+    return getGroupKey(appId, "admin")
+}
+
+//////////////////
+//              //
+// system level //
+//              //
+//////////////////
+
+func getSysGroupKey(groupName string) string {
+    return fmt.Sprintf("%s:%s", KeyPrefixSysGroup, groupName)
+}
+
+func getSysAdminGroupKey() string {
+    return getSysGroupKey("admin")
 }

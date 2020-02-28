@@ -12,18 +12,18 @@ var mutex = &sync.Mutex{}
 var NextIds = make(map[string]uint)
 var nextAppId uint
 
-func getNextId(k Keeper, ctx sdk.Context, tableName string) (uint, error) {
+func getNextId(k Keeper, ctx sdk.Context, appId uint, tableName string) (uint, error) {
     store := ctx.KVStore(k.storeKey)
     mutex.Lock()
     defer mutex.Unlock()
 
-    var nextIdKey = getNextIdKey(tableName)
+    var nextIdKey = getNextIdKey(appId, tableName)
     var nextId uint
     var found bool
     if nextId, found = NextIds[tableName]; found {
     } else if bz := store.Get([]byte(nextIdKey)); bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &nextId)
-    } else if bz = store.Get([]byte(getTableKey(tableName))); bz != nil {
+    } else if bz = store.Get([]byte(getTableKey(appId, tableName))); bz != nil {
         nextId = 1
     } else {
         return 0, errors.New(fmt.Sprintf("Invalid table name %s", tableName))
@@ -35,7 +35,7 @@ func getNextId(k Keeper, ctx sdk.Context, tableName string) (uint, error) {
     return nextId, nil
 }
 
-func getDatabaseId(k Keeper, ctx sdk.Context, appCode string) (uint, error) {
+func registerDatabaseId(k Keeper, ctx sdk.Context, appCode string) (uint, error) {
     store := ctx.KVStore(k.storeKey)
     mutex.Lock()
     defer mutex.Unlock()

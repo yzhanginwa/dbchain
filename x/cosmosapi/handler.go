@@ -62,89 +62,124 @@ func handleMsgCreateApplication(ctx sdk.Context, keeper Keeper, msg MsgCreateApp
 
 // Handle a message to create table 
 func handleMsgCreateTable(ctx sdk.Context, keeper Keeper, msg MsgCreateTable) sdk.Result {
-    if !isAdmin(ctx, keeper, msg.Owner) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return sdk.ErrUnknownRequest("Invalid app code").Result()
+    }
+
+    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
         return sdk.ErrUnknownRequest("Not authorized").Result()
     }
  
-    if keeper.IsTablePresent(ctx, msg.TableName) {
+    if keeper.IsTablePresent(ctx, appId, msg.TableName) {
         return sdk.ErrUnknownRequest("Table name existed already!").Result()
     }
-    keeper.CreateTable(ctx, msg.Owner, msg.TableName, msg.Fields)
+    keeper.CreateTable(ctx, appId, msg.Owner, msg.TableName, msg.Fields)
     return sdk.Result{}
 }
 
 func handleMsgDropTable(ctx sdk.Context, keeper Keeper, msg MsgDropTable) sdk.Result {
-    if !isAdmin(ctx, keeper, msg.Owner) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return sdk.ErrUnknownRequest("Invalid app code").Result()
+    }
+
+    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
         return sdk.ErrUnknownRequest("Not authorized").Result()
     }
 
-    if !keeper.IsTablePresent(ctx, msg.TableName) {
+    if !keeper.IsTablePresent(ctx, appId, msg.TableName) {
         return sdk.ErrUnknownRequest("Table name does not exist!").Result()
     }
-    keeper.DropTable(ctx, msg.Owner, msg.TableName)
+    keeper.DropTable(ctx, appId, msg.Owner, msg.TableName)
     return sdk.Result{}
 }
 
 func handleMsgAddColumn(ctx sdk.Context, keeper Keeper, msg MsgAddColumn) sdk.Result {
-    if !isAdmin(ctx, keeper, msg.Owner) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return sdk.ErrUnknownRequest("Invalid app code").Result()
+    }
+
+    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
         return sdk.ErrUnknownRequest("Not authorized").Result()
     }
 
     field := strings.ToLower(msg.Field)
-    if keeper.IsFieldPresent(ctx, msg.TableName, field) {
+    if keeper.IsFieldPresent(ctx, appId, msg.TableName, field) {
         return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s exists already!", msg.Field, msg.TableName)).Result()
     }
-    keeper.AddColumn(ctx, msg.TableName, field)
+    keeper.AddColumn(ctx, appId, msg.TableName, field)
     return sdk.Result{}
 }
 
 func handleMsgDropColumn(ctx sdk.Context, keeper Keeper, msg MsgDropColumn) sdk.Result {
-    if !isAdmin(ctx, keeper, msg.Owner) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return sdk.ErrUnknownRequest("Invalid app code").Result()
+    }
+
+    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
         return sdk.ErrUnknownRequest("Not authorized").Result()
     }
-    if !keeper.IsFieldPresent(ctx, msg.TableName, msg.Field) {
+    if !keeper.IsFieldPresent(ctx, appId, msg.TableName, msg.Field) {
         return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s does not exist yet!", msg.Field, msg.TableName)).Result()
     }
-    keeper.DropColumn(ctx, msg.TableName, msg.Field)
+    keeper.DropColumn(ctx, appId, msg.TableName, msg.Field)
     return sdk.Result{}
 }
 
 func handleMsgRenameColumn(ctx sdk.Context, keeper Keeper, msg MsgRenameColumn) sdk.Result {
-    if !isAdmin(ctx, keeper, msg.Owner) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return sdk.ErrUnknownRequest("Invalid app code").Result()
+    }
+
+    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
         return sdk.ErrUnknownRequest("Not authorized").Result()
     }
-    if !keeper.IsFieldPresent(ctx, msg.TableName, msg.OldField) {
+    if !keeper.IsFieldPresent(ctx, appId, msg.TableName, msg.OldField) {
         return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s does not exist yet!", msg.OldField, msg.TableName)).Result()
     }
 
     newField := strings.ToLower(msg.NewField)
-    if keeper.IsFieldPresent(ctx, msg.TableName, newField) {
+    if keeper.IsFieldPresent(ctx, appId, msg.TableName, newField) {
         return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s exists already!", msg.NewField, msg.TableName)).Result()
     }
-    keeper.RenameColumn(ctx, msg.TableName, msg.OldField, newField)
+    keeper.RenameColumn(ctx, appId, msg.TableName, msg.OldField, newField)
     return sdk.Result{}
 }
 
 func handleMsgCreateIndex(ctx sdk.Context, keeper Keeper, msg MsgCreateIndex) sdk.Result {
-    if !isAdmin(ctx, keeper, msg.Owner) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return sdk.ErrUnknownRequest("Invalid app code").Result()
+    }
+
+    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
         return sdk.ErrUnknownRequest("Not authorized").Result()
     }
-    if ! keeper.IsFieldPresent(ctx, msg.TableName, msg.Field) {
+    if ! keeper.IsFieldPresent(ctx, appId, msg.TableName, msg.Field) {
         return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s does not exist yet!", msg.Field, msg.TableName)).Result()
     }
-    keeper.CreateIndex(ctx, msg.Owner, msg.TableName, msg.Field)
+    keeper.CreateIndex(ctx, appId, msg.Owner, msg.TableName, msg.Field)
     return sdk.Result{}
 }
 
 func handleMsgDropIndex(ctx sdk.Context, keeper Keeper, msg MsgDropIndex) sdk.Result {
-    if !isAdmin(ctx, keeper, msg.Owner) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return sdk.ErrUnknownRequest("Invalid app code").Result()
+    }
+
+    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
         return sdk.ErrUnknownRequest("Not authorized").Result()
     }
-    if ! keeper.IsFieldPresent(ctx, msg.TableName, msg.Field) {
+    if ! keeper.IsFieldPresent(ctx, appId, msg.TableName, msg.Field) {
         return sdk.ErrUnknownRequest(fmt.Sprintf("Field %s of table %s does not exist yet!", msg.Field, msg.TableName)).Result()
     }
 
-    existingIndex, err := keeper.GetIndex(ctx, msg.TableName)
+    existingIndex, err := keeper.GetIndex(ctx, appId, msg.TableName)
     if err != nil {
         return sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not have any index yet!", msg.TableName)).Result()
     }
@@ -153,36 +188,51 @@ func handleMsgDropIndex(ctx sdk.Context, keeper Keeper, msg MsgDropIndex) sdk.Re
         return sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not have index on %s yet!", msg.TableName, msg.Field)).Result()
     }
 
-    keeper.DropIndex(ctx, msg.Owner, msg.TableName, msg.Field)
+    keeper.DropIndex(ctx, appId, msg.Owner, msg.TableName, msg.Field)
     return sdk.Result{}
 }
 
 func handleMsgModifyOption(ctx sdk.Context, keeper Keeper, msg MsgModifyOption) sdk.Result {
-    if !isAdmin(ctx, keeper, msg.Owner) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return sdk.ErrUnknownRequest("Invalid app code").Result()
+    }
+
+    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
         return sdk.ErrUnknownRequest("Not authorized").Result()
     }
-    if !keeper.IsTablePresent(ctx, msg.TableName) {
+    if !keeper.IsTablePresent(ctx, appId, msg.TableName) {
         return sdk.ErrUnknownRequest("Table name does not exist!").Result()
     }
 
-    keeper.ModifyOption(ctx, msg.Owner, msg.TableName, msg.Action, msg.Option)
+    keeper.ModifyOption(ctx, appId, msg.Owner, msg.TableName, msg.Action, msg.Option)
     return sdk.Result{}
 }
 
 func handleMsgModifyColumnOption(ctx sdk.Context, keeper Keeper, msg MsgModifyColumnOption) sdk.Result {
-    if !isAdmin(ctx, keeper, msg.Owner) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return sdk.ErrUnknownRequest("Invalid app code").Result()
+    }
+
+    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
         return sdk.ErrUnknownRequest("Not authorized").Result()
     }
-    if !keeper.IsTablePresent(ctx, msg.TableName) {
+    if !keeper.IsTablePresent(ctx, appId, msg.TableName) {
         return sdk.ErrUnknownRequest("Table name does not exist!").Result()
     }
 
-    keeper.ModifyColumnOption(ctx, msg.Owner, msg.TableName, msg.FieldName, msg.Action, msg.Option)
+    keeper.ModifyColumnOption(ctx, appId, msg.Owner, msg.TableName, msg.FieldName, msg.Action, msg.Option)
     return sdk.Result{}
 }
 
 func handleMsgInsertRow(ctx sdk.Context, keeper Keeper, msg types.MsgInsertRow) sdk.Result {
-    if !keeper.IsTablePresent(ctx, msg.TableName) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return sdk.ErrUnknownRequest("Invalid app code").Result()
+    }
+
+    if !keeper.IsTablePresent(ctx, appId, msg.TableName) {
         return sdk.ErrUnknownRequest(fmt.Sprintf("Table % does not exist!", msg.TableName)).Result()
     }
     
@@ -191,16 +241,21 @@ func handleMsgInsertRow(ctx sdk.Context, keeper Keeper, msg types.MsgInsertRow) 
         return sdk.ErrUnknownRequest("Failed to parse row fields!").Result()
     }
 
-    keeper.Insert(ctx, msg.TableName, rowFields, msg.Owner)
+    keeper.Insert(ctx, appId, msg.TableName, rowFields, msg.Owner)
     return sdk.Result{}
 }
 
 func handleMsgUpdateRow(ctx sdk.Context, keeper Keeper, msg types.MsgUpdateRow) sdk.Result {
-    if !keeper.IsTablePresent(ctx, msg.TableName) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return sdk.ErrUnknownRequest("Invalid app code").Result()
+    }
+
+    if !keeper.IsTablePresent(ctx, appId, msg.TableName) {
         return sdk.ErrUnknownRequest(fmt.Sprintf("Table % does not exist!", msg.TableName)).Result()
     }
 
-    options, _ := keeper.GetOption(ctx, msg.TableName)
+    options, _ := keeper.GetOption(ctx, appId, msg.TableName)
     if ! utils.ItemExists(options, string(types.TBLOPT_UPDATABLE)) {
         return sdk.ErrUnknownRequest(fmt.Sprintf("Table % is not updatable!", msg.TableName)).Result()
     }
@@ -210,29 +265,39 @@ func handleMsgUpdateRow(ctx sdk.Context, keeper Keeper, msg types.MsgUpdateRow) 
         return sdk.ErrUnknownRequest("Failed to parse row fields!").Result()
     }
 
-    keeper.Update(ctx, msg.TableName, msg.Id, rowFields, msg.Owner)
+    keeper.Update(ctx, appId, msg.TableName, msg.Id, rowFields, msg.Owner)
     return sdk.Result{}
 }
 
 func handleMsgDeleteRow(ctx sdk.Context, keeper Keeper, msg types.MsgDeleteRow) sdk.Result {
-    if !keeper.IsTablePresent(ctx, msg.TableName) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return sdk.ErrUnknownRequest("Invalid app code").Result()
+    }
+
+    if !keeper.IsTablePresent(ctx, appId, msg.TableName) {
         return sdk.ErrUnknownRequest(fmt.Sprintf("Table % does not exist!", msg.TableName)).Result()
     }
 
-    options, _ := keeper.GetOption(ctx, msg.TableName)
+    options, _ := keeper.GetOption(ctx, appId, msg.TableName)
     if ! utils.ItemExists(options, string(types.TBLOPT_DELETABLE)) {
         return sdk.ErrUnknownRequest(fmt.Sprintf("Table % is not updatable!", msg.TableName)).Result()
     }
 
-    keeper.Delete(ctx, msg.TableName, msg.Id, msg.Owner)
+    keeper.Delete(ctx, appId, msg.TableName, msg.Id, msg.Owner)
     return sdk.Result{}
 }
 
 func handleMsgAddAdminAccount(ctx sdk.Context, keeper Keeper, msg MsgAddAdminAccount) sdk.Result {
-    if !isAdmin(ctx, keeper, msg.Owner) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return sdk.ErrUnknownRequest("Invalid app code").Result()
+    }
+
+    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
         return sdk.ErrUnknownRequest("Not authorized").Result()
     }
-    _, err := keeper.AddAdminAccount(ctx, msg.AdminAddress, msg.Owner)
+    err = keeper.AddAdminAccount(ctx, appId, msg.AdminAddress, msg.Owner)
     if err != nil {
         return sdk.ErrUnknownRequest(fmt.Sprintf("%v", err)).Result()
     }
@@ -245,8 +310,8 @@ func handleMsgAddAdminAccount(ctx sdk.Context, keeper Keeper, msg MsgAddAdminAcc
 //                //
 ////////////////////
 
-func isAdmin(ctx sdk.Context, keeper Keeper, address sdk.AccAddress) bool {
-    adminAddresses := keeper.ShowAdminGroup(ctx)
+func isAdmin(ctx sdk.Context, keeper Keeper, appCode string, address sdk.AccAddress) bool {
+    adminAddresses := keeper.GetDatabaseAdmins(ctx, appCode)
     var is_admin = false
     for _, addr := range adminAddresses {
         if bytes.Compare(address, addr) == 0 {
@@ -256,3 +321,4 @@ func isAdmin(ctx sdk.Context, keeper Keeper, address sdk.AccAddress) bool {
     }
     return is_admin
 }
+
