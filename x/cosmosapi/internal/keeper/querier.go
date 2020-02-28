@@ -38,7 +38,11 @@ func NewQuerier(keeper Keeper) sdk.Querier {
     return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
         switch path[0] {
         case QueryApplication:
-            return queryApplications(ctx, req, keeper)
+            if len(path) > 1 {
+                return queryApplication(ctx, path[1:], req, keeper)
+            } else {
+                return queryApplications(ctx, req, keeper)
+            }
         case QueryTables:
             if len(path) > 1 {
                 return queryTable(ctx, path[1:], req, keeper)
@@ -65,11 +69,11 @@ func NewQuerier(keeper Keeper) sdk.Querier {
     }
 }
 
-////////////////
-//            //
-// query meta //
-//            //
-////////////////
+////////////////////////////////
+//                            //
+// query application/database //
+//                            //
+////////////////////////////////
 
 // the the list of app code in the system
 func queryApplications(ctx sdk.Context, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
@@ -83,6 +87,28 @@ func queryApplications(ctx sdk.Context, req abci.RequestQuery, keeper Keeper) ([
 
     return res, nil
 }
+
+func queryApplication(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+    appCode := path[0]
+    database, err := keeper.getDatabase(ctx, appCode)
+
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("AppCode %s does not exist", appCode))
+    }
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, database)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+////////////////
+//            //
+// query meta //
+//            //
+////////////////
 
 func queryTables(ctx sdk.Context, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     tables, err := keeper.getTables(ctx)

@@ -27,6 +27,18 @@ func (k Keeper) getDatabases(ctx sdk.Context) ([]string) {
     return result
 }
 
+func (k Keeper) getDatabase(ctx sdk.Context, appCode string) (types.Database, error) {
+    store := ctx.KVStore(k.storeKey)
+    key := getDatabaseKey(appCode)
+    bz := store.Get([]byte(key))
+    if bz == nil {
+        return types.Database{}, errors.New(fmt.Sprintf("App code %s is invalid!", appCode))
+    }
+    var database types.Database
+    k.cdc.MustUnmarshalBinaryBare(bz, &database)
+    return database, nil
+}
+
 func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, description string) error {
     store := ctx.KVStore(k.storeKey)
     newAppCode := generateNewAppCode(owner)

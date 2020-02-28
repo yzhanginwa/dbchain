@@ -26,6 +26,10 @@ func NewDatabase() Database {
     return Database{}
 }
 
+func (d Database) String() string {
+    return strings.TrimSpace(fmt.Sprintf(`AppCoe: %s`, d.AppCode))
+}
+
 ///////////
 //       //
 // table //
