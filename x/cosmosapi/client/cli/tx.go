@@ -128,8 +128,8 @@ func GetCmdAddColumn(cdc *codec.Codec) *cobra.Command {
             txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode:= args[0]
-            name   := args[2]
-            field  := args[3]
+            name   := args[1]
+            field  := args[2]
             msg := types.NewMsgAddColumn(cliCtx.GetFromAddress(), appCode, name, field)
             err := msg.ValidateBasic()
             if err != nil {

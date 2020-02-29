@@ -106,13 +106,15 @@ func GetCmdIndex(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use: "index",
         Short: "show index",
-        Args: cobra.ExactArgs(1),
+        Args: cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/index/%s", queryRoute, args[0]), nil)
+            appCode   := args[0]
+            tableName := args[1]
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/index/%s/%s", queryRoute, appCode, tableName), nil)
             if err != nil {
-                fmt.Printf("could not index index of table %s", args[0])
+                fmt.Printf("could not index index of table %s", tableName)
                 return nil
             }
 
@@ -127,14 +129,15 @@ func GetCmdOption(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use: "table-option",
         Short: "show table options",
-        Args: cobra.ExactArgs(1),
+        Args: cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-            // args[0] is table name
-            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/option/%s", queryRoute, args[0]), nil)
+            appCode   := args[0]
+            tableName := args[1]
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/option/%s/%s", queryRoute, appCode, tableName), nil)
             if err != nil {
-                fmt.Printf("could not get options of table %s", args[0])
+                fmt.Printf("could not get options of table %s", tableName)
                 return nil
             }
 
@@ -149,15 +152,16 @@ func GetCmdColumnOption(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use: "column-option",
         Short: "show column options",
-        Args: cobra.ExactArgs(2),
+        Args: cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-            // args[0] is table name
-            // args[1] is field name
-            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/column_option/%s/%s", queryRoute, args[0], args[1]), nil)
+            appCode   := args[0]
+            tableName := args[1]
+            fieldName := args[2]
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/column_option/%s/%s/%s", queryRoute, appCode, tableName, fieldName), nil)
             if err != nil {
-                fmt.Printf("could not get options of column %s of table %s", args[1], args[0])
+                fmt.Printf("could not get options of column %s of table %s", fieldName, tableName)
                 return nil
             }
 
