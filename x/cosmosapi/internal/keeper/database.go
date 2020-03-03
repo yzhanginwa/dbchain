@@ -4,6 +4,7 @@ import (
     "crypto/sha256"
     "encoding/base64"
     "fmt"
+    "regexp"
     "errors"
     "bytes"
     sdk "github.com/cosmos/cosmos-sdk/types"
@@ -111,6 +112,12 @@ func generateNewAppCode(owner sdk.AccAddress) string {
     blockTime := other.GetCurrentBlockTime().String()
     hashedBytes := sha256.Sum256([]byte(blockTime + owner.String()))
     hashStr := base64.StdEncoding.EncodeToString(hashedBytes[:])
-    return hashStr[:10]
+    code0:= hashStr[:10]
+
+    r1 := regexp.MustCompile("[+]")
+    r2 := regexp.MustCompile("[/]")
+    code1 := r1.ReplaceAllString(code0, "p");
+    code2 := r2.ReplaceAllString(code1, "a");
+    return code2
 }
 
