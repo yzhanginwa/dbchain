@@ -5,6 +5,7 @@ import (
     "encoding/base64"
     "fmt"
     "errors"
+    "bytes"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/other"
@@ -20,7 +21,7 @@ func (k Keeper) GetDatabaseAdmins(ctx sdk.Context, appCode string) []sdk.AccAddr
     }
 }
 
-func (k Keeper) getDatabases(ctx sdk.Context) ([]string) {
+func (k Keeper) getAllAppCode(ctx sdk.Context) ([]string) {
     store := ctx.KVStore(k.storeKey)
     start, end := getDatabaseIteratorStartAndEndKey()
     iter := store.Iterator([]byte(start), []byte(end))
@@ -31,6 +32,27 @@ func (k Keeper) getDatabases(ctx sdk.Context) ([]string) {
         keyString := string(key)
         appCode := getAppCodeFromDatabaseKey(keyString)
         result = append(result, appCode)
+    }
+
+    return result
+}
+
+func (k Keeper) getAdminAppCode(ctx sdk.Context, address sdk.AccAddress) ([]string) {
+    all := k.getAllAppCode(ctx)
+    var result []string
+
+    for _, appCode := range all {
+        appId, err := k.GetDatabaseId(ctx, appCode)
+        if err != nil {
+            return []string{}
+        }
+        adminAddresses := k.ShowAdminGroup(ctx, appId)
+        for _, addr := range adminAddresses {
+            if bytes.Compare(address, addr) == 0 {
+                result = append(result, appCode)
+                break
+            }
+        }
     }
 
     return result

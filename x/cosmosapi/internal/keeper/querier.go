@@ -20,6 +20,7 @@ import (
 // query endpoints supported by the cosmosapi service Querier
 const (
     QueryApplication   = "application"
+    QueryAdminApps     = "admin_apps"
     QueryTables   = "tables"
     QueryIndex    = "index"
     QueryOption   = "option"
@@ -43,6 +44,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             } else {
                 return queryApplications(ctx, path[1:], req, keeper)
             }
+        case QueryAdminApps:
+            return queryAdminApps(ctx, path[1:], req, keeper)
         case QueryTables:
             if len(path) > 3 {
                 return queryTable(ctx, path[1:], req, keeper)
@@ -84,7 +87,7 @@ func queryApplications(ctx sdk.Context, path []string, req abci.RequestQuery, ke
     }
 
     // we use the term database in the code
-    applications := keeper.getDatabases(ctx)
+    applications := keeper.getAllAppCode(ctx)
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, applications)
     if err != nil {
@@ -109,6 +112,24 @@ func queryApplication(ctx sdk.Context, path []string, req abci.RequestQuery, kee
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, database)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryAdminApps(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+    accessCode:= path[0]
+    addr, err := verifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+    }
+
+    // we use the term database in the code
+    adminApps := keeper.getAdminAppCode(ctx, addr)
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, adminApps)
     if err != nil {
         panic("could not marshal result to JSON")
     }
