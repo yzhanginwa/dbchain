@@ -38,13 +38,13 @@ func NewQuerier(keeper Keeper) sdk.Querier {
     return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
         switch path[0] {
         case QueryApplication:
-            if len(path) > 1 {
+            if len(path) > 2 {
                 return queryApplication(ctx, path[1:], req, keeper)
             } else {
-                return queryApplications(ctx, req, keeper)
+                return queryApplications(ctx, path[1:], req, keeper)
             }
         case QueryTables:
-            if len(path) > 2 {
+            if len(path) > 3 {
                 return queryTable(ctx, path[1:], req, keeper)
             } else {
                 return queryTables(ctx, path[1:], req, keeper)
@@ -76,7 +76,13 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 ////////////////////////////////
 
 // the the list of app code in the system
-func queryApplications(ctx sdk.Context, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+func queryApplications(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+    accessCode:= path[0]
+    _, err := verifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+    }
+
     // we use the term database in the code
     applications := keeper.getDatabases(ctx)
 
@@ -89,7 +95,13 @@ func queryApplications(ctx sdk.Context, req abci.RequestQuery, keeper Keeper) ([
 }
 
 func queryApplication(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
-    appCode := path[0]
+    accessCode:= path[0]
+    _, err := verifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+    }
+
+    appCode := path[1]
     database, err := keeper.getDatabase(ctx, appCode)
 
     if err != nil {
@@ -111,7 +123,13 @@ func queryApplication(ctx sdk.Context, path []string, req abci.RequestQuery, kee
 ////////////////
 
 func queryTables(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
-    appId, err := keeper.GetDatabaseId(ctx, path[0])
+    accessCode:= path[0]
+    _, err := verifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
         return []byte{}, sdk.ErrUnknownRequest("Invalid app code")
     }
@@ -131,15 +149,21 @@ func queryTables(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
 }
 
 func queryTable(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
-    appId, err := keeper.GetDatabaseId(ctx, path[0])
+    accessCode:= path[0]
+    _, err := verifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
         return nil, sdk.ErrUnknownRequest("Invalid app code")
     }
 
-    table, err := keeper.GetTable(ctx, appId, path[1])
+    table, err := keeper.GetTable(ctx, appId, path[2])
 
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not exist",  path[1]))
+        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not exist",  table))
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, table)
@@ -151,15 +175,22 @@ func queryTable(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 }
 
 func queryIndex(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
-    appId, err := keeper.GetDatabaseId(ctx, path[0])
+    accessCode:= path[0]
+    _, err := verifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
         return nil, sdk.ErrUnknownRequest("Invalid app code")
     }
 
-    index, err := keeper.GetIndex(ctx, appId, path[1])
+    tableName := path[2]
+    index, err := keeper.GetIndex(ctx, appId, tableName)
 
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not exist",  path[1]))
+        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not exist",  tableName))
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, index)
@@ -171,14 +202,22 @@ func queryIndex(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 }
 
 func queryOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
-    appId, err := keeper.GetDatabaseId(ctx, path[0])
+    accessCode:= path[0]
+    _, err := verifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
         return nil, sdk.ErrUnknownRequest("Invalid app code")
     }
-    options, err := keeper.GetOption(ctx, appId, path[1])
+
+    tableName := path[2]
+    options, err := keeper.GetOption(ctx, appId, tableName)
 
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not exist",  path[1]))
+        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not exist",  tableName))
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, options)
