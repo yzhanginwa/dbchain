@@ -29,8 +29,8 @@ func (k Keeper) getDatabases(ctx sdk.Context) ([]string) {
     for ; iter.Valid(); iter.Next() {
         key := iter.Key()
         keyString := string(key)
-        appId := getAppCodeFromDatabaseKey(keyString)
-        result = append(result, appId)
+        appCode := getAppCodeFromDatabaseKey(keyString)
+        result = append(result, appCode)
     }
 
     return result
