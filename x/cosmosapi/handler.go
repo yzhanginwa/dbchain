@@ -297,7 +297,7 @@ func handleMsgAddAdminAccount(ctx sdk.Context, keeper Keeper, msg MsgAddAdminAcc
     if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
         return sdk.ErrUnknownRequest("Not authorized").Result()
     }
-    err = keeper.AddAdminAccount(ctx, appId, msg.AdminAddress, msg.Owner)
+    err = keeper.AddAdminAccount(ctx, appId, msg.AdminAddress)
     if err != nil {
         return sdk.ErrUnknownRequest(fmt.Sprintf("%v", err)).Result()
     }

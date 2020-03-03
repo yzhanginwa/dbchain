@@ -27,7 +27,7 @@ func (k Keeper) CreateGenesisAdminGroup(ctx sdk.Context, genesisState types.Gene
 //                //
 ////////////////////
 
-func (k Keeper) AddAdminAccount(ctx sdk.Context, appId uint, adminAddress sdk.AccAddress, owner sdk.AccAddress) error {
+func (k Keeper) AddAdminAccount(ctx sdk.Context, appId uint, adminAddress sdk.AccAddress) error {
     store := ctx.KVStore(k.storeKey)
     key := getAdminGroupKey(appId)
 
