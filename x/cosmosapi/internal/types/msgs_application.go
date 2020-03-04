@@ -13,13 +13,15 @@ import (
 // MsgCreateApplication defines a CreateTable message
 type MsgCreateApplication struct {
     Owner sdk.AccAddress `json:"owner"`
+    Name string          `json:"name"`
     Description string   `json:"description"`
 }
 
 // NewMsgCreateApplication is a constructor function for MsgCreatTable
-func NewMsgCreateApplication(owner sdk.AccAddress, description string) MsgCreateApplication {
+func NewMsgCreateApplication(owner sdk.AccAddress, name string, description string) MsgCreateApplication {
     return MsgCreateApplication {
         Owner: owner,
+        Name: name,
         Description: description,
     }
 }
@@ -34,6 +36,9 @@ func (msg MsgCreateApplication) Type() string { return "create_application" }
 func (msg MsgCreateApplication) ValidateBasic() sdk.Error {
     if msg.Owner.Empty() {
         return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.Name) == 0 {
+        return sdk.ErrUnknownRequest("Application name cannot be empty")
     }
     if len(msg.Description) == 0 {
         return sdk.ErrUnknownRequest("Application description cannot be empty")

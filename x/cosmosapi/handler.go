@@ -56,7 +56,7 @@ func handleMsgCreateApplication(ctx sdk.Context, keeper Keeper, msg MsgCreateApp
     //       If it's false, nobody can create application
 
     // We use the term database for internal use. To outside we use application to make users understand easily
-    keeper.CreateDatabase(ctx, msg.Owner, msg.Description)
+    keeper.CreateDatabase(ctx, msg.Owner, msg.Name, msg.Description)
     return sdk.Result{}
 }
 

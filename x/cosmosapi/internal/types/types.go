@@ -19,6 +19,7 @@ type Database struct {
     Owner sdk.AccAddress  `json:"owner"`
     AppCode string        `json:"appcode"`
     AppId uint            `json:"appid"`
+    Name string           `json:"name"`
     Description string    `json:"description"`
 }
 
