@@ -287,8 +287,9 @@ func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keep
         return nil, sdk.ErrUnknownRequest("Invalid app code")
     }
 
+    tableName := path[2] 
     u32, err := strconv.ParseUint(path[3], 10, 32)
-    fields, err := keeper.Find(ctx, appId, path[2], uint(u32), addr)
+    fields, err := keeper.Find(ctx, appId, tableName, uint(u32), addr)
 
     if err != nil {
         return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not exist",  path[2]))
@@ -314,7 +315,10 @@ func queryIdsBy(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
         return nil, sdk.ErrUnknownRequest("Invalid app code")
     }
 
-    ids := keeper.FindBy(ctx, appId, path[2], path[3], path[4], addr)
+    tableName := path[2]
+    fieldName := path[3]
+    value := path[4]
+    ids := keeper.FindBy(ctx, appId, tableName, fieldName, value, addr)
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, ids)
     if err != nil {
@@ -336,7 +340,9 @@ func queryAllIds(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
         return nil, sdk.ErrUnknownRequest("Invalid app code")
     }
 
-    ids := keeper.FindAll(ctx, appId, path[2], addr)
+    var tableName = path[2]
+
+    ids := keeper.FindAll(ctx, appId, tableName, addr)
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, ids)
     if err != nil {
