@@ -250,15 +250,24 @@ func queryOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
 }
 
 func queryColumnOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
-    appId, err := keeper.GetDatabaseId(ctx, path[0])
+    accessCode:= path[0]
+    _, err := verifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
         return nil, sdk.ErrUnknownRequest("Invalid app code")
     }
 
-    options, err := keeper.GetColumnOption(ctx, appId, path[1], path[2])
+    tableName := path[2]
+    fieldName := path[3]
+
+    options, err := keeper.GetColumnOption(ctx, appId, tableName, fieldName)
 
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Field %s.%s does not exist",  path[1], path[2]))
+        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Field %s.%s does not exist",  tableName, fieldName))
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, options)
