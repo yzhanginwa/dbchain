@@ -241,7 +241,10 @@ func handleMsgInsertRow(ctx sdk.Context, keeper Keeper, msg types.MsgInsertRow) 
         return sdk.ErrUnknownRequest("Failed to parse row fields!").Result()
     }
 
-    keeper.Insert(ctx, appId, msg.TableName, rowFields, msg.Owner)
+    _, err = keeper.Insert(ctx, appId, msg.TableName, rowFields, msg.Owner)
+    if err != nil {
+        return sdk.ErrUnknownRequest("Failed validation of inserting row").Result()
+    }
     return sdk.Result{}
 }
 
