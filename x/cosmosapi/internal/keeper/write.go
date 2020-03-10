@@ -12,7 +12,7 @@ import (
 
 
 func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) (uint, error){
-    if(!validateInsertion(k, ctx, appId, tableName, fields)) {
+    if(!validateInsertion(k, ctx, appId, tableName, fields, owner)) {
         return 0, errors.New(fmt.Sprintf("Failed validation when inserting table %s", tableName))
     }
 
@@ -95,7 +95,7 @@ func isSystemField(fieldName string) bool {
 }
 
 // for now, we check the filed non-null option
-func validateInsertion(k Keeper, ctx sdk.Context, appId uint, tableName string, fields types.RowFields) bool {
+func validateInsertion(k Keeper, ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {
     fieldNames, err := k.getTableFields(ctx, appId, tableName)
     if err != nil {
         return(false)
@@ -107,14 +107,27 @@ func validateInsertion(k Keeper, ctx sdk.Context, appId uint, tableName string, 
         }
         fieldOptions, _ := k.GetColumnOption(ctx, appId, tableName, fieldName)
         // TODO: use a constant for the possible options
-        if(utils.ItemExists(fieldOptions, types.FLDOPT_NOTNULL)) {
+        if(utils.ItemExists(fieldOptions, string(types.FLDOPT_NOTNULL))) {
+            if value, ok := fields[fieldName]; ok {
+                if(len(value) < 1) {
+                    return(false)
+                }
+            } else {
+              return(false)
+            }
+        }
+
+        if(utils.ItemExists(fieldOptions, string(types.FLDOPT_UNIQUE))) {
             if value, ok := fields[fieldName]; ok {
                 if(len(value)>0) {
-                    continue
+                    ids := k.FindBy(ctx, appId, tableName, fieldName, value, owner)
+                    if len(ids) > 0 {
+                        return(false)
+                    }
                 }
             }
-            return(false)
         }
+
     }
     return(true)
 }

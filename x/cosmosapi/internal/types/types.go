@@ -71,6 +71,7 @@ type FieldOption string
 
 const (
     FLDOPT_NOTNULL    FieldOption = "not-null"
+    FLDOPT_UNIQUE     FieldOption = "unique"
 )
 
 
