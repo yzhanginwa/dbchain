@@ -2,19 +2,13 @@ package keeper
 
 import (
     "fmt"
-    "strings"
     "strconv"
-    "errors"
-    "time"
-    "regexp"
     //"encoding/hex"
-    "encoding/base64"
-    "github.com/tendermint/tendermint/crypto/secp256k1"
 
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
     abci "github.com/tendermint/tendermint/abci/types"
-    //"github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
+    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/utils"
 )
 
 // query endpoints supported by the cosmosapi service Querier
@@ -29,8 +23,6 @@ const (
     QueryIdsBy    = "find_by"
     QueryAllIds   = "find_all"
     QueryAdminGroup = "admin_group"
-
-    MaxAllowedTimeDiff = 15 * 1000   // 15 seconds
 )
 
 
@@ -81,7 +73,7 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 // the the list of app code in the system
 func queryApplications(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     accessCode:= path[0]
-    _, err := verifyAccessCode(accessCode)
+    _, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
         return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
     }
@@ -99,7 +91,7 @@ func queryApplications(ctx sdk.Context, path []string, req abci.RequestQuery, ke
 
 func queryApplication(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     accessCode:= path[0]
-    _, err := verifyAccessCode(accessCode)
+    _, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
         return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
     }
@@ -121,7 +113,7 @@ func queryApplication(ctx sdk.Context, path []string, req abci.RequestQuery, kee
 
 func queryAdminApps(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     accessCode:= path[0]
-    addr, err := verifyAccessCode(accessCode)
+    addr, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
         return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
     }
@@ -145,7 +137,7 @@ func queryAdminApps(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
 
 func queryTables(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     accessCode:= path[0]
-    _, err := verifyAccessCode(accessCode)
+    _, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
         return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
     }
@@ -171,7 +163,7 @@ func queryTables(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
 
 func queryTable(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     accessCode:= path[0]
-    _, err := verifyAccessCode(accessCode)
+    _, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
         return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
     }
@@ -197,7 +189,7 @@ func queryTable(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 
 func queryIndex(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     accessCode:= path[0]
-    _, err := verifyAccessCode(accessCode)
+    _, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
         return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
     }
@@ -224,7 +216,7 @@ func queryIndex(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 
 func queryOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     accessCode:= path[0]
-    _, err := verifyAccessCode(accessCode)
+    _, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
         return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
     }
@@ -251,7 +243,7 @@ func queryOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
 
 func queryColumnOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     accessCode:= path[0]
-    _, err := verifyAccessCode(accessCode)
+    _, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
         return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
     }
@@ -286,7 +278,7 @@ func queryColumnOption(ctx sdk.Context, path []string, req abci.RequestQuery, ke
 
 func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     accessCode:= path[0]
-    addr, err := verifyAccessCode(accessCode)
+    addr, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
         return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
     }
@@ -314,7 +306,7 @@ func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keep
 
 func queryIdsBy(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     accessCode:= path[0]
-    addr, err := verifyAccessCode(accessCode)
+    addr, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
         return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
     }
@@ -339,7 +331,7 @@ func queryIdsBy(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 
 func queryAllIds(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
     accessCode:= path[0]
-    addr, err := verifyAccessCode(accessCode)
+    addr, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
         return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
     }
@@ -389,42 +381,4 @@ func queryAdminGroup(ctx sdk.Context, path []string, req abci.RequestQuery, keep
 // helper funcs //
 //              //
 //////////////////
-
-func verifyAccessCode(accessCode string) (sdk.AccAddress, error) {
-    r1 := regexp.MustCompile("-")
-    r2 := regexp.MustCompile("_")
-    accessCode1 := r1.ReplaceAllString(accessCode, "+");
-    accessCode2 := r2.ReplaceAllString(accessCode1, "/");
-
-    parts := strings.Split(accessCode2, ":")
-    pubKeyBytes, _ := base64.StdEncoding.DecodeString(parts[0])
-    timeStamp      := parts[1]
-    signature, _   := base64.StdEncoding.DecodeString(parts[2])
-
-    //pubKeyBytes, _ := hex.DecodeString(pubKeyStr)
-    //pubKey, _ := crypto.PubKey(hex.DecodeString(pubKeyStr))
-
-    var pubKey secp256k1.PubKeySecp256k1
-    copy(pubKey[:], pubKeyBytes)
-    //pubKey := crypto.PubKey(pubKeyBytes)
-
-    if ! pubKey.VerifyBytes([]byte(timeStamp), []byte(signature)) {
-        return nil, errors.New("Failed to verify signature")
-    }
-
-    timeStampInt, err := strconv.Atoi(timeStamp)
-    if err != nil {
-        return nil, errors.New("Failed to verify access token")
-    }
-    now := time.Now().UnixNano() / 1000000
-    diff := now - int64(timeStampInt)
-    if diff < 0 { diff -= 0 }
-
-    if diff < MaxAllowedTimeDiff {
-        address := sdk.AccAddress(pubKey.Address())
-        return address, nil
-    } else {
-        return nil, errors.New("Failed to verify access token")
-    }
-}
 
