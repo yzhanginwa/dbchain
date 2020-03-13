@@ -2,6 +2,8 @@ package utils
 
 import (
 	"reflect"
+        "bytes"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func ItemExists(slice interface{}, item interface{}) bool {
@@ -17,5 +19,14 @@ func ItemExists(slice interface{}, item interface{}) bool {
         }
     }
 
+    return false
+}
+
+func AddressIncluded(addresses []sdk.AccAddress, address sdk.AccAddress) bool {
+    for _, addr := range addresses {
+        if bytes.Compare(address, addr) == 0 {
+            return true
+        }
+    }
     return false
 }

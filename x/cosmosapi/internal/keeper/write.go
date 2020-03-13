@@ -12,6 +12,10 @@ import (
 
 
 func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) (uint, error){
+    if(!haveWritePermission(k, ctx, appId, tableName, owner)) {
+        return 0, errors.New(fmt.Sprintf("Do not have permission inserting table %s", tableName))
+    }
+
     if(!validateInsertion(k, ctx, appId, tableName, fields, owner)) {
         return 0, errors.New(fmt.Sprintf("Failed validation when inserting table %s", tableName))
     }
@@ -92,6 +96,18 @@ func (k Keeper) Delete(ctx sdk.Context, appId uint, tableName string, id uint, o
 func isSystemField(fieldName string) bool {
     systemFields := []string{"id", "created_by", "created_at"}
     return utils.ItemExists(systemFields, fieldName)
+}
+
+
+func haveWritePermission(k Keeper, ctx sdk.Context, appId uint, tableName string, owner sdk.AccAddress) bool {
+    options, _ := k.GetOption(ctx, appId, tableName)
+    if utils.ItemExists(options, string(types.TBLOPT_ADMIN_ONLY)) {
+        admins := k.ShowAdminGroup(ctx, appId)
+        if utils.AddressIncluded(admins, owner) {
+            return true
+        }
+    }
+    return false
 }
 
 // for now, we check the filed non-null option
