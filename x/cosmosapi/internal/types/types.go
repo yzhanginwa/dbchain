@@ -63,7 +63,7 @@ type TableOption string
 
 const (
     TBLOPT_PUBLIC     TableOption = "public"
-    TBLOPT_ADMIN_ONLY TableOption = "admin_only"  // admin_only: the table can only be written by database admin
+    TBLOPT_ADMIN_ONLY TableOption = "admin-only"  // admin_only: the table can only be written by database admin
     TBLOPT_UPDATABLE  TableOption = "updatable"
     TBLOPT_DELETABLE  TableOption = "deletable"
 )
