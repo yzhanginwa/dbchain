@@ -33,6 +33,7 @@ type (
     MsgInsertRow    = types.MsgInsertRow
     MsgUpdateRow    = types.MsgUpdateRow
     MsgDeleteRow    = types.MsgDeleteRow
+    MsgFreezeRow    = types.MsgFreezeRow
 
     MsgAddAdminAccount = types.MsgAddAdminAccount
 

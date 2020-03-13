@@ -88,6 +88,27 @@ func (k Keeper) Delete(ctx sdk.Context, appId uint, tableName string, id uint, o
     return id, nil
 }
 
+func (k Keeper) Freeze(ctx sdk.Context, appId uint, tableName string, id uint, owner sdk.AccAddress) (uint, error){
+    store := ctx.KVStore(k.storeKey)
+
+    if id == 0 {
+        return 0, errors.New("Id cannot be empty")
+    }
+
+    keyAt := getDataKey(appId, tableName, id, types.FLD_FROZEN_AT)
+    bz := store.Get([]byte(keyAt))
+    if bz != nil {
+        return id, nil
+    }
+    store.Set([]byte(keyAt), k.cdc.MustMarshalBinaryBare(other.GetCurrentBlockTime().String()))
+
+    keyBy := getDataKey(appId, tableName, id, types.FLD_FROZEN_BY)
+    store.Set([]byte(keyBy), k.cdc.MustMarshalBinaryBare(owner.String()))
+
+    // TODO: to remove the related indexes
+    return id, nil
+}
+
 //////////////////
 //              //
 // helper funcs //

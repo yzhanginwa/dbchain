@@ -40,6 +40,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgUpdateRow(ctx, keeper, msg)
         case MsgDeleteRow:
             return handleMsgDeleteRow(ctx, keeper, msg)
+        case MsgFreezeRow:
+            return handleMsgFreezeRow(ctx, keeper, msg)
         case MsgAddAdminAccount:
             return handleMsgAddAdminAccount(ctx, keeper, msg)
         default:
@@ -288,6 +290,20 @@ func handleMsgDeleteRow(ctx sdk.Context, keeper Keeper, msg types.MsgDeleteRow) 
     }
 
     keeper.Delete(ctx, appId, msg.TableName, msg.Id, msg.Owner)
+    return sdk.Result{}
+}
+
+func handleMsgFreezeRow(ctx sdk.Context, keeper Keeper, msg types.MsgFreezeRow) sdk.Result {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return sdk.ErrUnknownRequest("Invalid app code").Result()
+    }
+
+    if !keeper.IsTablePresent(ctx, appId, msg.TableName) {
+        return sdk.ErrUnknownRequest(fmt.Sprintf("Table % does not exist!", msg.TableName)).Result()
+    }
+
+    keeper.Freeze(ctx, appId, msg.TableName, msg.Id, msg.Owner)
     return sdk.Result{}
 }
 

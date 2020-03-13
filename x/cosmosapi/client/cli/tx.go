@@ -40,6 +40,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdInsertRow(cdc),
         GetCmdUpdateRow(cdc),
         GetCmdDeleteRow(cdc),
+        GetCmdFreezeRow(cdc),
         GetCmdAddAdminAccount(cdc),
     )...)
 
@@ -392,6 +393,34 @@ func GetCmdDeleteRow(cdc *codec.Codec) *cobra.Command {
         },
     }
 }
+
+func GetCmdFreezeRow(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "freeze-row [appCode] [tableName] [id]",
+        Short: "freeze a row",
+        Args:  cobra.ExactArgs(3),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode := args[0]
+            tableName    := args[1]
+            id, err := strconv.ParseUint(args[2], 10, 0)
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+
+            msg := types.NewMsgFreezeRow(cliCtx.GetFromAddress(), appCode, tableName, uint(id))
+            err = msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
 
 /////////////////////////
 //                     //

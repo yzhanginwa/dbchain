@@ -177,3 +177,58 @@ func (msg MsgDeleteRow) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
+//////////////////
+//              //
+// MsgFreezeRow //
+//              //
+//////////////////
+
+type MsgFreezeRow struct {
+    Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
+    TableName string     `json:"table_name"`
+    Id uint              `json:"id"`
+}
+
+func NewMsgFreezeRow(owner sdk.AccAddress, appCode string, tableName string, id uint) MsgFreezeRow {
+    return MsgFreezeRow{
+        Owner: owner,
+        AppCode: appCode,
+        TableName: tableName,
+        Id: id,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgFreezeRow) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgFreezeRow) Type() string { return "freeze_row" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgFreezeRow) ValidateBasic() sdk.Error {
+    if msg.Owner.Empty() {
+        return sdk.ErrInvalidAddress(msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdk.ErrUnknownRequest("App code cannot be empty")
+    }
+    if len(msg.TableName) == 0 {
+        return sdk.ErrUnknownRequest("Table name cannot be empty")
+    }
+    if msg.Id ==0 {
+        return sdk.ErrUnknownRequest("Id cannot be zero")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgFreezeRow) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgFreezeRow) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
+

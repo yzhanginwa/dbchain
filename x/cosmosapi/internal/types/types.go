@@ -53,6 +53,17 @@ func (t Table) String() string {
     return strings.TrimSpace(fmt.Sprintf(`Name: %s`, t.Name))
 }
 
+//////////////////////////
+//                      //
+// reserved field names //
+//                      //
+//////////////////////////
+
+const (
+    FLD_FROZEN_AT       string = "_frozen_at_"
+    FLD_FROZEN_BY       string = "_frozen_by_"
+)
+
 //////////////////
 //              //
 // option types //
