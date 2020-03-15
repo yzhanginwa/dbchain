@@ -127,8 +127,9 @@ func haveWritePermission(k Keeper, ctx sdk.Context, appId uint, tableName string
         if utils.AddressIncluded(admins, owner) {
             return true
         }
+        return false
     }
-    return false
+    return true
 }
 
 // for now, we check the filed non-null option
