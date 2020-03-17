@@ -27,6 +27,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdFindIdsBy(storeKey, cdc),
         GetCmdFindAllIds(storeKey, cdc),
         GetCmdShowAdminGroup(storeKey, cdc),
+        GetCmdGetAccessCode(storeKey, cdc),
     )...)
     return cosmosapiQueryCmd
 }
@@ -70,16 +71,16 @@ func GetCmdTable(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use: "table",
         Short: "query tables",
-        Args: cobra.MaximumNArgs(2),
+        Args: cobra.MaximumNArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             var path string
-            if len(args) == 2 {
+            if len(args) == 3 {
+                path = fmt.Sprintf("custom/%s/tables/%s/%s/%s", queryRoute, args[0], args[1], args[2])
+            } else if len(args) == 2 {
                 path = fmt.Sprintf("custom/%s/tables/%s/%s", queryRoute, args[0], args[1])
-            } else if len(args) == 1 {
-                path = fmt.Sprintf("custom/%s/tables/%s", queryRoute, args[0])
             } else {
-                fmt.Printf("Need at least one parameter!")
+                fmt.Printf("Need at least 2 parameters!")
                 return nil
             }
 
@@ -89,7 +90,7 @@ func GetCmdTable(queryRoute string, cdc *codec.Codec) *cobra.Command {
                 return nil
             }
 
-            if len(args) == 2 {
+            if len(args) == 3 {
                 var out types.Table
                 cdc.MustUnmarshalJSON(res, &out)
                 return cliCtx.PrintOutput(out)
