@@ -5,13 +5,10 @@ import (
     "strconv"
     "errors"
     "time"
-    "regexp"
-    //"encoding/hex"
-    "encoding/base64"
+    "github.com/mr-tron/base58"
     "github.com/tendermint/tendermint/crypto/secp256k1"
 
     sdk "github.com/cosmos/cosmos-sdk/types"
-    //"github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 )
 
 const (
@@ -26,22 +23,13 @@ const (
 //////////////////
 
 func VerifyAccessCode(accessCode string) (sdk.AccAddress, error) {
-    r1 := regexp.MustCompile("-")
-    r2 := regexp.MustCompile("_")
-    accessCode1 := r1.ReplaceAllString(accessCode, "+");
-    accessCode2 := r2.ReplaceAllString(accessCode1, "/");
-
-    parts := strings.Split(accessCode2, ":")
-    pubKeyBytes, _ := base64.StdEncoding.DecodeString(parts[0])
+    parts := strings.Split(accessCode, ":")
+    pubKeyBytes, _ := base58.Decode(parts[0])
     timeStamp      := parts[1]
-    signature, _   := base64.StdEncoding.DecodeString(parts[2])
-
-    //pubKeyBytes, _ := hex.DecodeString(pubKeyStr)
-    //pubKey, _ := crypto.PubKey(hex.DecodeString(pubKeyStr))
+    signature, _   := base58.Decode(parts[2])
 
     var pubKey secp256k1.PubKeySecp256k1
     copy(pubKey[:], pubKeyBytes)
-    //pubKey := crypto.PubKey(pubKeyBytes)
 
     if ! pubKey.VerifyBytes([]byte(timeStamp), []byte(signature)) {
         return nil, errors.New("Failed to verify signature")
