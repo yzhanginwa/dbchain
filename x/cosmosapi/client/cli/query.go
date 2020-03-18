@@ -108,13 +108,14 @@ func GetCmdIndex(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use: "index",
         Short: "show index",
-        Args: cobra.ExactArgs(2),
+        Args: cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-            appCode   := args[0]
-            tableName := args[1]
-            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/index/%s/%s", queryRoute, appCode, tableName), nil)
+            accessCode := args[0]
+            appCode   := args[1]
+            tableName := args[2]
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/index/%s/%s/%s", queryRoute, accessCode, appCode, tableName), nil)
             if err != nil {
                 fmt.Printf("could not index index of table %s", tableName)
                 return nil
@@ -131,13 +132,14 @@ func GetCmdOption(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use: "table-option",
         Short: "show table options",
-        Args: cobra.ExactArgs(2),
+        Args: cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-            appCode   := args[0]
-            tableName := args[1]
-            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/option/%s/%s", queryRoute, appCode, tableName), nil)
+            accessCode := args[0]
+            appCode    := args[1]
+            tableName  := args[2]
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/option/%s/%s/%s", queryRoute, accessCode, appCode, tableName), nil)
             if err != nil {
                 fmt.Printf("could not get options of table %s", tableName)
                 return nil
@@ -154,14 +156,15 @@ func GetCmdColumnOption(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use: "column-option",
         Short: "show column options",
-        Args: cobra.ExactArgs(3),
+        Args: cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-            appCode   := args[0]
-            tableName := args[1]
-            fieldName := args[2]
-            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/column_option/%s/%s/%s", queryRoute, appCode, tableName, fieldName), nil)
+            accessCode := args[0]
+            appCode    := args[1]
+            tableName  := args[2]
+            fieldName  := args[3]
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/column_option/%s/%s/%s/%s", queryRoute, accessCode, appCode, tableName, fieldName), nil)
             if err != nil {
                 fmt.Printf("could not get options of column %s of table %s", fieldName, tableName)
                 return nil
@@ -178,11 +181,15 @@ func GetCmdFindRow(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use: "find",
         Short: "find row",
-        Args: cobra.ExactArgs(2),
+        Args: cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find/%s/%s", queryRoute, args[0], args[1]), nil)
+            accessCode := args[0]
+            appCode    := args[1]
+            tableName  := args[2]
+            id         := args[3]
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find/%s/%s/%s/%", queryRoute, accessCode, appCode, tableName, id), nil)
             if err != nil {
                 fmt.Printf("could not find row")
                 return nil
@@ -199,12 +206,18 @@ func GetCmdFindIdsBy(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use: "find-by",
         Short: "find by",
-        Args: cobra.ExactArgs(3),
+        Args: cobra.ExactArgs(5),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-            // args are tableName, fieldName, and value respectively
-            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find_by/%s/%s/%s", queryRoute, args[0], args[1], args[2]), nil)
+            accessCode := args[0]
+            appCode    := args[1]
+            tableName  := args[2]
+            fieldName  := args[3]
+            value      := args[4]
+
+            // args are accessCode, appCode, tableName, fieldName, and value respectively
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find_by/%s/%s/%s", queryRoute, accessCode, appCode, tableName, fieldName, value), nil)
             if err != nil {
                 fmt.Printf("could not find ids")
                 return nil
@@ -221,12 +234,15 @@ func GetCmdFindAllIds(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use: "find-all",
         Short: "find all",
-        Args: cobra.ExactArgs(1),
+        Args: cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-            // args are tableName
-            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find_all/%s", queryRoute, args[0]), nil)
+            accessCode := args[0]
+            appCode    := args[1]
+            tableName  := args[2]
+
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find_all/%s/%s/%s", queryRoute, accessCode, appCode, tableName), nil)
             if err != nil {
                 fmt.Printf("could not find ids")
                 return nil
