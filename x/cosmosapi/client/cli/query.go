@@ -36,15 +36,16 @@ func GetCmdApplication(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use: "application",
         Short: "query applications",
-        Args: cobra.MaximumNArgs(1),
+        Args: cobra.MaximumNArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
 
             var path string
-            if len(args) == 1 {
-                path = fmt.Sprintf("custom/%s/application/%s", queryRoute, args[0])
+            // args[0] is the access token.
+            if len(args) == 2 {
+                path = fmt.Sprintf("custom/%s/application/%s/%s", queryRoute, args[0], args[1])
             } else {
-                path = fmt.Sprintf("custom/%s/application", queryRoute)
+                path = fmt.Sprintf("custom/%s/application/%s", queryRoute, args[0])
             }
 
             res, _, err := cliCtx.QueryWithData(path, nil)
@@ -53,7 +54,7 @@ func GetCmdApplication(queryRoute string, cdc *codec.Codec) *cobra.Command {
                 return nil
             }
 
-            if len(args) == 1 {
+            if len(args) == 2 {
                 var out types.Database
                 cdc.MustUnmarshalJSON(res, &out)
                 return cliCtx.PrintOutput(out)
