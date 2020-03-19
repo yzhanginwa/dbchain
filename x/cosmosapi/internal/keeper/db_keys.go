@@ -29,6 +29,10 @@ func getDatabaseNextIdKey() string {
     return fmt.Sprintf("%s:nextId", KeyPrefixDb)
 }
 
+func getDatabaseUserKey(appId uint, user string) string {
+    return fmt.Sprintf("%s:%d:%s", KeyPrefixDb, appId, user)
+}
+
 func getDatabaseIteratorStartAndEndKey() (string, string) {
     start := fmt.Sprintf("%s:code:", KeyPrefixDb)
     end   := fmt.Sprintf("%s:code;", KeyPrefixDb)

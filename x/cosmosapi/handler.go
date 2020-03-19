@@ -16,6 +16,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
         switch msg := msg.(type) {
         case MsgCreateApplication:
             return handleMsgCreateApplication(ctx, keeper, msg)
+        case MsgAddDatabaseUser:
+            return handleMsgAddDatabaseUser(ctx, keeper, msg)
         case MsgCreateTable:
             return handleMsgCreateTable(ctx, keeper, msg)
         case MsgDropTable:
@@ -59,6 +61,12 @@ func handleMsgCreateApplication(ctx sdk.Context, keeper Keeper, msg MsgCreateApp
 
     // We use the term database for internal use. To outside we use application to make users understand easily
     keeper.CreateDatabase(ctx, msg.Owner, msg.Name, msg.Description, msg.Permissioned)
+    return sdk.Result{}
+}
+
+func handleMsgAddDatabaseUser(ctx sdk.Context, keeper Keeper, msg MsgAddDatabaseUser) sdk.Result {
+    // We use the term database for internal use. To outside we use application to make users understand easily
+    keeper.AddDatabaseUser(ctx, msg.Owner, msg.AppCode, msg.User)
     return sdk.Result{}
 }
 

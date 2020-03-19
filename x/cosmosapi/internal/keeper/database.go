@@ -104,6 +104,19 @@ func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name strin
     return nil 
 }
 
+func (k Keeper) AddDatabaseUser(ctx sdk.Context, owner sdk.AccAddress, appCode string, user sdk.AccAddress) error {
+    store := ctx.KVStore(k.storeKey)
+
+    appId, err := k.GetDatabaseId(ctx, appCode)
+    if err != nil {
+        return errors.New(fmt.Sprintf("Application code %s does not exist!", appCode))
+    }
+
+    key := getDatabaseUserKey(appId, user.String())
+    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(user))
+    return nil
+}
+
 ////////////////////
 //                //
 // helper methods //

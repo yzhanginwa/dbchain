@@ -28,6 +28,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
     cosmosapiTxCmd.AddCommand(client.PostCommands(
         GetCmdCreateApplication(cdc),
+        GetCmdAddAppUser(cdc),
         GetCmdCreateTable(cdc),
         GetCmdDropTable(cdc),
         GetCmdAddColumn(cdc),
@@ -70,6 +71,33 @@ func GetCmdCreateApplication(cdc *codec.Codec) *cobra.Command {
             }
             msg := types.NewMsgCreateApplication(cliCtx.GetFromAddress(), name, description, permissioned)
             err := msg.ValidateBasic()
+            if err != nil {
+                return err
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+func GetCmdAddAppUser(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "add-app-user [appCode] [address]",
+        Short: "add application user",
+        Args:  cobra.ExactArgs(2),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode := args[0]
+            address := args[1]
+            user, err := sdk.AccAddressFromBech32(address)
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+
+            msg := types.NewMsgAddDatabaseUser(cliCtx.GetFromAddress(), appCode, user)
+            err = msg.ValidateBasic()
             if err != nil {
                 return err
             }
