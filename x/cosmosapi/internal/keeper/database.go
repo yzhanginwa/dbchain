@@ -117,6 +117,17 @@ func (k Keeper) AddDatabaseUser(ctx sdk.Context, owner sdk.AccAddress, appCode s
     return nil
 }
 
+func (k Keeper) DatabaseUserExists(ctx sdk.Context, appId uint, user sdk.AccAddress) bool {
+    store := ctx.KVStore(k.storeKey)
+
+    key := getDatabaseUserKey(appId, user.String())
+    bz := store.Get([]byte(key))
+    if bz == nil {
+        return false
+    }
+    return true
+}
+
 ////////////////////
 //                //
 // helper methods //
