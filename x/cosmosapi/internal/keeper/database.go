@@ -10,6 +10,7 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/other"
+    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/keeper/cache"
 )
 
 func (k Keeper) GetDatabaseAdmins(ctx sdk.Context, appCode string) []sdk.AccAddress {
@@ -68,7 +69,27 @@ func (k Keeper) GetDatabaseId(ctx sdk.Context, appCode string) (uint, error) {
     }
 }
 
+
+func (k Keeper) getDatabaseById(ctx sdk.Context, appId uint) (types.Database, error) {
+    if appCode, ok := cache.GetAppCodeById(appId); ok {
+        return k.getDatabase(ctx, appCode)
+    } else {
+        return types.Database{}, errors.New(fmt.Sprintf("AppID %d is invalid!", appId))
+    }
+}
+
 func (k Keeper) getDatabase(ctx sdk.Context, appCode string) (types.Database, error) {
+    if cached_db, ok := cache.GetDatabase(appCode); ok {
+        return cached_db, nil
+    }
+    db, err := k.getDatabaseRaw(ctx, appCode)
+    if err == nil {
+        cache.SetDatabase(appCode, db)
+    }
+    return db, err
+}
+
+func (k Keeper) getDatabaseRaw(ctx sdk.Context, appCode string) (types.Database, error) {
     store := ctx.KVStore(k.storeKey)
     key := getDatabaseKey(appCode)
     bz := store.Get([]byte(key))
