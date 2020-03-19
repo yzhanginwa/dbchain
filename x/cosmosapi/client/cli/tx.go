@@ -57,14 +57,18 @@ func GetCmdCreateApplication(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use:   "create-application",
         Short: "create a new application",
-        Args:  cobra.ExactArgs(2),
+        Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
             name := args[0]
             description := args[1]
-            msg := types.NewMsgCreateApplication(cliCtx.GetFromAddress(), name, description)
+            var permissioned = true
+            if args[2] == "no" || args[2] == "false" {
+                permissioned = false
+            }
+            msg := types.NewMsgCreateApplication(cliCtx.GetFromAddress(), name, description, permissioned)
             err := msg.ValidateBasic()
             if err != nil {
                 return err

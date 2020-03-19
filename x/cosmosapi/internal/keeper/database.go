@@ -80,7 +80,7 @@ func (k Keeper) getDatabase(ctx sdk.Context, appCode string) (types.Database, er
     return database, nil
 }
 
-func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name string, description string) error {
+func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name string, description string, permissioned bool) error {
     store := ctx.KVStore(k.storeKey)
     newAppCode := generateNewAppCode(owner)
     key := getDatabaseKey(newAppCode)
@@ -94,6 +94,7 @@ func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name strin
     db.Owner = owner
     db.Name = name
     db.Description = description
+    db.Permissioned = permissioned
     db.AppCode = newAppCode
     db.AppId = appId
     store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(db))

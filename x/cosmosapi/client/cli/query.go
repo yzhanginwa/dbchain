@@ -36,7 +36,7 @@ func GetCmdApplication(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use: "application",
         Short: "query applications",
-        Args: cobra.MaximumNArgs(2),
+        Args: cobra.MinimumNArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
 

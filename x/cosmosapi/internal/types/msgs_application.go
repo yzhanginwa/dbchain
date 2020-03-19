@@ -15,14 +15,16 @@ type MsgCreateApplication struct {
     Owner sdk.AccAddress `json:"owner"`
     Name string          `json:"name"`
     Description string   `json:"description"`
+    Permissioned bool    `json:"permissioned"`
 }
 
 // NewMsgCreateApplication is a constructor function for MsgCreatTable
-func NewMsgCreateApplication(owner sdk.AccAddress, name string, description string) MsgCreateApplication {
+func NewMsgCreateApplication(owner sdk.AccAddress, name string, description string, permissioned bool) MsgCreateApplication {
     return MsgCreateApplication {
         Owner: owner,
         Name: name,
         Description: description,
+        Permissioned: permissioned,
     }
 }
 

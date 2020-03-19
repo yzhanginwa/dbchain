@@ -21,6 +21,7 @@ type Database struct {
     AppId uint            `json:"appid"`
     Name string           `json:"name"`
     Description string    `json:"description"`
+    Permissioned bool     `json:"permissioned"`
 }
 
 func NewDatabase() Database {
