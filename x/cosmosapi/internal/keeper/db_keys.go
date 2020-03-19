@@ -6,9 +6,12 @@ import (
 )
 
 const (
+    KeyPrefixAppCode    = "appcode"
+    KeyPrefixAppNextId  = "appnextid"
     KeyPrefixDb       = "db"
     KeyPrefixSysGroup = "sysgrp"
 
+    KeyPrefixUser  = "usr"
     KeyPrefixMeta  = "mt"
     KeyPrefixData  = "dt"
     KeyPrefixIndex = "ix"
@@ -22,26 +25,26 @@ const (
 //////////////////////////////////
 
 func getDatabaseKey(appCode string) string {
-    return fmt.Sprintf("%s:code:%s", KeyPrefixDb, appCode)
+    return fmt.Sprintf("%s:%s", KeyPrefixAppCode, appCode)
 }
 
 func getDatabaseNextIdKey() string {
-    return fmt.Sprintf("%s:nextId", KeyPrefixDb)
+    return fmt.Sprintf("%s", KeyPrefixAppNextId)
 }
 
 func getDatabaseUserKey(appId uint, user string) string {
-    return fmt.Sprintf("%s:%d:%s", KeyPrefixDb, appId, user)
+    return fmt.Sprintf("%s:%d:%s:%s", KeyPrefixDb, appId, KeyPrefixUser, user)
 }
 
 func getDatabaseIteratorStartAndEndKey() (string, string) {
-    start := fmt.Sprintf("%s:code:", KeyPrefixDb)
-    end   := fmt.Sprintf("%s:code;", KeyPrefixDb)
+    start := fmt.Sprintf("%s:", KeyPrefixAppCode)
+    end   := fmt.Sprintf("%s;", KeyPrefixAppCode)
     return start, end
 }
 
 func getAppCodeFromDatabaseKey(key string) string {
     arr := strings.Split(key, ":")
-    return arr[2]
+    return arr[1]
 }
 
 
