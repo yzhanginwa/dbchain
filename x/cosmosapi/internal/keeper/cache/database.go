@@ -10,8 +10,10 @@ import (
 //                //
 ////////////////////
 
-var database map[string]types.Database
-var appIdToCode map[uint]string
+var (
+    database = make(map[string]types.Database)
+    appIdToCode = make(map[uint]string)
+)
 
 func GetDatabase(appCode string) (types.Database, bool) {
     value, ok := database[appCode]
