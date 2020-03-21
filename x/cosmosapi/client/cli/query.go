@@ -19,6 +19,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
     }
     cosmosapiQueryCmd.AddCommand(client.GetCommands(
         GetCmdApplication(storeKey, cdc),
+        GetCmdAppUsers(storeKey, cdc),
         GetCmdTable(storeKey, cdc),
         GetCmdIndex(storeKey, cdc),
         GetCmdOption(storeKey, cdc),
@@ -63,6 +64,29 @@ func GetCmdApplication(queryRoute string, cdc *codec.Codec) *cobra.Command {
                 cdc.MustUnmarshalJSON(res, &out)
                 return cliCtx.PrintOutput(out)
             }
+        },
+    }
+}
+
+func GetCmdAppUsers(queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "app-users",
+        Short: "show app users",
+        Args: cobra.ExactArgs(2),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            accessCode := args[0]
+            appCode   := args[1]
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/app_users/%s/%s", queryRoute, accessCode, appCode), nil)
+            if err != nil {
+                fmt.Printf("could not get users of application %s", appCode)
+                return nil
+            }
+
+            var out types.QueryTables // QueryTables is a []string. It could be reused here
+            cdc.MustUnmarshalJSON(res, &out)
+            return cliCtx.PrintOutput(out)
         },
     }
 }

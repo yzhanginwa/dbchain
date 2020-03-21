@@ -14,6 +14,7 @@ import (
 // query endpoints supported by the cosmosapi service Querier
 const (
     QueryApplication   = "application"
+    QueryAppUsers      = "app_users"
     QueryAdminApps     = "admin_apps"
     QueryTables   = "tables"
     QueryIndex    = "index"
@@ -36,6 +37,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             } else {
                 return queryApplications(ctx, path[1:], req, keeper)
             }
+        case QueryAppUsers:
+            return queryAppUsers(ctx, path[1:], req, keeper)
         case QueryAdminApps:
             return queryAdminApps(ctx, path[1:], req, keeper)
         case QueryTables:
@@ -104,6 +107,29 @@ func queryApplication(ctx sdk.Context, path []string, req abci.RequestQuery, kee
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, database)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryAppUsers(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+    accessCode:= path[0]
+    addr, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+    }
+
+    appCode := path[1]
+    appId, err := keeper.GetDatabaseId(ctx, appCode)
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest("Invalid app code")
+    }
+
+    users := keeper.GetDatabaseUsers(ctx, appId, addr)
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, users)
     if err != nil {
         panic("could not marshal result to JSON")
     }

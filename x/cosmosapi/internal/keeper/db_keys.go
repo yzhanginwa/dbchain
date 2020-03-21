@@ -47,6 +47,16 @@ func getAppCodeFromDatabaseKey(key string) string {
     return arr[1]
 }
 
+func getDatabaseUserIteratorStartAndEndKey(appId uint) (string, string) {
+    start := fmt.Sprintf("%s:%d:%s:", KeyPrefixDb, appId, KeyPrefixUser)
+    end   := fmt.Sprintf("%s:%d:%s;", KeyPrefixDb, appId, KeyPrefixUser)
+    return start, end
+}
+
+func getUserFromDatabaseUserKey(key string) string {
+    arr := strings.Split(key, ":")
+    return arr[3]
+}
 
 //////////////////
 //              //

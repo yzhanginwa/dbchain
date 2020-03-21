@@ -10,6 +10,7 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/other"
+    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/utils"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/keeper/cache"
 )
 
@@ -149,11 +150,39 @@ func (k Keeper) DatabaseUserExists(ctx sdk.Context, appId uint, user sdk.AccAddr
     return true
 }
 
+func (k Keeper) GetDatabaseUsers(ctx sdk.Context, appId uint, owner sdk.AccAddress) []string {
+    if !k.isAdmin(ctx, appId, owner) {
+        return []string{}
+    }
+
+    store := ctx.KVStore(k.storeKey)
+    start, end := getDatabaseUserIteratorStartAndEndKey(appId)
+    iter := store.Iterator([]byte(start), []byte(end))
+    var result = []string{}
+
+    for ; iter.Valid(); iter.Next() {
+        key := iter.Key()
+        keyString := string(key)
+        user := getUserFromDatabaseUserKey(keyString)
+        result = append(result, user)
+    }
+
+    return result
+}
+
 ////////////////////
 //                //
 // helper methods //
 //                //
 ////////////////////
+
+func (k Keeper) isAdmin(ctx sdk.Context, appId uint, addr sdk.AccAddress) bool {
+    admins := k.ShowAdminGroup(ctx, appId)
+    if utils.AddressIncluded(admins, addr) {
+        return true
+    }
+    return false
+}
 
 func generateNewAppCode(owner sdk.AccAddress) string {
     blockTime := other.GetCurrentBlockTime().String()
