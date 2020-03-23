@@ -12,7 +12,7 @@ import (
 
 
 func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) (uint, error){
-    if !haveUserPermission(k, ctx, appId, owner) {
+    if !k.IsDatabaseUser(ctx, appId, owner) {
         return 0, errors.New(fmt.Sprintf("Do not have user permission on database %d", appId))
     }
     if(!haveWritePermission(k, ctx, appId, tableName, owner)) {
@@ -120,22 +120,6 @@ func (k Keeper) Freeze(ctx sdk.Context, appId uint, tableName string, id uint, o
 func isSystemField(fieldName string) bool {
     systemFields := []string{"id", "created_by", "created_at"}
     return utils.ItemExists(systemFields, fieldName)
-}
-
-func haveUserPermission(k Keeper, ctx sdk.Context, appId uint, owner sdk.AccAddress) bool {
-    database, err := k.getDatabaseById(ctx, appId)
-    if err != nil {
-        return false
-    }
-    if database.Permissioned {
-        if k.DatabaseUserExists(ctx, appId, owner) {
-            return true
-        } else {
-            return false
-        }
-    } else {
-        return true
-    }
 }
 
 func haveWritePermission(k Keeper, ctx sdk.Context, appId uint, tableName string, owner sdk.AccAddress) bool {

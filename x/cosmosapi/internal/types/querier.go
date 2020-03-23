@@ -6,8 +6,11 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-
-////////////////
+/////////////////
+//             //
+// QueryTables //
+//             //
+/////////////////
 
 // QueryTables Result table names
 type QueryTables []string
@@ -17,7 +20,11 @@ func (t QueryTables) String() string {
     return strings.Join(t, "\n")
 }
 
-////////////////
+////////////////////
+//                //
+// QueryRowFields //
+//                //
+////////////////////
 
 type QueryRowFields map[string]string
 
@@ -29,7 +36,11 @@ func (rf QueryRowFields) String() string {
     return result
 }
 
-////////////////
+////////////////////////
+//                    //
+// QuerySliceOfString //
+//                    //
+////////////////////////
 
 type QuerySliceOfString []string
 
@@ -38,9 +49,11 @@ func (t QuerySliceOfString) String() string {
     return strings.Join(t, "\n")
 }
 
-////////////////
-
-////////////////
+///////////////////
+//               //
+// QueryOfString //
+//               //
+///////////////////
 
 type QueryOfString string
 
@@ -49,7 +62,28 @@ func (t QueryOfString) String() string {
     return string(t)
 }
 
-////////////////
+////////////////////
+//                //
+// QueryOfBoolean //
+//                //
+////////////////////
+
+type QueryOfBoolean bool
+
+// implement fmt.Stringer
+func (t QueryOfBoolean) String() string {
+    if t {
+        return "true"
+    } else {
+        return "false"
+    }
+}
+
+/////////////////////
+//                 //
+// QueryAdminGroup //
+//                 //
+/////////////////////
 
 type QueryAdminGroup []sdk.AccAddress
 
@@ -60,6 +94,3 @@ func (ag QueryAdminGroup) String() string {
     }
     return strings.Join(buf, "\n")
 }
-
-////////////////
-

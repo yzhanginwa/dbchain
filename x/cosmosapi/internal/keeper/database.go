@@ -170,6 +170,22 @@ func (k Keeper) GetDatabaseUsers(ctx sdk.Context, appId uint, owner sdk.AccAddre
     return result
 }
 
+func (k Keeper) IsDatabaseUser(ctx sdk.Context, appId uint, owner sdk.AccAddress) bool {
+    database, err := k.getDatabaseById(ctx, appId)
+    if err != nil {
+        return false
+    }
+    if database.Permissioned {
+        if k.DatabaseUserExists(ctx, appId, owner) {
+            return true
+        } else {
+            return false
+        }
+    } else {
+        return true
+    }
+}
+
 ////////////////////
 //                //
 // helper methods //

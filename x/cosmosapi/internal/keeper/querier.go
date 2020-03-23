@@ -15,6 +15,7 @@ import (
 const (
     QueryApplication   = "application"
     QueryAppUsers      = "app_users"
+    QueryIsAppUser     = "is_app_user"
     QueryAdminApps     = "admin_apps"
     QueryTables   = "tables"
     QueryIndex    = "index"
@@ -39,6 +40,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             }
         case QueryAppUsers:
             return queryAppUsers(ctx, path[1:], req, keeper)
+        case QueryIsAppUser:
+            return queryIsAppUser(ctx, path[1:], req, keeper)
         case QueryAdminApps:
             return queryAdminApps(ctx, path[1:], req, keeper)
         case QueryTables:
@@ -130,6 +133,29 @@ func queryAppUsers(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
     users := keeper.GetDatabaseUsers(ctx, appId, addr)
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, users)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryIsAppUser(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+    accessCode:= path[0]
+    addr, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+    }
+
+    appCode := path[1]
+    appId, err := keeper.GetDatabaseId(ctx, appCode)
+    if err != nil {
+        return []byte{}, sdk.ErrUnknownRequest("Invalid app code")
+    }
+
+    isAppUser := keeper.IsDatabaseUser(ctx, appId, addr)
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, isAppUser)
     if err != nil {
         panic("could not marshal result to JSON")
     }
