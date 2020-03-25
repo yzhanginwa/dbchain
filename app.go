@@ -5,7 +5,7 @@ import (
     "os"
 
     abci "github.com/tendermint/tendermint/abci/types"
-    cmn "github.com/tendermint/tendermint/libs/common"
+    tmos "github.com/tendermint/tendermint/libs/os"
     "github.com/tendermint/tendermint/libs/log"
     tmtypes "github.com/tendermint/tendermint/types"
     dbm "github.com/tendermint/tm-db"
@@ -18,7 +18,6 @@ import (
     "github.com/cosmos/cosmos-sdk/x/auth"
     "github.com/cosmos/cosmos-sdk/x/bank"
     distr "github.com/cosmos/cosmos-sdk/x/distribution"
-    "github.com/cosmos/cosmos-sdk/x/genaccounts"
     "github.com/cosmos/cosmos-sdk/x/genutil"
     "github.com/cosmos/cosmos-sdk/x/params"
     "github.com/cosmos/cosmos-sdk/x/slashing"
@@ -39,7 +38,6 @@ var (
 
     // NewBasicManager is in charge of setting up basic module elemnets
     ModuleBasics = module.NewBasicManager(
-        genaccounts.AppModuleBasic{},
         genutil.AppModuleBasic{},
         auth.AppModuleBasic{},
         bank.AppModuleBasic{},
@@ -118,7 +116,7 @@ func NewCosmosApiApp(
     }
 
     // The ParamsKeeper handles parameter storage for the application
-    app.paramsKeeper = params.NewKeeper(app.cdc, keys[params.StoreKey], tkeys[params.TStoreKey], params.DefaultCodespace)
+    app.paramsKeeper = params.NewKeeper(app.cdc, keys[params.StoreKey], tkeys[params.TStoreKey])
     // Set specific supspaces
     authSubspace := app.paramsKeeper.Subspace(auth.DefaultParamspace)
     bankSupspace := app.paramsKeeper.Subspace(bank.DefaultParamspace)
@@ -138,7 +136,6 @@ func NewCosmosApiApp(
     app.bankKeeper = bank.NewBaseKeeper(
         app.accountKeeper,
         bankSupspace,
-        bank.DefaultCodespace,
         app.ModuleAccountAddrs(),
     )
 
@@ -155,10 +152,8 @@ func NewCosmosApiApp(
     stakingKeeper := staking.NewKeeper(
         app.cdc,
         keys[staking.StoreKey],
-        tkeys[staking.TStoreKey],
         app.supplyKeeper,
         stakingSubspace,
-        staking.DefaultCodespace,
     )
 
     app.distrKeeper = distr.NewKeeper(
@@ -167,7 +162,6 @@ func NewCosmosApiApp(
         distrSubspace,
         &stakingKeeper,
         app.supplyKeeper,
-        distr.DefaultCodespace,
         auth.FeeCollectorName,
         app.ModuleAccountAddrs(),
     )
@@ -177,7 +171,6 @@ func NewCosmosApiApp(
         keys[slashing.StoreKey],
         &stakingKeeper,
         slashingSubspace,
-        slashing.DefaultCodespace,
     )
 
     // register the staking hooks
@@ -197,15 +190,14 @@ func NewCosmosApiApp(
     )
 
     app.mm = module.NewManager(
-        genaccounts.NewAppModule(app.accountKeeper),
         genutil.NewAppModule(app.accountKeeper, app.stakingKeeper, app.BaseApp.DeliverTx),
         auth.NewAppModule(app.accountKeeper),
         bank.NewAppModule(app.bankKeeper, app.accountKeeper),
         cosmosapi.NewAppModule(app.cosmosApiKeeper, app.bankKeeper),
         supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
-        distr.NewAppModule(app.distrKeeper, app.supplyKeeper),
-        slashing.NewAppModule(app.slashingKeeper, app.stakingKeeper),
-        staking.NewAppModule(app.stakingKeeper, app.distrKeeper, app.accountKeeper, app.supplyKeeper),
+        distr.NewAppModule(app.distrKeeper, app.accountKeeper, app.supplyKeeper, app.stakingKeeper),
+        slashing.NewAppModule(app.slashingKeeper, app.accountKeeper, app.stakingKeeper),
+        staking.NewAppModule(app.stakingKeeper, app.accountKeeper, app.supplyKeeper),
     )
 
     app.mm.SetOrderBeginBlockers(distr.ModuleName, slashing.ModuleName, cosmosapi.ModuleName)
@@ -215,7 +207,6 @@ func NewCosmosApiApp(
     // NOTE: The genutils moodule must occur after staking so that pools are
     // properly initialized with tokens from genesis accounts.
     app.mm.SetOrderInitGenesis(
-        genaccounts.ModuleName,
         distr.ModuleName,
         staking.ModuleName,
         auth.ModuleName,
@@ -249,7 +240,7 @@ func NewCosmosApiApp(
 
     err := app.LoadLatestVersion(app.keys[bam.MainStoreKey])
     if err != nil {
-        cmn.Exit(err.Error())
+        tmos.Exit(err.Error())
     }
 
     return app

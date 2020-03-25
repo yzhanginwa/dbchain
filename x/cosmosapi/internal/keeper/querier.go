@@ -7,6 +7,7 @@ import (
 
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
+    sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
     abci "github.com/tendermint/tendermint/abci/types"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/utils"
 )
@@ -30,7 +31,7 @@ const (
 
 // NewQuerier is the module level router for state queries
 func NewQuerier(keeper Keeper) sdk.Querier {
-    return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
+    return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err error) {
         switch path[0] {
         case QueryApplication:
             if len(path) > 2 {
@@ -65,7 +66,7 @@ func NewQuerier(keeper Keeper) sdk.Querier {
         case QueryAdminGroup:
             return queryAdminGroup(ctx, path[1:], req, keeper)
         default:
-            return nil, sdk.ErrUnknownRequest("unknown cosmosapi query endpoint")
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown cosmosapi query endpoint")
         }
     }
 }
@@ -77,11 +78,11 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 ////////////////////////////////
 
 // the the list of app code in the system
-func queryApplications(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+func queryApplications(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
     _, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
     // we use the term database in the code
@@ -95,18 +96,18 @@ func queryApplications(ctx sdk.Context, path []string, req abci.RequestQuery, ke
     return res, nil
 }
 
-func queryApplication(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+func queryApplication(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
     _, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
     appCode := path[1]
     database, err := keeper.getDatabase(ctx, appCode)
 
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("AppCode %s does not exist", appCode))
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("AppCode %s does not exist", appCode))
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, database)
@@ -117,17 +118,17 @@ func queryApplication(ctx sdk.Context, path []string, req abci.RequestQuery, kee
     return res, nil
 }
 
-func queryAppUsers(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+func queryAppUsers(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
     addr, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
     appCode := path[1]
     appId, err := keeper.GetDatabaseId(ctx, appCode)
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest("Invalid app code")
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
     users := keeper.GetDatabaseUsers(ctx, appId, addr)
@@ -140,17 +141,17 @@ func queryAppUsers(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
     return res, nil
 }
 
-func queryIsAppUser(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+func queryIsAppUser(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
     addr, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
     appCode := path[1]
     appId, err := keeper.GetDatabaseId(ctx, appCode)
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest("Invalid app code")
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
     isAppUser := keeper.IsDatabaseUser(ctx, appId, addr)
@@ -163,11 +164,11 @@ func queryIsAppUser(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
     return res, nil
 }
 
-func queryAdminApps(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+func queryAdminApps(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
     addr, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
     // we use the term database in the code
@@ -187,22 +188,22 @@ func queryAdminApps(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
 //            //
 ////////////////
 
-func queryTables(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+func queryTables(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
     _, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
     appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest("Invalid app code")
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
     tables, err := keeper.getTables(ctx, appId)
 
     if err != nil {
-        return nil, sdk.ErrUnknownRequest("Can not get table names")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Can not get table names")
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, tables)
@@ -213,22 +214,22 @@ func queryTables(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
     return res, nil
 }
 
-func queryTable(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+func queryTable(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
     _, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
     appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
-        return nil, sdk.ErrUnknownRequest("Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
     table, err := keeper.GetTable(ctx, appId, path[2])
 
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not exist",  table))
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Table %s does not exist",  table))
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, table)
@@ -239,23 +240,23 @@ func queryTable(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
     return res, nil
 }
 
-func queryIndex(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+func queryIndex(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
     _, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
     appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
-        return nil, sdk.ErrUnknownRequest("Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
     tableName := path[2]
     index, err := keeper.GetIndex(ctx, appId, tableName)
 
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not exist",  tableName))
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Table %s does not exist",  tableName))
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, index)
@@ -266,23 +267,23 @@ func queryIndex(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
     return res, nil
 }
 
-func queryOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+func queryOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
     _, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
     appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
-        return nil, sdk.ErrUnknownRequest("Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
     tableName := path[2]
     options, err := keeper.GetOption(ctx, appId, tableName)
 
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not exist",  tableName))
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Table %s does not exist",  tableName))
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, options)
@@ -293,16 +294,16 @@ func queryOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
     return res, nil
 }
 
-func queryColumnOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+func queryColumnOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
     _, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
     appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
-        return nil, sdk.ErrUnknownRequest("Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
     tableName := path[2]
@@ -311,7 +312,7 @@ func queryColumnOption(ctx sdk.Context, path []string, req abci.RequestQuery, ke
     options, err := keeper.GetColumnOption(ctx, appId, tableName, fieldName)
 
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Field %s.%s does not exist",  tableName, fieldName))
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s.%s does not exist",  tableName, fieldName))
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, options)
@@ -328,16 +329,16 @@ func queryColumnOption(ctx sdk.Context, path []string, req abci.RequestQuery, ke
 //            //
 ////////////////
 
-func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
     addr, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
     appId, err := keeper.GetDatabaseId(ctx, path[1])
     if  err != nil {
-        return nil, sdk.ErrUnknownRequest("Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
     tableName := path[2] 
@@ -345,7 +346,7 @@ func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keep
     fields, err := keeper.Find(ctx, appId, tableName, uint(u32), addr)
 
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("Table %s does not exist",  path[2]))
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Table %s does not exist",  path[2]))
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, fields)
@@ -356,16 +357,16 @@ func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keep
     return res, nil
 }
 
-func queryIdsBy(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+func queryIdsBy(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
     addr, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
     appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
-        return nil, sdk.ErrUnknownRequest("Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
     tableName := path[2]
@@ -381,16 +382,16 @@ func queryIdsBy(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
     return res, nil
 }
 
-func queryAllIds(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+func queryAllIds(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
     addr, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
-        return []byte{}, sdk.ErrUnknownRequest("Access code is not valid!")
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
     appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
-        return nil, sdk.ErrUnknownRequest("Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
     var tableName = path[2]
@@ -411,10 +412,10 @@ func queryAllIds(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
 //             //
 /////////////////
 
-func queryAdminGroup(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
+func queryAdminGroup(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     appId, err := keeper.GetDatabaseId(ctx, path[0])
     if err != nil {
-        return nil, sdk.ErrUnknownRequest("Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
     adminAddresses := keeper.ShowAdminGroup(ctx, appId)

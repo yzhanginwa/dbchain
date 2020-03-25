@@ -15,8 +15,8 @@ BUILD_FLAGS := -ldflags '$(ldflags)'
 all: install
 
 install: go.sum
-		go install -mod=readonly $(BUILD_FLAGS) ./cmd/cosmosapid
-		go install -mod=readonly $(BUILD_FLAGS) ./cmd/cosmosapicli
+		go install  $(BUILD_FLAGS) ./cmd/cosmosapid
+		go install  $(BUILD_FLAGS) ./cmd/cosmosapicli
 
 go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"

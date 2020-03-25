@@ -2,6 +2,7 @@ package types
 
 import (
     sdk "github.com/cosmos/cosmos-sdk/types"
+    sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 ////////////////////
@@ -35,19 +36,20 @@ func (msg MsgCreateTable) Route() string { return RouterKey }
 func (msg MsgCreateTable) Type() string { return "create_table" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgCreateTable) ValidateBasic() sdk.Error {
+func (msg MsgCreateTable) ValidateBasic() error {
     if msg.Owner.Empty() {
-        return sdk.ErrInvalidAddress(msg.Owner.String())
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
     }
     if len(msg.AppCode) == 0 {
-        return sdk.ErrUnknownRequest("App code cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
-        return sdk.ErrUnknownRequest("Table name cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name cannot be empty")
     }
     if len(msg.Fields) ==0 {
-        return sdk.ErrUnknownRequest("Fields cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Fields cannot be empty")
     }
+
     return nil
 }
 
@@ -90,16 +92,17 @@ func (msg MsgDropTable) Route() string { return RouterKey }
 func (msg MsgDropTable) Type() string { return "drop_table" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgDropTable) ValidateBasic() sdk.Error {
+func (msg MsgDropTable) ValidateBasic() error {
     if msg.Owner.Empty() {
-        return sdk.ErrInvalidAddress(msg.Owner.String())
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
     }
     if len(msg.AppCode) == 0 {
-        return sdk.ErrUnknownRequest("App code cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
-        return sdk.ErrUnknownRequest("Table name cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name cannot be empty")
     }
+
     return nil
 }
 
@@ -143,19 +146,20 @@ func (msg MsgAddColumn) Route() string { return RouterKey }
 func (msg MsgAddColumn) Type() string { return "add_column" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgAddColumn) ValidateBasic() sdk.Error {
+func (msg MsgAddColumn) ValidateBasic() error {
     if msg.Owner.Empty() {
-        return sdk.ErrInvalidAddress(msg.Owner.String())
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
     }
     if len(msg.AppCode) == 0 {
-        return sdk.ErrUnknownRequest("App code cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
-        return sdk.ErrUnknownRequest("Table name cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name cannot be empty")
     }
     if len(msg.Field) ==0 {
-        return sdk.ErrUnknownRequest("Field cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Field cannot be empty")
     }
+
     return nil
 }
 
@@ -198,19 +202,20 @@ func (msg MsgDropColumn) Route() string { return RouterKey }
 func (msg MsgDropColumn) Type() string { return "drop_column" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgDropColumn) ValidateBasic() sdk.Error {
+func (msg MsgDropColumn) ValidateBasic() error {
     if msg.Owner.Empty() {
-        return sdk.ErrInvalidAddress(msg.Owner.String())
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
     }
     if len(msg.AppCode) == 0 {
-        return sdk.ErrUnknownRequest("App code cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
-        return sdk.ErrUnknownRequest("Table name cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name cannot be empty")
     }
     if len(msg.Field) ==0 {
-        return sdk.ErrUnknownRequest("Field cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Field cannot be empty")
     }
+
     return nil
 }
 
@@ -255,22 +260,23 @@ func (msg MsgRenameColumn) Route() string { return RouterKey }
 func (msg MsgRenameColumn) Type() string { return "rename_column" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgRenameColumn) ValidateBasic() sdk.Error {
+func (msg MsgRenameColumn) ValidateBasic() error {
     if msg.Owner.Empty() {
-        return sdk.ErrInvalidAddress(msg.Owner.String())
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
     }
     if len(msg.AppCode) == 0 {
-        return sdk.ErrUnknownRequest("App code cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
-        return sdk.ErrUnknownRequest("Table name cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name cannot be empty")
     }
     if len(msg.OldField) ==0 {
-        return sdk.ErrUnknownRequest("Old field cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Old field cannot be empty")
     }
     if len(msg.NewField) ==0 {
-        return sdk.ErrUnknownRequest("New field cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "New field cannot be empty")
     }
+
     return nil
 }
 
@@ -314,19 +320,20 @@ func (msg MsgCreateIndex) Route() string { return RouterKey }
 func (msg MsgCreateIndex) Type() string { return "create_index" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgCreateIndex) ValidateBasic() sdk.Error {
+func (msg MsgCreateIndex) ValidateBasic() error {
     if msg.Owner.Empty() {
-        return sdk.ErrInvalidAddress(msg.Owner.String())
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
     }
     if len(msg.AppCode) == 0 {
-        return sdk.ErrUnknownRequest("App code cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
-        return sdk.ErrUnknownRequest("Table name cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name cannot be empty")
     }
     if len(msg.Field) ==0 {
-        return sdk.ErrUnknownRequest("Field cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Field cannot be empty")
     }
+
     return nil
 }
 
@@ -370,19 +377,20 @@ func (msg MsgDropIndex) Route() string { return RouterKey }
 func (msg MsgDropIndex) Type() string { return "drop_index" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgDropIndex) ValidateBasic() sdk.Error {
+func (msg MsgDropIndex) ValidateBasic() error {
     if msg.Owner.Empty() {
-        return sdk.ErrInvalidAddress(msg.Owner.String())
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
     }
     if len(msg.AppCode) == 0 {
-        return sdk.ErrUnknownRequest("App code cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
-        return sdk.ErrUnknownRequest("Table name cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name cannot be empty")
     }
     if len(msg.Field) ==0 {
-        return sdk.ErrUnknownRequest("Field cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Field cannot be empty")
     }
+
     return nil
 }
 
@@ -428,26 +436,24 @@ func (msg MsgModifyOption) Route() string { return RouterKey }
 func (msg MsgModifyOption) Type() string { return "modify_option" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgModifyOption) ValidateBasic() sdk.Error {
+func (msg MsgModifyOption) ValidateBasic() error {
     if msg.Owner.Empty() {
-        return sdk.ErrInvalidAddress(msg.Owner.String())
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
     }
     if len(msg.AppCode) == 0 {
-        return sdk.ErrUnknownRequest("App code cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
-        return sdk.ErrUnknownRequest("Table name cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name cannot be empty")
     }
-    if len(msg.Action) ==0 {
-        return sdk.ErrUnknownRequest("Action cannot be empty")
+    if len(msg.Action) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Action cannot be empty")
     }
-
     if !(msg.Action == "add" || msg.Action == "drop") {
-        return sdk.ErrUnknownRequest("Action has to be either add or drop")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Action has to be either add or drop")
     }
-
     if len(msg.Option) ==0 {
-        return sdk.ErrUnknownRequest("Option cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Option cannot be empty")
     }
     return nil
 }
@@ -497,29 +503,29 @@ func (msg MsgModifyColumnOption) Route() string { return RouterKey }
 func (msg MsgModifyColumnOption) Type() string { return "modify_column_option" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgModifyColumnOption) ValidateBasic() sdk.Error {
+func (msg MsgModifyColumnOption) ValidateBasic() error {
     if msg.Owner.Empty() {
-        return sdk.ErrInvalidAddress(msg.Owner.String())
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
     }
     if len(msg.AppCode) == 0 {
-        return sdk.ErrUnknownRequest("App code cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
     }
     if len(msg.TableName) == 0 {
-        return sdk.ErrUnknownRequest("Table name cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name cannot be empty")
     }
     if len(msg.FieldName) == 0 {
-        return sdk.ErrUnknownRequest("Field name cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Field name cannot be empty")
     }
     if len(msg.Action) ==0 {
-        return sdk.ErrUnknownRequest("Action cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Action cannot be empty")
     }
 
     if !(msg.Action == "add" || msg.Action == "drop") {
-        return sdk.ErrUnknownRequest("Action has to be either add or drop")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Action has to be either add or drop")
     }
 
     if len(msg.Option) ==0 {
-        return sdk.ErrUnknownRequest("Option cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Option cannot be empty")
     }
     return nil
 }

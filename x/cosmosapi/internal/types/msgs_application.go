@@ -2,6 +2,7 @@ package types
 
 import (
     sdk "github.com/cosmos/cosmos-sdk/types"
+    sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 //////////////////////////
@@ -35,15 +36,15 @@ func (msg MsgCreateApplication) Route() string { return RouterKey }
 func (msg MsgCreateApplication) Type() string { return "create_application" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgCreateApplication) ValidateBasic() sdk.Error {
+func (msg MsgCreateApplication) ValidateBasic() error {
     if msg.Owner.Empty() {
-        return sdk.ErrInvalidAddress(msg.Owner.String())
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
     }
     if len(msg.Name) == 0 {
-        return sdk.ErrUnknownRequest("Application name cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Application name cannot be empty")
     }
     if len(msg.Description) == 0 {
-        return sdk.ErrUnknownRequest("Application description cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Application description cannot be empty")
     }
     return nil
 }
@@ -86,15 +87,15 @@ func (msg MsgAddDatabaseUser) Route() string { return RouterKey }
 func (msg MsgAddDatabaseUser) Type() string { return "add_database_user" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgAddDatabaseUser) ValidateBasic() sdk.Error {
+func (msg MsgAddDatabaseUser) ValidateBasic() error {
     if msg.Owner.Empty() {
-        return sdk.ErrInvalidAddress(msg.Owner.String())
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
     }
     if len(msg.AppCode) == 0 {
-        return sdk.ErrUnknownRequest("Application Code cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Application Code cannot be empty")
     }
     if msg.User.Empty() {
-        return sdk.ErrUnknownRequest("User cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "User cannot be empty")
     }
     return nil
 }

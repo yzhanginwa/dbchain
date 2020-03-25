@@ -4,6 +4,7 @@ import (
     "fmt"
     "github.com/cosmos/cosmos-sdk/client"
     "github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/client/flags"
     "github.com/cosmos/cosmos-sdk/codec"
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
     "github.com/spf13/cobra"
@@ -17,7 +18,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         SuggestionsMinimumDistance: 2,
         RunE:                       client.ValidateCmd,
     }
-    cosmosapiQueryCmd.AddCommand(client.GetCommands(
+    cosmosapiQueryCmd.AddCommand(flags.GetCommands(
         GetCmdApplication(storeKey, cdc),
         GetCmdAppUsers(storeKey, cdc),
         GetCmdIsAppUser(storeKey, cdc),

@@ -2,6 +2,7 @@ package types
 
 import (
     sdk "github.com/cosmos/cosmos-sdk/types"
+    sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 ////////////////////////
@@ -31,15 +32,15 @@ func (msg MsgAddAdminAccount) Route() string { return RouterKey }
 func (msg MsgAddAdminAccount) Type() string { return "add_admin_account" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgAddAdminAccount) ValidateBasic() sdk.Error {
+func (msg MsgAddAdminAccount) ValidateBasic() error {
     if len(msg.AppCode) == 0 {
-        return sdk.ErrUnknownRequest("App code cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
     }
     if msg.AdminAddress.Empty() {
-        return sdk.ErrInvalidAddress(msg.AdminAddress.String())
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.AdminAddress.String())
     }
     if msg.Owner.Empty() {
-        return sdk.ErrInvalidAddress(msg.Owner.String())
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
     }
     return nil
 }

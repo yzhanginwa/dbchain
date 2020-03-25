@@ -7,8 +7,10 @@ import (
     "bufio"
 
     "github.com/spf13/cobra"
+    "github.com/spf13/viper"
     "github.com/cosmos/cosmos-sdk/client/context"
     "github.com/cosmos/cosmos-sdk/codec"
+    "github.com/cosmos/cosmos-sdk/client/flags"
     "github.com/cosmos/cosmos-sdk/client/input"
     "github.com/cosmos/cosmos-sdk/client/keys"
     "github.com/mr-tron/base58"
@@ -26,7 +28,7 @@ func GetCmdGetAccessCode(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
             name := args[0]
 
-            kb, err := keys.NewKeyBaseFromHomeFlag()
+            kb, err := keys.NewKeyBaseFromDir(viper.GetString(flags.FlagHome))
             if err != nil {
                     return err
             }

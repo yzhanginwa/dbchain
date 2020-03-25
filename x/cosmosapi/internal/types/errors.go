@@ -1,17 +1,10 @@
 package types
 
 import (
-    sdk "github.com/cosmos/cosmos-sdk/types"
+    sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// DefaultCodespace is the Module Name
-const (
-    DefaultCodespace sdk.CodespaceType = ModuleName
-
-    CodeWrongBallot sdk.CodeType = 101
+var (
+    ErrDatabaseNotExist = sdkerrors.Register(ModuleName, 1, "database does not exist")
 )
 
-// ErrNameDoesNotExist is the error for name not existing
-func ErrWrongBallot(codespace sdk.CodespaceType) sdk.Error {
-    return sdk.NewError(codespace, CodeWrongBallot, "Wrong ballot")
-}

@@ -5,8 +5,6 @@ import (
     "io"
 
     "github.com/cosmos/cosmos-sdk/server"
-    "github.com/cosmos/cosmos-sdk/x/genaccounts"
-    genaccscli "github.com/cosmos/cosmos-sdk/x/genaccounts/client/cli"
     "github.com/cosmos/cosmos-sdk/x/staking"
 
     "github.com/spf13/cobra"
@@ -14,6 +12,7 @@ import (
     "github.com/tendermint/tendermint/libs/log"
 
     sdk "github.com/cosmos/cosmos-sdk/types"
+    "github.com/cosmos/cosmos-sdk/x/auth"
     genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
     app "github.com/yzhanginwa/cosmos-api"
     cosmosapicli "github.com/yzhanginwa/cosmos-api/x/cosmosapi/client/cli"
@@ -44,14 +43,14 @@ func main() {
     // CLI commands to initialize the chain
     rootCmd.AddCommand(
         genutilcli.InitCmd(ctx, cdc, app.ModuleBasics, app.DefaultNodeHome),
-        genutilcli.CollectGenTxsCmd(ctx, cdc, genaccounts.AppModuleBasic{}, app.DefaultNodeHome),
+        genutilcli.CollectGenTxsCmd(ctx, cdc, auth.GenesisAccountIterator{}, app.DefaultNodeHome),
         genutilcli.GenTxCmd(
             ctx, cdc, app.ModuleBasics, staking.AppModuleBasic{},
-            genaccounts.AppModuleBasic{}, app.DefaultNodeHome, app.DefaultCLIHome,
+            auth.GenesisAccountIterator{}, app.DefaultNodeHome, app.DefaultCLIHome,
         ),
         genutilcli.ValidateGenesisCmd(ctx, cdc, app.ModuleBasics),
         // AddGenesisAccountCmd allows users to add accounts to the genesis file
-        genaccscli.AddGenesisAccountCmd(ctx, cdc, app.DefaultNodeHome, app.DefaultCLIHome),
+        AddGenesisAccountCmd(ctx, cdc, app.DefaultNodeHome, app.DefaultCLIHome),
         cosmosapicli.AddGenesisAdminAccountCmd(ctx, cdc, app.DefaultNodeHome, app.DefaultCLIHome),
     )
 
