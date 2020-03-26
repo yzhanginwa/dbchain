@@ -21,27 +21,25 @@ func GetCmdGetAccessCode(queryRoute string, cdc *codec.Codec) *cobra.Command {
     resultCmd := &cobra.Command{
         Use: "access-code",
         Short: "show access code",
-        Args: cobra.ExactArgs(1),
+        Args: cobra.MinimumNArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
-
             kb, err := cryptoKeys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
             if err != nil {
                 return err
             }
 
             name := args[0]
-            now := time.Now().UnixNano() / 1000000
-            nowString := strconv.Itoa(int(now)) 
+            var str string
 
-            signature, pubKey, err := kb.Sign(name, keys.DefaultKeyPass, []byte(nowString))
-
-            if err != nil {
-                return err
+            if len(args) > 1 {
+                str = args[1]
+            } else {
+                now := time.Now().UnixNano() / 1000000
+                str = strconv.Itoa(int(now))
             }
 
-            if pk, ok := pubKey.(secp256k1.PubKeySecp256k1); ok {
-                out := base58.Encode(pk[:]) + ":" + nowString + ":" + base58.Encode(signature)
+            if out, ok := signForToken(kb, name, str); ok {
                 return cliCtx.PrintOutput(types.QueryOfString(out))
             } else {
                 return errors.New("Failed to parse public key")
@@ -54,4 +52,18 @@ func GetCmdGetAccessCode(queryRoute string, cdc *codec.Codec) *cobra.Command {
     viper.BindPFlag(flags.FlagKeyringBackend, resultCmd.Flags().Lookup(flags.FlagKeyringBackend))
 
     return resultCmd
+}
+
+func signForToken(kb cryptoKeys.Keybase, name string, str string) (string, bool) {
+    signature, pubKey, err := kb.Sign(name, keys.DefaultKeyPass, []byte(str))
+    if err != nil {
+        return "", false
+    }
+
+    if pk, ok := pubKey.(secp256k1.PubKeySecp256k1); ok {
+        out := base58.Encode(pk[:]) + ":" + str + ":" + base58.Encode(signature)
+        return out, true
+    } else {
+        return "", false
+    }
 }
