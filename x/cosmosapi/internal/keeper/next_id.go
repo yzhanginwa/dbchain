@@ -18,9 +18,14 @@ func getNextId(k Keeper, ctx sdk.Context, appId uint, tableName string) (uint, e
     defer mutex.Unlock()
 
     var nextIdKey = getNextIdKey(appId, tableName)
+
+ctx.Logger().Info("hahahahahah")
+ctx.Logger().Info(nextIdKey)
+
+
     var nextId uint
     var found bool
-    if nextId, found = NextIds[tableName]; found {
+    if nextId, found = NextIds[nextIdKey]; found {
     } else if bz := store.Get([]byte(nextIdKey)); bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &nextId)
     } else if bz = store.Get([]byte(getTableKey(appId, tableName))); bz != nil {
@@ -30,7 +35,7 @@ func getNextId(k Keeper, ctx sdk.Context, appId uint, tableName string) (uint, e
     }
 
     store.Set([]byte(nextIdKey), k.cdc.MustMarshalBinaryBare(nextId + 1))
-    NextIds[tableName] = nextId + 1
+    NextIds[nextIdKey] = nextId + 1
 
     return nextId, nil
 }
