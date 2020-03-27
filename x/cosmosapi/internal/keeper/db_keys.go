@@ -139,6 +139,12 @@ func getFriendKey(owner string, friendAddr string) string {
     return fmt.Sprintf("%s:%s:%s", KeyPrefixFriend, owner, friendAddr)
 }
 
+func getFriendIteratorStartAndEndKey(owner string) (string, string) {
+    start := fmt.Sprintf("%s:%s:", KeyPrefixFriend, owner)
+    end   := fmt.Sprintf("%s:%s;", KeyPrefixFriend, owner)
+    return start, end
+}
+
 func getWaitingFriendKey(owner string, friendAddr string) string {
     return fmt.Sprintf("%s:%s:%s", KeyPrefixWaitingFriend, owner, friendAddr)
 }

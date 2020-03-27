@@ -30,6 +30,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdFindIdsBy(storeKey, cdc),
         GetCmdFindAllIds(storeKey, cdc),
         GetCmdShowAdminGroup(storeKey, cdc),
+        GetCmdShowFriends(storeKey, cdc),
         GetCmdGetAccessCode(storeKey, cdc),
     )...)
     return cosmosapiQueryCmd

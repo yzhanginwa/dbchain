@@ -94,3 +94,19 @@ func (ag QueryAdminGroup) String() string {
     }
     return strings.Join(buf, "\n")
 }
+
+////////////////////
+//                //
+// QueryOfFriends //
+//                //
+////////////////////
+
+type QueryOfFriends []Friend
+
+func (f QueryOfFriends) String() string {
+    var buf []string
+    for index, friend := range f {
+        buf[index] = fmt.Sprintf("%s(%s)", friend.Address, friend.Name)
+    }
+    return strings.Join(buf, "\n")
+}
