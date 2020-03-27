@@ -32,6 +32,25 @@ func (d Database) String() string {
     return strings.TrimSpace(fmt.Sprintf(`AppCoe: %s`, d.AppCode))
 }
 
+////////////
+//        //
+// friend //
+//        //
+////////////
+
+type Friend struct {
+    Address string `json:"address"`
+    Name    string `json:"name"`
+}
+
+func NewFriend() Friend {
+    return Friend{}
+}
+
+func (f Friend) String() string {
+    return strings.TrimSpace(fmt.Sprintf(`Addr: %s`, f.Address))
+}
+
 ///////////
 //       //
 // table //

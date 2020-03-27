@@ -36,6 +36,7 @@ type (
     MsgDeleteRow    = types.MsgDeleteRow
     MsgFreezeRow    = types.MsgFreezeRow
 
+    MsgAddFriend    = types.MsgAddFriend
     MsgAddAdminAccount = types.MsgAddAdminAccount
 
     Table           = types.Table

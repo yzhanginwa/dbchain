@@ -10,6 +10,8 @@ const (
     KeyPrefixAppNextId  = "appnextid"
     KeyPrefixDb       = "db"
     KeyPrefixSysGroup = "sysgrp"
+    KeyPrefixFriend         = "friend"
+    KeyPrefixWaitingFriend  = "waiting_friend"
 
     KeyPrefixUser  = "usr"
     KeyPrefixMeta  = "mt"
@@ -125,6 +127,20 @@ func getIdFromDataKey(key string) string {
 func getFieldNameFromDataKey(key string) string {
     arr := strings.Split(key, ":")
     return arr[5]
+}
+
+////////////////////
+//                //
+// friend related //
+//                //
+////////////////////
+
+func getFriendKey(owner string, friendAddr string) string {
+    return fmt.Sprintf("%s:%s:%s", KeyPrefixFriend, owner, friendAddr)
+}
+
+func getWaitingFriendKey(owner string, friendAddr string) string {
+    return fmt.Sprintf("%s:%s:%s", KeyPrefixWaitingFriend, owner, friendAddr)
 }
 
 ///////////////////

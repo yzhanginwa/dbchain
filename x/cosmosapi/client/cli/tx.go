@@ -45,6 +45,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdDeleteRow(cdc),
         GetCmdFreezeRow(cdc),
         GetCmdAddAdminAccount(cdc),
+        GetCmdAddFriend(cdc),
     )...)
 
     return cosmosapiTxCmd
@@ -505,6 +506,33 @@ func GetCmdAddAdminAccount(cdc * codec.Codec) *cobra.Command {
     }
 }
 
+////////////////
+//            //
+// add friend //
+//            //
+////////////////
+
+func GetCmdAddFriend(cdc * codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "add-friend [address] [name]",
+        Short: "add a friend ",
+        Args:  cobra.ExactArgs(2),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            address := args[0]
+            name    := args[1]
+            msg := types.NewMsgAddFriend(cliCtx.GetFromAddress(), address, name)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
 
 
 //////////////////////
