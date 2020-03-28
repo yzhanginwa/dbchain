@@ -142,7 +142,7 @@ func showAllIdsHandler(cliCtx context.CLIContext, storeName string) http.Handler
     }
 }
 
-func showAllFriends(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showFriends(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/friends/%s", storeName, vars["accessToken"]), nil)
@@ -154,3 +154,14 @@ func showAllFriends(cliCtx context.CLIContext, storeName string) http.HandlerFun
     }
 }
 
+func showPendingFriends(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        vars := mux.Vars(r)
+        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/pending_friends/%s", storeName, vars["accessToken"]), nil)
+        if err != nil {
+            rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+            return
+        }
+        rest.PostProcessResponse(w, cliCtx, res)
+    }
+}

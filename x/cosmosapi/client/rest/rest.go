@@ -21,5 +21,6 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/find/{%s}/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "name", "id"), showRowHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/find_by/{%s}/{%s}/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "name", "field", "value"), showIdsByHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/find_all/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "name"), showAllIdsHandler(cliCtx, storeName)).Methods("GET")
-    r.HandleFunc(fmt.Sprintf("/%s/friends/{%s}", storeName, "accessToken"), showAllFriends(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/friends/{%s}", storeName, "accessToken"), showFriends(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/pending_friends/{%s}", storeName, "accessToken"), showPendingFriends(cliCtx, storeName)).Methods("GET")
 }
