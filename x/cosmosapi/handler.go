@@ -335,7 +335,7 @@ func handleMsgAddAdminAccount(ctx sdk.Context, keeper Keeper, msg MsgAddAdminAcc
 }
 
 func handleMsgAddFriend(ctx sdk.Context, keeper Keeper, msg MsgAddFriend) (*sdk.Result, error) {
-    err := keeper.AddFriend(ctx, msg.Owner, msg.FriendAddr, msg.FriendName)
+    err := keeper.AddFriend(ctx, msg.Owner, msg.OwnerName, msg.FriendAddr, msg.FriendName)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
     }

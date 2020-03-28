@@ -14,14 +14,16 @@ import (
 // MsgAddFriend defines a CreateTable message
 type MsgAddFriend struct {
     Owner sdk.AccAddress    `json:"owner"`
+    OwnerName string        `json:"owner_name"`
     FriendAddr string       `json:"friend_addr"`
     FriendName string       `json:"friend_name"`
 }
 
 // NewMsgAddFriend is a constructor function for MsgCreatTable
-func NewMsgAddFriend(owner sdk.AccAddress, friendAddr string, friendName string) MsgAddFriend {
+func NewMsgAddFriend(owner sdk.AccAddress, ownerName string, friendAddr string, friendName string) MsgAddFriend {
     return MsgAddFriend {
         Owner: owner,
+        OwnerName: ownerName,
         FriendAddr: friendAddr,
         FriendName: friendName,
     }
@@ -37,6 +39,9 @@ func (msg MsgAddFriend) Type() string { return "add_friend" }
 func (msg MsgAddFriend) ValidateBasic() error {
     if msg.Owner.Empty() {
         return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    if len(msg.OwnerName) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Owner name cannot be empty")
     }
     if len(msg.FriendAddr) == 0 {
         return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "Friend address cannot be empty")

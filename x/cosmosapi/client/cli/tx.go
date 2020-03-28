@@ -514,17 +514,18 @@ func GetCmdAddAdminAccount(cdc * codec.Codec) *cobra.Command {
 
 func GetCmdAddFriend(cdc * codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "add-friend [address] [name]",
+        Use:   "add-friend [my-name] [address] [name]",
         Short: "add a friend ",
-        Args:  cobra.ExactArgs(2),
+        Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            address := args[0]
-            name    := args[1]
-            msg := types.NewMsgAddFriend(cliCtx.GetFromAddress(), address, name)
+            ownerName := args[0]
+            address   := args[1]
+            name      := args[2]
+            msg := types.NewMsgAddFriend(cliCtx.GetFromAddress(), ownerName, address, name)
             err := msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))

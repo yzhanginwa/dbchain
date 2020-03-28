@@ -6,10 +6,11 @@ import (
     "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
 )
 
-func (k Keeper) AddFriend(ctx sdk.Context, owner sdk.AccAddress, friendAddr string, friendName string) error {
+func (k Keeper) AddFriend(ctx sdk.Context, owner sdk.AccAddress, ownerName string, friendAddr string, friendName string) error {
     store := ctx.KVStore(k.storeKey)
-    key := getFriendKey(owner.String(), friendAddr)
-    
+    ownerStr := owner.String()
+    key := getFriendKey(ownerStr, friendAddr)
+
     bz := store.Get([]byte(key))
     if bz != nil {
         return errors.New("Friend existed already")
@@ -18,6 +19,20 @@ func (k Keeper) AddFriend(ctx sdk.Context, owner sdk.AccAddress, friendAddr stri
     friend := types.NewFriend()
     friend.Address = friendAddr
     friend.Name    = friendName
+
+    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(friend))
+
+    // try to add self as waiting friend of the friend
+
+    key = getWaitingFriendKey(friendAddr, ownerStr)
+    bz = store.Get([]byte(key))
+    if bz != nil {
+        return nil  // no need to return error
+    }
+
+    friend =types.NewFriend()
+    friend.Address = ownerStr
+    friend.Name = ownerName
 
     store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(friend)) 
     return nil
