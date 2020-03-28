@@ -27,6 +27,7 @@ const (
     QueryAllIds   = "find_all"
     QueryAdminGroup = "admin_group"
     QueryFriends  = "friends"
+    QueryPendingFriends  = "pending_friends"
 )
 
 
@@ -68,6 +69,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryAdminGroup(ctx, path[1:], req, keeper)
         case QueryFriends:
             return queryFriends(ctx, path[1:], req, keeper)
+        case QueryPendingFriends:
+            return queryPendingFriends(ctx, path[1:], req, keeper)
         default:
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown cosmosapi query endpoint")
         }
@@ -423,6 +426,22 @@ func queryFriends(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
     }
 
     friends := keeper.GetFriends(ctx, addr)
+    res, err := codec.MarshalJSONIndent(keeper.cdc, friends)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryPendingFriends(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    addr, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    friends := keeper.GetPendingFriends(ctx, addr)
     res, err := codec.MarshalJSONIndent(keeper.cdc, friends)
     if err != nil {
         panic("could not marshal result to JSON")

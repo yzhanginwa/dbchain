@@ -54,6 +54,22 @@ func (k Keeper) GetFriends(ctx sdk.Context, owner sdk.AccAddress) []types.Friend
     return friends
 }
 
+func (k Keeper) GetPendingFriends(ctx sdk.Context, owner sdk.AccAddress) []types.Friend {
+    store := ctx.KVStore(k.storeKey)
+    bech32 := owner.String()
+
+    start, end := getPendingFriendIteratorStartAndEndKey(bech32)
+    iter := store.Iterator([]byte(start), []byte(end))
+    var mold types.Friend
+    var friends []types.Friend
+    for ; iter.Valid(); iter.Next() {
+        val := iter.Value()
+        k.cdc.MustUnmarshalBinaryBare(val, &mold)
+        friends = append(friends, mold)
+    }
+    return friends
+}
+
 //////////////////////
 //                  //
 // helper functions //

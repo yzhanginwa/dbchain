@@ -149,6 +149,12 @@ func getPendingFriendKey(owner string, friendAddr string) string {
     return fmt.Sprintf("%s:%s:%s", KeyPrefixPendingFriend, owner, friendAddr)
 }
 
+func getPendingFriendIteratorStartAndEndKey(owner string) (string, string) {
+    start := fmt.Sprintf("%s:%s:", KeyPrefixPendingFriend, owner)
+    end   := fmt.Sprintf("%s:%s;", KeyPrefixPendingFriend, owner)
+    return start, end
+}
+
 ///////////////////
 //               //
 // group related //
