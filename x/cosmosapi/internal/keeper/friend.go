@@ -117,7 +117,7 @@ func (k Keeper) addPendingFriend(ctx sdk.Context, ownerAddr string, ownerName st
 
 func (k Keeper) getPendingFriend(ctx sdk.Context, ownerAddr string, friendAddr string) (types.Friend, error) {
     store := ctx.KVStore(k.storeKey)
-    key := getPendingFriendKey(friendAddr, ownerAddr)
+    key := getPendingFriendKey(ownerAddr, friendAddr)
     bz := store.Get([]byte(key))
     if bz == nil {
         return types.Friend{}, errors.New("Pending friend not found")
