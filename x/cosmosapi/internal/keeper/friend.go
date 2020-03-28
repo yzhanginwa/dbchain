@@ -22,9 +22,9 @@ func (k Keeper) AddFriend(ctx sdk.Context, owner sdk.AccAddress, ownerName strin
 
     store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(friend))
 
-    // try to add self as waiting friend of the friend
+    // try to add self as pending friend of the friend
 
-    key = getWaitingFriendKey(friendAddr, ownerStr)
+    key = getPendingFriendKey(friendAddr, ownerStr)
     bz = store.Get([]byte(key))
     if bz != nil {
         return nil  // no need to return error

@@ -11,7 +11,7 @@ const (
     KeyPrefixDb       = "db"
     KeyPrefixSysGroup = "sysgrp"
     KeyPrefixFriend         = "friend"
-    KeyPrefixWaitingFriend  = "waiting_friend"
+    KeyPrefixPendingFriend  = "pending_friend"
 
     KeyPrefixUser  = "usr"
     KeyPrefixMeta  = "mt"
@@ -145,8 +145,8 @@ func getFriendIteratorStartAndEndKey(owner string) (string, string) {
     return start, end
 }
 
-func getWaitingFriendKey(owner string, friendAddr string) string {
-    return fmt.Sprintf("%s:%s:%s", KeyPrefixWaitingFriend, owner, friendAddr)
+func getPendingFriendKey(owner string, friendAddr string) string {
+    return fmt.Sprintf("%s:%s:%s", KeyPrefixPendingFriend, owner, friendAddr)
 }
 
 ///////////////////
