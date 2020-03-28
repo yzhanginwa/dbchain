@@ -37,6 +37,7 @@ type (
     MsgFreezeRow    = types.MsgFreezeRow
 
     MsgAddFriend    = types.MsgAddFriend
+    MsgRespondFriend   = types.MsgRespondFriend
     MsgAddAdminAccount = types.MsgAddAdminAccount
 
     Table           = types.Table

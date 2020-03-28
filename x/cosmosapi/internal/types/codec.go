@@ -30,5 +30,6 @@ func RegisterCodec(cdc *codec.Codec) {
     cdc.RegisterConcrete(MsgFreezeRow{}, "cosmosapi/FreezeRow", nil)
     cdc.RegisterConcrete(MsgAddAdminAccount{}, "cosmosapi/AddAdminAccount", nil)
     cdc.RegisterConcrete(MsgAddFriend{}, "cosmosapi/AddFriend", nil)
+    cdc.RegisterConcrete(MsgRespondFriend{}, "cosmosapi/RespondFriend", nil)
 }
 

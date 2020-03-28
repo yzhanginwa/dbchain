@@ -62,3 +62,56 @@ func (msg MsgAddFriend) GetSignBytes() []byte {
 func (msg MsgAddFriend) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
+
+//////////////////////
+//                  //
+// MsgRespondFriend //
+//                  //
+//////////////////////
+
+// MsgRespondFriend defines a CreateTable message
+type MsgRespondFriend struct {
+    Owner sdk.AccAddress    `json:"owner"`
+    FriendAddr string       `json:"friend_addr"`
+    Action string           `json:"action"`
+}
+
+// NewMsgRespondFriend is a constructor function for MsgCreatTable
+func NewMsgRespondFriend(owner sdk.AccAddress, friendAddr string, action string) MsgRespondFriend {
+    return MsgRespondFriend {
+        Owner: owner,
+        FriendAddr: friendAddr,
+        Action: action,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgRespondFriend) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgRespondFriend) Type() string { return "respond_friend" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgRespondFriend) ValidateBasic() error {
+    if msg.Owner.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    if len(msg.FriendAddr) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "Friend address cannot be empty")
+    }
+    if len(msg.Action) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Friend name cannot be empty")
+    }
+
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgRespondFriend) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgRespondFriend) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}

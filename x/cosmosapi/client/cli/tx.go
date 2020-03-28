@@ -46,6 +46,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdFreezeRow(cdc),
         GetCmdAddAdminAccount(cdc),
         GetCmdAddFriend(cdc),
+        GetCmdRespondFriend(cdc),
     )...)
 
     return cosmosapiTxCmd
@@ -526,6 +527,28 @@ func GetCmdAddFriend(cdc * codec.Codec) *cobra.Command {
             address   := args[1]
             name      := args[2]
             msg := types.NewMsgAddFriend(cliCtx.GetFromAddress(), ownerName, address, name)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+func GetCmdRespondFriend(cdc * codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "respond-friend [address] [action]",
+        Short: "Respond a friend. The action could be delete, accept, reject.",
+        Args:  cobra.ExactArgs(2),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            address := args[0]
+            action  := args[1]
+            msg := types.NewMsgRespondFriend(cliCtx.GetFromAddress(), address, action)
             err := msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))

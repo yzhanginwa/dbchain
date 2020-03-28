@@ -17,6 +17,26 @@ func (k Keeper) AddFriend(ctx sdk.Context, owner sdk.AccAddress, ownerName strin
     return nil
 }
 
+func (k Keeper) RespondFriend(ctx sdk.Context, owner sdk.AccAddress, friendAddr string, action string) error {
+    ownerAddr:= owner.String()
+    if action == "delete" {
+        k.deleteFriend(ctx, ownerAddr, friendAddr)
+    } else if action == "reject" {
+        k.deletePendingFriend(ctx, ownerAddr, friendAddr)
+    } else if action == "accept" {
+        pf, err := k.getPendingFriend(ctx, ownerAddr, friendAddr)
+        if err != nil {
+            return err
+        }
+        k.addFriend(ctx, ownerAddr, pf.Address, pf.Name)
+        k.deletePendingFriend(ctx, ownerAddr, friendAddr)
+    } else {
+        return errors.New("Wrong action for responding friend")
+    }
+
+    return nil
+}
+
 func (k Keeper) GetFriends(ctx sdk.Context, owner sdk.AccAddress) []types.Friend {
     store := ctx.KVStore(k.storeKey)
     bech32 := owner.String()
@@ -72,6 +92,13 @@ func (k Keeper) addFriend(ctx sdk.Context, ownerAddr string, friendAddr string, 
     return nil
 }
 
+func (k Keeper) deleteFriend(ctx sdk.Context, ownerAddr string, friendAddr string) error {
+    store := ctx.KVStore(k.storeKey)
+    key := getFriendKey(ownerAddr, friendAddr)
+    store.Delete([]byte(key))
+    return nil
+}
+
 func (k Keeper) addPendingFriend(ctx sdk.Context, ownerAddr string, ownerName string, friendAddr string) error {
     store := ctx.KVStore(k.storeKey)
     key := getPendingFriendKey(friendAddr, ownerAddr)
@@ -85,5 +112,24 @@ func (k Keeper) addPendingFriend(ctx sdk.Context, ownerAddr string, ownerName st
     friend.Name = ownerName
 
     store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(friend))
+    return nil
+}
+
+func (k Keeper) getPendingFriend(ctx sdk.Context, ownerAddr string, friendAddr string) (types.Friend, error) {
+    store := ctx.KVStore(k.storeKey)
+    key := getPendingFriendKey(friendAddr, ownerAddr)
+    bz := store.Get([]byte(key))
+    if bz == nil {
+        return types.Friend{}, errors.New("Pending friend not found")
+    }
+    var friend types.Friend
+    k.cdc.MustUnmarshalBinaryBare(bz, &friend)
+    return friend, nil
+}
+
+func (k Keeper) deletePendingFriend(ctx sdk.Context, ownerAddr string, friendAddr string) error {
+    store := ctx.KVStore(k.storeKey)
+    key := getPendingFriendKey(ownerAddr, friendAddr)
+    store.Delete([]byte(key))
     return nil
 }

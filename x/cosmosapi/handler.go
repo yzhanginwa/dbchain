@@ -49,6 +49,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgAddAdminAccount(ctx, keeper, msg)
         case MsgAddFriend:
             return handleMsgAddFriend(ctx, keeper, msg)
+        case MsgRespondFriend:
+            return handleMsgRespondFriend(ctx, keeper, msg)
         default:
             errMsg := fmt.Sprintf("Unrecognized cosmosapi Msg type: %v", msg.Type())
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
@@ -336,6 +338,14 @@ func handleMsgAddAdminAccount(ctx sdk.Context, keeper Keeper, msg MsgAddAdminAcc
 
 func handleMsgAddFriend(ctx sdk.Context, keeper Keeper, msg MsgAddFriend) (*sdk.Result, error) {
     err := keeper.AddFriend(ctx, msg.Owner, msg.OwnerName, msg.FriendAddr, msg.FriendName)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
+    return &sdk.Result{}, nil
+}
+
+func handleMsgRespondFriend(ctx sdk.Context, keeper Keeper, msg MsgRespondFriend) (*sdk.Result, error) {
+    err := keeper.RespondFriend(ctx, msg.Owner, msg.FriendAddr, msg.Action)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
     }
