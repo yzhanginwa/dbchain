@@ -7,34 +7,13 @@ import (
 )
 
 func (k Keeper) AddFriend(ctx sdk.Context, owner sdk.AccAddress, ownerName string, friendAddr string, friendName string) error {
-    store := ctx.KVStore(k.storeKey)
-    ownerStr := owner.String()
-    key := getFriendKey(ownerStr, friendAddr)
-
-    bz := store.Get([]byte(key))
-    if bz != nil {
-        return errors.New("Friend existed already")
+    ownerAddr:= owner.String()
+    err := k.addFriend(ctx, ownerAddr, friendAddr, friendName)
+    if err != nil {
+        return err
     }
 
-    friend := types.NewFriend()
-    friend.Address = friendAddr
-    friend.Name    = friendName
-
-    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(friend))
-
-    // try to add self as pending friend of the friend
-
-    key = getPendingFriendKey(friendAddr, ownerStr)
-    bz = store.Get([]byte(key))
-    if bz != nil {
-        return nil  // no need to return error
-    }
-
-    friend =types.NewFriend()
-    friend.Address = ownerStr
-    friend.Name = ownerName
-
-    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(friend)) 
+    k.addPendingFriend(ctx, ownerAddr, ownerName, friendAddr)
     return nil
 }
 
@@ -76,3 +55,35 @@ func (k Keeper) GetPendingFriends(ctx sdk.Context, owner sdk.AccAddress) []types
 //                  //
 //////////////////////
 
+func (k Keeper) addFriend(ctx sdk.Context, ownerAddr string, friendAddr string, friendName string) error {
+    store := ctx.KVStore(k.storeKey)
+    key := getFriendKey(ownerAddr, friendAddr)
+
+    bz := store.Get([]byte(key))
+    if bz != nil {
+        return errors.New("Friend existed already")
+    }
+
+    friend := types.NewFriend()
+    friend.Address = friendAddr
+    friend.Name    = friendName
+
+    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(friend))
+    return nil
+}
+
+func (k Keeper) addPendingFriend(ctx sdk.Context, ownerAddr string, ownerName string, friendAddr string) error {
+    store := ctx.KVStore(k.storeKey)
+    key := getPendingFriendKey(friendAddr, ownerAddr)
+    bz := store.Get([]byte(key))
+    if bz != nil {
+        return nil  // no need to return error
+    }
+
+    friend := types.NewFriend()
+    friend.Address = ownerAddr
+    friend.Name = ownerName
+
+    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(friend))
+    return nil
+}
