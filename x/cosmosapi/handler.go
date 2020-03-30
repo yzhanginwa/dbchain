@@ -121,7 +121,7 @@ func handleMsgAddColumn(ctx sdk.Context, keeper Keeper, msg MsgAddColumn) (*sdk.
     }
 
     field := strings.ToLower(msg.Field)
-    if keeper.IsFieldPresent(ctx, appId, msg.TableName, field) {
+    if keeper.HasField(ctx, appId, msg.TableName, field) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s of table %s exists already!", msg.Field, msg.TableName))
     }
     keeper.AddColumn(ctx, appId, msg.TableName, field)
@@ -137,7 +137,7 @@ func handleMsgDropColumn(ctx sdk.Context, keeper Keeper, msg MsgDropColumn) (*sd
     if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
-    if !keeper.IsFieldPresent(ctx, appId, msg.TableName, msg.Field) {
+    if !keeper.HasField(ctx, appId, msg.TableName, msg.Field) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s of table %s does not exist yet!", msg.Field, msg.TableName))
     }
     keeper.DropColumn(ctx, appId, msg.TableName, msg.Field)
@@ -153,12 +153,12 @@ func handleMsgRenameColumn(ctx sdk.Context, keeper Keeper, msg MsgRenameColumn) 
     if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
-    if !keeper.IsFieldPresent(ctx, appId, msg.TableName, msg.OldField) {
+    if !keeper.HasField(ctx, appId, msg.TableName, msg.OldField) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s of table %s does not exist yet!", msg.OldField, msg.TableName))
     }
 
     newField := strings.ToLower(msg.NewField)
-    if keeper.IsFieldPresent(ctx, appId, msg.TableName, newField) {
+    if keeper.HasField(ctx, appId, msg.TableName, newField) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s of table %s exists already!", msg.NewField, msg.TableName))
     }
     keeper.RenameColumn(ctx, appId, msg.TableName, msg.OldField, newField)
@@ -174,7 +174,7 @@ func handleMsgCreateIndex(ctx sdk.Context, keeper Keeper, msg MsgCreateIndex) (*
     if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
-    if ! keeper.IsFieldPresent(ctx, appId, msg.TableName, msg.Field) {
+    if !keeper.HasField(ctx, appId, msg.TableName, msg.Field) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s of table %s does not exist yet!", msg.Field, msg.TableName))
     }
     keeper.CreateIndex(ctx, appId, msg.Owner, msg.TableName, msg.Field)
@@ -190,7 +190,7 @@ func handleMsgDropIndex(ctx sdk.Context, keeper Keeper, msg MsgDropIndex) (*sdk.
     if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
-    if ! keeper.IsFieldPresent(ctx, appId, msg.TableName, msg.Field) {
+    if !keeper.HasField(ctx, appId, msg.TableName, msg.Field) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s of table %s does not exist yet!", msg.Field, msg.TableName))
     }
 

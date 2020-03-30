@@ -34,7 +34,7 @@ func (k Keeper) HasTable(ctx sdk.Context, appId uint, name string) bool {
     return store.Has([]byte(getTableKey(appId, name)))
 }
 
-func (k Keeper) IsFieldPresent(ctx sdk.Context, appId uint, tableName string, field string) bool {
+func (k Keeper) HasField(ctx sdk.Context, appId uint, tableName string, field string) bool {
     table, err := k.GetTable(ctx, appId, tableName)
     if err != nil {
         return false
