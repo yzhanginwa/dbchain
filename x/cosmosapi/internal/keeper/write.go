@@ -15,11 +15,11 @@ func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields typ
     if !k.IsDatabaseUser(ctx, appId, owner) {
         return 0, errors.New(fmt.Sprintf("Do not have user permission on database %d", appId))
     }
-    if(!haveWritePermission(k, ctx, appId, tableName, owner)) {
+    if(!k.haveWritePermission(ctx, appId, tableName, owner)) {
         return 0, errors.New(fmt.Sprintf("Do not have permission inserting table %s", tableName))
     }
 
-    if(!validateInsertion(k, ctx, appId, tableName, fields, owner)) {
+    if(!k.validateInsertion(ctx, appId, tableName, fields, owner)) {
         return 0, errors.New(fmt.Sprintf("Failed validation when inserting table %s", tableName))
     }
 
@@ -117,12 +117,13 @@ func (k Keeper) Freeze(ctx sdk.Context, appId uint, tableName string, id uint, o
 // helper funcs //
 //              //
 //////////////////
+
 func isSystemField(fieldName string) bool {
     systemFields := []string{"id", "created_by", "created_at"}
     return utils.ItemExists(systemFields, fieldName)
 }
 
-func haveWritePermission(k Keeper, ctx sdk.Context, appId uint, tableName string, owner sdk.AccAddress) bool {
+func (k Keeper) haveWritePermission(ctx sdk.Context, appId uint, tableName string, owner sdk.AccAddress) bool {
     options, _ := k.GetOption(ctx, appId, tableName)
     if utils.ItemExists(options, string(types.TBLOPT_ADMIN_ONLY)) {
         admins := k.ShowAdminGroup(ctx, appId)
@@ -135,7 +136,7 @@ func haveWritePermission(k Keeper, ctx sdk.Context, appId uint, tableName string
 }
 
 // for now, we check the filed non-null option
-func validateInsertion(k Keeper, ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {
+func (k Keeper) validateInsertion(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {
     fieldNames, err := k.getTableFields(ctx, appId, tableName)
     if err != nil {
         return(false)
