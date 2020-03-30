@@ -169,6 +169,25 @@ func (k Keeper) validateInsertion(ctx sdk.Context, appId uint, tableName string,
             }
         }
 
+        if(utils.ItemExists(fieldOptions, string(types.FLDOPT_OWN))) {
+            if tn, ok := utils.GetTableNameFromForeignKey(fieldName); ok {
+                foreignId := fields[fieldName]
+                u64, err := strconv.ParseUint(foreignId, 10, 64)
+                if err != nil {
+                    return false
+                }
+                foreignOwner, err := k.FindField(ctx, appId, tn, uint(u64), "created_by")
+                if err == nil {
+                    if foreignOwner != owner.String() {
+                        return false
+                    }
+                } else {
+                    return false
+                }
+            } else {
+                return false
+            }
+        }
     }
     return(true)
 }

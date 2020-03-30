@@ -44,3 +44,11 @@ func TestAddressIncluded(t *testing.T) {
     }
 }
 
+func TestSplitFieldName(t *testing.T) {
+    tableName, ok := GetTableNameFromForeignKey("supplier_id")
+    require.Equal(t, ok, true)
+    require.Equal(t, tableName, "supplier")
+
+    tableName, ok = GetTableNameFromForeignKey("_id")
+    require.Equal(t, ok, false)
+}

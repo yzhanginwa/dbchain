@@ -37,6 +37,27 @@ func (k Keeper) DoFind(ctx sdk.Context, appId uint, tableName string, id uint) (
     return fields, nil
 }
 
+func (k Keeper) FindField(ctx sdk.Context, appId uint, tableName string, id uint, fieldName string) (string, error){
+    store := ctx.KVStore(k.storeKey)
+
+    if !k.HasField(ctx, appId, tableName, fieldName) {
+        return "", errors.New("Field not existed")
+    }
+
+    if id == 0 {
+        return "", errors.New("Id cannot be 0")
+    }
+
+    key := getDataKey(appId, tableName, id, fieldName)
+    bz := store.Get([]byte(key))
+    if bz != nil {
+        var value string
+        k.cdc.MustUnmarshalBinaryBare(bz, &value)
+        return value, nil
+    }
+    return "", errors.New("Field not found")
+}
+
 func (k Keeper) Find(ctx sdk.Context, appId uint, tableName string, id uint, owner sdk.AccAddress) (types.RowFields, error){
     var ids []uint
     ids = append(ids, id)
