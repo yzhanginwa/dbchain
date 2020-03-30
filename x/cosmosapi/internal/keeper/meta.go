@@ -29,7 +29,7 @@ func (k Keeper) getTables(ctx sdk.Context, appId uint) ([]string, error) {
 
 
 // Check if the table is present in the store or not
-func (k Keeper) IsTablePresent(ctx sdk.Context, appId uint, name string) bool {
+func (k Keeper) HasTable(ctx sdk.Context, appId uint, name string) bool {
     store := ctx.KVStore(k.storeKey)
     return store.Has([]byte(getTableKey(appId, name)))
 }

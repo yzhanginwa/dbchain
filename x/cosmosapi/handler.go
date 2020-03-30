@@ -86,7 +86,7 @@ func handleMsgCreateTable(ctx sdk.Context, keeper Keeper, msg MsgCreateTable) (*
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
  
-    if keeper.IsTablePresent(ctx, appId, msg.TableName) {
+    if keeper.HasTable(ctx, appId, msg.TableName) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name existed already!")
     }
     keeper.CreateTable(ctx, appId, msg.Owner, msg.TableName, msg.Fields)
@@ -103,7 +103,7 @@ func handleMsgDropTable(ctx sdk.Context, keeper Keeper, msg MsgDropTable) (*sdk.
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
 
-    if !keeper.IsTablePresent(ctx, appId, msg.TableName) {
+    if !keeper.HasTable(ctx, appId, msg.TableName) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name does not exist!")
     }
     keeper.DropTable(ctx, appId, msg.Owner, msg.TableName)
@@ -216,7 +216,7 @@ func handleMsgModifyOption(ctx sdk.Context, keeper Keeper, msg MsgModifyOption) 
     if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
-    if !keeper.IsTablePresent(ctx, appId, msg.TableName) {
+    if !keeper.HasTable(ctx, appId, msg.TableName) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name does not exist!")
     }
 
@@ -233,7 +233,7 @@ func handleMsgModifyColumnOption(ctx sdk.Context, keeper Keeper, msg MsgModifyCo
     if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
-    if !keeper.IsTablePresent(ctx, appId, msg.TableName) {
+    if !keeper.HasTable(ctx, appId, msg.TableName) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name does not exist!")
     }
 
@@ -247,7 +247,7 @@ func handleMsgInsertRow(ctx sdk.Context, keeper Keeper, msg types.MsgInsertRow) 
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    if !keeper.IsTablePresent(ctx, appId, msg.TableName) {
+    if !keeper.HasTable(ctx, appId, msg.TableName) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Table % does not exist!", msg.TableName))
     }
     
@@ -269,7 +269,7 @@ func handleMsgUpdateRow(ctx sdk.Context, keeper Keeper, msg types.MsgUpdateRow) 
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Invalid app code")
     }
 
-    if !keeper.IsTablePresent(ctx, appId, msg.TableName) {
+    if !keeper.HasTable(ctx, appId, msg.TableName) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("Table % does not exist!", msg.TableName))
     }
 
@@ -293,7 +293,7 @@ func handleMsgDeleteRow(ctx sdk.Context, keeper Keeper, msg types.MsgDeleteRow) 
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Invalid app code")
     }
 
-    if !keeper.IsTablePresent(ctx, appId, msg.TableName) {
+    if !keeper.HasTable(ctx, appId, msg.TableName) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("Table % does not exist!", msg.TableName))
     }
 
@@ -312,7 +312,7 @@ func handleMsgFreezeRow(ctx sdk.Context, keeper Keeper, msg types.MsgFreezeRow) 
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Invalid app code")
     }
 
-    if !keeper.IsTablePresent(ctx, appId, msg.TableName) {
+    if !keeper.HasTable(ctx, appId, msg.TableName) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("Table % does not exist!", msg.TableName))
     }
 
