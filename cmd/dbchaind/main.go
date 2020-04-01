@@ -14,8 +14,8 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/cosmos/cosmos-sdk/x/auth"
     genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-    app "github.com/yzhanginwa/cosmos-api"
-    dbchaincli "github.com/yzhanginwa/cosmos-api/x/dbchain/client/cli"
+    app "github.com/yzhanginwa/dbchain"
+    dbchaincli "github.com/yzhanginwa/dbchain/x/dbchain/client/cli"
 
     abci "github.com/tendermint/tendermint/abci/types"
     tmtypes "github.com/tendermint/tendermint/types"

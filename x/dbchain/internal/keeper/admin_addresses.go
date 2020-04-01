@@ -4,7 +4,7 @@ import (
     "errors"
     "bytes"
     sdk "github.com/cosmos/cosmos-sdk/types"
-    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/types"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
 //////////////////

@@ -7,8 +7,8 @@ import (
     "encoding/json"
     sdk "github.com/cosmos/cosmos-sdk/types"
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/types"
-    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/utils"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
 )
 
 // NewHandler returns a handler for "nameservice" type messages.

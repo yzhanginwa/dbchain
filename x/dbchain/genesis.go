@@ -4,7 +4,7 @@ import (
     "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
     abci "github.com/tendermint/tendermint/abci/types"
-    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/types"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
 func ValidateGenesis(data GenesisState) error {

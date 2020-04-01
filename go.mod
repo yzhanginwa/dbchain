@@ -1,4 +1,4 @@
-module github.com/yzhanginwa/cosmos-api
+module github.com/yzhanginwa/dbchain
 
 go 1.13
 

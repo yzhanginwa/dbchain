@@ -9,7 +9,7 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
     abci "github.com/tendermint/tendermint/abci/types"
-    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/utils"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
 )
 
 // query endpoints supported by the dbchain service Querier

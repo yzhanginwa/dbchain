@@ -5,9 +5,9 @@ import (
     "strconv"
     "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
-    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/other"
-    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/types"
-    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/utils"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/other"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
 )
 
 

@@ -4,7 +4,7 @@ import (
     "fmt"
     "net/http"
     "github.com/cosmos/cosmos-sdk/client/context"
-    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/utils"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "github.com/cosmos/cosmos-sdk/types/rest"
     "github.com/gorilla/mux"
     shell "github.com/ipfs/go-ipfs-api"

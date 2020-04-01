@@ -1,7 +1,7 @@
 package cache 
 
 import (
-    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/types"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
 ////////////////////

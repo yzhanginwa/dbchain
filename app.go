@@ -24,7 +24,7 @@ import (
     "github.com/cosmos/cosmos-sdk/x/staking"
     "github.com/cosmos/cosmos-sdk/x/supply"
 
-    "github.com/yzhanginwa/cosmos-api/x/dbchain"
+    "github.com/yzhanginwa/dbchain/x/dbchain"
 )
 
 const appName = "dbchain"

@@ -8,10 +8,10 @@ import (
     "errors"
     "bytes"
     sdk "github.com/cosmos/cosmos-sdk/types"
-    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/types"
-    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/other"
-    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/utils"
-    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/keeper/cache"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/other"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
 )
 
 func (k Keeper) GetDatabaseAdmins(ctx sdk.Context, appCode string) []sdk.AccAddress {
