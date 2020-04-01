@@ -3,7 +3,7 @@ package keeper
 import (
     "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
-    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
+    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/types"
 )
 
 func (k Keeper) AddFriend(ctx sdk.Context, owner sdk.AccAddress, ownerName string, friendAddr string, friendName string) error {

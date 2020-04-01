@@ -1,8 +1,8 @@
-package cosmosapi
+package dbchain
 
 import (
-    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/keeper"
-    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
+    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/keeper"
+    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/types"
 )
 
 const (

@@ -9,10 +9,10 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
     abci "github.com/tendermint/tendermint/abci/types"
-    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/utils"
+    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/utils"
 )
 
-// query endpoints supported by the cosmosapi service Querier
+// query endpoints supported by the dbchain service Querier
 const (
     QueryApplication   = "application"
     QueryAppUsers      = "app_users"
@@ -72,7 +72,7 @@ func NewQuerier(keeper Keeper) sdk.Querier {
         case QueryPendingFriends:
             return queryPendingFriends(ctx, path[1:], req, keeper)
         default:
-            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown cosmosapi query endpoint")
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown dbchain query endpoint")
         }
     }
 }

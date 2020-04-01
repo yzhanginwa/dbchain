@@ -34,8 +34,8 @@ func main() {
     config.Seal()
 
     rootCmd := &cobra.Command{
-        Use:   "cosmosapicli",
-        Short: "cosmosapi Client",
+        Use:   "dbchaincli",
+        Short: "dbchain Client",
     }
 
     // Add --chain-id to persistent flags and mark it required

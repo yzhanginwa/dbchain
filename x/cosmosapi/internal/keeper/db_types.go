@@ -1,7 +1,7 @@
 package keeper
 
 import (
-    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
+    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/types"
 )
 
 

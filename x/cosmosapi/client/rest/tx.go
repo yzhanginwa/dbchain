@@ -4,7 +4,7 @@ import (
     "net/http"
 
     "github.com/cosmos/cosmos-sdk/client/context"
-    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
+    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/types"
 
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/cosmos/cosmos-sdk/types/rest"

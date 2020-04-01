@@ -24,17 +24,17 @@ import (
     "github.com/cosmos/cosmos-sdk/x/staking"
     "github.com/cosmos/cosmos-sdk/x/supply"
 
-    "github.com/yzhanginwa/cosmos-api/x/cosmosapi"
+    "github.com/yzhanginwa/cosmos-api/x/dbchain"
 )
 
-const appName = "cosmosapi"
+const appName = "dbchain"
 
 var (
     // default home directories for the application CLI
-    DefaultCLIHome = os.ExpandEnv("$HOME/.cosmosapicli")
+    DefaultCLIHome = os.ExpandEnv("$HOME/.dbchaincli")
 
     // DefaultNodeHome sets the folder where the applcation data and configuration will be stored
-    DefaultNodeHome = os.ExpandEnv("$HOME/.cosmosapid")
+    DefaultNodeHome = os.ExpandEnv("$HOME/.dbchaind")
 
     // NewBasicManager is in charge of setting up basic module elemnets
     ModuleBasics = module.NewBasicManager(
@@ -47,7 +47,7 @@ var (
         slashing.AppModuleBasic{},
         supply.AppModuleBasic{},
 
-        cosmosapi.AppModule{},
+        dbchain.AppModule{},
     )
     // account permissions
     maccPerms = map[string][]string{
@@ -83,7 +83,7 @@ type dbChainApp struct {
     distrKeeper    distr.Keeper
     supplyKeeper   supply.Keeper
     paramsKeeper   params.Keeper
-    dbChainKeeper cosmosapi.Keeper
+    dbChainKeeper dbchain.Keeper
 
     // Module Manager
     mm *module.Manager
@@ -103,7 +103,7 @@ func NewDbChainApp(
     bApp.SetAppVersion(version.Version)
 
     keys := sdk.NewKVStoreKeys(bam.MainStoreKey, auth.StoreKey, staking.StoreKey,
-        supply.StoreKey, distr.StoreKey, slashing.StoreKey, params.StoreKey, cosmosapi.StoreKey)
+        supply.StoreKey, distr.StoreKey, slashing.StoreKey, params.StoreKey, dbchain.StoreKey)
 
     tkeys := sdk.NewTransientStoreKeys(staking.TStoreKey, params.TStoreKey)
 
@@ -181,11 +181,11 @@ func NewDbChainApp(
             app.slashingKeeper.Hooks()),
     )
 
-    // The DbChainKeeper is the Keeper from module cosmosapi
+    // The DbChainKeeper is the Keeper from module dbchain
     // It handles interactions with the namestore
-    app.dbChainKeeper = cosmosapi.NewKeeper(
+    app.dbChainKeeper = dbchain.NewKeeper(
         app.bankKeeper,
-        keys[cosmosapi.StoreKey],
+        keys[dbchain.StoreKey],
         app.cdc,
     )
 
@@ -193,14 +193,14 @@ func NewDbChainApp(
         genutil.NewAppModule(app.accountKeeper, app.stakingKeeper, app.BaseApp.DeliverTx),
         auth.NewAppModule(app.accountKeeper),
         bank.NewAppModule(app.bankKeeper, app.accountKeeper),
-        cosmosapi.NewAppModule(app.dbChainKeeper, app.bankKeeper),
+        dbchain.NewAppModule(app.dbChainKeeper, app.bankKeeper),
         supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
         distr.NewAppModule(app.distrKeeper, app.accountKeeper, app.supplyKeeper, app.stakingKeeper),
         slashing.NewAppModule(app.slashingKeeper, app.accountKeeper, app.stakingKeeper),
         staking.NewAppModule(app.stakingKeeper, app.accountKeeper, app.supplyKeeper),
     )
 
-    app.mm.SetOrderBeginBlockers(distr.ModuleName, slashing.ModuleName, cosmosapi.ModuleName)
+    app.mm.SetOrderBeginBlockers(distr.ModuleName, slashing.ModuleName, dbchain.ModuleName)
     app.mm.SetOrderEndBlockers(staking.ModuleName)
 
     // Sets the order of Genesis - Order matters, genutil is to always come last
@@ -212,7 +212,7 @@ func NewDbChainApp(
         auth.ModuleName,
         bank.ModuleName,
         slashing.ModuleName,
-        cosmosapi.ModuleName,
+        dbchain.ModuleName,
         supply.ModuleName,
         genutil.ModuleName,
     )

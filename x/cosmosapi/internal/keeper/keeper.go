@@ -26,7 +26,7 @@ type Keeper struct {
 }
 
 
-// NewKeeper creates new instances of the cosmosapi Keeper
+// NewKeeper creates new instances of the dbchain Keeper
 func NewKeeper(coinKeeper bank.Keeper, storeKey sdk.StoreKey, cdc *codec.Codec) Keeper {
     return Keeper{
         CoinKeeper: coinKeeper,

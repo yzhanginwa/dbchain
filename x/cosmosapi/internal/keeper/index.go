@@ -4,7 +4,7 @@ import (
     "fmt"
     "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
-    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
+    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/types"
 )
 
 func (k Keeper) updateIndex(ctx sdk.Context, appId uint, tableName string, id uint, fields types.RowFields) (uint, error){

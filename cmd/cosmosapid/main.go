@@ -15,7 +15,7 @@ import (
     "github.com/cosmos/cosmos-sdk/x/auth"
     genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
     app "github.com/yzhanginwa/cosmos-api"
-    cosmosapicli "github.com/yzhanginwa/cosmos-api/x/cosmosapi/client/cli"
+    dbchaincli "github.com/yzhanginwa/cosmos-api/x/dbchain/client/cli"
 
     abci "github.com/tendermint/tendermint/abci/types"
     tmtypes "github.com/tendermint/tendermint/types"
@@ -36,8 +36,8 @@ func main() {
     ctx := server.NewDefaultContext()
 
     rootCmd := &cobra.Command{
-        Use:               "cosmosapid",
-        Short:             "cosmosapi App Daemon (server)",
+        Use:               "dbchaind",
+        Short:             "dbchain App Daemon (server)",
         PersistentPreRunE: server.PersistentPreRunEFn(ctx),
     }
     // CLI commands to initialize the chain
@@ -51,7 +51,7 @@ func main() {
         genutilcli.ValidateGenesisCmd(ctx, cdc, app.ModuleBasics),
         // AddGenesisAccountCmd allows users to add accounts to the genesis file
         AddGenesisAccountCmd(ctx, cdc, app.DefaultNodeHome, app.DefaultCLIHome),
-        cosmosapicli.AddGenesisAdminAccountCmd(ctx, cdc, app.DefaultNodeHome, app.DefaultCLIHome),
+        dbchaincli.AddGenesisAdminAccountCmd(ctx, cdc, app.DefaultNodeHome, app.DefaultCLIHome),
     )
 
     server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)

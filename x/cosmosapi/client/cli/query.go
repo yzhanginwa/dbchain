@@ -6,19 +6,19 @@ import (
     "github.com/cosmos/cosmos-sdk/client/context"
     "github.com/cosmos/cosmos-sdk/client/flags"
     "github.com/cosmos/cosmos-sdk/codec"
-    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
+    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/types"
     "github.com/spf13/cobra"
 )
 
 func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-    cosmosapiQueryCmd := &cobra.Command{
+    dbchainQueryCmd := &cobra.Command{
         Use:                        types.ModuleName,
-        Short:                      "Querying commands for the cosmosapi module",
+        Short:                      "Querying commands for the dbchain module",
         DisableFlagParsing:         true,
         SuggestionsMinimumDistance: 2,
         RunE:                       client.ValidateCmd,
     }
-    cosmosapiQueryCmd.AddCommand(flags.GetCommands(
+    dbchainQueryCmd.AddCommand(flags.GetCommands(
         GetCmdApplication(storeKey, cdc),
         GetCmdAppUsers(storeKey, cdc),
         GetCmdIsAppUser(storeKey, cdc),
@@ -34,7 +34,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdShowPendingFriends(storeKey, cdc),
         GetCmdGetAccessCode(storeKey, cdc),
     )...)
-    return cosmosapiQueryCmd
+    return dbchainQueryCmd
 }
 
 func GetCmdApplication(queryRoute string, cdc *codec.Codec) *cobra.Command {

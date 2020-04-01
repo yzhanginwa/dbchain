@@ -1,4 +1,4 @@
-package cosmosapi
+package dbchain
 
 import (
     "fmt"
@@ -7,8 +7,8 @@ import (
     "encoding/json"
     sdk "github.com/cosmos/cosmos-sdk/types"
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
-    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/utils"
+    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/types"
+    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/utils"
 )
 
 // NewHandler returns a handler for "nameservice" type messages.
@@ -52,7 +52,7 @@ func NewHandler(keeper Keeper) sdk.Handler {
         case MsgRespondFriend:
             return handleMsgRespondFriend(ctx, keeper, msg)
         default:
-            errMsg := fmt.Sprintf("Unrecognized cosmosapi Msg type: %v", msg.Type())
+            errMsg := fmt.Sprintf("Unrecognized dbchain Msg type: %v", msg.Type())
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
         }
     }

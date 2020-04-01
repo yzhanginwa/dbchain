@@ -1,4 +1,4 @@
-package cosmosapi
+package dbchain
 
 import (
     "time"
@@ -10,9 +10,9 @@ import (
     "github.com/cosmos/cosmos-sdk/codec"
     "github.com/cosmos/cosmos-sdk/types/module"
     "github.com/cosmos/cosmos-sdk/x/bank"
-    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/client/cli"
-    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/client/rest"
-    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/other"
+    "github.com/yzhanginwa/cosmos-api/x/dbchain/client/cli"
+    "github.com/yzhanginwa/cosmos-api/x/dbchain/client/rest"
+    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/other"
 
     "github.com/cosmos/cosmos-sdk/client/context"
     sdk "github.com/cosmos/cosmos-sdk/types"

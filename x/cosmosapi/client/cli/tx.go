@@ -16,11 +16,11 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/cosmos/cosmos-sdk/x/auth"
     "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-    "github.com/yzhanginwa/cosmos-api/x/cosmosapi/internal/types"
+    "github.com/yzhanginwa/cosmos-api/x/dbchain/internal/types"
 )
 
 func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-    cosmosapiTxCmd := &cobra.Command{
+    dbchainTxCmd := &cobra.Command{
         Use:                        types.ModuleName,
         Short:                      "Cosmosapi transaction subcommands",
         DisableFlagParsing:         true,
@@ -28,7 +28,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         RunE:                       client.ValidateCmd,
     }
 
-    cosmosapiTxCmd.AddCommand(flags.PostCommands(
+    dbchainTxCmd.AddCommand(flags.PostCommands(
         GetCmdCreateApplication(cdc),
         GetCmdAddAppUser(cdc),
         GetCmdCreateTable(cdc),
@@ -49,7 +49,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdRespondFriend(cdc),
     )...)
 
-    return cosmosapiTxCmd
+    return dbchainTxCmd
 }
 
 ////////////////////
