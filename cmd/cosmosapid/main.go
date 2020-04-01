@@ -65,7 +65,7 @@ func main() {
 }
 
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
-    return app.NewCosmosApiApp(logger, db)
+    return app.NewDbChainApp(logger, db)
 }
 
 func exportAppStateAndTMValidators(
@@ -73,7 +73,7 @@ func exportAppStateAndTMValidators(
 ) (json.RawMessage, []tmtypes.GenesisValidator, error) {
 
     if height != -1 {
-        nsApp := app.NewCosmosApiApp(logger, db)
+        nsApp := app.NewDbChainApp(logger, db)
         err := nsApp.LoadHeight(height)
         if err != nil {
             return nil, nil, err
@@ -81,7 +81,7 @@ func exportAppStateAndTMValidators(
         return nsApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
     }
 
-    nsApp := app.NewCosmosApiApp(logger, db)
+    nsApp := app.NewDbChainApp(logger, db)
 
     return nsApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 }

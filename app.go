@@ -90,7 +90,7 @@ type dbChainApp struct {
 }
 
 // NewNameServiceApp is a constructor function for nameServiceApp
-func NewCosmosApiApp(
+func NewDbChainApp(
     logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseApp),
 ) *dbChainApp {
 
@@ -181,7 +181,7 @@ func NewCosmosApiApp(
             app.slashingKeeper.Hooks()),
     )
 
-    // The CosmosApiKeeper is the Keeper from module cosmosapi
+    // The DbChainKeeper is the Keeper from module cosmosapi
     // It handles interactions with the namestore
     app.dbChainKeeper = cosmosapi.NewKeeper(
         app.bankKeeper,
