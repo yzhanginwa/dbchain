@@ -240,7 +240,7 @@ func GetCmdFindRow(queryRoute string, cdc *codec.Codec) *cobra.Command {
             appCode    := args[1]
             tableName  := args[2]
             id         := args[3]
-            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find/%s/%s/%s/%", queryRoute, accessCode, appCode, tableName, id), nil)
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", queryRoute, accessCode, appCode, tableName, id), nil)
             if err != nil {
                 fmt.Printf("could not find row")
                 return nil
