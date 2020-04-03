@@ -23,6 +23,7 @@ import (
 )
 
 func main() {
+    go statusReport()
     cobra.EnableCommandSorting = false
 
     cdc := app.MakeCodec()
