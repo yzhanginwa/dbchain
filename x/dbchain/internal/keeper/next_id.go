@@ -5,7 +5,6 @@ import (
     "sync"
     "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
-
 )
 
 var mutex = &sync.Mutex{}
@@ -18,11 +17,6 @@ func getNextId(k Keeper, ctx sdk.Context, appId uint, tableName string) (uint, e
     defer mutex.Unlock()
 
     var nextIdKey = getNextIdKey(appId, tableName)
-
-ctx.Logger().Info("hahahahahah")
-ctx.Logger().Info(nextIdKey)
-
-
     var nextId uint
     var found bool
     if nextId, found = NextIds[nextIdKey]; found {
@@ -60,4 +54,3 @@ func registerDatabaseId(k Keeper, ctx sdk.Context, appCode string) (uint, error)
     nextAppId += 1
     return currentAppId, nil
 }
-
