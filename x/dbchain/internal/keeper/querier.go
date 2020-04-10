@@ -92,7 +92,7 @@ func queryApplications(ctx sdk.Context, path []string, req abci.RequestQuery, ke
     }
 
     // we use the term database in the code
-    applications := keeper.getAllAppCode(ctx)
+    applications := keeper.GetAllAppCode(ctx)
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, applications)
     if err != nil {
@@ -206,7 +206,7 @@ func queryTables(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    tables, err := keeper.getTables(ctx, appId)
+    tables, err := keeper.GetTables(ctx, appId)
 
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Can not get table names")

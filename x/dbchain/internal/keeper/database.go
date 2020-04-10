@@ -24,7 +24,7 @@ func (k Keeper) GetDatabaseAdmins(ctx sdk.Context, appCode string) []sdk.AccAddr
     }
 }
 
-func (k Keeper) getAllAppCode(ctx sdk.Context) ([]string) {
+func (k Keeper) GetAllAppCode(ctx sdk.Context) ([]string) {
     store := ctx.KVStore(k.storeKey)
     start, end := getDatabaseIteratorStartAndEndKey()
     iter := store.Iterator([]byte(start), []byte(end))
@@ -41,7 +41,7 @@ func (k Keeper) getAllAppCode(ctx sdk.Context) ([]string) {
 }
 
 func (k Keeper) getAdminAppCode(ctx sdk.Context, address sdk.AccAddress) ([]string) {
-    all := k.getAllAppCode(ctx)
+    all := k.GetAllAppCode(ctx)
     var result []string
 
     for _, appCode := range all {

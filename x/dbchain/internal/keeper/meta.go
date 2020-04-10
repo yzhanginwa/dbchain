@@ -15,7 +15,7 @@ import (
 //                         //
 /////////////////////////////
 
-func (k Keeper) getTables(ctx sdk.Context, appId uint) ([]string, error) {
+func (k Keeper) GetTables(ctx sdk.Context, appId uint) ([]string, error) {
     store := ctx.KVStore(k.storeKey)
     tablesKey := getTablesKey(appId)
     bz := store.Get([]byte(tablesKey))
