@@ -11,6 +11,17 @@ var mutex = &sync.Mutex{}
 var NextIds = make(map[string]uint)
 var nextAppId uint
 
+func (k Keeper) PeekNextId(ctx sdk.Context, appId uint, tableName string) (uint, error) {
+    var nextIdKey = getNextIdKey(appId, tableName)
+    var nextId uint
+    var found bool
+    if nextId, found = NextIds[nextIdKey]; found {
+        return nextId, nil
+    } else {
+        return 0, nil
+    }
+}
+
 func getNextId(k Keeper, ctx sdk.Context, appId uint, tableName string) (uint, error) {
     store := ctx.KVStore(k.storeKey)
     mutex.Lock()

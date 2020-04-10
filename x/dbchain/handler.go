@@ -9,6 +9,7 @@ import (
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    "github.com/cosmos/cosmos-sdk/version"
 )
 
 // NewHandler returns a handler for "nameservice" type messages.
@@ -64,6 +65,12 @@ func handleMsgCreateApplication(ctx sdk.Context, keeper Keeper, msg MsgCreateApp
     // TODO: Add a system paramter "allow-creating-application", which is controlled by genesis admin
     //       If it's false, nobody can create application
 
+    if version.Name == "dbChainCommunity" {
+        var apps = keeper.GetAllAppCode(ctx)
+        if len(apps) > 2 {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 3 apps allowed")
+        }
+    }
     // We use the term database for internal use. To outside we use application to make users understand easily
     keeper.CreateDatabase(ctx, msg.Owner, msg.Name, msg.Description, msg.Permissioned)
     return &sdk.Result{}, nil
@@ -86,6 +93,16 @@ func handleMsgCreateTable(ctx sdk.Context, keeper Keeper, msg MsgCreateTable) (*
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
  
+    if version.Name == "dbChainCommunity" {
+        tables, err := keeper.GetTables(ctx, appId)
+        if err != nil {
+            return nil, err
+        }
+        if len(tables) > 9 {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 5 tables allowed")
+        }
+    }
+
     if keeper.HasTable(ctx, appId, msg.TableName) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name existed already!")
     }
@@ -254,6 +271,13 @@ func handleMsgInsertRow(ctx sdk.Context, keeper Keeper, msg types.MsgInsertRow) 
     var rowFields types.RowFields
     if err := json.Unmarshal(msg.Fields, &rowFields); err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Failed to parse row fields!")
+    }
+
+    if version.Name == "dbChainCommunity" {
+        nextId, _ := keeper.PeekNextId(ctx, appId, msg.TableName)
+        if nextId > 1000 {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 1000 rows allowed")
+        }
     }
 
     _, err = keeper.Insert(ctx, appId, msg.TableName, rowFields, msg.Owner)
