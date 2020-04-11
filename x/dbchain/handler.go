@@ -67,8 +67,8 @@ func handleMsgCreateApplication(ctx sdk.Context, keeper Keeper, msg MsgCreateApp
 
     if version.Name == "dbChainCommunity" {
         var apps = keeper.GetAllAppCode(ctx)
-        if len(apps) > 2 {
-            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 3 apps allowed")
+        if len(apps) > 9 {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 10 apps allowed")
         }
     }
     // We use the term database for internal use. To outside we use application to make users understand easily
@@ -98,8 +98,8 @@ func handleMsgCreateTable(ctx sdk.Context, keeper Keeper, msg MsgCreateTable) (*
         if err != nil {
             return nil, err
         }
-        if len(tables) > 9 {
-            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 5 tables allowed")
+        if len(tables) > 29 {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 30 tables allowed")
         }
     }
 
