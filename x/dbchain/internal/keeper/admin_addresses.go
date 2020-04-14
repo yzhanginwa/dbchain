@@ -21,11 +21,42 @@ func (k Keeper) CreateGenesisAdminGroup(ctx sdk.Context, genesisState types.Gene
     store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(adminAddresses))
 }
 
+func (k Keeper) GetSysAdmins(ctx sdk.Context) []string {
+    store := ctx.KVStore(k.storeKey)
+
+    var sysAdmins []string
+    key := getSysAdminGroupKey()
+    bz := store.Get([]byte(key))
+    if bz != nil {
+        k.cdc.MustUnmarshalBinaryBare(bz, &sysAdmins)
+    }
+    return sysAdmins
+}
+
 ////////////////////
 //                //
 // Database level //
 //                //
 ////////////////////
+
+func (k Keeper) CreateGroup(ctx sdk.Context, appId uint, groupName string) error {
+    store := ctx.KVStore(k.storeKey)
+    key := getGroupsKey(appId)
+    var groups []string
+    bz := store.Get([]byte(key))
+    if bz != nil {
+        k.cdc.MustUnmarshalBinaryBare(bz, &groups)
+        for _, grp := range groups {
+            if groupName  == grp {
+                return errors.New("Duplicate group name")
+            }
+        }
+    }
+
+    groups = append(groups, groupName) 
+    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(groups))
+    return nil
+}
 
 func (k Keeper) AddAdminAccount(ctx sdk.Context, appId uint, adminAddress sdk.AccAddress) error {
     store := ctx.KVStore(k.storeKey)

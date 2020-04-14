@@ -18,6 +18,7 @@ const (
     KeyPrefixData  = "dt"
     KeyPrefixIndex = "ix"
     KeyPrefixGroup = "grp"
+    KeyPrefixGroups = "grps"
 )
 
 //////////////////////////////////
@@ -160,6 +161,10 @@ func getPendingFriendIteratorStartAndEndKey(owner string) (string, string) {
 // group related //
 //               //
 ///////////////////
+
+func getGroupsKey(appId uint) string {
+    return fmt.Sprintf("%s:%d:%s", KeyPrefixDb, appId, KeyPrefixGroups)
+}
 
 func getGroupKey(appId uint, groupName string) string {
     return fmt.Sprintf("%s:%d:%s:%s", KeyPrefixDb, appId, KeyPrefixGroup, groupName)

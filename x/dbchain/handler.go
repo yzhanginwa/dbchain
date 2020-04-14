@@ -46,6 +46,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgDeleteRow(ctx, keeper, msg)
         case MsgFreezeRow:
             return handleMsgFreezeRow(ctx, keeper, msg)
+        case MsgCreateGroup:
+            return handleMsgCreateGroup(ctx, keeper, msg)
         case MsgAddAdminAccount:
             return handleMsgAddAdminAccount(ctx, keeper, msg)
         case MsgAddFriend:
@@ -344,6 +346,29 @@ func handleMsgFreezeRow(ctx sdk.Context, keeper Keeper, msg types.MsgFreezeRow) 
     return &sdk.Result{}, nil
 }
 
+func handleMsgCreateGroup(ctx sdk.Context, keeper Keeper, msg MsgCreateGroup) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Invalid app code")
+    }
+
+    if msg.Group == "admin" {
+        if !isSysAdmin(ctx, keeper, msg.Owner) {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Not authorized")
+        }
+    } else {
+        if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Not authorized")
+        }
+    }
+
+    err = keeper.CreateGroup(ctx, appId, msg.Group)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
+    return &sdk.Result{}, nil
+}
+
 func handleMsgAddAdminAccount(ctx sdk.Context, keeper Keeper, msg MsgAddAdminAccount) (*sdk.Result, error) {
     appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
     if err != nil {
@@ -381,6 +406,19 @@ func handleMsgRespondFriend(ctx sdk.Context, keeper Keeper, msg MsgRespondFriend
 // helper methods //
 //                //
 ////////////////////
+
+func isSysAdmin(ctx sdk.Context, keeper Keeper, address sdk.AccAddress) bool {
+    sysAdmins := keeper.GetSysAdmins(ctx)
+    var is_sysAdmin = false
+    var strAddr = address.String()
+    for _, addr := range sysAdmins {
+        if strAddr == addr {
+            is_sysAdmin = true
+            break
+        }
+    }
+    return is_sysAdmin
+}
 
 func isAdmin(ctx sdk.Context, keeper Keeper, appCode string, address sdk.AccAddress) bool {
     adminAddresses := keeper.GetDatabaseAdmins(ctx, appCode)

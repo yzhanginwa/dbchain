@@ -44,6 +44,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdUpdateRow(cdc),
         GetCmdDeleteRow(cdc),
         GetCmdFreezeRow(cdc),
+        GetCmdCreateGroup(cdc),
         GetCmdAddAdminAccount(cdc),
         GetCmdAddFriend(cdc),
         GetCmdRespondFriend(cdc),
@@ -499,6 +500,35 @@ func GetCmdAddAdminAccount(cdc * codec.Codec) *cobra.Command {
 
             msg := types.NewMsgAddAdminAccount(appCode, addr, cliCtx.GetFromAddress())
             err = msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+//////////////////
+//              //
+// create group //
+//              //
+//////////////////
+
+func GetCmdCreateGroup(cdc * codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "create-group [appCode] [group]",
+        Short: "create group for a database",
+        Args:  cobra.ExactArgs(2),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode := args[0]
+            groupName := args[1]
+
+            msg := types.NewMsgCreateGroup(appCode, groupName, cliCtx.GetFromAddress())
+            err := msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
