@@ -1,20 +1,13 @@
 package keeper
 
 import (
-    "os"
+    "fmt"
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/cosmos/cosmos-sdk/x/bank"
     "github.com/tendermint/tendermint/libs/log"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
-
-var (
-    logger = defaultLogger()
-)
-
-func defaultLogger() log.Logger {
-    return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("ethan1", "ethan2")
-}
 
 // Keeper maintains the link to storage and exposes getter/setter methods for the various parts of the state machine
 type Keeper struct {
@@ -35,6 +28,10 @@ func NewKeeper(coinKeeper bank.Keeper, storeKey sdk.StoreKey, cdc *codec.Codec) 
     }
 }
 
+// Logger returns a module-specific logger.
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+    return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
 
 //////////////////////
 //                  //

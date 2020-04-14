@@ -8,6 +8,7 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/other"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    shell "github.com/ipfs/go-ipfs-api"
 )
 
 
@@ -22,6 +23,9 @@ func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields typ
     if(!k.validateInsertion(ctx, appId, tableName, fields, owner)) {
         return 0, errors.New(fmt.Sprintf("Failed validation when inserting table %s", tableName))
     }
+
+    // as far the first go routine to be used
+    go k.tryToPinFile(ctx, appId, tableName, fields, owner)
 
     id, err := getNextId(k, ctx, appId, tableName)
     if err != nil {
@@ -192,3 +196,28 @@ func (k Keeper) validateInsertion(ctx sdk.Context, appId uint, tableName string,
     return(true)
 }
 
+func (k Keeper) tryToPinFile(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {
+    fieldNames, err := k.getTableFields(ctx, appId, tableName)
+    if err != nil {
+        return(false)
+    }
+
+    for _, fieldName := range fieldNames {
+        if(isSystemField(fieldName)) {
+            continue
+        }
+        fieldOptions, _ := k.GetColumnOption(ctx, appId, tableName, fieldName)
+        if(utils.ItemExists(fieldOptions, string(types.FLDOPT_FILE))) {
+            if value, ok := fields[fieldName]; ok {
+                sh := shell.NewShell("localhost:5001")
+                err =sh.Pin(value)
+                if err != nil {
+                    logger := k.Logger(ctx)
+                    logger.Error(fmt.Sprintf("Failed to pin ipfs cid %s", value))
+                    return false
+                }
+            }
+        }
+    }
+    return true
+}
