@@ -48,8 +48,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgFreezeRow(ctx, keeper, msg)
         case MsgCreateGroup:
             return handleMsgCreateGroup(ctx, keeper, msg)
-        case MsgAddAdminAccount:
-            return handleMsgAddAdminAccount(ctx, keeper, msg)
+        case MsgAddGroupMember:
+            return handleMsgAddGroupMember(ctx, keeper, msg)
         case MsgAddFriend:
             return handleMsgAddFriend(ctx, keeper, msg)
         case MsgRespondFriend:
@@ -369,16 +369,23 @@ func handleMsgCreateGroup(ctx sdk.Context, keeper Keeper, msg MsgCreateGroup) (*
     return &sdk.Result{}, nil
 }
 
-func handleMsgAddAdminAccount(ctx sdk.Context, keeper Keeper, msg MsgAddAdminAccount) (*sdk.Result, error) {
+func handleMsgAddGroupMember(ctx sdk.Context, keeper Keeper, msg MsgAddGroupMember) (*sdk.Result, error) {
     appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Invalid app code")
     }
 
-    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Not authorized")
+    if msg.Group == "admin" {
+        if !isSysAdmin(ctx, keeper, msg.Owner) {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Not authorized")
+        }
+    } else {
+        if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Not authorized")
+        }
     }
-    err = keeper.AddAdminAccount(ctx, appId, msg.AdminAddress)
+
+    err = keeper.AddGroupMember(ctx, appId, msg.Group, msg.Member)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
     }

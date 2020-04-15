@@ -1,10 +1,12 @@
 package keeper
 
 import (
+    "fmt"
     "errors"
     "bytes"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
 )
 
 //////////////////
@@ -58,24 +60,29 @@ func (k Keeper) CreateGroup(ctx sdk.Context, appId uint, groupName string) error
     return nil
 }
 
-func (k Keeper) AddAdminAccount(ctx sdk.Context, appId uint, adminAddress sdk.AccAddress) error {
-    store := ctx.KVStore(k.storeKey)
-    key := getAdminGroupKey(appId)
-
-    var adminAddresses []sdk.AccAddress
-    bz := store.Get([]byte(key))
-    if bz != nil {
-        k.cdc.MustUnmarshalBinaryBare(bz, &adminAddresses)
+func (k Keeper) AddGroupMember(ctx sdk.Context, appId uint, group string, member sdk.AccAddress) error {
+    groups := k.ShowGroups(ctx, appId)
+    if !utils.ItemExists(groups, group) {
+        return errors.New(fmt.Sprintf("Group %s does not exist", group))
     }
 
-    for _, addr := range adminAddresses {
-        if bytes.Compare(adminAddress, addr) == 0 {
+    store := ctx.KVStore(k.storeKey)
+    key := getGroupKey(appId, group)
+
+    var members []sdk.AccAddress
+    bz := store.Get([]byte(key))
+    if bz != nil {
+        k.cdc.MustUnmarshalBinaryBare(bz, &members)
+    }
+
+    for _, addr := range members {
+        if bytes.Compare(member, addr) == 0 {
             return errors.New("Duplicate admin address found")
         }
     }
 
-    adminAddresses = append(adminAddresses, adminAddress)
-    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(adminAddresses))
+    members  = append(members, member)
+    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(members))
     return nil
 }
 

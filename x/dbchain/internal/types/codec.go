@@ -29,7 +29,7 @@ func RegisterCodec(cdc *codec.Codec) {
     cdc.RegisterConcrete(MsgDeleteRow{}, "dbchain/DeleteRow", nil)
     cdc.RegisterConcrete(MsgFreezeRow{}, "dbchain/FreezeRow", nil)
     cdc.RegisterConcrete(MsgCreateGroup{}, "dbchain/CreateGroup", nil)
-    cdc.RegisterConcrete(MsgAddAdminAccount{}, "dbchain/AddAdminAccount", nil)
+    cdc.RegisterConcrete(MsgAddGroupMember{}, "dbchain/AddGroupMember", nil)
     cdc.RegisterConcrete(MsgAddFriend{}, "dbchain/AddFriend", nil)
     cdc.RegisterConcrete(MsgRespondFriend{}, "dbchain/RespondFriend", nil)
 }

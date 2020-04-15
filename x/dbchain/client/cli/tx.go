@@ -45,7 +45,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdDeleteRow(cdc),
         GetCmdFreezeRow(cdc),
         GetCmdCreateGroup(cdc),
-        GetCmdAddAdminAccount(cdc),
+        GetCmdAddGroupMember(cdc),
         GetCmdAddFriend(cdc),
         GetCmdRespondFriend(cdc),
     )...)
@@ -474,31 +474,32 @@ func GetCmdFreezeRow(cdc *codec.Codec) *cobra.Command {
 }
 
 
-/////////////////////////
-//                     //
-// admin group related //
-//                     //
-/////////////////////////
+//////////////////////
+//                  //
+// add group member //
+//                  //
+//////////////////////
 
-func GetCmdAddAdminAccount(cdc * codec.Codec) *cobra.Command {
+func GetCmdAddGroupMember(cdc * codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "add-admin [appCode] [address]",
-        Short: "add an account into admin group",
-        Args:  cobra.ExactArgs(2),
+        Use:   "add-group-member [appCode] [group] [address]",
+        Short: "add an account into a group",
+        Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
-            adminAddress := args[1]
-            addr, err := sdk.AccAddressFromBech32(adminAddress)
+            groupName := args[1]
+            memberAddress := args[2]
+            addr, err := sdk.AccAddressFromBech32(memberAddress)
 
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
 
-            msg := types.NewMsgAddAdminAccount(appCode, addr, cliCtx.GetFromAddress())
+            msg := types.NewMsgAddGroupMember(appCode, groupName, addr, cliCtx.GetFromAddress())
             err = msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))

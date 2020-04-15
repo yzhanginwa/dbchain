@@ -7,37 +7,42 @@ import (
 
 ////////////////////////
 //                    //
-// MsgAddAdminAccount //
+// MsgAddGroupMember //
 //                    //
 ////////////////////////
 
-type MsgAddAdminAccount struct {
+type MsgAddGroupMember struct {
     AppCode string              `json:"app_code"`
-    AdminAddress sdk.AccAddress `json:"admin_address"`
+    Group string                `json:"group"`
+    Member sdk.AccAddress       `json:"member"`
     Owner sdk.AccAddress        `json:"owner"`
 }
 
-func NewMsgAddAdminAccount(appCode string, adminAddress sdk.AccAddress, owner sdk.AccAddress) MsgAddAdminAccount {
-    return MsgAddAdminAccount {
+func NewMsgAddGroupMember(appCode string, group string, member sdk.AccAddress, owner sdk.AccAddress) MsgAddGroupMember {
+    return MsgAddGroupMember {
         AppCode: appCode,
-        AdminAddress: adminAddress,
+        Group: group,
+        Member: member,
         Owner: owner,
     }
 }
 
 // Route should return the name of the module
-func (msg MsgAddAdminAccount) Route() string { return RouterKey }
+func (msg MsgAddGroupMember) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgAddAdminAccount) Type() string { return "add_admin_account" }
+func (msg MsgAddGroupMember) Type() string { return "add_group_member" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgAddAdminAccount) ValidateBasic() error {
+func (msg MsgAddGroupMember) ValidateBasic() error {
     if len(msg.AppCode) == 0 {
         return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
     }
-    if msg.AdminAddress.Empty() {
-        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.AdminAddress.String())
+    if len(msg.Group) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Group name cannot be empty")
+    }
+    if msg.Member.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Member.String())
     }
     if msg.Owner.Empty() {
         return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
@@ -46,12 +51,12 @@ func (msg MsgAddAdminAccount) ValidateBasic() error {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgAddAdminAccount) GetSignBytes() []byte {
+func (msg MsgAddGroupMember) GetSignBytes() []byte {
     return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg MsgAddAdminAccount) GetSigners() []sdk.AccAddress {
+func (msg MsgAddGroupMember) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 

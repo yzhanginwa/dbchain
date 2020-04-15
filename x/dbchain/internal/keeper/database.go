@@ -122,7 +122,8 @@ func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name strin
     store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(db))
 
     // Add owner into the admin group of the database
-    k.AddAdminAccount(ctx, appId, owner)
+    k.CreateGroup(ctx, appId, "admin")
+    k.AddGroupMember(ctx, appId, "admin", owner)
     return nil 
 }
 
