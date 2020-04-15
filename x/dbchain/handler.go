@@ -12,6 +12,10 @@ import (
     "github.com/cosmos/cosmos-sdk/version"
 )
 
+var (
+    AllowCreateApplication bool
+)
+
 // NewHandler returns a handler for "nameservice" type messages.
 func NewHandler(keeper Keeper) sdk.Handler {
     return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
@@ -63,9 +67,11 @@ func NewHandler(keeper Keeper) sdk.Handler {
 
 // Handle a message to create application
 func handleMsgCreateApplication(ctx sdk.Context, keeper Keeper, msg MsgCreateApplication) (*sdk.Result, error) {
-    // for now, we allow anybody to create application
-    // TODO: Add a system paramter "allow-creating-application", which is controlled by genesis admin
-    //       If it's false, nobody can create application
+    if !AllowCreateApplication {
+        if !isSysAdmin(ctx, keeper, msg.Owner) {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Not authorized")
+        }
+    }
 
     if version.Name == "dbChainCommunity" {
         var apps = keeper.GetAllAppCode(ctx)

@@ -15,6 +15,7 @@ import (
     "github.com/cosmos/cosmos-sdk/x/auth"
     genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
     app "github.com/yzhanginwa/dbchain"
+    dbcmodule "github.com/yzhanginwa/dbchain/x/dbchain"
     dbchaincli "github.com/yzhanginwa/dbchain/x/dbchain/client/cli"
 
     abci "github.com/tendermint/tendermint/abci/types"
@@ -41,6 +42,12 @@ func main() {
         Short:             "dbchain App Daemon (server)",
         PersistentPreRunE: server.PersistentPreRunEFn(ctx),
     }
+
+    rootCmd.PersistentFlags().BoolVar(&dbcmodule.AllowCreateApplication,
+                                      "allow-create-application",
+                                      false,
+                                      "allow non-admin users to create application")
+
     // CLI commands to initialize the chain
     rootCmd.AddCommand(
         genutilcli.InitCmd(ctx, cdc, app.ModuleBasics, app.DefaultNodeHome),
