@@ -130,7 +130,7 @@ func isSystemField(fieldName string) bool {
 func (k Keeper) haveWritePermission(ctx sdk.Context, appId uint, tableName string, owner sdk.AccAddress) bool {
     options, _ := k.GetOption(ctx, appId, tableName)
     if utils.ItemExists(options, string(types.TBLOPT_ADMIN_ONLY)) {
-        admins := k.ShowAdminGroup(ctx, appId)
+        admins := k.ShowGroup(ctx, appId, "admin")
         if utils.AddressIncluded(admins, owner) {
             return true
         }

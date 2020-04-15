@@ -79,15 +79,28 @@ func (k Keeper) AddAdminAccount(ctx sdk.Context, appId uint, adminAddress sdk.Ac
     return nil
 }
 
-func (k Keeper) ShowAdminGroup(ctx sdk.Context, appId uint) []sdk.AccAddress {
+func (k Keeper) ShowGroup(ctx sdk.Context, appId uint, groupName string) []sdk.AccAddress {
     store := ctx.KVStore(k.storeKey)
-    key := getAdminGroupKey(appId)
+    key := getGroupKey(appId, groupName)
 
     bz := store.Get([]byte(key))
     if bz == nil {
         return []sdk.AccAddress{}
     }
-    var adminAddresses []sdk.AccAddress
-    k.cdc.MustUnmarshalBinaryBare(bz, &adminAddresses)
-    return adminAddresses
+    var addresses []sdk.AccAddress
+    k.cdc.MustUnmarshalBinaryBare(bz, &addresses)
+    return addresses
+}
+
+func (k Keeper) ShowGroups(ctx sdk.Context, appId uint) []string {
+    store := ctx.KVStore(k.storeKey)
+    key := getGroupsKey(appId)
+
+    bz := store.Get([]byte(key))
+    if bz == nil {
+        return []string{}
+    }
+    var groups []string
+    k.cdc.MustUnmarshalBinaryBare(bz, &groups)
+    return groups
 }

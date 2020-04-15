@@ -79,17 +79,17 @@ func (t QueryOfBoolean) String() string {
     }
 }
 
-/////////////////////
-//                 //
-// QueryAdminGroup //
-//                 //
-/////////////////////
+////////////////
+//            //
+// QueryGroup //
+//            //
+////////////////
 
-type QueryAdminGroup []sdk.AccAddress
+type QueryGroup []sdk.AccAddress
 
-func (ag QueryAdminGroup) String() string {
+func (g QueryGroup) String() string {
     var buf []string
-    for index, addr := range ag {
+    for index, addr := range g {
         buf[index] = fmt.Sprintf("%s", addr)
     }
     return strings.Join(buf, "\n")

@@ -49,7 +49,7 @@ func (k Keeper) getAdminAppCode(ctx sdk.Context, address sdk.AccAddress) ([]stri
         if err != nil {
             return []string{}
         }
-        adminAddresses := k.ShowAdminGroup(ctx, appId)
+        adminAddresses := k.ShowGroup(ctx, appId, "admin")
         for _, addr := range adminAddresses {
             if bytes.Compare(address, addr) == 0 {
                 result = append(result, appCode)
@@ -193,7 +193,7 @@ func (k Keeper) IsDatabaseUser(ctx sdk.Context, appId uint, owner sdk.AccAddress
 ////////////////////
 
 func (k Keeper) isAdmin(ctx sdk.Context, appId uint, addr sdk.AccAddress) bool {
-    admins := k.ShowAdminGroup(ctx, appId)
+    admins := k.ShowGroup(ctx, appId, "admin")
     if utils.AddressIncluded(admins, addr) {
         return true
     }

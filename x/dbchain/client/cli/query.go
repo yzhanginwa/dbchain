@@ -29,7 +29,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdFindRow(storeKey, cdc),
         GetCmdFindIdsBy(storeKey, cdc),
         GetCmdFindAllIds(storeKey, cdc),
-        GetCmdShowAdminGroup(storeKey, cdc),
+        GetCmdShowGroup(storeKey, cdc),
         GetCmdShowFriends(storeKey, cdc),
         GetCmdShowPendingFriends(storeKey, cdc),
         GetCmdGetAccessCode(storeKey, cdc),

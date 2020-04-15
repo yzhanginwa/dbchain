@@ -25,7 +25,8 @@ const (
     QueryRow      = "find"
     QueryIdsBy    = "find_by"
     QueryAllIds   = "find_all"
-    QueryAdminGroup = "admin_group"
+    QueryGroups   = "groups"
+    QueryGroup    = "group"
     QueryFriends  = "friends"
     QueryPendingFriends  = "pending_friends"
 )
@@ -65,8 +66,10 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryIdsBy(ctx, path[1:], req, keeper)
         case QueryAllIds:
             return queryAllIds(ctx, path[1:], req, keeper)
-        case QueryAdminGroup:
-            return queryAdminGroup(ctx, path[1:], req, keeper)
+        case QueryGroups:
+            return queryGroups(ctx, path[1:], req, keeper)
+        case QueryGroup:
+            return queryGroup(ctx, path[1:], req, keeper)
         case QueryFriends:
             return queryFriends(ctx, path[1:], req, keeper)
         case QueryPendingFriends:
@@ -456,7 +459,7 @@ func queryPendingFriends(ctx sdk.Context, path []string, req abci.RequestQuery, 
 //             //
 /////////////////
 
-func queryAdminGroup(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+func queryGroups(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
     _, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
@@ -468,9 +471,32 @@ func queryAdminGroup(ctx sdk.Context, path []string, req abci.RequestQuery, keep
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    adminAddresses := keeper.ShowAdminGroup(ctx, appId)
+    groups := keeper.ShowGroups(ctx, appId)
 
-    res, err := codec.MarshalJSONIndent(keeper.cdc, adminAddresses)
+    res, err := codec.MarshalJSONIndent(keeper.cdc, groups)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryGroup(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    _, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    groupName := path[2]
+    addresses := keeper.ShowGroup(ctx, appId, groupName)
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, addresses)
     if err != nil {
         panic("could not marshal result to JSON")
     }

@@ -8,25 +8,37 @@ import (
     "github.com/spf13/cobra"
 )
 
-func GetCmdShowAdminGroup(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdShowGroup(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "admin-group",
-        Short: "show admin group",
-        Args: cobra.ExactArgs(2),
+        Use: "show-group",
+        Short: "show group",
+        Args: cobra.MinimumNArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
 
             accessCode := args[0]
             appCode    := args[1]
-            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/admin_group/%s/%s", queryRoute, accessCode, appCode), nil)
-            if err != nil {
-                fmt.Printf("could not show admin group")
-                return nil
+            if len(args) > 2 {
+                groupName  := args[2]
+                res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/group/%s/%s/%s", queryRoute, accessCode, appCode, groupName), nil)
+                if err != nil {
+                    fmt.Printf("could not show members of %s %s", appCode, groupName)
+                    return nil
+                }
+                var out types.QueryGroup
+                cdc.MustUnmarshalJSON(res, &out)
+                return cliCtx.PrintOutput(out)
+            } else {
+                res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/groups/%s/%s", queryRoute, accessCode, appCode), nil)
+                if err != nil {
+                    fmt.Printf("could not show groups of %s", appCode)
+                    return nil
+                }
+                var out types.QuerySliceOfString
+                cdc.MustUnmarshalJSON(res, &out)
+                return cliCtx.PrintOutput(out)
             }
 
-            var out types.QueryAdminGroup
-            cdc.MustUnmarshalJSON(res, &out)
-            return cliCtx.PrintOutput(out)
         },
     }
 }
