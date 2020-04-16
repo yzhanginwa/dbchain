@@ -45,7 +45,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdDeleteRow(cdc),
         GetCmdFreezeRow(cdc),
         GetCmdModifyGroup(cdc),
-        GetCmdAddGroupMember(cdc),
+        GetCmdModifyGroupMember(cdc),
         GetCmdAddFriend(cdc),
         GetCmdRespondFriend(cdc),
     )...)
@@ -474,32 +474,33 @@ func GetCmdFreezeRow(cdc *codec.Codec) *cobra.Command {
 }
 
 
-//////////////////////
-//                  //
-// add group member //
-//                  //
-//////////////////////
+/////////////////////////
+//                     //
+// modify group member //
+//                     //
+/////////////////////////
 
-func GetCmdAddGroupMember(cdc * codec.Codec) *cobra.Command {
+func GetCmdModifyGroupMember(cdc * codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "add-group-member [appCode] [group] [address]",
-        Short: "add an account into a group",
-        Args:  cobra.ExactArgs(3),
+        Use:   "modify-group-member [appCode] [group] [action] [address]",
+        Short: "add/drop account into/from a group",
+        Args:  cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            appCode := args[0]
-            groupName := args[1]
-            memberAddress := args[2]
+            appCode       := args[0]
+            groupName     := args[1]
+            action        := args[2]
+            memberAddress := args[3]
             addr, err := sdk.AccAddressFromBech32(memberAddress)
 
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
 
-            msg := types.NewMsgAddGroupMember(appCode, groupName, addr, cliCtx.GetFromAddress())
+            msg := types.NewMsgModifyGroupMember(appCode, groupName, action, addr, cliCtx.GetFromAddress())
             err = msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
@@ -511,7 +512,7 @@ func GetCmdAddGroupMember(cdc * codec.Codec) *cobra.Command {
 
 //////////////////
 //              //
-// create group //
+// Modify group //
 //              //
 //////////////////
 

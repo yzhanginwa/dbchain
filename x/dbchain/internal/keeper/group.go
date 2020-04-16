@@ -83,7 +83,7 @@ func (k Keeper) ModifyGroup(ctx sdk.Context, appId uint, action string, groupNam
     return nil
 }
 
-func (k Keeper) AddGroupMember(ctx sdk.Context, appId uint, group string, member sdk.AccAddress) error {
+func (k Keeper) ModifyGroupMember(ctx sdk.Context, appId uint, group string, action string, member sdk.AccAddress) error {
     groups := k.ShowGroups(ctx, appId)
     if !utils.ItemExists(groups, group) {
         return errors.New(fmt.Sprintf("Group %s does not exist", group))
@@ -98,13 +98,31 @@ func (k Keeper) AddGroupMember(ctx sdk.Context, appId uint, group string, member
         k.cdc.MustUnmarshalBinaryBare(bz, &members)
     }
 
-    for _, addr := range members {
+    var position = -1
+    for i, addr := range members {
         if bytes.Compare(member, addr) == 0 {
-            return errors.New("Duplicate admin address found")
+            position = i
+            break
         }
     }
 
-    members  = append(members, member)
+    if action == "add" {
+        if position > -1 {
+            return errors.New("Duplicate member")
+        } else {
+            members = append(members, member)
+        }
+    } else {
+        if position > -1 {
+            l := len(members)
+            members[position] = members[l-1]
+            members[l-1] = sdk.AccAddress{}
+            members = members[:l-1]
+        } else {
+            return errors.New("Member not exist")
+        }
+    }
+
     store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(members))
     return nil
 }

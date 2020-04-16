@@ -39,7 +39,7 @@ type (
     MsgAddFriend    = types.MsgAddFriend
     MsgRespondFriend   = types.MsgRespondFriend
     MsgModifyGroup     = types.MsgModifyGroup
-    MsgAddGroupMember  = types.MsgAddGroupMember
+    MsgModifyGroupMember  = types.MsgModifyGroupMember
 
     Table           = types.Table
 

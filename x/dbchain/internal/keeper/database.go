@@ -123,7 +123,7 @@ func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name strin
 
     // Add owner into the admin group of the database
     k.ModifyGroup(ctx, appId, "add", "admin")
-    k.AddGroupMember(ctx, appId, "admin", owner)
+    k.ModifyGroupMember(ctx, appId, "admin", "add", owner)
     return nil 
 }
 

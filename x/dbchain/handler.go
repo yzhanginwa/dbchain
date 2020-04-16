@@ -52,8 +52,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgFreezeRow(ctx, keeper, msg)
         case MsgModifyGroup:
             return handleMsgModifyGroup(ctx, keeper, msg)
-        case MsgAddGroupMember:
-            return handleMsgAddGroupMember(ctx, keeper, msg)
+        case MsgModifyGroupMember:
+            return handleMsgModifyGroupMember(ctx, keeper, msg)
         case MsgAddFriend:
             return handleMsgAddFriend(ctx, keeper, msg)
         case MsgRespondFriend:
@@ -375,7 +375,7 @@ func handleMsgModifyGroup(ctx sdk.Context, keeper Keeper, msg MsgModifyGroup) (*
     return &sdk.Result{}, nil
 }
 
-func handleMsgAddGroupMember(ctx sdk.Context, keeper Keeper, msg MsgAddGroupMember) (*sdk.Result, error) {
+func handleMsgModifyGroupMember(ctx sdk.Context, keeper Keeper, msg MsgModifyGroupMember) (*sdk.Result, error) {
     appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Invalid app code")
@@ -391,7 +391,7 @@ func handleMsgAddGroupMember(ctx sdk.Context, keeper Keeper, msg MsgAddGroupMemb
         }
     }
 
-    err = keeper.AddGroupMember(ctx, appId, msg.Group, msg.Member)
+    err = keeper.ModifyGroupMember(ctx, appId, msg.Group, msg.Action, msg.Member)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
     }
