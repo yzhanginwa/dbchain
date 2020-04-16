@@ -128,15 +128,18 @@ func isSystemField(fieldName string) bool {
 }
 
 func (k Keeper) haveWritePermission(ctx sdk.Context, appId uint, tableName string, owner sdk.AccAddress) bool {
-    options, _ := k.GetOption(ctx, appId, tableName)
-    if utils.ItemExists(options, string(types.TBLOPT_ADMIN_ONLY)) {
-        admins := k.ShowGroup(ctx, appId, "admin")
-        if utils.AddressIncluded(admins, owner) {
+    writableGroups := k.GetWritableByGroups(ctx, appId, tableName)
+    if len(writableGroups) == 0 {
+        return true
+    }
+
+    for _, group := range writableGroups {
+        members := k.ShowGroup(ctx, appId, group)
+        if utils.AddressIncluded(members, owner) {
             return true
         }
-        return false
     }
-    return true
+    return false
 }
 
 // for now, we check the filed non-null option

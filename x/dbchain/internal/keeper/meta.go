@@ -240,6 +240,25 @@ func (k Keeper) GetOption(ctx sdk.Context, appId uint, tableName string) ([]stri
     return options, nil
 }
 
+func (k Keeper) GetWritableByGroups(ctx sdk.Context, appId uint, tableName string) []string {
+    options, _ := k.GetOption(ctx, appId, tableName)
+    baseLen := len(types.TBLOPT_WRITABLE_BY)
+    var result []string
+
+    for _, option := range options {
+        if len(option) > (baseLen + 2) {
+            if option[:baseLen] == string(types.TBLOPT_WRITABLE_BY) {
+                g := option[baseLen:]
+                gl := len(g)
+                if g[0] == '(' && g[gl-1] == ')' {
+                    result = append(result, g[1:gl-1])
+                }
+            }
+        }
+    }
+    return result
+}
+
 func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldName string, action string, option string) {
     store := ctx.KVStore(k.storeKey)
     key := getColumnOptionsKey(appId, tableName, fieldName)

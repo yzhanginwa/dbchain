@@ -93,10 +93,10 @@ const (
 type TableOption string
 
 const (
-    TBLOPT_PUBLIC     TableOption = "public"
-    TBLOPT_ADMIN_ONLY TableOption = "admin-only"  // admin_only: the table can only be written by database admin
-    TBLOPT_UPDATABLE  TableOption = "updatable"
-    TBLOPT_DELETABLE  TableOption = "deletable"
+    TBLOPT_PUBLIC      TableOption = "public"
+    TBLOPT_WRITABLE_BY TableOption = "writable-by"  // writable-by: the table can only be written by members of writable-by group
+    TBLOPT_UPDATABLE   TableOption = "updatable"
+    TBLOPT_DELETABLE   TableOption = "deletable"
 )
 
 type FieldOption string
