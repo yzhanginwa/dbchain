@@ -44,7 +44,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdUpdateRow(cdc),
         GetCmdDeleteRow(cdc),
         GetCmdFreezeRow(cdc),
-        GetCmdCreateGroup(cdc),
+        GetCmdModifyGroup(cdc),
         GetCmdAddGroupMember(cdc),
         GetCmdAddFriend(cdc),
         GetCmdRespondFriend(cdc),
@@ -515,20 +515,21 @@ func GetCmdAddGroupMember(cdc * codec.Codec) *cobra.Command {
 //              //
 //////////////////
 
-func GetCmdCreateGroup(cdc * codec.Codec) *cobra.Command {
+func GetCmdModifyGroup(cdc * codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "create-group [appCode] [group]",
-        Short: "create group for a database",
-        Args:  cobra.ExactArgs(2),
+        Use:   "modify-group [appCode] [action] [group]",
+        Short: "add/drop group for a database",
+        Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            appCode := args[0]
-            groupName := args[1]
+            appCode   := args[0]
+            action    := args[1]
+            groupName := args[2]
 
-            msg := types.NewMsgCreateGroup(appCode, groupName, cliCtx.GetFromAddress())
+            msg := types.NewMsgModifyGroup(appCode, action, groupName, cliCtx.GetFromAddress())
             err := msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))

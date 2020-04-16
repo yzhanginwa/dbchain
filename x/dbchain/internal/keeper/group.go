@@ -41,21 +41,44 @@ func (k Keeper) GetSysAdmins(ctx sdk.Context) []string {
 //                //
 ////////////////////
 
-func (k Keeper) CreateGroup(ctx sdk.Context, appId uint, groupName string) error {
+func (k Keeper) ModifyGroup(ctx sdk.Context, appId uint, action string, groupName string) error {
     store := ctx.KVStore(k.storeKey)
     key := getGroupsKey(appId)
     var groups []string
     bz := store.Get([]byte(key))
     if bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &groups)
-        for _, grp := range groups {
-            if groupName  == grp {
-                return errors.New("Duplicate group name")
-            }
+    }
+
+    var position = -1
+    for i, grp := range groups {
+        if groupName  == grp {
+            position = i
+            break
         }
     }
 
-    groups = append(groups, groupName) 
+    if action == "add" {
+        if position > -1 {
+            return errors.New("Duplicate group name")
+        } else {
+            groups = append(groups, groupName)
+        }
+    } else {
+        if position > -1 {
+            if len(k.ShowGroups(ctx, appId)) > 0 {
+                return errors.New("Group is not empty")
+            }
+
+            l := len(groups)
+            groups[position] = groups[l-1]
+            groups[l-1] = ""
+            groups = groups[:l-1]
+        } else {
+            return errors.New("Group not exist")
+        }
+    }
+
     store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(groups))
     return nil
 }

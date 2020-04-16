@@ -5,36 +5,41 @@ import (
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-/////////////////
-//             //
-// MsgAddGroup //
-//             //
-/////////////////
+////////////////////
+//                //
+// MsgModifyGroup //
+//                //
+////////////////////
 
-type MsgCreateGroup struct {
+type MsgModifyGroup struct {
     AppCode string           `json:"app_code"`
+    Action string            `json:"action"`
     Group string             `json:"group"`
     Owner sdk.AccAddress     `json:"owner"`
 }
 
-func NewMsgCreateGroup(appCode string, group string, owner sdk.AccAddress) MsgCreateGroup {
-    return MsgCreateGroup {
+func NewMsgModifyGroup(appCode string, action string, group string, owner sdk.AccAddress) MsgModifyGroup {
+    return MsgModifyGroup {
         AppCode: appCode,
+        Action: action,
         Group: group,
         Owner: owner,
     }
 }
 
 // Route should return the name of the module
-func (msg MsgCreateGroup) Route() string { return RouterKey }
+func (msg MsgModifyGroup) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgCreateGroup) Type() string { return "create_group" }
+func (msg MsgModifyGroup) Type() string { return "modify_group" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgCreateGroup) ValidateBasic() error {
+func (msg MsgModifyGroup) ValidateBasic() error {
     if len(msg.AppCode) == 0 {
         return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
+    }
+    if msg.Action != "add" && msg.Action != "drop" {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "Wrong action")
     }
     if len(msg.Group) == 0 {
         return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "Group name cannot be empty")
@@ -46,11 +51,11 @@ func (msg MsgCreateGroup) ValidateBasic() error {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgCreateGroup) GetSignBytes() []byte {
+func (msg MsgModifyGroup) GetSignBytes() []byte {
     return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg MsgCreateGroup) GetSigners() []sdk.AccAddress {
+func (msg MsgModifyGroup) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }

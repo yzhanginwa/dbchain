@@ -50,8 +50,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgDeleteRow(ctx, keeper, msg)
         case MsgFreezeRow:
             return handleMsgFreezeRow(ctx, keeper, msg)
-        case MsgCreateGroup:
-            return handleMsgCreateGroup(ctx, keeper, msg)
+        case MsgModifyGroup:
+            return handleMsgModifyGroup(ctx, keeper, msg)
         case MsgAddGroupMember:
             return handleMsgAddGroupMember(ctx, keeper, msg)
         case MsgAddFriend:
@@ -352,7 +352,7 @@ func handleMsgFreezeRow(ctx sdk.Context, keeper Keeper, msg types.MsgFreezeRow) 
     return &sdk.Result{}, nil
 }
 
-func handleMsgCreateGroup(ctx sdk.Context, keeper Keeper, msg MsgCreateGroup) (*sdk.Result, error) {
+func handleMsgModifyGroup(ctx sdk.Context, keeper Keeper, msg MsgModifyGroup) (*sdk.Result, error) {
     appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Invalid app code")
@@ -368,7 +368,7 @@ func handleMsgCreateGroup(ctx sdk.Context, keeper Keeper, msg MsgCreateGroup) (*
         }
     }
 
-    err = keeper.CreateGroup(ctx, appId, msg.Group)
+    err = keeper.ModifyGroup(ctx, appId, msg.Action, msg.Group)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
     }
