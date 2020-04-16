@@ -423,9 +423,8 @@ func handleMsgRespondFriend(ctx sdk.Context, keeper Keeper, msg MsgRespondFriend
 func isSysAdmin(ctx sdk.Context, keeper Keeper, address sdk.AccAddress) bool {
     sysAdmins := keeper.GetSysAdmins(ctx)
     var is_sysAdmin = false
-    var strAddr = address.String()
     for _, addr := range sysAdmins {
-        if strAddr == addr {
+        if bytes.Compare(address, addr) == 0 {
             is_sysAdmin = true
             break
         }

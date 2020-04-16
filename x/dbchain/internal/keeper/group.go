@@ -23,10 +23,10 @@ func (k Keeper) CreateGenesisAdminGroup(ctx sdk.Context, genesisState types.Gene
     store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(adminAddresses))
 }
 
-func (k Keeper) GetSysAdmins(ctx sdk.Context) []string {
+func (k Keeper) GetSysAdmins(ctx sdk.Context) []sdk.AccAddress {
     store := ctx.KVStore(k.storeKey)
 
-    var sysAdmins []string
+    var sysAdmins []sdk.AccAddress
     key := getSysAdminGroupKey()
     bz := store.Get([]byte(key))
     if bz != nil {
@@ -65,8 +65,11 @@ func (k Keeper) ModifyGroup(ctx sdk.Context, appId uint, action string, groupNam
             groups = append(groups, groupName)
         }
     } else {
+        if groupName == "admin" {
+            return errors.New("You should not drop Admin group")
+        }
         if position > -1 {
-            if len(k.ShowGroups(ctx, appId)) > 0 {
+            if len(k.ShowGroup(ctx, appId, groupName)) > 0 {
                 return errors.New("Group is not empty")
             }
 
@@ -123,7 +126,11 @@ func (k Keeper) ModifyGroupMember(ctx sdk.Context, appId uint, group string, act
         }
     }
 
-    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(members))
+    if len(members) < 1 {
+        store.Delete([]byte(key))
+    } else {
+        store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(members))
+    }
     return nil
 }
 
