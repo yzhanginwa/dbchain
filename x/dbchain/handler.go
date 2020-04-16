@@ -12,6 +12,10 @@ import (
     "github.com/cosmos/cosmos-sdk/version"
 )
 
+const (
+    CommunityEdition = "dbChainCommunity"
+)
+
 var (
     AllowCreateApplication bool
 )
@@ -73,7 +77,7 @@ func handleMsgCreateApplication(ctx sdk.Context, keeper Keeper, msg MsgCreateApp
         }
     }
 
-    if version.Name == "dbChainCommunity" {
+    if version.Name == CommunityEdition {
         var apps = keeper.GetAllAppCode(ctx)
         if len(apps) > 9 {
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 10 apps allowed")
@@ -101,7 +105,7 @@ func handleMsgCreateTable(ctx sdk.Context, keeper Keeper, msg MsgCreateTable) (*
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
  
-    if version.Name == "dbChainCommunity" {
+    if version.Name == CommunityEdition {
         tables, err := keeper.GetTables(ctx, appId)
         if err != nil {
             return nil, err
@@ -281,7 +285,7 @@ func handleMsgInsertRow(ctx sdk.Context, keeper Keeper, msg types.MsgInsertRow) 
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Failed to parse row fields!")
     }
 
-    if version.Name == "dbChainCommunity" {
+    if version.Name == CommunityEdition {
         nextId, _ := keeper.PeekNextId(ctx, appId, msg.TableName)
         if nextId > 1000 {
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 1000 rows allowed")
