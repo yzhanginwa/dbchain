@@ -82,7 +82,11 @@ func (k Keeper) ModifyGroup(ctx sdk.Context, appId uint, action string, groupNam
         }
     }
 
-    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(groups))
+    if len(groups) < 1 {
+        store.Delete([]byte(key))
+    } else {
+        store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(groups))
+    }
     return nil
 }
 
