@@ -44,6 +44,9 @@ func (msg MsgModifyGroup) ValidateBasic() error {
     if len(msg.Group) == 0 {
         return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "Group name cannot be empty")
     }
+    if !validateMetaName(msg.Group) {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Group name is invalid")
+    }
     if msg.Owner.Empty() {
         return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
     }

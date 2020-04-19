@@ -1,6 +1,7 @@
 package types
 
 import (
+    "fmt"
     sdk "github.com/cosmos/cosmos-sdk/types"
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -46,8 +47,18 @@ func (msg MsgCreateTable) ValidateBasic() error {
     if len(msg.TableName) == 0 {
         return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name cannot be empty")
     }
+    if !validateMetaName(msg.TableName) {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name is invalid")
+    }
+
     if len(msg.Fields) ==0 {
         return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Fields cannot be empty")
+    }
+
+    for _, fld := range msg.Fields {
+        if !validateMetaName(fld) {
+            return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field name %s is invalid", fld))
+        }
     }
 
     return nil
@@ -159,6 +170,10 @@ func (msg MsgAddColumn) ValidateBasic() error {
     if len(msg.Field) ==0 {
         return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Field cannot be empty")
     }
+    if !validateMetaName(msg.Field) {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Field name is invalid")
+    }
+
 
     return nil
 }
@@ -276,6 +291,10 @@ func (msg MsgRenameColumn) ValidateBasic() error {
     if len(msg.NewField) ==0 {
         return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "New field cannot be empty")
     }
+    if !validateMetaName(msg.NewField) {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "New field name is invalid")
+    }
+
 
     return nil
 }
