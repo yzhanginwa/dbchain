@@ -125,10 +125,10 @@ func getIdFromDataKey(key string) string {
     return arr[5]
 }
 
-func getFieldNameFromDataKey(key string) string {
-    arr := strings.Split(key, ":")
-    return arr[4]
-}
+// func getFieldNameFromDataKey(key string) string {
+//     arr := strings.Split(key, ":")
+//     return arr[4]
+// }
 
 ////////////////////
 //                //

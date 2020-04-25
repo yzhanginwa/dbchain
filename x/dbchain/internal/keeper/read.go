@@ -105,15 +105,12 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
         for ; iter.Valid(); iter.Next() {
             key := iter.Key()
             keyString := string(key)
-            fn := getFieldNameFromDataKey(keyString)
-            if fn == field {
-                val := iter.Value()
-                k.cdc.MustUnmarshalBinaryBare(val, &mold)
-                if mold == value {
-                    id := getIdFromDataKey(keyString)
-                    u64, _ := strconv.ParseUint(id, 10, 64)
-                    result = append(result, uint(u64))
-                }
+            val := iter.Value()
+            k.cdc.MustUnmarshalBinaryBare(val, &mold)
+            if mold == value {
+                id := getIdFromDataKey(keyString)
+                u64, _ := strconv.ParseUint(id, 10, 64)
+                result = append(result, uint(u64))
             }
         }
     }
@@ -133,16 +130,12 @@ func (k Keeper) FindAll(ctx sdk.Context, appId uint, tableName string, owner sdk
     // full table scanning
     start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, "id")
     iter := store.Iterator([]byte(start), []byte(end))
-    var currentId = "0"
     for ; iter.Valid(); iter.Next() {
         key := iter.Key()
         keyString := string(key)
         id := getIdFromDataKey(keyString)
-        if id != currentId {
-            currentId = id
-            u64, _ := strconv.ParseUint(id, 10, 64)
-            result = append(result, uint(u64))
-        }
+        u64, _ := strconv.ParseUint(id, 10, 64)
+        result = append(result, uint(u64))
     }
 
     // if public table, return all ids
