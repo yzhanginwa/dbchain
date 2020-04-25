@@ -29,6 +29,7 @@ const (
     QueryGroup    = "group"
     QueryFriends  = "friends"
     QueryPendingFriends  = "pending_friends"
+    QueryQuerier  = "querier"
 )
 
 
@@ -74,6 +75,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryFriends(ctx, path[1:], req, keeper)
         case QueryPendingFriends:
             return queryPendingFriends(ctx, path[1:], req, keeper)
+        case QueryQuerier:
+            return queryQuerier(ctx, path[1:], req, keeper)
         default:
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown dbchain query endpoint")
         }
