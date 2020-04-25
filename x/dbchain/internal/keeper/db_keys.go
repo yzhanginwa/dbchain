@@ -109,25 +109,25 @@ func getIndexKey(appId uint, tableName string, fieldName string, value string) s
 }
 
 // to store the value of a fields on a record of a table.
-func getDataKey(appId uint,tableName string, id uint, fieldName string) string {
-    return fmt.Sprintf("%s:%d:%s:%s:%d:%s", KeyPrefixDb, appId, KeyPrefixData, tableName, id, fieldName)
+func getDataKey(appId uint, tableName string, fieldName string, id uint) string {
+    return fmt.Sprintf("%s:%d:%s:%s:%s:%d", KeyPrefixDb, appId, KeyPrefixData, tableName, fieldName, id)
 }
 
 // to get the start and end parameters of iterator which seeks certain value of a field
-func getDataIteratorStartAndEndKey(appId uint, tableName string) (string, string) {
-    start := fmt.Sprintf("%s:%d:%s:%s:", KeyPrefixDb, appId, KeyPrefixData, tableName)
-    end   := fmt.Sprintf("%s:%d:%s:%s;", KeyPrefixDb, appId, KeyPrefixData, tableName)
+func getFieldDataIteratorStartAndEndKey(appId uint, tableName string, fieldName string) (string, string) {
+    start := fmt.Sprintf("%s:%d:%s:%s:%s:", KeyPrefixDb, appId, KeyPrefixData, tableName, fieldName)
+    end   := fmt.Sprintf("%s:%d:%s:%s:%s;", KeyPrefixDb, appId, KeyPrefixData, tableName, fieldName)
     return start, end
 }
 
 func getIdFromDataKey(key string) string {
     arr := strings.Split(key, ":")
-    return arr[4]
+    return arr[5]
 }
 
 func getFieldNameFromDataKey(key string) string {
     arr := strings.Split(key, ":")
-    return arr[5]
+    return arr[4]
 }
 
 ////////////////////

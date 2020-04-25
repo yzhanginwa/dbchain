@@ -26,7 +26,7 @@ func (k Keeper) DoFind(ctx sdk.Context, appId uint, tableName string, id uint) (
     var value string
 
     for _, fieldName := range fieldNames {
-        key := getDataKey(appId, tableName, id, fieldName)
+        key := getDataKey(appId, tableName, fieldName, id)
         bz := store.Get([]byte(key)) 
         if bz != nil {
             k.cdc.MustUnmarshalBinaryBare(bz, &value)
@@ -48,7 +48,7 @@ func (k Keeper) FindField(ctx sdk.Context, appId uint, tableName string, id uint
         return "", errors.New("Id cannot be 0")
     }
 
-    key := getDataKey(appId, tableName, id, fieldName)
+    key := getDataKey(appId, tableName, fieldName, id)
     bz := store.Get([]byte(key))
     if bz != nil {
         var value string
@@ -99,7 +99,7 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
         }
     } else {
         // partial table scanning
-        start, end := getDataIteratorStartAndEndKey(appId, tableName)
+        start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, field)
         iter := store.Iterator([]byte(start), []byte(end))
         var mold string
         for ; iter.Valid(); iter.Next() {
@@ -131,7 +131,7 @@ func (k Keeper) FindAll(ctx sdk.Context, appId uint, tableName string, owner sdk
     var result []uint
 
     // full table scanning
-    start, end := getDataIteratorStartAndEndKey(appId, tableName)
+    start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, "id")
     iter := store.Iterator([]byte(start), []byte(end))
     var currentId = "0"
     for ; iter.Valid(); iter.Next() {
@@ -171,7 +171,7 @@ func (k Keeper) filterOwnIds(ctx sdk.Context, appId uint,  tableName string, ids
     var result = []uint{}
     var mold string
     for _, id := range ids {
-        key := getDataKey(appId, tableName, uint(id), "created_by")
+        key := getDataKey(appId, tableName, "created_by", uint(id))
         bz := store.Get([]byte(key))
         if bz != nil {
             k.cdc.MustUnmarshalBinaryBare(bz, &mold)
