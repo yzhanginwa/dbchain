@@ -2,6 +2,7 @@ package utils
 
 import (
     "testing"
+    "bytes"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/stretchr/testify/require"
 )
@@ -51,4 +52,27 @@ func TestSplitFieldName(t *testing.T) {
 
     tableName, ok = GetTableNameFromForeignKey("_id")
     require.Equal(t, ok, false)
+}
+
+func TestConvertIntToByteArray(t *testing.T) {
+    cases := []struct {
+        matching bool
+        number int64
+        byteArray []byte
+    }{
+         { false, 1,   []byte{1, 0, 0, 0, 0, 0, 0, 0} },
+         { true,  1,   []byte{0, 0, 0, 0, 0, 0, 0, 1} },
+         { true,  255, []byte{0, 0, 0, 0, 0, 0, 0, 255} },
+         { true,  256, []byte{0, 0, 0, 0, 0, 0, 1, 0} },
+         { true,  257, []byte{0, 0, 0, 0, 0, 0, 1, 1} },
+    }
+
+    for _, tc := range cases {
+        ary := IntToByteArray(tc.number)
+        result := (bytes.Compare(ary, tc.byteArray) == 0)
+        require.Equal(t, tc.matching, result)
+
+        n := ByteArrayToInt(tc.byteArray)
+        require.Equal(t, tc.matching, (n == tc.number))
+    }
 }
