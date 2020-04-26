@@ -14,14 +14,8 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
 )
 
-func (k Keeper) GetDatabaseAdmins(ctx sdk.Context, appCode string) []sdk.AccAddress {
-    // TODO: we'll have a better way to maintain and retrive a group of database specific admins
-    database, err := k.getDatabase(ctx, appCode)
-    if err != nil {
-        return []sdk.AccAddress{}
-    } else {
-        return []sdk.AccAddress{database.Owner}
-    }
+func (k Keeper) GetDatabaseAdmins(ctx sdk.Context, appId uint) []sdk.AccAddress {
+    return k.ShowGroup(ctx, appId, "admin")
 }
 
 func (k Keeper) GetAllAppCode(ctx sdk.Context) ([]string) {

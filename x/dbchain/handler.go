@@ -101,7 +101,7 @@ func handleMsgCreateTable(ctx sdk.Context, keeper Keeper, msg MsgCreateTable) (*
         return nil, err
     }
 
-    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
  
@@ -128,7 +128,7 @@ func handleMsgDropTable(ctx sdk.Context, keeper Keeper, msg MsgDropTable) (*sdk.
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
 
@@ -145,7 +145,7 @@ func handleMsgAddColumn(ctx sdk.Context, keeper Keeper, msg MsgAddColumn) (*sdk.
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
 
@@ -163,7 +163,7 @@ func handleMsgDropColumn(ctx sdk.Context, keeper Keeper, msg MsgDropColumn) (*sd
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
     if !keeper.HasField(ctx, appId, msg.TableName, msg.Field) {
@@ -179,7 +179,7 @@ func handleMsgRenameColumn(ctx sdk.Context, keeper Keeper, msg MsgRenameColumn) 
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
     if !keeper.HasField(ctx, appId, msg.TableName, msg.OldField) {
@@ -200,7 +200,7 @@ func handleMsgCreateIndex(ctx sdk.Context, keeper Keeper, msg MsgCreateIndex) (*
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
     if !keeper.HasField(ctx, appId, msg.TableName, msg.Field) {
@@ -216,7 +216,7 @@ func handleMsgDropIndex(ctx sdk.Context, keeper Keeper, msg MsgDropIndex) (*sdk.
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
     if !keeper.HasField(ctx, appId, msg.TableName, msg.Field) {
@@ -242,7 +242,7 @@ func handleMsgModifyOption(ctx sdk.Context, keeper Keeper, msg MsgModifyOption) 
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
     if !keeper.HasTable(ctx, appId, msg.TableName) {
@@ -259,7 +259,7 @@ func handleMsgModifyColumnOption(ctx sdk.Context, keeper Keeper, msg MsgModifyCo
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
     if !keeper.HasTable(ctx, appId, msg.TableName) {
@@ -367,7 +367,7 @@ func handleMsgModifyGroup(ctx sdk.Context, keeper Keeper, msg MsgModifyGroup) (*
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Not authorized")
         }
     } else {
-        if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
+        if !isAdmin(ctx, keeper, appId, msg.Owner) {
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Not authorized")
         }
     }
@@ -390,7 +390,7 @@ func handleMsgModifyGroupMember(ctx sdk.Context, keeper Keeper, msg MsgModifyGro
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Not authorized")
         }
     } else {
-        if !isAdmin(ctx, keeper, msg.AppCode, msg.Owner) {
+        if !isAdmin(ctx, keeper, appId, msg.Owner) {
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Not authorized")
         }
     }
@@ -436,8 +436,8 @@ func isSysAdmin(ctx sdk.Context, keeper Keeper, address sdk.AccAddress) bool {
     return is_sysAdmin
 }
 
-func isAdmin(ctx sdk.Context, keeper Keeper, appCode string, address sdk.AccAddress) bool {
-    adminAddresses := keeper.GetDatabaseAdmins(ctx, appCode)
+func isAdmin(ctx sdk.Context, keeper Keeper, appId uint, address sdk.AccAddress) bool {
+    adminAddresses := keeper.GetDatabaseAdmins(ctx, appId)
     var is_admin = false
     for _, addr := range adminAddresses {
         if bytes.Compare(address, addr) == 0 {
