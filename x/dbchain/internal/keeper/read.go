@@ -3,7 +3,6 @@ package keeper
 import (
     "fmt"
     "errors"
-    "strconv"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
@@ -26,8 +25,8 @@ func (k Keeper) DoFind(ctx sdk.Context, appId uint, tableName string, id uint) (
     var value string
 
     for _, fieldName := range fieldNames {
-        key := getDataKey(appId, tableName, fieldName, id)
-        bz := store.Get([]byte(key)) 
+        key := getDataKeyBytes(appId, tableName, fieldName, id)
+        bz := store.Get(key)
         if bz != nil {
             k.cdc.MustUnmarshalBinaryBare(bz, &value)
             fields[fieldName] = value
@@ -48,8 +47,8 @@ func (k Keeper) FindField(ctx sdk.Context, appId uint, tableName string, id uint
         return "", errors.New("Id cannot be 0")
     }
 
-    key := getDataKey(appId, tableName, fieldName, id)
-    bz := store.Get([]byte(key))
+    key := getDataKeyBytes(appId, tableName, fieldName, id)
+    bz := store.Get(key)
     if bz != nil {
         var value string
         k.cdc.MustUnmarshalBinaryBare(bz, &value)
@@ -104,13 +103,11 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
         var mold string
         for ; iter.Valid(); iter.Next() {
             key := iter.Key()
-            keyString := string(key)
             val := iter.Value()
             k.cdc.MustUnmarshalBinaryBare(val, &mold)
             if mold == value {
-                id := getIdFromDataKey(keyString)
-                u64, _ := strconv.ParseUint(id, 10, 64)
-                result = append(result, uint(u64))
+                id := getIdFromDataKey(key)
+                result = append(result, id)
             }
         }
     }
@@ -132,10 +129,8 @@ func (k Keeper) FindAll(ctx sdk.Context, appId uint, tableName string, owner sdk
     iter := store.Iterator([]byte(start), []byte(end))
     for ; iter.Valid(); iter.Next() {
         key := iter.Key()
-        keyString := string(key)
-        id := getIdFromDataKey(keyString)
-        u64, _ := strconv.ParseUint(id, 10, 64)
-        result = append(result, uint(u64))
+        id := getIdFromDataKey(key)
+        result = append(result, id)
     }
 
     // if public table, return all ids
@@ -164,8 +159,8 @@ func (k Keeper) filterOwnIds(ctx sdk.Context, appId uint,  tableName string, ids
     var result = []uint{}
     var mold string
     for _, id := range ids {
-        key := getDataKey(appId, tableName, "created_by", uint(id))
-        bz := store.Get([]byte(key))
+        key := getDataKeyBytes(appId, tableName, "created_by", uint(id))
+        bz := store.Get(key)
         if bz != nil {
             k.cdc.MustUnmarshalBinaryBare(bz, &mold)
             if mold == ownerString {

@@ -3,6 +3,7 @@ package keeper
 import (
     "fmt"
     "strings"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
 )
 
 const (
@@ -109,8 +110,10 @@ func getIndexKey(appId uint, tableName string, fieldName string, value string) s
 }
 
 // to store the value of a fields on a record of a table.
-func getDataKey(appId uint, tableName string, fieldName string, id uint) string {
-    return fmt.Sprintf("%s:%d:%s:%s:%s:%d", KeyPrefixDb, appId, KeyPrefixData, tableName, fieldName, id)
+func getDataKeyBytes(appId uint, tableName string, fieldName string, id uint) []byte {
+    base := fmt.Sprintf("%s:%d:%s:%s:%s:", KeyPrefixDb, appId, KeyPrefixData, tableName, fieldName)
+    idBytes := utils.IntToByteArray(int64(id))
+    return append([]byte(base), idBytes...)
 }
 
 // to get the start and end parameters of iterator which seeks certain value of a field
@@ -120,9 +123,13 @@ func getFieldDataIteratorStartAndEndKey(appId uint, tableName string, fieldName 
     return start, end
 }
 
-func getIdFromDataKey(key string) string {
-    arr := strings.Split(key, ":")
-    return arr[5]
+func getIdFromDataKey(key []byte) uint {
+    length := len(key)
+    if length < 8 {
+        panic("key length cannot less than 8")
+    }
+    id := utils.ByteArrayToInt(key[length-8:])  // 8 = 64 / 8
+    return uint(id)
 }
 
 // func getFieldNameFromDataKey(key string) string {

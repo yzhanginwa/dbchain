@@ -108,8 +108,8 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
     for _, id := range ids {
         record := map[string]string{}
         for _, f := range builder.Select {
-            key := getDataKey(appId, builder.Table, f, id)
-            bz := store.Get([]byte(key))
+            key := getDataKeyBytes(appId, builder.Table, f, id)
+            bz := store.Get(key)
             var value string
             if bz != nil {
                 keeper.cdc.MustUnmarshalBinaryBare(bz, &value)

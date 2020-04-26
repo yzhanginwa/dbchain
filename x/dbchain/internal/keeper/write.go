@@ -66,8 +66,8 @@ func (k Keeper) Write(ctx sdk.Context, appId uint, tableName string, id uint, fi
 
     for _, fieldName := range fieldNames {
         if value, ok := fields[fieldName]; ok {
-            key := getDataKey(appId, tableName, fieldName, id)
-            store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(value)) 
+            key := getDataKeyBytes(appId, tableName, fieldName, id)
+            store.Set(key, k.cdc.MustMarshalBinaryBare(value))
         }
     }
 
@@ -87,8 +87,8 @@ func (k Keeper) Delete(ctx sdk.Context, appId uint, tableName string, id uint, o
     }
 
     for _, fieldName := range fieldNames {
-        key := getDataKey(appId, tableName, fieldName, id)
-        store.Delete([]byte(key)) 
+        key := getDataKeyBytes(appId, tableName, fieldName, id)
+        store.Delete(key)
     }
 
     // TODO: to remove the related indexes
@@ -102,15 +102,15 @@ func (k Keeper) Freeze(ctx sdk.Context, appId uint, tableName string, id uint, o
         return 0, errors.New("Id cannot be empty")
     }
 
-    keyAt := getDataKey(appId, tableName, types.FLD_FROZEN_AT, id)
-    bz := store.Get([]byte(keyAt))
+    keyAt := getDataKeyBytes(appId, tableName, types.FLD_FROZEN_AT, id)
+    bz := store.Get(keyAt)
     if bz != nil {
         return id, nil
     }
-    store.Set([]byte(keyAt), k.cdc.MustMarshalBinaryBare(other.GetCurrentBlockTime().String()))
+    store.Set(keyAt, k.cdc.MustMarshalBinaryBare(other.GetCurrentBlockTime().String()))
 
-    keyBy := getDataKey(appId, tableName, types.FLD_FROZEN_BY, id)
-    store.Set([]byte(keyBy), k.cdc.MustMarshalBinaryBare(owner.String()))
+    keyBy := getDataKeyBytes(appId, tableName, types.FLD_FROZEN_BY, id)
+    store.Set(keyBy, k.cdc.MustMarshalBinaryBare(owner.String()))
 
     // TODO: to remove the related indexes
     return id, nil
