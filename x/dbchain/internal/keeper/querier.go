@@ -212,12 +212,7 @@ func queryTables(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    tables, err := keeper.GetTables(ctx, appId)
-
-    if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Can not get table names")
-    }
-
+    tables := keeper.GetTables(ctx, appId)
     res, err := codec.MarshalJSONIndent(keeper.cdc, tables)
     if err != nil {
         panic("could not marshal result to JSON")

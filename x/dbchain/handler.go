@@ -106,10 +106,7 @@ func handleMsgCreateTable(ctx sdk.Context, keeper Keeper, msg MsgCreateTable) (*
     }
  
     if version.Name == CommunityEdition {
-        tables, err := keeper.GetTables(ctx, appId)
-        if err != nil {
-            return nil, err
-        }
+        tables := keeper.GetTables(ctx, appId)
         if len(tables) > 29 {
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 30 tables allowed")
         }

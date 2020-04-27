@@ -15,16 +15,16 @@ import (
 //                         //
 /////////////////////////////
 
-func (k Keeper) GetTables(ctx sdk.Context, appId uint) ([]string, error) {
+func (k Keeper) GetTables(ctx sdk.Context, appId uint) []string {
     store := ctx.KVStore(k.storeKey)
     tablesKey := getTablesKey(appId)
     bz := store.Get([]byte(tablesKey))
     if bz == nil {
-        return nil, errors.New("No tables found")
+        return []string{}
     }
     var tableNames []string
     k.cdc.MustUnmarshalBinaryBare(bz, &tableNames)
-    return tableNames, nil
+    return tableNames
 }
 
 
