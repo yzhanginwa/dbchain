@@ -30,3 +30,12 @@ func AddressIncluded(addresses []sdk.AccAddress, address sdk.AccAddress) bool {
     }
     return false
 }
+
+func StringIncluded(strSlice []string, str string) bool {
+    for _, item := range strSlice {
+        if item == str {
+            return true
+        }
+    }
+    return false
+}

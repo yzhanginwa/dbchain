@@ -40,7 +40,24 @@ func TestAddressIncluded(t *testing.T) {
     }
 
     for _, tc := range cases {
-        result := AddressIncluded(tc.slice, tc.item) 
+        result := AddressIncluded(tc.slice, tc.item)
+        require.Equal(t, result, tc.included)
+    }
+}
+
+func TestStringIncluded(t *testing.T) {
+    cases := []struct {
+        included bool
+        slice []string
+        item  string
+    }{
+         { true,  []string{"aaa", "bbb", "ccc"}, "aaa" },
+         { false, []string{"aaa"}, "ccc"},
+         { false, []string{}, "aaa"},
+    }
+
+    for _, tc := range cases {
+        result := StringIncluded(tc.slice, tc.item)
         require.Equal(t, result, tc.included)
     }
 }

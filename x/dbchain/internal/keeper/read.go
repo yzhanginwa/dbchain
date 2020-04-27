@@ -73,7 +73,7 @@ func (k Keeper) Find(ctx sdk.Context, appId uint, tableName string, id uint, own
 }
 
 // Find by an attribute in the r.Fields
-func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field string,  value string, owner sdk.AccAddress) []uint {
+func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field string,  values []string, owner sdk.AccAddress) []uint {
     store := ctx.KVStore(k.storeKey)
 
     var hasIndex bool
@@ -87,14 +87,17 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
         }
     }
 
-    var result []uint
+    results := []uint{}
     if hasIndex {
-        key := getIndexKey(appId, tableName, field, value)
-        bz := store.Get([]byte(key))
-        if bz == nil {
-            result = []uint{}
-        } else {
-            k.cdc.MustUnmarshalBinaryBare(bz, &result)
+        for i := 0; i < len(values); i++ {
+            value := values[i]
+            key := getIndexKey(appId, tableName, field, value)
+            bz := store.Get([]byte(key))
+            var result []uint
+            if bz != nil {
+                k.cdc.MustUnmarshalBinaryBare(bz, &result)
+                results = append(results, result...)
+            }
         }
     } else {
         // partial table scanning
@@ -105,18 +108,18 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
             key := iter.Key()
             val := iter.Value()
             k.cdc.MustUnmarshalBinaryBare(val, &mold)
-            if mold == value {
+            if utils.StringIncluded(values, mold) {
                 id := getIdFromDataKey(key)
-                result = append(result, id)
+                results = append(results, id)
             }
         }
     }
 
     // if public table, return all ids
     if k.isTablePublic(ctx, appId, tableName) {
-        return result
+        return results
     } else {
-        return k.filterOwnIds(ctx, appId, tableName, result, owner)
+        return k.filterOwnIds(ctx, appId, tableName, results, owner)
     }
 }
 

@@ -379,7 +379,7 @@ func queryIdsBy(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
     tableName := path[2]
     fieldName := path[3]
     value := path[4]
-    ids := keeper.FindBy(ctx, appId, tableName, fieldName, value, addr)
+    ids := keeper.FindBy(ctx, appId, tableName, fieldName, []string{value}, addr)
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, ids)
     if err != nil {

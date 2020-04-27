@@ -168,7 +168,7 @@ func (k Keeper) validateInsertion(ctx sdk.Context, appId uint, tableName string,
         if(utils.ItemExists(fieldOptions, string(types.FLDOPT_UNIQUE))) {
             if value, ok := fields[fieldName]; ok {
                 if(len(value)>0) {
-                    ids := k.FindBy(ctx, appId, tableName, fieldName, value, owner)
+                    ids := k.FindBy(ctx, appId, tableName, fieldName, []string{value}, owner)
                     if len(ids) > 0 {
                         return(false)
                     }
