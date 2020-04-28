@@ -76,7 +76,7 @@ func (k Keeper) Find(ctx sdk.Context, appId uint, tableName string, id uint, own
 func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field string,  values []string, owner sdk.AccAddress) []uint {
     store := ctx.KVStore(k.storeKey)
 
-    var hasIndex bool
+    hasIndex := false
     indexFields, err := k.GetIndex(ctx, appId, tableName)
     if err == nil {
         for _, item := range(indexFields) {
@@ -112,6 +112,56 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
                 id := getIdFromDataKey(key)
                 results = append(results, id)
             }
+        }
+    }
+
+    // if public table, return all ids
+    if k.isTablePublic(ctx, appId, tableName) {
+        return results
+    } else {
+        return k.filterOwnIds(ctx, appId, tableName, results, owner)
+    }
+}
+
+func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field string, operator string, value string, owner sdk.AccAddress) []uint {
+    //TODO: consider if the field has index and how to make use of it
+    store := ctx.KVStore(k.storeKey)
+    results := []uint{}
+
+    start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, field)
+    iter := store.Iterator([]byte(start), []byte(end))
+    var mold string
+    for ; iter.Valid(); iter.Next() {
+        key := iter.Key()
+        val := iter.Value()
+        k.cdc.MustUnmarshalBinaryBare(val, &mold)
+
+        matching := false
+        switch operator {
+        case "=", "==" :
+            if mold == value {
+                matching = true
+            }
+        case ">" :
+            if mold > value {
+                matching = true
+            }
+        case ">=" :
+            if mold >= value {
+                matching = true
+            }
+        case "<" :
+            if mold < value {
+                matching = true
+            }
+        case "<=" :
+            if mold <= value {
+                matching = true
+            }
+        }
+        if matching {
+            id := getIdFromDataKey(key)
+            results = append(results, id)
         }
     }
 

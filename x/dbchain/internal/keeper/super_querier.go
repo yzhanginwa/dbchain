@@ -2,6 +2,7 @@ package keeper
 
 import (
     "fmt"
+    "strings"
     "strconv"
     "github.com/mr-tron/base58"
     "encoding/json"
@@ -13,9 +14,9 @@ import (
 )
 
 type Condition struct {
-    Left string
+    Field string
     Operator string
-    Right string
+    Value string
 }
 
 type QuerierBuilder struct {
@@ -58,20 +59,28 @@ func queryQuerier(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Failed to parse querier objects!")
     }
    
-    result, err := querierSuperHandler(ctx, keeper, appId, querierObjs, addr)
+    result, singleRecord, err := querierSuperHandler(ctx, keeper, appId, querierObjs, addr)
     if err != nil {
         return nil, err
     }
         
-    res, err := codec.MarshalJSONIndent(keeper.cdc, result)
-    if err != nil {
-        panic("could not marshal result to JSON")
-    }
+    if singleRecord {
+        res, err := codec.MarshalJSONIndent(keeper.cdc, result[0])
+        if err != nil {
+            panic("could not marshal result to JSON")
+        }
 
-    return res, nil
+        return res, nil
+    } else {
+        res, err := codec.MarshalJSONIndent(keeper.cdc, result)
+        if err != nil {
+            panic("could not marshal result to JSON")
+        }
+        return res, nil
+    }
 }
 
-func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs [](map[string]string), owner sdk.AccAddress) ([](map[string]string), error) {
+func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs [](map[string]string), owner sdk.AccAddress) ([](map[string]string), bool, error) {
     builders := []QuerierBuilder{}
     j := -1
     
@@ -82,18 +91,25 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
             builders = append(builders, QuerierBuilder{})
             j += 1
             builders[j].Table = qo["table"]
-        case "select" :
-            fields := []string{}
-            if err := json.Unmarshal([]byte(qo["fields"]), &fields); err != nil {
-                return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Failed to parse fields!")
-            }
+        case "select":
+            fields := strings.Split(qo["fields"], ",")
             builders[j].Select = fields
-        case "find" :
+        case "find":
            id, err := strconv.Atoi(qo["id"])
            if err != nil {
-               return nil, err
+               return nil, false, err
            }
            builders[j].Ids = []uint{uint(id)}
+        case "first":
+           builders[j].Limit = 1
+        case "equal":
+           cond := Condition{
+               Field: qo["field"],
+               Operator: "=",
+               Value: qo["value"],
+           }
+           where := []Condition{cond}
+           builders[j].Where = where
         }
     }
 
@@ -113,7 +129,7 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
             } else if keeper.HasField(ctx, appId, curTable, fld2) {
                 builders[j].Ids = getIdsFromRightToLeft(ctx, keeper, appId, ids, curTable, fld2, owner)
             } else {
-                return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Association does not exist!")
+                return nil, false, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Association does not exist!")
             }
         }
 
@@ -122,23 +138,30 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
                 builders[j].Ids = keeper.FindAll(ctx, appId, builders[j].Table, owner)
             }
         } else {
-            // get ids with the where clause
+            //TODO: we support one condition for now. Will support the logical operator and with multiple conditions
+            cond := builders[j].Where[0]
+            builders[j].Ids = keeper.Where(ctx, appId, builders[j].Table, cond.Field, cond.Operator, cond.Value, owner)
         }
-        ids = builders[j].Ids
+
+        if builders[j].Limit == 0 {
+            ids = builders[j].Ids
+        } else {
+            ids = builders[j].Ids[:builders[j].Limit]
+        }
     }
 
     j -= 1
     if len(builders[j].Select) == 0 {
         table, err := keeper.GetTable(ctx, appId, builders[j].Table)
         if err != nil {
-            return nil, err
+            return nil, false, err
         }
         builders[j].Select = table.Fields
     }
 
     store := ctx.KVStore(keeper.storeKey)
     var result = [](map[string]string){}
-    for _, id := range builders[j].Ids {
+    for _, id := range ids {
         record := map[string]string{}
         for _, f := range builders[j].Select {
             key := getDataKeyBytes(appId, builders[j].Table, f, id)
@@ -151,7 +174,11 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
         }
         result = append(result, record)
     }
-    return result, nil
+    singleRecord := false
+    if builders[j].Limit == 1 {
+        singleRecord = true
+    }
+    return result, singleRecord, nil
 }
 
 //////////////////
