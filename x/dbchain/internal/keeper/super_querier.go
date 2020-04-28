@@ -117,14 +117,12 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
             }
         }
 
-        if len(builders[j].Ids) != 1 {
-            if len(builders[j].Where) == 0 {
-                if len(builders[j].Ids) == 0 {
-                    builders[j].Ids = keeper.FindAll(ctx, appId, builders[j].Table, owner)
-                }
-            } else {
-                // get ids with the where clause
+        if len(builders[j].Where) == 0 {
+            if 0 == j && 0 == len(builders[j].Ids) {
+                builders[j].Ids = keeper.FindAll(ctx, appId, builders[j].Table, owner)
             }
+        } else {
+            // get ids with the where clause
         }
         ids = builders[j].Ids
     }
