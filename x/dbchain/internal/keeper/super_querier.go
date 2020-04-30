@@ -25,7 +25,7 @@ type QuerierBuilder struct {
     Select []string
     Where []Condition
     Order []string
-    Limit uint
+    Limit int
 }
 
 
@@ -59,28 +59,19 @@ func queryQuerier(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Failed to parse querier objects!")
     }
    
-    result, singleRecord, err := querierSuperHandler(ctx, keeper, appId, querierObjs, addr)
+    result, err := querierSuperHandler(ctx, keeper, appId, querierObjs, addr)
     if err != nil {
         return nil, err
     }
         
-    if singleRecord {
-        res, err := codec.MarshalJSONIndent(keeper.cdc, result[0])
-        if err != nil {
-            panic("could not marshal result to JSON")
-        }
-
-        return res, nil
-    } else {
-        res, err := codec.MarshalJSONIndent(keeper.cdc, result)
-        if err != nil {
-            panic("could not marshal result to JSON")
-        }
-        return res, nil
+    res, err := codec.MarshalJSONIndent(keeper.cdc, result)
+    if err != nil {
+        panic("could not marshal result to JSON")
     }
+    return res, nil
 }
 
-func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs [](map[string]string), owner sdk.AccAddress) ([](map[string]string), bool, error) {
+func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs [](map[string]string), owner sdk.AccAddress) ([](map[string]string), error) {
     builders := []QuerierBuilder{}
     j := -1
     
@@ -97,7 +88,7 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
         case "find":
            id, err := strconv.Atoi(qo["id"])
            if err != nil {
-               return nil, false, err
+               return nil, err
            }
            builders[j].Ids = []uint{uint(id)}
         case "first":
@@ -129,7 +120,7 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
             } else if keeper.HasField(ctx, appId, curTable, fld2) {
                 builders[j].Ids = getIdsFromRightToLeft(ctx, keeper, appId, ids, curTable, fld2, owner)
             } else {
-                return nil, false, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Association does not exist!")
+                return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Association does not exist!")
             }
         }
 
@@ -143,10 +134,10 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
             builders[j].Ids = keeper.Where(ctx, appId, builders[j].Table, cond.Field, cond.Operator, cond.Value, owner)
         }
 
-        if builders[j].Limit == 0 {
+        if builders[j].Limit == 0 || builders[j].Limit >= len(builders[j].Ids) {
             ids = builders[j].Ids
         } else {
-            ids = builders[j].Ids[:builders[j].Limit]
+            ids = builders[j].Ids[:(builders[j].Limit)]
         }
     }
 
@@ -154,7 +145,7 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
     if len(builders[j].Select) == 0 {
         table, err := keeper.GetTable(ctx, appId, builders[j].Table)
         if err != nil {
-            return nil, false, err
+            return nil, err
         }
         builders[j].Select = table.Fields
     }
@@ -174,11 +165,7 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
         }
         result = append(result, record)
     }
-    singleRecord := false
-    if builders[j].Limit == 1 {
-        singleRecord = true
-    }
-    return result, singleRecord, nil
+    return result, nil
 }
 
 //////////////////
