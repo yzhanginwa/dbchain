@@ -95,6 +95,8 @@ type TableOption string
 const (
     TBLOPT_PUBLIC      TableOption = "public"
     TBLOPT_WRITABLE_BY TableOption = "writable-by"  // writable-by: the table can only be written by members of writable-by group
+    TBLOPT_PAYMENT     TableOption = "payment"      // payment: this table needs to have fields "sender", "recipient", token_name, and "amount".
+                                                    //          after the a row is saved, the amount of token_name is sent from sender to recipient
     TBLOPT_UPDATABLE   TableOption = "updatable"
     TBLOPT_DELETABLE   TableOption = "deletable"
 )

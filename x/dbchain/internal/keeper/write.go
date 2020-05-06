@@ -32,12 +32,17 @@ func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields typ
         return 0, errors.New(fmt.Sprintf("Failed to get id for table %s", tableName))
     }
 
+    if(!k.preprocessPayment(ctx, appId, tableName, fields, owner)) {
+        return 0, errors.New(fmt.Sprintf("Failed validation of record of payment table %s", tableName))
+    }
+
     // to set the 2 special fields
     fields["id"] = strconv.Itoa(int(id))
     fields["created_by"] = owner.String()
     fields["created_at"] = other.GetCurrentBlockTime().String()
 
     k.Write(ctx, appId, tableName, id, fields, owner)
+
     k.updateIndex(ctx, appId, tableName, id, fields)
     return id, nil
 }
@@ -142,6 +147,55 @@ func (k Keeper) haveWritePermission(ctx sdk.Context, appId uint, tableName strin
     return false
 }
 
+func (k Keeper) preprocessPayment(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {
+    if !k.isTablePayment(ctx, appId, tableName) {
+        return true
+    }
+
+    fieldNames, err := k.getTableFields(ctx, appId, tableName)
+    if err != nil {
+        return false
+    }
+
+    var senderRecipient map[string]sdk.AccAddress
+    var amount int
+
+    rounds := 0   // used to count the collecting of sender, recipient, and amount
+    for _, fieldName := range fieldNames {
+        if fieldName == "sender" || fieldName == "recipient" {
+            rounds += 1
+            if value, ok := fields[fieldName]; ok {
+                address, err := sdk.AccAddressFromBech32(value)
+                if err == nil {
+                    senderRecipient[fieldName] = address
+                } else {
+                    return false
+                }
+            } else {
+                return false
+            }
+        } else if fieldName == "amount" {
+            rounds += 1
+            if value, ok := fields[fieldName]; ok {
+                if amount, ok = validateAmount(value); !ok {
+                    return false
+                }
+            } else {
+                return false
+            }
+        }
+    }
+    if rounds != 3 {
+        return false
+    }
+    coin := sdk.NewCoin("dbctoken", sdk.NewInt(int64(amount)))
+    err = k.CoinKeeper.SendCoins(ctx, senderRecipient["sender"], senderRecipient["recipient"], sdk.Coins{coin})
+    if err != nil {
+        return false
+    }
+    return true
+}
+
 // for now, we check the filed non-null option
 func (k Keeper) validateInsertion(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {
     fieldNames, err := k.getTableFields(ctx, appId, tableName)
@@ -223,4 +277,22 @@ func (k Keeper) tryToPinFile(ctx sdk.Context, appId uint, tableName string, fiel
         }
     }
     return true
+}
+
+func (k Keeper) isTablePayment(ctx sdk.Context, appId uint, tableName string) bool {
+    tableOptions, _ := k.GetOption(ctx, appId, tableName)
+    return utils.ItemExists(tableOptions, string(types.TBLOPT_PAYMENT))
+}
+
+func validateAmount(amount string) (int, bool) {
+    i, err := strconv.Atoi(amount)
+    if err != nil {
+        return 0, false
+    }
+
+    if i > 0 {
+        return i, true
+    } else {
+        return 0, false
+    }
 }
