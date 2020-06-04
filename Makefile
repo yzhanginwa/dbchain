@@ -23,11 +23,19 @@ BUILD_FLAGS2 := -ldflags '$(ldflags2)'
 all: install
 
 install: go.sum
-	go install  $(BUILD_FLAGS1) ./cmd/dbchaind
-	go install  $(BUILD_FLAGS1) ./cmd/dbchaincli
+	make -j 2 daemon cli
 
 installc: go.sum
+	make -j 2 daemonc clic
+
+daemon:
+	go install  $(BUILD_FLAGS1) ./cmd/dbchaind
+cli:
+	go install  $(BUILD_FLAGS1) ./cmd/dbchaincli
+
+daemonc:
 	go install  $(BUILD_FLAGS2) ./cmd/dbchaind
+clic:
 	go install  $(BUILD_FLAGS2) ./cmd/dbchaincli
 
 go.sum: go.mod
