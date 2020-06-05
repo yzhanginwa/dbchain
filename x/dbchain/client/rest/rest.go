@@ -27,4 +27,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/group/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "groupName"), showGroupMembers(cliCtx, storeName)).Methods("GET")
 
     r.HandleFunc(fmt.Sprintf("/%s/querier/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "querierBase58"), execQuerier(cliCtx, storeName)).Methods("GET")
+
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/send_verf_code/{%s}/{%s}", storeName, "accessToken", "mobile"), oracleSendVerfCode(cliCtx, storeName)).Methods("GEt")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/verify_verf_code/{%s}/{%s}/{%s}", storeName, "accessToken", "mobile", "verificationCode"), oracleVerifyVerfCode(cliCtx, storeName)).Methods("GET")
 }
