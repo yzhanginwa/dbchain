@@ -32,7 +32,7 @@ func oracleSendVerfCode(cliCtx context.CLIContext, storeName string) http.Handle
        
         verificationCode := utils.GenerateVerfCode(6)
         fmt.Println(verificationCode)
-        saveMobileAndVerificationCode(addr.String(), mobile, verificationCode)
+        cacheMobileAndVerificationCode(addr.String(), mobile, verificationCode)
         if sent := sendVerificationCode(mobile, verificationCode); !sent {
             rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to send sms")
             return
@@ -68,7 +68,7 @@ func oracleVerifyVerfCode(cliCtx context.CLIContext, storeName string) http.Hand
 //                  //
 //////////////////////
 
-func saveMobileAndVerificationCode(strAddr string, mobile string, verificationCode string) bool {
+func cacheMobileAndVerificationCode(strAddr string, mobile string, verificationCode string) bool {
     mobileVerfCode := MobileVerfCode {
         Mobile: mobile,
         VerfCode: verificationCode,
