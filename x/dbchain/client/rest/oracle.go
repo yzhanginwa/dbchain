@@ -6,7 +6,6 @@ import (
     "github.com/gorilla/mux"
     "github.com/cosmos/cosmos-sdk/client/context"
     "github.com/cosmos/cosmos-sdk/types/rest"
-    sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
 )
 
@@ -33,7 +32,7 @@ func oracleSendVerfCode(cliCtx context.CLIContext, storeName string) http.Handle
        
         verificationCode := utils.GenerateVerfCode(6)
         fmt.Println(verificationCode)
-        saveMobileAndVerificationCode(addr, mobile, verificationCode)
+        saveMobileAndVerificationCode(addr.String(), mobile, verificationCode)
         if sent := sendVerificationCode(mobile, verificationCode); !sent {
             rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to send sms")
             return
@@ -55,7 +54,7 @@ func oracleVerifyVerfCode(cliCtx context.CLIContext, storeName string) http.Hand
             return
         }
 
-        if VerifyVerfCode(addr, mobile, verificationCode) {
+        if VerifyVerfCode(addr.String(), mobile, verificationCode) {
             rest.PostProcessResponse(w, cliCtx, "Success")
         } else {
             rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to verify")
@@ -69,13 +68,13 @@ func oracleVerifyVerfCode(cliCtx context.CLIContext, storeName string) http.Hand
 //                  //
 //////////////////////
 
-func saveMobileAndVerificationCode(addr sdk.AccAddress, mobile string, verificationCode string) bool {
+func saveMobileAndVerificationCode(strAddr string, mobile string, verificationCode string) bool {
     mobileVerfCode := MobileVerfCode {
         Mobile: mobile,
         VerfCode: verificationCode,
     }
 
-    associationMap[addr.String()] = mobileVerfCode
+    associationMap[strAddr] = mobileVerfCode
     return true
 }   
 
@@ -83,8 +82,9 @@ func sendVerificationCode(mobile string, verificationCode string) bool {
     return true
 }
 
-func VerifyVerfCode(addr sdk.AccAddress, mobile string, verificationCode string) bool {
-    if mobileCode, ok := associationMap[addr.String()]; ok {
+func VerifyVerfCode(strAddr string , mobile string, verificationCode string) bool {
+    if mobileCode, ok := associationMap[strAddr]; ok {
+        delete(associationMap, strAddr)
         if mobileCode.Mobile == mobile && mobileCode.VerfCode == verificationCode {
             return true
         }
