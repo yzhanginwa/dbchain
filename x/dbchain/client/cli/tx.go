@@ -30,6 +30,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
     dbchainTxCmd.AddCommand(flags.PostCommands(
         GetCmdCreateApplication(cdc),
+        GetCmdCreateSysDatabase(cdc),
         GetCmdAddAppUser(cdc),
         GetCmdCreateTable(cdc),
         GetCmdDropTable(cdc),
@@ -76,6 +77,27 @@ func GetCmdCreateApplication(cdc *codec.Codec) *cobra.Command {
                 permissioned = false
             }
             msg := types.NewMsgCreateApplication(cliCtx.GetFromAddress(), name, description, permissioned)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return err
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+func GetCmdCreateSysDatabase(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "create-sys-database",
+        Short: "create a system database",
+        Args:  cobra.ExactArgs(0),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            msg := types.NewMsgCreateSysDatabase(cliCtx.GetFromAddress())
             err := msg.ValidateBasic()
             if err != nil {
                 return err

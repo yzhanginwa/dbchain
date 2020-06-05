@@ -21,6 +21,7 @@ var (
 type (
     Keeper          = keeper.Keeper
     MsgCreateApplication = types.MsgCreateApplication
+    MsgCreateSysDatabase = types.MsgCreateSysDatabase
     MsgAddDatabaseUser   = types.MsgAddDatabaseUser
     MsgCreateTable  = types.MsgCreateTable
     MsgDropTable    = types.MsgDropTable

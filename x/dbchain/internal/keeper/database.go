@@ -96,9 +96,13 @@ func (k Keeper) getDatabaseRaw(ctx sdk.Context, appCode string) (types.Database,
     return database, nil
 }
 
-func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name string, description string, permissioned bool) error {
+func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name string, description string, permissioned bool, system bool) error {
     store := ctx.KVStore(k.storeKey)
     newAppCode := generateNewAppCode(owner)
+    if system {
+        newAppCode = "0000000001"
+    }
+
     key := getDatabaseKey(newAppCode)
     bz := store.Get([]byte(key))
     if bz != nil {

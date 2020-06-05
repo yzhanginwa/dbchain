@@ -26,6 +26,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
         switch msg := msg.(type) {
         case MsgCreateApplication:
             return handleMsgCreateApplication(ctx, keeper, msg)
+        case MsgCreateSysDatabase:
+            return handleMsgCreateSysDatabase(ctx, keeper, msg)
         case MsgAddDatabaseUser:
             return handleMsgAddDatabaseUser(ctx, keeper, msg)
         case MsgCreateTable:
@@ -84,7 +86,17 @@ func handleMsgCreateApplication(ctx sdk.Context, keeper Keeper, msg MsgCreateApp
         }
     }
     // We use the term database for internal use. To outside we use application to make users understand easily
-    keeper.CreateDatabase(ctx, msg.Owner, msg.Name, msg.Description, msg.Permissioned)
+    keeper.CreateDatabase(ctx, msg.Owner, msg.Name, msg.Description, msg.Permissioned, false)
+    return &sdk.Result{}, nil
+}
+
+func handleMsgCreateSysDatabase(ctx sdk.Context, keeper Keeper, msg MsgCreateSysDatabase) (*sdk.Result, error) {
+    // only sys admin can create the sys database
+    if !isSysAdmin(ctx, keeper, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Not authorized")
+    }
+
+    keeper.CreateDatabase(ctx, msg.Owner, "sysdb", "database for the use of system only", false, true)
     return &sdk.Result{}, nil
 }
 

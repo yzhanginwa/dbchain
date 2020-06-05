@@ -14,6 +14,7 @@ func init() {
 // RegisterCodec registers concrete types on the Amino codec
 func RegisterCodec(cdc *codec.Codec) {
     cdc.RegisterConcrete(MsgCreateApplication{}, "dbchain/CreateApplication", nil)
+    cdc.RegisterConcrete(MsgCreateSysDatabase{}, "dbchain/CreateSysDatabase", nil)
     cdc.RegisterConcrete(MsgAddDatabaseUser{}, "dbchain/AddDatabaseUser", nil)
     cdc.RegisterConcrete(MsgCreateTable{}, "dbchain/CreateTable", nil)
     cdc.RegisterConcrete(MsgDropTable{}, "dbchain/DropTable", nil)

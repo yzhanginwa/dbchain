@@ -109,3 +109,45 @@ func (msg MsgAddDatabaseUser) GetSignBytes() []byte {
 func (msg MsgAddDatabaseUser) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
+
+//////////////////////////
+//                      //
+// MsgCreateSysDatabase //
+//                      //
+//////////////////////////
+
+// MsgCreateSysDatabase defines a CreateApplication message
+type MsgCreateSysDatabase struct {
+    Owner sdk.AccAddress `json:"owner"`
+}
+
+// NewMsgCreateSysDatabase is a constructor function for MsgCreatTable
+func NewMsgCreateSysDatabase(owner sdk.AccAddress) MsgCreateSysDatabase {
+    return MsgCreateSysDatabase {
+        Owner: owner,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgCreateSysDatabase) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgCreateSysDatabase) Type() string { return "create_sys_database" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgCreateSysDatabase) ValidateBasic() error {
+    if msg.Owner.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgCreateSysDatabase) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgCreateSysDatabase) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
