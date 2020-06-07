@@ -2,10 +2,14 @@ package cli
 
 import (
     "fmt"
+    "github.com/mr-tron/base58"
+    "github.com/tendermint/tendermint/crypto/secp256k1"
+    sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/cosmos/cosmos-sdk/client"
     "github.com/cosmos/cosmos-sdk/client/context"
     "github.com/cosmos/cosmos-sdk/client/flags"
     "github.com/cosmos/cosmos-sdk/codec"
+    "github.com/yzhanginwa/dbchain/x/dbchain/client/rest"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/spf13/cobra"
 )
@@ -33,6 +37,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdShowFriends(storeKey, cdc),
         GetCmdShowPendingFriends(storeKey, cdc),
         GetCmdGetAccessCode(storeKey, cdc),
+        GetCmdGetOracleInfo(storeKey, cdc),
     )...)
     return dbchainQueryCmd
 }
@@ -302,6 +307,26 @@ func GetCmdFindAllIds(queryRoute string, cdc *codec.Codec) *cobra.Command {
             var out types.QuerySliceOfString
             cdc.MustUnmarshalJSON(res, &out)
             return cliCtx.PrintOutput(out)
+        },
+    }
+}
+
+func GetCmdGetOracleInfo(queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "oracle-info",
+        Short: "show oracle info",
+        Args: cobra.ExactArgs(0),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            privKey, err := rest.LoadPrivKey()
+            if err != nil {
+                privKey := secp256k1.GenPrivKey()
+                base58Str := base58.Encode(privKey[:])
+                return cliCtx.PrintOutput(fmt.Sprintf("%s: %s", rest.OracleEncryptedPrivKey, base58Str))
+            }
+            accAddr := sdk.AccAddress(privKey.PubKey().Address())
+            return cliCtx.PrintOutput(fmt.Sprintf("Address: %s", accAddr.String()))
         },
     }
 }

@@ -3,6 +3,7 @@ module github.com/yzhanginwa/dbchain
 go 1.13
 
 require (
+	github.com/btcsuite/btcd v0.0.0-20190213025234-306aecffea32
 	github.com/cosmos/cosmos-sdk v0.38.3
 	github.com/gorilla/mux v1.7.3
 	github.com/ipfs/go-ipfs-api v0.0.3
