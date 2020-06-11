@@ -3,6 +3,8 @@ package rest
 import (
     "fmt"
     "net/http"
+    "io/ioutil"
+    "encoding/json"
     "github.com/gorilla/mux"
     "github.com/spf13/viper"
     "github.com/mr-tron/base58"
@@ -10,8 +12,14 @@ import (
     "github.com/cosmos/cosmos-sdk/client/context"
     "github.com/cosmos/cosmos-sdk/types/rest"
     sdk "github.com/cosmos/cosmos-sdk/types"
-    authtypes "github.com/cosmos/cosmos-sdk/x/auth/types
+    authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+    "github.com/cosmos/cosmos-sdk/x/auth/exported"
+    amino "github.com/tendermint/go-amino"
+    cryptoamino "github.com/tendermint/tendermint/crypto/encoding/amino"
+
+    rpcclient "github.com/tendermint/tendermint/rpc/client"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
 type MobileVerfCode struct {
@@ -22,10 +30,19 @@ type MobileVerfCode struct {
 const OracleEncryptedPrivKey = "oracle-encrypted-key"
 
 var (
+    aminoCdc = amino.NewCodec()
     associationMap = make(map[string]MobileVerfCode)
     oraclePrivKey secp256k1.PrivKeySecp256k1
     oraclePrivKeyLoaded = false
 )
+
+func init () {
+    aminoCdc.RegisterInterface((*sdk.Msg)(nil), nil)
+    aminoCdc.RegisterInterface((*sdk.Tx)(nil), nil)
+    aminoCdc.RegisterConcrete(types.MsgInsertRow{}, "dbchain/InsertRow", nil)
+    cryptoamino.RegisterAmino(aminoCdc)
+    authtypes.RegisterCodec(aminoCdc)
+}
 
 func oracleSendVerfCode(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
@@ -106,10 +123,8 @@ func cacheMobileAndVerificationCode(strAddr string, mobile string, verificationC
 func sendVerificationCode(mobile string, verificationCode string) bool {
     fmt.Println(mobile)
     fmt.Println(verificationCode)
-    a := viper.GetString("ethan")
-    fmt.Println(a)
-    viper.Set("ethan", "a new value")
-    viper.SafeWriteConfig()
+
+    //to send verification through a provider
     return true
 }
 
@@ -131,6 +146,16 @@ func saveToAuthTable(addr sdk.AccAddress, mobile string) {
         return
     }
 
+    oracleAccAddr := sdk.AccAddress(privKey.PubKey().Address())
+
+    accNum, seq, err := getAccountInfo(oracleAccAddr.String())
+    if err != nil {
+        fmt.Println("Failed to load oracle's account info!!!")
+        return
+    }
+   
+    fmt.Printf("\nAccount number: %d, seq: %d\n\n", accNum, seq)
+
     rowFields := make(types.RowFields)
     rowFields["address"] = addr.String()
     rowFields["type"]    = "mobile"
@@ -150,46 +175,73 @@ func saveToAuthTable(addr sdk.AccAddress, mobile string) {
     }
 
     msgs := []sdk.Msg{msg}
+    stdFee := authtypes.NewStdFee(200000, sdk.Coins{sdk.NewCoin("dbctoken", sdk.NewInt(1))})
 
     stdSignMsg := authtypes.StdSignMsg{
-        ChainID:       "mainchain",
-        AccountNumber: 1,
-        Sequence:      1,
-        Memo:          "hello from Voyager 1!",
+        ChainID:       "testnet",
+        AccountNumber: accNum,
+        Sequence:      seq,
+        Memo:          "",
         Msgs:          msgs,
-        Fee:           authtypes.NewStdFee(200000, sdk.Coins{sdk.NewCoin("dbctoken", sdk.NewInt(1))}),
-    },
+        Fee:           stdFee,
+    }
 
-    sig, err = priv.Sign(stdSignMsg.Bytes())
+    sig, err := privKey.Sign(stdSignMsg.Bytes())
     if err != nil {
-        return nil, nil, err
+        fmt.Println("Oracle: Failed to sign message!!!")
+        return
     }
 
-    return sig, priv.PubKey(), nil
-
-    signBytes = sig
-
-    return authtypes.StdSignature{
-        PubKey:    pubkey,
-        Signature: sigBytes,
+    stdSignature :=authtypes.StdSignature{
+        PubKey:    privKey.PubKey(),
+        Signature: sig,
     }
 
+    newStdTx := authtypes.NewStdTx(msgs, stdFee, []authtypes.StdSignature{stdSignature}, "")
 
-	func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdTx {
-    33:		return StdTx{
-=>  34:			Msgs:       msgs,
-    35:			Fee:        fee,
-    36:			Signatures: sigs,
-    37:			Memo:       memo,
-    38:		}
-    39:	}
+    encoder := authtypes.DefaultTxEncoder(aminoCdc)
+    txBytes, err := encoder(newStdTx)
+    if err != nil {
+        fmt.Println("Oracle: Failed to marshal StdTx!!!")
+        return
+    }
 
+    //cliCtx.BroadcastTxAsync(txBytes)
+    rpc, err := rpcclient.NewHTTP("http://localhost:26657", "/websocket")
+    if err != nil {
+        fmt.Printf("failted to get client: %v\n", err)
+        return
+    }
 
+    _, err = rpc.BroadcastTxAsync(txBytes)
+    if err != nil {
+        fmt.Printf("failted to broadcast transaction: %v\n", err)
+        return
+    }
+}
 
+func getAccountInfo(address string) (uint64, uint64, error) {
+    resp, err := http.Get(fmt.Sprintf("http://localhost:1317/auth/accounts/%s", address))
+    if err != nil {
+        fmt.Println("failed to get account info") 
+        return 0, 0, err
+    }
+    defer resp.Body.Close()
+    body, err := ioutil.ReadAll(resp.Body)
 
+    type MyAccount struct {
+      Height string            `json:"height"`   
+      Result exported.Account  `json:"result"`
+    }
 
+    var account MyAccount
+    if err := aminoCdc.UnmarshalJSON(body, &account); err != nil {
+        fmt.Printf("failted to broadcast unmarshal account body\n")
+        return 0, 0, err
+    }
 
+    seq := account.Result.GetSequence()
+    accountNumber := account.Result.GetAccountNumber()
 
-
-
+    return accountNumber, seq, nil
 }
