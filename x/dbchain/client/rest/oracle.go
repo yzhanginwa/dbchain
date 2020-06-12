@@ -20,6 +20,8 @@ import (
     rpcclient "github.com/tendermint/tendermint/rpc/client"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+
+    "github.com/aliyun/alibaba-cloud-sdk-go/services/dysmsapi"
 )
 
 type MobileVerfCode struct {
@@ -28,12 +30,16 @@ type MobileVerfCode struct {
 }
 
 const OracleEncryptedPrivKey = "oracle-encrypted-key"
+const AliyunSmsKey    = "aliyun-sms-key"
+const AliyunSmsSecret = "aliyun-sms-secret"
 
 var (
     aminoCdc = amino.NewCodec()
     associationMap = make(map[string]MobileVerfCode)
     oraclePrivKey secp256k1.PrivKeySecp256k1
     oraclePrivKeyLoaded = false
+    aliyunSmsKey string
+    aliyunSmsSecret string
 )
 
 func init () {
@@ -94,6 +100,12 @@ func oracleVerifyVerfCode(cliCtx context.CLIContext, storeName string) http.Hand
 //                  //
 //////////////////////
 
+func LoadAliyunSmsKeyAndSecret() (string, string) {
+    key := viper.GetString(AliyunSmsKey)
+    secret := viper.GetString(AliyunSmsSecret)
+    return key, secret
+}
+ 
 func LoadPrivKey() (secp256k1.PrivKeySecp256k1, error) {
     if oraclePrivKeyLoaded {
         return oraclePrivKey, nil
@@ -121,8 +133,26 @@ func cacheMobileAndVerificationCode(strAddr string, mobile string, verificationC
 }   
 
 func sendVerificationCode(mobile string, verificationCode string) bool {
-    fmt.Println(mobile)
-    fmt.Println(verificationCode)
+    if aliyunSmsKey == "" {
+        aliyunSmsKey, aliyunSmsSecret = LoadAliyunSmsKeyAndSecret()
+    }
+
+    // aliyun sms service
+    client, err := dysmsapi.NewClientWithAccessKey("cn-hangzhou", aliyunSmsKey, aliyunSmsSecret)
+    request := dysmsapi.CreateSendSmsRequest()
+    request.Scheme = "https"
+
+    request.SignName = "大中华区块链公章"
+    request.TemplateCode = "SMS_192960014"
+    request.PhoneNumbers = mobile
+    request.TemplateParam = fmt.Sprintf("{\"code\": \"%s\"}", verificationCode)
+
+    response, err := client.SendSms(request)
+    if err != nil {
+        fmt.Print(err.Error())
+        return false
+    }
+    fmt.Printf("response is %#v\n", response)
 
     //to send verification through a provider
     return true
