@@ -9,7 +9,7 @@ import (
     "github.com/cosmos/cosmos-sdk/client/context"
     "github.com/cosmos/cosmos-sdk/client/flags"
     "github.com/cosmos/cosmos-sdk/codec"
-    "github.com/yzhanginwa/dbchain/x/dbchain/client/rest"
+    "github.com/yzhanginwa/dbchain/x/dbchain/client/rest/oracle"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/spf13/cobra"
 )
@@ -319,11 +319,11 @@ func GetCmdGetOracleInfo(queryRoute string, cdc *codec.Codec) *cobra.Command {
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-            privKey, err := rest.LoadPrivKey()
+            privKey, err := oracle.LoadPrivKey()
             if err != nil {
                 privKey := secp256k1.GenPrivKey()
                 base58Str := base58.Encode(privKey[:])
-                return cliCtx.PrintOutput(fmt.Sprintf("%s: %s", rest.OracleEncryptedPrivKey, base58Str))
+                return cliCtx.PrintOutput(fmt.Sprintf("%s: %s", oracle.OracleEncryptedPrivKey, base58Str))
             }
             accAddr := sdk.AccAddress(privKey.PubKey().Address())
             return cliCtx.PrintOutput(fmt.Sprintf("Address: %s", accAddr.String()))
