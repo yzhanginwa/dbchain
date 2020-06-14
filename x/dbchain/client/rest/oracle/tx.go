@@ -2,12 +2,12 @@ package oracle
 
 import (
     "fmt"
-    sdk "github.com/cosmos/cosmos-sdk/types"
-    authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
     amino "github.com/tendermint/go-amino"
     cryptoamino "github.com/tendermint/tendermint/crypto/encoding/amino"
-
     rpcclient "github.com/tendermint/tendermint/rpc/client"
+    "github.com/tendermint/tendermint/crypto/secp256k1"
+    sdk "github.com/cosmos/cosmos-sdk/types"
+    authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
@@ -35,9 +35,15 @@ func buildTxAndBroadcast(msg sdk.Msg) {
         fmt.Println("Failed to load oracle's account info!!!")
         return
     }
-   
-    //fmt.Printf("\nAccount number: %d, seq: %d\n\n", accNum, seq)
 
+    txBytes, err := buildAndSignAndBuildTxBytes(msg, accNum, seq, privKey)
+    if err != nil {
+        return
+    }
+    broadcastTxBytes(txBytes)
+}
+
+func buildAndSignAndBuildTxBytes(msg sdk.Msg, accNum uint64, seq uint64, privKey secp256k1.PrivKeySecp256k1) ([]byte, error) {
     msgs := []sdk.Msg{msg}
     stdFee := authtypes.NewStdFee(200000, sdk.Coins{sdk.NewCoin("dbctoken", sdk.NewInt(1))})
 
@@ -53,10 +59,10 @@ func buildTxAndBroadcast(msg sdk.Msg) {
     sig, err := privKey.Sign(stdSignMsg.Bytes())
     if err != nil {
         fmt.Println("Oracle: Failed to sign message!!!")
-        return
+        return nil, err
     }
 
-    stdSignature :=authtypes.StdSignature{
+    stdSignature := authtypes.StdSignature {
         PubKey:    privKey.PubKey(),
         Signature: sig,
     }
@@ -67,10 +73,15 @@ func buildTxAndBroadcast(msg sdk.Msg) {
     txBytes, err := encoder(newStdTx)
     if err != nil {
         fmt.Println("Oracle: Failed to marshal StdTx!!!")
-        return
+        return nil, err
     }
 
+    return txBytes, nil
+
     //cliCtx.BroadcastTxAsync(txBytes)
+}
+
+func broadcastTxBytes(txBytes []byte) {
     rpc, err := rpcclient.NewHTTP("http://localhost:26657", "/websocket")
     if err != nil {
         fmt.Printf("failted to get client: %v\n", err)
