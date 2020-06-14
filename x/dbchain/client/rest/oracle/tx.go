@@ -68,9 +68,7 @@ func buildAndSignAndBuildTxBytes(msg sdk.Msg, accNum uint64, seq uint64, privKey
     }
 
     newStdTx := authtypes.NewStdTx(msgs, stdFee, []authtypes.StdSignature{stdSignature}, "")
-
-    encoder := authtypes.DefaultTxEncoder(aminoCdc)
-    txBytes, err := encoder(newStdTx)
+    txBytes, err := aminoCdc.MarshalBinaryLengthPrefixed(newStdTx)
     if err != nil {
         fmt.Println("Oracle: Failed to marshal StdTx!!!")
         return nil, err
