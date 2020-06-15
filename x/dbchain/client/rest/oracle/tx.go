@@ -2,6 +2,7 @@ package oracle
 
 import (
     "fmt"
+    "github.com/spf13/viper"
     amino "github.com/tendermint/go-amino"
     cryptoamino "github.com/tendermint/tendermint/crypto/encoding/amino"
     rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -46,8 +47,8 @@ func buildTxAndBroadcast(msg sdk.Msg) {
 func buildAndSignAndBuildTxBytes(msg sdk.Msg, accNum uint64, seq uint64, privKey secp256k1.PrivKeySecp256k1) ([]byte, error) {
     msgs := []sdk.Msg{msg}
     stdFee := authtypes.NewStdFee(200000, sdk.Coins{sdk.NewCoin("dbctoken", sdk.NewInt(1))})
-
-    stdSignMsgBytes := authtypes.StdSignBytes("testnet", accNum, seq, stdFee, msgs, "")
+    chainId := viper.GetString("chain-id")
+    stdSignMsgBytes := authtypes.StdSignBytes(chainId, accNum, seq, stdFee, msgs, "")
 
     //type StdSignDoc struct {
     //        AccountNumber uint64            `json:"account_number" yaml:"account_number"`
