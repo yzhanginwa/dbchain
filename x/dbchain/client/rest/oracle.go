@@ -67,6 +67,7 @@ func oracleVerifyVerfCode(cliCtx context.CLIContext, storeName string) http.Hand
 
         if VerifyVerfCode(addr.String(), mobile, verificationCode) {
             saveToAuthTable(addr, mobile)
+            tryToSendToken(addr)
             rest.PostProcessResponse(w, cliCtx, "Success")
         } else {
             rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to verify")
@@ -138,4 +139,16 @@ func saveToAuthTable(addr sdk.AccAddress, mobile string) {
     rowFields["value"]   = mobile
 
     oracle.InsertRow("0000000001", "authentication", rowFields)
+}
+
+func tryToSendToken(addr sdk.AccAddress) {
+    accNum, _, err := oracle.GetAccountInfo(addr.String())
+    if err != nil {
+        fmt.Println("Failed to load oracle's account info!!!")
+        return
+    }
+
+    if accNum == 0 {
+        oracle.SendFirstTokenTo(addr)
+    }
 }

@@ -7,7 +7,7 @@ import (
     "github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
-func getAccountInfo(address string) (uint64, uint64, error) {
+func GetAccountInfo(address string) (uint64, uint64, error) {
     resp, err := http.Get(fmt.Sprintf("http://localhost:1317/auth/accounts/%s", address))
     if err != nil {
         fmt.Println("failed to get account info")

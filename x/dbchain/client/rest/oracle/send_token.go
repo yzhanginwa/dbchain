@@ -1,0 +1,30 @@
+package oracle
+
+import (
+    "fmt"
+    sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+// MsgSend - high level transaction of the coin module
+type MsgSend struct {
+    FromAddress sdk.AccAddress `json:"from_address" yaml:"from_address"`
+    ToAddress   sdk.AccAddress `json:"to_address" yaml:"to_address"`
+    Amount      sdk.Coins      `json:"amount" yaml:"amount"`
+}
+
+func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) MsgSend {
+    return MsgSend{FromAddress: fromAddr, ToAddress: toAddr, Amount: amount}
+}
+
+func SendFirstTokenTo(addr sdk.AccAddress) {
+    privKey, err := LoadPrivKey()
+    if err != nil {
+        fmt.Println("Failed to load oracle's private key!!!")
+        return
+    }
+    oracleAccAddr := sdk.AccAddress(privKey.PubKey().Address())
+
+    oneCoin := sdk.NewCoin("dbctoken", sdk.NewInt(1))
+    msg := NewMsgSend(oracleAccAddr, addr, []sdk.Coin{oneCoin})
+    buildTxAndBroadcast(msg)
+}
