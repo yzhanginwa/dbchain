@@ -23,5 +23,7 @@ func init () {
     aminoCdc.RegisterInterface((*exported.Account)(nil), nil)
     aminoCdc.RegisterConcrete(&authtypes.BaseAccount{}, "cosmos-sdk/Account", nil)
     aminoCdc.RegisterConcrete(StdTx{}, "cosmos-sdk/StdTx", nil)
+
+    aminoCdc.RegisterConcrete(MsgSend{}, "cosmos-sdk/MsgSend", nil)
 }
 
