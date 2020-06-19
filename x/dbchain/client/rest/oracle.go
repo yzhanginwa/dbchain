@@ -75,6 +75,29 @@ func oracleVerifyVerfCode(cliCtx context.CLIContext, storeName string) http.Hand
     }
 }
 
+func oracleVerifyIdNumberAndCorpName(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        vars := mux.Vars(r)
+        accessCode      := vars["accessToken"]
+        idNumber := vars["id_number"]
+        corpName := vars["corp_name"]
+
+        addr, err := utils.VerifyAccessCode(accessCode)
+        if err != nil {
+            rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+            return
+        }
+
+        if VerifyVerfCode(addr.String(), mobile, verificationCode) {
+            saveToAuthTable(addr, mobile)
+            tryToSendToken(addr)
+            rest.PostProcessResponse(w, cliCtx, "Success")
+        } else {
+            rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to verify")
+        }
+    }
+}
+
 //////////////////////
 //                  //
 // helper functions //
