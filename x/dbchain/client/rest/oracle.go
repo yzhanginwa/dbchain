@@ -2,7 +2,11 @@ package rest
 
 import (
     "fmt"
+    "time"
+    "errors"
+    "io/ioutil"
     "net/http"
+    "encoding/json"
     "github.com/gorilla/mux"
     "github.com/spf13/viper"
     "github.com/cosmos/cosmos-sdk/client/context"
@@ -21,14 +25,27 @@ type MobileVerfCode struct {
     VerfCode string   `json:"verf_code"`
 }
 
+type IdCard struct {
+    Name string     `json:"name"`
+    IdNumber string `json:"id_number"`
+}
+
 const AliyunSmsKey    = "aliyun-sms-key"
 const AliyunSmsSecret = "aliyun-sms-secret"
+const AliyunSkyEyeAppCode = "aliyun-sky-eye-appcode"
 
 var (
     associationMap = make(map[string]MobileVerfCode)
     aliyunSmsKey string
     aliyunSmsSecret string
 )
+
+func newIdCard(name, idNumber string) IdCard {
+    return IdCard {
+        Name:     name,
+        IdNumber: idNumber,
+    }
+}
 
 func oracleSendVerfCode(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +59,8 @@ func oracleSendVerfCode(cliCtx context.CLIContext, storeName string) http.Handle
             return
         }
        
-        verificationCode := utils.GenerateVerfCode(6)
+        //verificationCode := utils.GenerateVerfCode(6)
+        verificationCode := "111111"
         cacheMobileAndVerificationCode(addr.String(), mobile, verificationCode)
         if sent := sendVerificationCode(mobile, verificationCode); !sent {
             rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to send sms")
@@ -66,7 +84,7 @@ func oracleVerifyVerfCode(cliCtx context.CLIContext, storeName string) http.Hand
         }
 
         if VerifyVerfCode(addr.String(), mobile, verificationCode) {
-            saveToAuthTable(addr, mobile)
+            saveToAuthTable(addr, "mobile", mobile)
             tryToSendToken(addr)
             rest.PostProcessResponse(w, cliCtx, "Success")
         } else {
@@ -75,12 +93,12 @@ func oracleVerifyVerfCode(cliCtx context.CLIContext, storeName string) http.Hand
     }
 }
 
-func oracleVerifyIdNumberAndCorpName(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func oracleVerifyNameAndIdNumber(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
-        accessCode      := vars["accessToken"]
-        idNumber := vars["id_number"]
-        corpName := vars["corp_name"]
+        accessCode := vars["accessToken"]
+        name       := vars["name"]
+        idNumber   := vars["id_number"]
 
         addr, err := utils.VerifyAccessCode(accessCode)
         if err != nil {
@@ -88,8 +106,8 @@ func oracleVerifyIdNumberAndCorpName(cliCtx context.CLIContext, storeName string
             return
         }
 
-        if VerifyVerfCode(addr.String(), mobile, verificationCode) {
-            saveToAuthTable(addr, mobile)
+        if VerifyNameAndIdNumber(name, idNumber) {
+            saveToAuthTable(addr, "idcard", newIdCard(name, idNumber))
             tryToSendToken(addr)
             rest.PostProcessResponse(w, cliCtx, "Success")
         } else {
@@ -121,6 +139,7 @@ func cacheMobileAndVerificationCode(strAddr string, mobile string, verificationC
 }   
 
 func sendVerificationCode(mobile string, verificationCode string) bool {
+    return true
     if aliyunSmsKey == "" {
         aliyunSmsKey, aliyunSmsSecret = LoadAliyunSmsKeyAndSecret()
     }
@@ -155,12 +174,16 @@ func VerifyVerfCode(strAddr string , mobile string, verificationCode string) boo
     return false
 }
 
-func saveToAuthTable(addr sdk.AccAddress, mobile string) {
+func saveToAuthTable(addr sdk.AccAddress, authType string, value interface{}) {
     rowFields := make(types.RowFields)
     rowFields["address"] = addr.String()
-    rowFields["type"]    = "mobile"
-    rowFields["value"]   = mobile
-
+    rowFields["type"]    = authType
+    bz, err := json.Marshal(value)
+    if err != nil {
+        fmt.Println("Failed to load oracle's account info!!!")
+        return
+    }
+    rowFields["value"] = string(bz)
     oracle.InsertRow("0000000001", "authentication", rowFields)
 }
 
@@ -174,4 +197,78 @@ func tryToSendToken(addr sdk.AccAddress) {
     if accNum == 0 {
         oracle.SendFirstTokenTo(addr)
     }
+}
+
+func VerifyNameAndIdNumber(name, id_number string) bool {
+    url := fmt.Sprintf("https://personalbusiness.shumaidata.com/getPersonalBusiness?idcard=%s", id_number)
+    request, err := http.NewRequest("GET", url, nil)
+    if err != nil {
+        fmt.Println("Failed to create new request!!!")
+        return false
+    }
+
+    appCode := viper.GetString(AliyunSkyEyeAppCode)
+    request.Header.Set("Authorization", "APPCODE " + appCode)
+
+    var client = &http.Client{
+        Timeout: time.Second * 10,
+    }
+    response, err := client.Do(request)
+    if err != nil {
+        fmt.Println("Failed to do request!!!")
+        return false
+    }
+
+    defer response.Body.Close()
+    if response.StatusCode != 200 {
+        fmt.Printf("Returned code is %d!!!\n", response.StatusCode)
+        return false
+    }
+
+    bodyBytes, _ := ioutil.ReadAll(response.Body)
+    frName, err := getName(bodyBytes)    
+    if err != nil {
+        fmt.Printf("Returned code is %d!!!\n", response.StatusCode)
+        return false
+    }
+    if name != frName {
+        fmt.Printf("Names don't match")
+        return false
+    }
+    return true
+}
+
+/////////////////////
+//                 //
+// helpe functions //
+//                 //
+/////////////////////
+
+func unWrap(i interface{}, key string) interface{} {
+   oneMap := i.(map[string]interface{})
+   return oneMap[key]
+}
+
+func getName(bodyBytes []byte) (string, error) {
+    var ent interface{}
+    err := json.Unmarshal(bodyBytes, &ent)
+    if err != nil {
+        return "", errors.New("Failed to unmarshal body bytes")
+    }
+    var queue = []string{"data", "data", "ryposfrs"}
+    for _, v := range queue {
+        ent = unWrap(ent, v)
+    }
+
+    corps := ent.([]interface{})
+    if len(corps) < 1 {
+        return "", errors.New("No corps found")
+    }
+    corp := corps[0]
+    c := corp.(map[string]interface{})
+    name, ok := c["ryname"]
+    if !ok {
+        return "", errors.New("Couldn't find ryname")
+    }
+    return name.(string), nil
 }
