@@ -1,6 +1,7 @@
 package utils
 
 import (
+    "fmt"
     "strings"
     "strconv"
     "errors"
@@ -21,6 +22,23 @@ const (
 // helper funcs //
 //              //
 //////////////////
+
+func MakeAccessCode(privKey secp256k1.PrivKeySecp256k1) string {
+    now := time.Now().UnixNano() / 1000000
+    timeStamp := strconv.Itoa(int(now))
+
+    signature, err := privKey.Sign([]byte(timeStamp))
+    if err != nil {
+        panic("failed to sign timestamp")
+    }
+
+    pubKey := privKey.PubKey()
+    pubKeyArray := pubKey.(secp256k1.PubKeySecp256k1)
+
+    encodedPubKey := base58.Encode(pubKeyArray[:])
+    encodedSig    := base58.Encode(signature)
+    return fmt.Sprintf("%s:%s:%s", encodedPubKey, timeStamp, encodedSig)
+}
 
 func VerifyAccessCode(accessCode string) (sdk.AccAddress, error) {
     parts := strings.Split(accessCode, ":")

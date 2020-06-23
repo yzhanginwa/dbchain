@@ -5,6 +5,7 @@ import (
     "bytes"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/stretchr/testify/require"
+    "github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
 
@@ -92,4 +93,15 @@ func TestConvertIntToByteArray(t *testing.T) {
         n := ByteArrayToInt(tc.byteArray)
         require.Equal(t, tc.matching, (n == tc.number))
     }
+}
+
+func TestAccessToken(t *testing.T) {
+    privKey := secp256k1.GenPrivKey()
+    accAddr := sdk.AccAddress(privKey.PubKey().Address())
+
+    accessCode := MakeAccessCode(privKey)
+
+    addr, err := VerifyAccessCode(accessCode)
+    require.Equal(t, true, (err == nil))
+    require.Equal(t, true, (accAddr.String() == addr.String()))
 }
