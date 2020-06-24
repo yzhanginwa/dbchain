@@ -30,6 +30,12 @@ type IdCard struct {
     IdNumber string `json:"id_number"`
 }
 
+type CorpInfo struct {
+    CorpName string   `json:"corp_name"`
+    RegNumber string  `json:"reg_number"`
+    CreditCode string `json:"credit_code"`
+}
+
 const AliyunSmsKey    = "aliyun-sms-key"
 const AliyunSmsSecret = "aliyun-sms-secret"
 const AliyunSkyEyeAppCode = "aliyun-sky-eye-appcode"
@@ -47,6 +53,14 @@ func newIdCard(name, idNumber string) IdCard {
     }
 }
 
+func newCorpInfo(corpName, regNumber, creditCode string) CorpInfo {
+    return CorpInfo {
+        CorpName:   corpName,
+        RegNumber:  regNumber,
+        CreditCode: creditCode,
+    }
+}
+
 func oracleSendVerfCode(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
@@ -59,8 +73,7 @@ func oracleSendVerfCode(cliCtx context.CLIContext, storeName string) http.Handle
             return
         }
        
-        //verificationCode := utils.GenerateVerfCode(6)
-        verificationCode := "111111"
+        verificationCode := utils.GenerateVerfCode(6)
         cacheMobileAndVerificationCode(addr.String(), mobile, verificationCode)
         if sent := sendVerificationCode(mobile, verificationCode); !sent {
             rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to send sms")
@@ -106,8 +119,38 @@ func oracleVerifyNameAndIdNumber(cliCtx context.CLIContext, storeName string) ht
             return
         }
 
-        if VerifyNameAndIdNumber(name, idNumber) {
+        if verifyNameAndIdNumber(name, idNumber) {
             saveToAuthTable(addr, "idcard", newIdCard(name, idNumber))
+            tryToSendToken(addr)
+            rest.PostProcessResponse(w, cliCtx, "Success")
+        } else {
+            rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to verify")
+        }
+    }
+}
+
+func oracleVerifyCorpInfo(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        vars := mux.Vars(r)
+        accessCode := vars["accessToken"]
+        corpName   := vars["corp_name"]
+        regNumber  := vars["reg_number"]
+        creditCode := vars["credit_code"]
+
+        addr, err := utils.VerifyAccessCode(accessCode)
+        if err != nil {
+            rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+            return
+        }
+
+        idNumber, err := getIdNumber(addr)
+        if err != nil {
+            rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+            return
+        }
+
+        if verifyCorpInfo(idNumber, corpName, regNumber, creditCode) {
+            saveToAuthTable(addr, "corp", newCorpInfo(corpName, regNumber, creditCode))
             tryToSendToken(addr)
             rest.PostProcessResponse(w, cliCtx, "Success")
         } else {
@@ -139,7 +182,6 @@ func cacheMobileAndVerificationCode(strAddr string, mobile string, verificationC
 }   
 
 func sendVerificationCode(mobile string, verificationCode string) bool {
-    return true
     if aliyunSmsKey == "" {
         aliyunSmsKey, aliyunSmsSecret = LoadAliyunSmsKeyAndSecret()
     }
@@ -199,12 +241,80 @@ func tryToSendToken(addr sdk.AccAddress) {
     }
 }
 
-func VerifyNameAndIdNumber(name, id_number string) bool {
-    url := fmt.Sprintf("https://personalbusiness.shumaidata.com/getPersonalBusiness?idcard=%s", id_number)
+func verifyCorpInfo(idNumber, corpName, regNumber, creditCode string) bool {
+    bodyBytes, err := getPersonalBusinessData(idNumber)
+    if err != nil {
+        return false
+    }
+
+    regN, creditC, err := getCorpInfo(bodyBytes, corpName)
+    if err != nil {
+        return false
+    }
+
+    if regN == regNumber && creditC == creditCode {
+        return true
+    }
+    return false
+}
+
+func getCorpInfo(bodyBytes []byte, corpName string) (string, string, error) {
+    var ent interface{}
+    err := json.Unmarshal(bodyBytes, &ent)
+    if err != nil {
+        return "", "", errors.New("Failed to unmarshal body bytes")
+    }
+    var queue = []string{"data", "data", "ryposfrs"}
+    for _, v := range queue {
+        ent = oracle.UnWrap(ent, v)
+    }
+
+    corps := ent.([]interface{})
+    if len(corps) < 1 {
+        return "", "", errors.New("No corps found")
+    }
+
+    for _, corp := range corps {
+        c := corp.(map[string]interface{})
+        name, ok := c["entname"]
+        if !ok {
+            return "", "", errors.New("Couldn't find ryname")
+        }
+        if name == corpName {
+            if r, ok := c["regno"]; ok {
+                if c, ok := c["creditcode"]; ok {
+                    return  r.(string), c.(string), nil
+                }
+            }
+        }
+    }
+    return "", "", errors.New("Not found!!!")
+}
+
+func verifyNameAndIdNumber(name, id_number string) bool {
+    bodyBytes, err := getPersonalBusinessData(id_number)
+    if err != nil {
+        return false
+    }
+    frName, err := getName(bodyBytes)    
+    if err != nil {
+        fmt.Printf("Failed to get name")
+        return false
+    }
+    if name != frName {
+        fmt.Printf("Names don't match")
+        return false
+    }
+    return true
+}
+
+func getPersonalBusinessData(idNumber string) ([]byte, error) {
+    url := fmt.Sprintf("https://personalbusiness.shumaidata.com/getPersonalBusiness?idcard=%s", idNumber)
     request, err := http.NewRequest("GET", url, nil)
     if err != nil {
+        //TODO: convert the println to log
         fmt.Println("Failed to create new request!!!")
-        return false
+        return nil, errors.New("Failed to create new request!!!")
     }
 
     appCode := viper.GetString(AliyunSkyEyeAppCode)
@@ -216,37 +326,17 @@ func VerifyNameAndIdNumber(name, id_number string) bool {
     response, err := client.Do(request)
     if err != nil {
         fmt.Println("Failed to do request!!!")
-        return false
+        return nil, errors.New("Failed to do request!!!")
     }
 
     defer response.Body.Close()
     if response.StatusCode != 200 {
         fmt.Printf("Returned code is %d!!!\n", response.StatusCode)
-        return false
+        return nil, errors.New(fmt.Sprintf("Returned code is %d!!!\n", response.StatusCode))
     }
 
     bodyBytes, _ := ioutil.ReadAll(response.Body)
-    frName, err := getName(bodyBytes)    
-    if err != nil {
-        fmt.Printf("Returned code is %d!!!\n", response.StatusCode)
-        return false
-    }
-    if name != frName {
-        fmt.Printf("Names don't match")
-        return false
-    }
-    return true
-}
-
-/////////////////////
-//                 //
-// helpe functions //
-//                 //
-/////////////////////
-
-func unWrap(i interface{}, key string) interface{} {
-   oneMap := i.(map[string]interface{})
-   return oneMap[key]
+    return bodyBytes, nil
 }
 
 func getName(bodyBytes []byte) (string, error) {
@@ -257,7 +347,7 @@ func getName(bodyBytes []byte) (string, error) {
     }
     var queue = []string{"data", "data", "ryposfrs"}
     for _, v := range queue {
-        ent = unWrap(ent, v)
+        ent = oracle.UnWrap(ent, v)
     }
 
     corps := ent.([]interface{})
@@ -271,4 +361,24 @@ func getName(bodyBytes []byte) (string, error) {
         return "", errors.New("Couldn't find ryname")
     }
     return name.(string), nil
+}
+
+func getIdNumber(addr sdk.AccAddress) (string, error) {
+    querierClient := oracle.NewSuperQuerierClient("0000000001")
+    querierClient.Table("authentication")
+    querierClient.Equal("address", addr.String())
+    querierClient.Equal("type", "idcard")
+    querierClient.Last()
+
+    records, err := querierClient.Execute()
+    if err != nil {
+        return "", err
+    }
+    jsonValue := oracle.UnWrap(records[0], "value")
+    result := IdCard{}
+    err = json.Unmarshal([]byte(jsonValue.(string)), &result)
+    if err != nil {
+        return "", errors.New("Failed to unmarshal IdCard")
+    }
+    return result.IdNumber, nil
 }
