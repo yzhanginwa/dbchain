@@ -25,6 +25,10 @@ type MobileVerfCode struct {
     VerfCode string   `json:"verf_code"`
 }
 
+type Mobile struct {
+    Mobile string   `json:"mobile"`
+}
+
 type IdCard struct {
     Name string     `json:"name"`
     IdNumber string `json:"id_number"`
@@ -45,6 +49,12 @@ var (
     aliyunSmsKey string
     aliyunSmsSecret string
 )
+
+func newMobile(mobile string) Mobile {
+    return Mobile {
+        Mobile: mobile,
+    }
+}
 
 func newIdCard(name, idNumber string) IdCard {
     return IdCard {
@@ -97,7 +107,7 @@ func oracleVerifyVerfCode(cliCtx context.CLIContext, storeName string) http.Hand
         }
 
         if VerifyVerfCode(addr.String(), mobile, verificationCode) {
-            saveToAuthTable(addr, "mobile", mobile)
+            saveToAuthTable(addr, "mobile", newMobile(mobile))
             tryToSendToken(addr)
             rest.PostProcessResponse(w, cliCtx, "Success")
         } else {
