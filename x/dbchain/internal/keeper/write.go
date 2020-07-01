@@ -196,8 +196,28 @@ func (k Keeper) preprocessPayment(ctx sdk.Context, appId uint, tableName string,
     return true
 }
 
-// for now, we check the filed non-null option
 func (k Keeper) validateInsertion(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {
+    if ok := k.validateInsertionWithTableOptions(ctx, appId, tableName, fields, owner); !ok {
+        return false
+    }
+    if ok := k.validateInsertionWithFieldOptions(ctx, appId, tableName, fields, owner); !ok {
+        return false
+    }
+    return true
+}
+
+func (k Keeper) validateInsertionWithTableOptions(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {
+    options, _ := k.GetOption(ctx, appId, tableName)
+    if utils.StringIncluded(options, string(types.TBLOPT_AUTH)) {
+        if checkWithOracleAuth(k, ctx, fields, owner) {
+            return true
+        }
+        return false
+    }
+    return true
+}
+
+func (k Keeper) validateInsertionWithFieldOptions(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {
     fieldNames, err := k.getTableFields(ctx, appId, tableName)
     if err != nil {
         return(false)

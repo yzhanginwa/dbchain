@@ -99,6 +99,7 @@ const (
                                                     //          after the a row is saved, the amount of token_name is sent from sender to recipient
     TBLOPT_UPDATABLE   TableOption = "updatable"
     TBLOPT_DELETABLE   TableOption = "deletable"
+    TBLOPT_AUTH        TableOption = "auth"
 )
 
 type FieldOption string
