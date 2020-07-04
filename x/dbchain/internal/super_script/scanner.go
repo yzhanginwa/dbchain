@@ -1,0 +1,126 @@
+package super_script
+
+import (
+    "bufio"
+    "bytes"
+    "io"
+    "strings"
+)
+
+// eof represents a marker rune for the end of the reader.
+var eof = rune(0)
+
+// Scanner represents a lexical scanner.
+type Scanner struct {
+    r *bufio.Reader
+}
+
+func NewScanner(r io.Reader) *Scanner {
+    return &Scanner{r: bufio.NewReader(r)}
+}
+
+func (s *Scanner) Scan() (tok Token, lit string) {
+    ch := s.read()
+
+    if isWhitespace(ch) {
+        s.unread()
+        return s.scanWhitespace()
+    } else if ch == '=' {
+        secondEqual := s.read() 
+        if secondEqual == '=' {
+            return DEQUAL, "=="
+        } else {
+            s.unread() 
+            return EQUAL, "="
+        }
+    } else if isValidLetter(ch) {
+        s.unread()
+        return s.scanIdent()
+    }
+
+    switch ch {
+    case eof:
+        return EOF, ""
+    case '"':
+        return DQUOTE, string(ch)
+    case ',':
+        return COMMA, string(ch)
+    case '.':
+        return DOT, string(ch)
+    }
+
+    return ILLEGAL, string(ch)
+}
+
+func (s *Scanner) scanWhitespace() (tok Token, lit string) {
+    var buf bytes.Buffer
+    buf.WriteRune(s.read())
+
+    for {
+        if ch := s.read(); ch == eof {
+            break
+        } else if !isWhitespace(ch) {
+            s.unread()
+            break
+        } else {
+            buf.WriteRune(ch)
+        }
+    }
+
+    return WS, buf.String()
+}
+
+func (s *Scanner) scanIdent() (tok Token, lit string) {
+    var buf bytes.Buffer
+    buf.WriteRune(s.read())
+
+    for {
+        if ch := s.read(); ch == eof {
+            break
+        } else if !isValidLetter(ch) && !isDigit(ch) && ch != '_' {
+            s.unread()
+            break
+        } else {
+            _, _ = buf.WriteRune(ch)
+        }
+    }
+
+    switch strings.ToUpper(buf.String()) {
+    case "THIS":
+        return THIS, buf.String()
+    case "PARENT":
+        return PARENT, buf.String()
+    case "TABLE":
+        return TABLE, buf.String()
+    case "==":
+        return DEQUAL, buf.String()
+    case "IN":
+        return IN, buf.String()
+    }
+
+    // Otherwise return as a regular identifier.
+    return IDENT, buf.String()
+}
+
+func (s *Scanner) read() rune {
+    ch, _, err := s.r.ReadRune()
+    if err != nil {
+        return eof
+    }
+    return ch
+}
+
+func (s *Scanner) unread() { _ = s.r.UnreadRune() }
+
+func isWhitespace(ch rune) bool {
+    return ch == ' ' || ch == '\t' || ch == '\n'
+}
+
+func isValidLetter(ch rune) bool {
+    return (ch >= 'a' && ch <= 'z') ||
+           (ch >= 'A' && ch <= 'Z') ||
+           (ch == '_')
+}
+
+func isDigit(ch rune) bool { return (ch >= '0' && ch <= '9') }
+
