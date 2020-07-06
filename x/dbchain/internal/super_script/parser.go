@@ -43,8 +43,8 @@ func (p *Parser) Comparison() error {
 
 func (p *Parser) SingleValue() bool {
     switch p.tok {
-    case DQUOTE:
-        if !p.StringLiteral() { return false }
+    case QUOTEDLIT:
+        return true
     case THIS:
         if !p.ThisExpr() { return false }
     default:
@@ -74,13 +74,6 @@ func (p *Parser) MultiValue() bool {
         if !p.expect(DOT) { break }
     } 
     if !p.Field() { return false }
-    return true
-}
-
-func (p *Parser) StringLiteral() bool {
-    if !p.expect(DQUOTE) { return false }
-    if !p.expect(IDENT) { return false }
-    if !p.expect(DQUOTE) { return false }
     return true
 }
 

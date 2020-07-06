@@ -33,6 +33,9 @@ func (s *Scanner) Scan() (tok Token, lit string) {
             s.unread() 
             return EQUAL, "="
         }
+    } else if ch == '"' {
+        s.unread()
+        return s.scanQuotedLit()
     } else if isValidLetter(ch) {
         s.unread()
         return s.scanIdent()
@@ -41,8 +44,6 @@ func (s *Scanner) Scan() (tok Token, lit string) {
     switch ch {
     case eof:
         return EOF, ""
-    case '"':
-        return DQUOTE, string(ch)
     case ',':
         return COMMA, string(ch)
     case '.':
@@ -68,6 +69,36 @@ func (s *Scanner) scanWhitespace() (tok Token, lit string) {
     }
 
     return WS, buf.String()
+}
+
+func (s *Scanner) scanQuotedLit() (tok Token, lit string) {
+    var buf bytes.Buffer
+    ch := s.read()
+    if ch != '"' {
+        return ILLEGAL, string(ch)  // this should not happen
+    }
+    buf.WriteRune(ch)
+
+    withEscape := false
+    for {
+        ch = s.read()
+        if ch == eof {
+            return ILLEGAL, string(ch)
+        }
+        if withEscape {
+            withEscape = false
+        } else {
+            if ch == '\\' {
+                withEscape = true
+            } else if ch == '"' {
+                buf.WriteRune(ch)
+                break
+            }
+        }
+        buf.WriteRune(ch)
+    }
+
+    return QUOTEDLIT, buf.String()
 }
 
 func (s *Scanner) scanIdent() (tok Token, lit string) {

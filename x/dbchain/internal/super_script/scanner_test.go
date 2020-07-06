@@ -20,7 +20,8 @@ func TestScanner_Scan(t *testing.T) {
         {s: "\n", tok: WS, lit: "\n"},
 
         // Misc characters
-        {s: `"`, tok: DQUOTE, lit: "\""},
+        {s: `"abcd"`, tok: QUOTEDLIT, lit: "\"abcd\""},
+        {s: `"abcd \""`, tok: QUOTEDLIT, lit: `"abcd \""`},
 
         // Identifiers
         {s: `foo`, tok: IDENT, lit: `foo`},

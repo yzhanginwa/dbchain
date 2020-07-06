@@ -13,11 +13,12 @@ const (
     IDENT // main
 
     // Misc characters
-    DQUOTE   // "
     COMMA    // ,
     DOT      // .
     LPAREN   // (
     RPAREN   // )
+
+    QUOTEDLIT // "xxxxxxx"
 
     // Keywords
     THIS
@@ -31,8 +32,8 @@ const (
 
 var tokenDisplay = []string{
     "illegal", "eof", "whitespace",
-    "identity", "double quote", "comma",
-    "dot" , "left parenthesis", "right parenthesis",
+    "identity", "comma", "dot",
+    "left parenthesis", "right parenthesis", "quoted string",
     "this", "parent", "table",
     "=" , "==", "in",
     "where",
