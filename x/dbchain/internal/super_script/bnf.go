@@ -6,8 +6,8 @@ package super_script
 //                                                                             //
 /////////////////////////////////////////////////////////////////////////////////
 //                                                                             //
-//    comparison = single_value "==" single_value .                            //
-//               | single_value "in" multi_value .                             //
+//    filter_condition = single_value "==" single_value .                      //
+//                     | single_value "in" multi_value .                       //
 //                                                                             //
 //    single_value = this_expr                                                 //
 //                 | string_literal .                                          //

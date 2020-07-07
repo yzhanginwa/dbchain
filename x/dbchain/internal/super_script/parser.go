@@ -18,7 +18,7 @@ func NewParser(r io.Reader) *Parser {
     return &Parser{s: NewScanner(r)}
 }
 
-func (p *Parser) Comparison() error {
+func (p *Parser) FilterCondition() error {
     p.nextSym()
     p.SingleValue()
     if p.err != nil {
