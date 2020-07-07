@@ -543,6 +543,62 @@ func (msg MsgAddInsertFilter) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
+////////////////////////
+//                    //
+// MsgDropInsertFilter //
+//                    //
+////////////////////////
+
+type MsgDropInsertFilter struct {
+    Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
+    TableName string     `json:"table_name"`
+    Index  string        `json:"index"`
+}
+
+// NewMsgCreatePoll is a constructor function for MsgCreatPoll
+func NewMsgDropInsertFilter(owner sdk.AccAddress, appCode string, tableName string, index string) MsgDropInsertFilter {
+    return MsgDropInsertFilter {
+        Owner: owner,
+        AppCode: appCode,
+        TableName: tableName,
+        Index: index,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgDropInsertFilter) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgDropInsertFilter) Type() string { return "drop_insert_filter" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgDropInsertFilter) ValidateBasic() error {
+    if msg.Owner.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
+    }
+    if len(msg.TableName) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name cannot be empty")
+    }
+    if len(msg.Index) ==0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Index cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgDropInsertFilter) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgDropInsertFilter) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
+
 ///////////////////////////
 //                       //
 // MsgModifyColumnOption //
