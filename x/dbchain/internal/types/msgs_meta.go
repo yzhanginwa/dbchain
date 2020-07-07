@@ -487,6 +487,61 @@ func (msg MsgModifyOption) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
+////////////////////////
+//                    //
+// MsgAddInsertFilter //
+//                    //
+////////////////////////
+
+type MsgAddInsertFilter struct {
+    Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
+    TableName string     `json:"table_name"`
+    Filter string        `json:"filter"`
+}
+
+// NewMsgCreatePoll is a constructor function for MsgCreatPoll
+func NewMsgAddInsertFilter(owner sdk.AccAddress, appCode string, tableName string, filter string) MsgAddInsertFilter {
+    return MsgAddInsertFilter {
+        Owner: owner,
+        AppCode: appCode,
+        TableName: tableName,
+        Filter: filter,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgAddInsertFilter) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgAddInsertFilter) Type() string { return "add_insert_filter" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgAddInsertFilter) ValidateBasic() error {
+    if msg.Owner.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
+    }
+    if len(msg.TableName) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name cannot be empty")
+    }
+    if len(msg.Filter) ==0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Filter cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgAddInsertFilter) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgAddInsertFilter) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
 
 ///////////////////////////
 //                       //

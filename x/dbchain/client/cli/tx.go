@@ -40,6 +40,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdCreateIndex(cdc),
         GetCmdDropIndex(cdc),
         GetCmdModifyOption(cdc),
+        GetCmdAddInsertFilter(cdc),
         GetCmdModifyColumnOption(cdc),
         GetCmdInsertRow(cdc),
         GetCmdUpdateRow(cdc),
@@ -358,6 +359,37 @@ func GetCmdModifyColumnOption(cdc *codec.Codec) *cobra.Command {
     }
 }
 
+///////////////////////////////
+//                           //
+// validation for new record //
+//                           //
+///////////////////////////////
+
+func GetCmdAddInsertFilter(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "add-insert-filter [appCode] [tableName] [filter-text]",
+        Short: "create a new row",
+        Args:  cobra.ExactArgs(4),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode   := args[0]
+            tableName := args[1]
+            filter    := args[2]
+
+            msg := types.NewMsgAddInsertFilter(cliCtx.GetFromAddress(), appCode, tableName, filter)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+
+}
 
 ///////////////////////////////
 //                           //
