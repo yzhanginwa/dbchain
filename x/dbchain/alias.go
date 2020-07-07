@@ -30,6 +30,7 @@ type (
     MsgRenameColumn = types.MsgRenameColumn
     MsgModifyOption = types.MsgModifyOption
     MsgAddInsertFilter    = types.MsgAddInsertFilter
+    MsgDropInsertFilter   = types.MsgDropInsertFilter
     MsgModifyColumnOption = types.MsgModifyColumnOption
     MsgCreateIndex  = types.MsgCreateIndex
     MsgDropIndex    = types.MsgDropIndex

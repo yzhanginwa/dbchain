@@ -2,6 +2,7 @@ package dbchain
 
 import (
     "fmt"
+    "strconv"
     "strings"
     "bytes"
     "encoding/json"
@@ -48,6 +49,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgModifyOption(ctx, keeper, msg)
         case MsgAddInsertFilter:
             return handleMsgAddInsertFilter(ctx, keeper, msg)
+        case MsgDropInsertFilter:
+            return handleMsgDropInsertFilter(ctx, keeper, msg)
         case MsgModifyColumnOption:
             return handleMsgModifyColumnOption(ctx, keeper, msg)
         case MsgInsertRow:
@@ -277,7 +280,35 @@ func handleMsgAddInsertFilter(ctx sdk.Context, keeper Keeper, msg MsgAddInsertFi
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name does not exist!")
     }
 
-    keeper.AddInsertFilter(ctx, appId, msg.Owner, msg.TableName, msg.Filter)
+    if !keeper.AddInsertFilter(ctx, appId, msg.Owner, msg.TableName, msg.Filter) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid filter")
+    }
+
+    return &sdk.Result{}, nil
+}
+
+func handleMsgDropInsertFilter(ctx sdk.Context, keeper Keeper, msg MsgDropInsertFilter) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
+    }
+    if !keeper.HasTable(ctx, appId, msg.TableName) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name does not exist!")
+    }
+
+    index, err := strconv.Atoi(msg.Index)
+    if err == nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
+
+    if !keeper.DropInsertFilter(ctx, appId, msg.Owner, msg.TableName, index - 1) { // the index in msg starts from 1
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Index not valid")
+    }
+
     return &sdk.Result{}, nil
 }
 
