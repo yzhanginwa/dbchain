@@ -46,6 +46,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgDropIndex(ctx, keeper, msg)
         case MsgModifyOption:
             return handleMsgModifyOption(ctx, keeper, msg)
+        case MsgAddInsertFilter:
+            return handleMsgAddInsertFilter(ctx, keeper, msg)
         case MsgModifyColumnOption:
             return handleMsgModifyColumnOption(ctx, keeper, msg)
         case MsgInsertRow:
@@ -259,6 +261,23 @@ func handleMsgModifyOption(ctx sdk.Context, keeper Keeper, msg MsgModifyOption) 
     }
 
     keeper.ModifyOption(ctx, appId, msg.Owner, msg.TableName, msg.Action, msg.Option)
+    return &sdk.Result{}, nil
+}
+
+func handleMsgAddInsertFilter(ctx sdk.Context, keeper Keeper, msg MsgAddInsertFilter) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
+    }
+    if !keeper.HasTable(ctx, appId, msg.TableName) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name does not exist!")
+    }
+
+    keeper.AddInsertFilter(ctx, appId, msg.Owner, msg.TableName, msg.Filter)
     return &sdk.Result{}, nil
 }
 

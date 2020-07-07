@@ -368,8 +368,8 @@ func GetCmdModifyColumnOption(cdc *codec.Codec) *cobra.Command {
 func GetCmdAddInsertFilter(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use:   "add-insert-filter [appCode] [tableName] [filter-text]",
-        Short: "create a new row",
-        Args:  cobra.ExactArgs(4),
+        Short: "add an insert filter",
+        Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             inBuf := bufio.NewReader(cmd.InOrStdin())
@@ -388,7 +388,6 @@ func GetCmdAddInsertFilter(cdc *codec.Codec) *cobra.Command {
             return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
         },
     }
-
 }
 
 ///////////////////////////////

@@ -62,11 +62,11 @@ func getUserFromDatabaseUserKey(key string) string {
     return arr[3]
 }
 
-//////////////////d
-//              //
-// meta related //
-//              //
-//////////////////
+///////////////////
+//               //
+// table related //
+//               //
+///////////////////
 
 // to store name of all tables
 func getTablesKey(appId uint) string {
@@ -91,6 +91,11 @@ func getMetaTableIndexKey(appId uint, tableName string) string {
 // to store the options for a table
 func getTableOptionsKey(appId uint, tableName string) string {
     return fmt.Sprintf("%s:%d:%s:opt:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName)
+}
+
+// to store the insert filters for a table
+func getTableInsertFilterKey(appId uint, tableName string) string {
+    return fmt.Sprintf("%s:%d:%s:insfltr:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName)
 }
 
 func getColumnOptionsKey(appId uint, tableName string, fieldName string) string {

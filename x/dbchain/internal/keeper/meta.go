@@ -7,6 +7,7 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    ss "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
 )
 
 /////////////////////////////
@@ -228,6 +229,24 @@ func (k Keeper) ModifyOption(ctx sdk.Context, appId uint, owner sdk.AccAddress, 
     }
 }
 
+func (k Keeper) AddInsertFilter(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, filter string) bool {
+    if !validateInsertFilter(filter) {
+        return false
+    } 
+    store := ctx.KVStore(k.storeKey)
+    key := getTableInsertFilterKey(appId, tableName)
+    var filters []string
+
+    bz := store.Get([]byte(key))
+    if bz != nil {
+        k.cdc.MustUnmarshalBinaryBare(bz, &filters)
+    }
+
+    filters = append(filters, filter)
+    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(filters))
+    return true
+}
+
 func (k Keeper) GetOption(ctx sdk.Context, appId uint, tableName string) ([]string, error) {
     store := ctx.KVStore(k.storeKey)
     key := getTableOptionsKey(appId, tableName)
@@ -395,4 +414,12 @@ func preProcessFields(fields []string) []string {
         }
     }
     return result
+}
+
+func validateInsertFilter(filter string) bool {
+    err := ss.NewParser(strings.NewReader(filter)).FilterCondition()
+    if err != nil {
+        return false
+    }
+    return true
 }
