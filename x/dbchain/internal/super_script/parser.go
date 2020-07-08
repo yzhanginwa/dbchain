@@ -5,17 +5,26 @@ import (
     "io"
 )
 
+// validate field name in current or specified table
+type validateTableField func(string, string) bool
+type getParentTable func(string, string) (string, error)
+
 // Parser represents a parser.
 type Parser struct {
     s   *Scanner
     tok Token  // last read token
     lit string // last read literal
     err error
+
+    vtf validateTableField
+    gpt getParentTable
+    currentTable string
+    currentField string
 }
 
 // NewParser returns a new instance of Parser.
-func NewParser(r io.Reader) *Parser {
-    return &Parser{s: NewScanner(r)}
+func NewParser(r io.Reader, vtf validateTableField, gpt getParentTable) *Parser {
+    return &Parser{s: NewScanner(r), vtf: vtf, gpt: gpt}
 }
 
 func (p *Parser) FilterCondition() error {
@@ -57,6 +66,7 @@ func (p *Parser) SingleValue() bool {
 
 func (p *Parser) ThisExpr() bool {
     if !p.expect(THIS) { return false }
+    p.currentTable = ""
     if !p.expect(DOT) { return false }
     if !p.Field() { return false }
     if p.accept(DOT) {
@@ -79,6 +89,12 @@ func (p *Parser) MultiValue() bool {
 
 func (p *Parser) ParentField() bool {
     if !p.expect(PARENT) { return false }
+    tn, err := p.gpt(p.currentTable, p.currentField)
+    if err != nil {
+        p.err = err
+        return false
+    }
+    p.currentTable = tn
     if !p.expect(DOT) { return false }
     if !p.Field() { return false }
     if p.accept(DOT) {
@@ -89,6 +105,7 @@ func (p *Parser) ParentField() bool {
 
 func (p *Parser) TableName() bool {
     if p.accept(IDENT) {
+        p.currentTable = p.lit
         return true
     }
     return false
@@ -106,7 +123,12 @@ func (p *Parser) Where() bool {
 
 func (p *Parser) Field() bool {
     if p.accept(IDENT) {
-        return true
+        if p.vtf(p.currentTable, p.currentField) {
+            return true
+        } else {
+            p.err = fmt.Errorf("Field name does not exist")
+            return false
+        }
     }
     return false
 }

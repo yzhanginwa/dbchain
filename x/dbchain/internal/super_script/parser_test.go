@@ -35,7 +35,15 @@ func TestParser_ParseStatement(t *testing.T) {
     }
 
     for i, tt := range tests {
-        err := NewParser(strings.NewReader(tt.s)).FilterCondition()
+        parser := NewParser(strings.NewReader(tt.s),
+            func(table, field string) bool {
+                return true
+            },
+            func(table, field string) (string, error) {
+                return "foo", nil
+            },
+        )
+        err := parser.FilterCondition()
         if !reflect.DeepEqual(tt.err, errstring(err)) {
             t.Errorf("%d. %q: error mismatch:\n  exp=%s\n  got=%s\n\n", i, tt.s, tt.err, err)
         }

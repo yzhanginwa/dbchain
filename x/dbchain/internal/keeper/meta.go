@@ -230,7 +230,7 @@ func (k Keeper) ModifyOption(ctx sdk.Context, appId uint, owner sdk.AccAddress, 
 }
 
 func (k Keeper) AddInsertFilter(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, filter string) bool {
-    if !validateInsertFilter(filter) {
+    if !validateInsertFilter(k, ctx, appId, tableName, filter) {
         return false
     } 
     store := ctx.KVStore(k.storeKey)
@@ -438,8 +438,24 @@ func preProcessFields(fields []string) []string {
     return result
 }
 
-func validateInsertFilter(filter string) bool {
-    err := ss.NewParser(strings.NewReader(filter)).FilterCondition()
+func validateInsertFilter(k Keeper, ctx sdk.Context, appId uint, tableName string, filter string) bool {
+    parser := ss.NewParser(strings.NewReader(filter),
+        func(table, field string) bool {
+            fieldNames, err := k.getTableFields(ctx, appId, table)
+            if err != nil { return false }
+            return utils.StringIncluded(fieldNames, field)
+        },
+
+        func(table, field string) (string, error) {
+            //for now we get parent table solely from the field name
+            if tn, ok := utils.GetTableNameFromForeignKey(field); ok {
+                return tn, nil
+            } else {
+                return "", errors.New("Wrong reference field name")
+            }
+        },
+    )
+    err := parser.FilterCondition()
     if err != nil {
         return false
     }
