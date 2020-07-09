@@ -543,11 +543,11 @@ func (msg MsgAddInsertFilter) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
-////////////////////////
-//                    //
+///////////////////
+//               //
 // MsgAddTrigger //
-//                    //
-////////////////////////
+//               //
+///////////////////
 
 type MsgAddTrigger struct {
     Owner sdk.AccAddress `json:"owner"`
@@ -598,11 +598,64 @@ func (msg MsgAddTrigger) GetSignBytes() []byte {
 func (msg MsgAddTrigger) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
-////////////////////////
-//                    //
+
+///////////////////
+//               //
+// MsgDropTrigger //
+//               //
+///////////////////
+
+type MsgDropTrigger struct {
+    Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
+    TableName string     `json:"table_name"`
+    Trigger string       `json:"trigger"`
+}
+
+// NewMsgCreatePoll is a constructor function for MsgCreatPoll
+func NewMsgDropTrigger(owner sdk.AccAddress, appCode string, tableName string) MsgDropTrigger {
+    return MsgDropTrigger {
+        Owner: owner,
+        AppCode: appCode,
+        TableName: tableName,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgDropTrigger) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgDropTrigger) Type() string { return "drop_trigger" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgDropTrigger) ValidateBasic() error {
+    if msg.Owner.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
+    }
+    if len(msg.TableName) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgDropTrigger) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgDropTrigger) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
+
+/////////////////////////
+//                     //
 // MsgDropInsertFilter //
-//                    //
-////////////////////////
+//                     //
+/////////////////////////
 
 type MsgDropInsertFilter struct {
     Owner sdk.AccAddress `json:"owner"`
