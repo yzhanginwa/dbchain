@@ -282,6 +282,39 @@ func (k Keeper) GetInsertFilters(ctx sdk.Context, appId uint, tableName string) 
     return filters
 }
 
+func (k Keeper) AddTrigger(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, trigger string) bool {
+    if !validateTriggerSyntax(k, ctx, appId, tableName, trigger) {
+        return false
+    }
+
+    table, err := k.GetTable(ctx, appId, tableName)
+    if err != nil {
+        return false
+    }
+
+    if len(table.Trigger) > 0 {
+        return false
+    }
+
+    table.Trigger = trigger
+
+    store := ctx.KVStore(k.storeKey)
+    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    return true
+}
+
+func (k Keeper) DropTrigger(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string) bool {
+    table, err := k.GetTable(ctx, appId, tableName)
+    if err != nil {
+        return false
+    }
+
+    table.Trigger = ""
+    store := ctx.KVStore(k.storeKey)
+    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    return true
+}
+
 func (k Keeper) GetOption(ctx sdk.Context, appId uint, tableName string) ([]string, error) {
     store := ctx.KVStore(k.storeKey)
     key := getTableOptionsKey(appId, tableName)
@@ -472,5 +505,9 @@ func validateInsertFilterSyntax(k Keeper, ctx sdk.Context, appId uint, tableName
     if err != nil {
         return false
     }
+    return true
+}
+
+func validateTriggerSyntax(k Keeper, ctx sdk.Context, appId uint, tableName string, filter string) bool {
     return true
 }

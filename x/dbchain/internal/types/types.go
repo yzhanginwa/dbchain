@@ -62,6 +62,7 @@ type Table struct {
     Owner sdk.AccAddress      `json:"owner"`
     Name string               `json:"name"`
     Fields []string           `json:"fields"`
+    Trigger string            `json:"trigger"`
 }
 
 func NewTable() Table {

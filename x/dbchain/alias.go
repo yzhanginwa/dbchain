@@ -31,6 +31,8 @@ type (
     MsgModifyOption = types.MsgModifyOption
     MsgAddInsertFilter    = types.MsgAddInsertFilter
     MsgDropInsertFilter   = types.MsgDropInsertFilter
+    MsgAddTrigger   = types.MsgAddTrigger
+    MsgDropTrigger  = types.MsgDropTrigger
     MsgModifyColumnOption = types.MsgModifyColumnOption
     MsgCreateIndex  = types.MsgCreateIndex
     MsgDropIndex    = types.MsgDropIndex

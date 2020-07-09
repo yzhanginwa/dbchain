@@ -51,6 +51,10 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgAddInsertFilter(ctx, keeper, msg)
         case MsgDropInsertFilter:
             return handleMsgDropInsertFilter(ctx, keeper, msg)
+        case MsgAddTrigger:
+            return handleMsgAddTrigger(ctx, keeper, msg)
+        case MsgDropTrigger:
+            return handleMsgDropTrigger(ctx, keeper, msg)
         case MsgModifyColumnOption:
             return handleMsgModifyColumnOption(ctx, keeper, msg)
         case MsgInsertRow:
@@ -307,6 +311,46 @@ func handleMsgDropInsertFilter(ctx sdk.Context, keeper Keeper, msg MsgDropInsert
 
     if !keeper.DropInsertFilter(ctx, appId, msg.Owner, msg.TableName, index - 1) { // the index in msg starts from 1
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Index not valid")
+    }
+
+    return &sdk.Result{}, nil
+}
+
+func handleMsgAddTrigger(ctx sdk.Context, keeper Keeper, msg MsgAddTrigger) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
+    }
+    if !keeper.HasTable(ctx, appId, msg.TableName) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name does not exist!")
+    }
+
+    if !keeper.AddTrigger(ctx, appId, msg.Owner, msg.TableName, msg.Trigger) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid trigger")
+    }
+
+    return &sdk.Result{}, nil
+}
+
+func handleMsgDropTrigger(ctx sdk.Context, keeper Keeper, msg MsgDropTrigger) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
+    }
+    if !keeper.HasTable(ctx, appId, msg.TableName) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name does not exist!")
+    }
+
+    if !keeper.DropTrigger(ctx, appId, msg.Owner, msg.TableName) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Failed to drop trigger")
     }
 
     return &sdk.Result{}, nil
