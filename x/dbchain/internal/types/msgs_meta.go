@@ -545,6 +545,61 @@ func (msg MsgAddInsertFilter) GetSigners() []sdk.AccAddress {
 
 ////////////////////////
 //                    //
+// MsgAddTrigger //
+//                    //
+////////////////////////
+
+type MsgAddTrigger struct {
+    Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
+    TableName string     `json:"table_name"`
+    Trigger string       `json:"trigger"`
+}
+
+// NewMsgCreatePoll is a constructor function for MsgCreatPoll
+func NewMsgAddTrigger(owner sdk.AccAddress, appCode string, tableName string, trigger string) MsgAddTrigger {
+    return MsgAddTrigger {
+        Owner: owner,
+        AppCode: appCode,
+        TableName: tableName,
+        Trigger: trigger,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgAddTrigger) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgAddTrigger) Type() string { return "add_trigger" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgAddTrigger) ValidateBasic() error {
+    if msg.Owner.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
+    }
+    if len(msg.TableName) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name cannot be empty")
+    }
+    if len(msg.Trigger) ==0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Trigger cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgAddTrigger) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgAddTrigger) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
+////////////////////////
+//                    //
 // MsgDropInsertFilter //
 //                    //
 ////////////////////////

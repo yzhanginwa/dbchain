@@ -42,6 +42,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdModifyOption(cdc),
         GetCmdAddInsertFilter(cdc),
         GetCmdDropInsertFilter(cdc),
+        GetCmdAddTrigger(cdc),
         GetCmdModifyColumnOption(cdc),
         GetCmdInsertRow(cdc),
         GetCmdUpdateRow(cdc),
@@ -406,6 +407,37 @@ func GetCmdDropInsertFilter(cdc *codec.Codec) *cobra.Command {
             index     := args[2]
 
             msg := types.NewMsgDropInsertFilter(cliCtx.GetFromAddress(), appCode, tableName, index)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+////////////////////////////
+//                        //
+// trigger for new record //
+//                        //
+////////////////////////////
+
+func GetCmdAddTrigger(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "add-trigger [appCode] [tableName] [trigger-text]",
+        Short: "add a trigger",
+        Args:  cobra.ExactArgs(3),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode   := args[0]
+            tableName := args[1]
+            trigger   := args[2]
+
+            msg := types.NewMsgAddTrigger(cliCtx.GetFromAddress(), appCode, tableName, trigger)
             err := msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
