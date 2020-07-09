@@ -269,6 +269,19 @@ func (k Keeper) DropInsertFilter(ctx sdk.Context, appId uint, owner sdk.AccAddre
     return true
 }
 
+func (k Keeper) GetInsertFilters(ctx sdk.Context, appId uint, tableName string) []string {
+    store := ctx.KVStore(k.storeKey)
+    key := getTableInsertFilterKey(appId, tableName)
+    var filters []string
+
+    bz := store.Get([]byte(key))
+    if bz != nil {
+        k.cdc.MustUnmarshalBinaryBare(bz, &filters)
+    }
+
+    return filters
+}
+
 func (k Keeper) GetOption(ctx sdk.Context, appId uint, tableName string) ([]string, error) {
     store := ctx.KVStore(k.storeKey)
     key := getTableOptionsKey(appId, tableName)

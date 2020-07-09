@@ -203,6 +203,9 @@ func (k Keeper) validateInsertion(ctx sdk.Context, appId uint, tableName string,
     if ok := k.validateInsertionWithFieldOptions(ctx, appId, tableName, fields, owner); !ok {
         return false
     }
+    if ok := k.validateInsertionWithInsertFilters(ctx, appId, tableName, fields, owner); !ok {
+        return false
+    }
     return true
 }
 
@@ -273,6 +276,16 @@ func (k Keeper) validateInsertionWithFieldOptions(ctx sdk.Context, appId uint, t
     return(true)
 }
 
+func (k Keeper) validateInsertionWithInsertFilters(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {
+    filters := k.GetInsertFilters(ctx, appId, tableName)
+    for _, filter := range filters {
+        if !validateAgainstOneInsertFilter(k, ctx, appId, tableName, fields, filter) {
+            return false
+        }
+    }
+    return true
+}
+
 func (k Keeper) tryToPinFile(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {
     fieldNames, err := k.getTableFields(ctx, appId, tableName)
     if err != nil {
@@ -315,4 +328,8 @@ func validateAmount(amount string) (int, bool) {
     } else {
         return 0, false
     }
+}
+
+func validateAgainstOneInsertFilter(k Keeper, ctx sdk.Context, appId uint, tableName string, fields types.RowFields, filter string) bool {
+    return true
 }
