@@ -127,6 +127,12 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
         return DEQUAL, buf.String()
     case "IN":
         return IN, buf.String()
+    case "IF":
+        return IF, buf.String()
+    case "THEN":
+        return THEN, buf.String()
+    case "FI":
+        return FI, buf.String()
     }
 
     // Otherwise return as a regular identifier.

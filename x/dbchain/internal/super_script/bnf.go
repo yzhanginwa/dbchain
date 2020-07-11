@@ -6,6 +6,8 @@ package super_script
 //                                                                             //
 /////////////////////////////////////////////////////////////////////////////////
 //                                                                             //
+//    if_condition = "if" filter_condition "then" assignment "fi"              //
+//                                                                             //
 //    filter_condition = single_value "==" single_value .                      //
 //                     | single_value "in" multi_value .                       //
 //                                                                             //
@@ -34,5 +36,7 @@ package super_script
 //    table = "table"                                                          //
 //                                                                             //
 //    ident = (a-zA-Z_)                                                        //
+//                                                                             //
+//    assignment = multi_value "=" single_value                                //
 //                                                                             //
 /////////////////////////////////////////////////////////////////////////////////

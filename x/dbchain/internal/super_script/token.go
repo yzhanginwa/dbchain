@@ -28,6 +28,9 @@ const (
     DEQUAL  // ==
     IN      // in
     WHERE   // where
+    IF      // if
+    THEN    // then
+    FI      // fi
 )
 
 var tokenDisplay = []string{
