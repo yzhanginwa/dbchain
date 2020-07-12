@@ -31,6 +31,7 @@ const (
     IF      // if
     THEN    // then
     FI      // fi
+    INSERT  // insert
 )
 
 var tokenDisplay = []string{

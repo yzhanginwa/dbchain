@@ -35,6 +35,7 @@ func TestScanner_Scan(t *testing.T) {
         {s: `if`, tok: IF, lit: "if"},
         {s: `then`, tok: THEN, lit: "then"},
         {s: `fi`, tok: FI, lit: "fi"},
+        {s: `insert`, tok: INSERT, lit: "insert"},
     }
 
     for i, tt := range tests {
