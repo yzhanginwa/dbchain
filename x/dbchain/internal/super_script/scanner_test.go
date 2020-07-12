@@ -30,6 +30,11 @@ func TestScanner_Scan(t *testing.T) {
         // Keywords
         {s: `THIS`, tok: THIS, lit: "THIS"},
         {s: `PARENT`, tok: PARENT, lit: "PARENT"},
+        {s: `=`, tok: EQUAL, lit: "="},
+        {s: `==`, tok: DEQUAL, lit: "=="},
+        {s: `if`, tok: IF, lit: "if"},
+        {s: `then`, tok: THEN, lit: "then"},
+        {s: `fi`, tok: FI, lit: "fi"},
     }
 
     for i, tt := range tests {
