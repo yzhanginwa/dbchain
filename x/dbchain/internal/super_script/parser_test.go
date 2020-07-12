@@ -6,8 +6,7 @@ import (
     "testing"
 )
 
-// Ensure the parser can parse strings into Statement ASTs.
-func TestParser_ParseStatement(t *testing.T) {
+func TestParser_ParseFilterConditioon(t *testing.T) {
     var tests = []struct {
         s    string
         err  string
@@ -28,10 +27,10 @@ func TestParser_ParseStatement(t *testing.T) {
         },
 
         // Errors
-        {s: `this.corp_id.aa`, err: `found "aa", expected parent`},
+        {s: `this.corp_id.aa`, err: `found "aa", expected "parent"`},
         {s: `foo`, err: `found "foo", expected double quote or "this"`},
-        {s: `this !`, err: `found "!", expected dot`},
-        {s: `this field`, err: `found "field", expected dot`},
+        {s: `this !`, err: `found "!", expected "dot"`},
+        {s: `this field`, err: `found "field", expected "dot"`},
     }
 
     for i, tt := range tests {
@@ -47,6 +46,38 @@ func TestParser_ParseStatement(t *testing.T) {
         err := parser.FilterCondition()
         if !reflect.DeepEqual(tt.err, errstring(err)) {
             t.Errorf("%d. %q: error mismatch:\n  exp=%s\n  got=%s\n\n", i, tt.s, tt.err, err)
+        }
+    }
+}
+
+func TestParser_ParseIfCondition(t *testing.T) {
+    var tests = []struct {
+        s    string
+        err  string
+    }{
+        {
+            s: `if this.corp_id.parent.created_id == this.created_id then
+                insert("corp", "name", "foo", "mailing", "100 main st")
+                insert("corp", "name", "bar", "mailing", "110 main st")
+                fi`,
+            err: "",
+        },
+
+    }
+
+    for i, tt := range tests {
+        parser := NewParser(strings.NewReader(tt.s),
+            func(table, field string) bool {
+                return true
+            },
+            func(table, field string) (string, error) {
+                return "foo", nil
+            },
+        )
+        parser.Start()
+        parser.IfCondition()
+        if !reflect.DeepEqual(tt.err, errstring(parser.err)) {
+            t.Errorf("%d. %q: error mismatch:\n  exp=%s\n  got=%s\n\n", i, tt.s, tt.err, parser.err)
         }
     }
 }

@@ -31,6 +31,57 @@ func (p *Parser) Start() {
     p.nextSym()
 }
 
+func (p *Parser) Trigger() error {
+    switch p.tok {
+    case IF:
+        p.IfCondition()
+        if p.err != nil {
+            return p.err
+        }
+    case INSERT:
+        p.Insert()
+        if p.err != nil {
+            return p.err
+        }
+    default:
+        return fmt.Errorf("found %q, expected if condition or insert statement", p.lit)
+    }
+    return nil
+}
+
+func (p *Parser) Insert() bool {
+    // insert(tableName, field1, "value1", fields2, "value2)
+    if !p.expect(INSERT) { return false }
+    if !p.expect(LPAREN) { return false }
+    if !p.expect(QUOTEDLIT) { return false } // tableName
+    fieldValuePairs := 0
+    for {
+        if p.accept(RPAREN) {
+            break
+        }
+        if !p.expect(COMMA) { return false }
+        if !p.expect(QUOTEDLIT) { return false }
+        if !p.expect(COMMA) { return false }
+        if !p.expect(QUOTEDLIT) { return false }
+        fieldValuePairs += 1
+    }
+    return true
+}
+
+func (p *Parser) IfCondition() bool {
+    if !p.expect(IF) { return false }
+    p.FilterCondition()
+    if !p.expect(THEN) { return false }
+    p.Insert()
+    for {
+        if p.accept(FI) {
+            break
+        }
+        p.Insert()
+    }
+    return true
+}
+
 func (p *Parser) FilterCondition() error {
     p.SingleValue()
     if p.err != nil {
@@ -155,7 +206,7 @@ func (p *Parser) expect(tok Token) bool {
     if (p.accept(tok)) {
         return true;
     }
-    p.err = fmt.Errorf("found \"%s\", expected %s", p.lit, tokenDisplay[int(tok)])
+    p.err = fmt.Errorf("found \"%s\", expected \"%s\"", p.lit, tokenDisplay[int(tok)])
     return false;
 }
 

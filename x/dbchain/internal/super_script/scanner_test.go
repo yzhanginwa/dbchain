@@ -20,12 +20,16 @@ func TestScanner_Scan(t *testing.T) {
         {s: "\n", tok: WS, lit: "\n"},
 
         // Misc characters
-        {s: `"abcd"`, tok: QUOTEDLIT, lit: "\"abcd\""},
-        {s: `"abcd \""`, tok: QUOTEDLIT, lit: `"abcd \""`},
+        {s: "(", tok: LPAREN, lit: "("},
+        {s: ")", tok: RPAREN, lit: ")"},
 
         // Identifiers
         {s: `foo`, tok: IDENT, lit: `foo`},
         {s: `Zx12_3U_-`, tok: IDENT, lit: `Zx12_3U_`},
+
+        {s: `"abcd"`, tok: QUOTEDLIT, lit: "\"abcd\""},
+        {s: `"abcd \""`, tok: QUOTEDLIT, lit: `"abcd \""`},
+
 
         // Keywords
         {s: `THIS`, tok: THIS, lit: "THIS"},

@@ -48,6 +48,10 @@ func (s *Scanner) Scan() (tok Token, lit string) {
         return COMMA, string(ch)
     case '.':
         return DOT, string(ch)
+    case '(':
+        return LPAREN, string(ch)
+    case ')':
+        return RPAREN, string(ch)
     }
 
     return ILLEGAL, string(ch)
