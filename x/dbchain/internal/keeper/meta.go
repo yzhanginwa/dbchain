@@ -501,6 +501,7 @@ func validateInsertFilterSyntax(k Keeper, ctx sdk.Context, appId uint, tableName
             }
         },
     )
+    parser.Start()
     err := parser.FilterCondition()
     if err != nil {
         return false

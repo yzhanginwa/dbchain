@@ -27,8 +27,11 @@ func NewParser(r io.Reader, vtf validateTableField, gpt getParentTable) *Parser 
     return &Parser{s: NewScanner(r), vtf: vtf, gpt: gpt}
 }
 
-func (p *Parser) FilterCondition() error {
+func (p *Parser) Start() {
     p.nextSym()
+}
+
+func (p *Parser) FilterCondition() error {
     p.SingleValue()
     if p.err != nil {
         return p.err
