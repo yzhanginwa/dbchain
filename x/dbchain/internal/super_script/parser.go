@@ -130,6 +130,34 @@ func (p *Parser) ThisExpr() bool {
 }
 
 func (p *Parser) MultiValue() bool {
+    switch p.tok {
+    case TABLE:
+        p.TableValue()
+    case LPAREN:
+        p.ListValue()
+    default:
+        p.err = fmt.Errorf("table or list is wanted")
+        return false
+    }
+
+    return true
+}
+
+func (p *Parser) ListValue() bool {
+    if !p.expect(LPAREN) { return false }
+    if !p.expect(QUOTEDLIT) { return false } // first element of list
+    for {
+        if p.accept(RPAREN) {
+            break;
+        }
+
+        if !p.expect(COMMA) { return false }
+        if !p.expect(QUOTEDLIT) { return false }
+    }
+    return true
+}
+
+func (p *Parser) TableValue() bool {
     if !p.expect(TABLE) { return false }
     if !p.expect(DOT) { return false }
     if !p.TableName() { return false }

@@ -20,7 +20,11 @@ package super_script
 //                                                                             //
 //    parent_field = parent "." field { "." parent_field } .                   //
 //                                                                             //
-//    multi_value = table "." table_name { "." where } "." field               //
+//    multi_value = list_value | table_value                                   //
+//                                                                             //
+//    list_value = "(" string_literal ["," string_listeral] ")"                //
+//                                                                             //
+//    table_value = table "." table_name { "." where } "." field               //
 //                | "(" string_literal { "," string_literal } ")" .            //
 //                                                                             //
 //    table_name = ident                                                       //
