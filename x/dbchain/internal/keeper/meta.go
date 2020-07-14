@@ -485,22 +485,10 @@ func preProcessFields(fields []string) []string {
 }
 
 func validateInsertFilterSyntax(k Keeper, ctx sdk.Context, appId uint, tableName string, filter string) bool {
-    parser := ss.NewParser(strings.NewReader(filter),
-        func(table, field string) bool {
-            fieldNames, err := k.getTableFields(ctx, appId, table)
-            if err != nil { return false }
-            return utils.StringIncluded(fieldNames, field)
-        },
+    fn1 := getScriptValidationCallbackOne(k, ctx, appId, tableName)
+    fn2 := getScriptValidationCallbackTwo(k, ctx, appId, tableName)
 
-        func(table, field string) (string, error) {
-            //for now we get parent table solely from the field name
-            if tn, ok := utils.GetTableNameFromForeignKey(field); ok {
-                return tn, nil
-            } else {
-                return "", errors.New("Wrong reference field name")
-            }
-        },
-    )
+    parser := ss.NewParser(strings.NewReader(filter), fn1, fn2)
     parser.Start()
     err := parser.FilterCondition()
     if err != nil {
