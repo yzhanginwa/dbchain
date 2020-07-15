@@ -37,6 +37,9 @@ func (p *Parser) Start() {
 func (p *Parser) Trigger() error {
     p.syntaxTree = []eval.Block{}
     for {
+        if p.tok == EOF {
+            return nil
+        }
         if !p.Statement() {
             break
         }

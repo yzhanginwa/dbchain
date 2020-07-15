@@ -50,7 +50,7 @@ func TestParser_ParseFilterConditioon(t *testing.T) {
     }
 }
 
-func TestParser_ParseIfCondition(t *testing.T) {
+func TestParser_ParseTrigger(t *testing.T) {
     var tests = []struct {
         s    string
         err  string
@@ -59,7 +59,10 @@ func TestParser_ParseIfCondition(t *testing.T) {
             s: `if this.corp_id.parent.created_id == this.created_id then
                 insert("corp", "name", "foo", "mailing", "100 main st")
                 insert("corp", "name", "bar", "mailing", "110 main st")
-                fi`,
+                fi
+                insert("corp", "name", "bar1", "mailing", "111 main st")
+                insert("corp", "name", "bar2", "mailing", "112 main st")
+               `,
             err: "",
         },
 
@@ -75,7 +78,7 @@ func TestParser_ParseIfCondition(t *testing.T) {
             },
         )
         parser.Start()
-        parser.IfCondition()
+        parser.Trigger()
         if !reflect.DeepEqual(tt.err, errstring(parser.err)) {
             t.Errorf("%d. %q: error mismatch:\n  exp=%s\n  got=%s\n\n", i, tt.s, tt.err, parser.err)
         }
