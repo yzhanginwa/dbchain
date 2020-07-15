@@ -497,6 +497,15 @@ func validateInsertFilterSyntax(k Keeper, ctx sdk.Context, appId uint, tableName
     return true
 }
 
-func validateTriggerSyntax(k Keeper, ctx sdk.Context, appId uint, tableName string, filter string) bool {
+func validateTriggerSyntax(k Keeper, ctx sdk.Context, appId uint, tableName string, trigger string) bool {
+    fn1 := getScriptValidationCallbackOne(k, ctx, appId, tableName)
+    fn2 := getScriptValidationCallbackTwo(k, ctx, appId, tableName)
+
+    parser := ss.NewParser(strings.NewReader(trigger), fn1, fn2)
+    parser.Start()
+    err := parser.Trigger()
+    if err != nil {
+        return false
+    }
     return true
 }

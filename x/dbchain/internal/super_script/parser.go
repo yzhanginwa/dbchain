@@ -3,6 +3,7 @@ package super_script
 import (
     "fmt"
     "io"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/eval"
 )
 
 // validate field name in current or specified table
@@ -20,6 +21,8 @@ type Parser struct {
     gpt getParentTable
     currentTable string
     currentField string
+
+    syntaxTree interface{} // eval.Condition or eval.
 }
 
 // NewParser returns a new instance of Parser.
@@ -32,21 +35,29 @@ func (p *Parser) Start() {
 }
 
 func (p *Parser) Trigger() error {
-    switch p.tok {
-    case IF:
-        p.IfCondition()
-        if p.err != nil {
-            return p.err
+    p.syntaxTree = []eval.Block{}
+    for {
+        if !p.Statement() {
+            break
         }
-    case INSERT:
-        p.Insert()
-        if p.err != nil {
-            return p.err
-        }
-    default:
-        return fmt.Errorf("found %q, expected if condition or insert statement", p.lit)
+    }
+    if p.err != nil {
+        return p.err
     }
     return nil
+}
+
+func (p *Parser) Statement() bool {
+    switch p.tok {
+    case IF:
+        if !p.IfCondition() { return false }
+    case INSERT:
+        if !p.Insert() { return false }
+    default:
+        p.err = fmt.Errorf("found %q, expected if condition or insert statement", p.lit)
+        return false
+    }
+    return true
 }
 
 func (p *Parser) Insert() bool {
