@@ -32,6 +32,9 @@ const (
     THEN    // then
     FI      // fi
     INSERT  // insert
+    RETURN  // return
+    TRUE    // true
+    FALSE   // false
 )
 
 var tokenDisplay = []string{

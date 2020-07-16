@@ -40,6 +40,9 @@ func TestScanner_Scan(t *testing.T) {
         {s: `then`, tok: THEN, lit: "then"},
         {s: `fi`, tok: FI, lit: "fi"},
         {s: `insert`, tok: INSERT, lit: "insert"},
+        {s: `return`, tok: RETURN, lit: "return"},
+        {s: `true`, tok: TRUE, lit: "true"},
+        {s: `false`, tok: FALSE, lit: "false"},
     }
 
     for i, tt := range tests {

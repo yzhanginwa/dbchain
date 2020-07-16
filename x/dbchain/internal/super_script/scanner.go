@@ -139,6 +139,12 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
         return FI, buf.String()
     case "INSERT":
         return INSERT, buf.String()
+    case "RETURN":
+        return RETURN, buf.String()
+    case "TRUE":
+        return TRUE, buf.String()
+    case "FALSE":
+        return FALSE, buf.String()
     }
 
     // Otherwise return as a regular identifier.
