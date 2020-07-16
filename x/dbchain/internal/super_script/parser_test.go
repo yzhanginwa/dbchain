@@ -51,7 +51,7 @@ func TestParser_ParseFilterConditioon(t *testing.T) {
     }
 }
 
-func TestParser_ParseTrigger(t *testing.T) {
+func TestParser_ParseScript(t *testing.T) {
     var tests = []struct {
         s    string
         err  string
@@ -80,7 +80,7 @@ func TestParser_ParseTrigger(t *testing.T) {
             },
         )
         parser.Start()
-        parser.Trigger()
+        parser.Script()
         if !reflect.DeepEqual(tt.err, errstring(parser.err)) {
             t.Errorf("%d. %q: error mismatch:\n  exp=%s\n  got=%s\n\n", i, tt.s, tt.err, parser.err)
         }

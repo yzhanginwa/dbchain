@@ -34,7 +34,7 @@ func (p *Parser) Start() {
     p.nextSym()
 }
 
-func (p *Parser) Trigger() error {
+func (p *Parser) Script() error {
     p.syntaxTree = []eval.Block{}
     for {
         if p.tok == EOF {

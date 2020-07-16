@@ -502,7 +502,7 @@ func validateTriggerSyntax(k Keeper, ctx sdk.Context, appId uint, tableName stri
 
     parser := ss.NewParser(strings.NewReader(trigger), fn1, fn2)
     parser.Start()
-    err := parser.Trigger()
+    err := parser.Script()
     if err != nil {
         return false
     }
