@@ -114,26 +114,18 @@ func (p *Parser) IfCondition() bool {
     return true
 }
 
-func (p *Parser) FilterCondition() error {
-    p.SingleValue()
-    if p.err != nil {
-        return p.err
-    }
+func (p *Parser) FilterCondition() bool {
+    if ! p.SingleValue() { return false }
 
     if p.accept(DEQUAL) {
-        p.SingleValue()
-        if p.err != nil {
-            return p.err
-        }
+        if !p.SingleValue() { return false }
     } else if p.accept(IN) {
-        p.MultiValue()
-        if p.err != nil {
-            return p.err
-        }
+        if !p.MultiValue() { return false }
     } else {
-        return fmt.Errorf("found %q, expected \"==\" or \"in\"", p.lit)
+        p.err = fmt.Errorf("found %q, expected \"==\" or \"in\"", p.lit)
+        return false
     }
-    return nil
+    return true
 }
 
 func (p *Parser) SingleValue() bool {

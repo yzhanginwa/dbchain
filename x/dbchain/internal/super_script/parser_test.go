@@ -43,7 +43,8 @@ func TestParser_ParseFilterConditioon(t *testing.T) {
             },
         )
         parser.Start()
-        err := parser.FilterCondition()
+        parser.FilterCondition()
+        err := parser.err
         if !reflect.DeepEqual(tt.err, errstring(err)) {
             t.Errorf("%d. %q: error mismatch:\n  exp=%s\n  got=%s\n\n", i, tt.s, tt.err, err)
         }
