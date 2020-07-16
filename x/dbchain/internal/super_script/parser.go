@@ -54,12 +54,28 @@ func (p *Parser) Statement() bool {
     switch p.tok {
     case IF:
         if !p.IfCondition() { return false }
+    case RETURN:
+        if !p.Return() { return false }
     case INSERT:
         if !p.Insert() { return false }
     default:
         p.err = fmt.Errorf("found %q, expected if condition or insert statement", p.lit)
         return false
     }
+    return true
+}
+
+func (p *Parser) Return() bool {
+    // return(true)
+    if !p.expect(RETURN) { return false }
+    if !p.expect(LPAREN) { return false }
+    if !p.accept(TRUE) {
+        if !p.accept(FALSE) {
+            p.err = fmt.Errorf("found %q, expected true or false", p.lit)
+            return false
+        }
+    }
+    if !p.expect(RPAREN) { return false }
     return true
 }
 
@@ -86,12 +102,14 @@ func (p *Parser) IfCondition() bool {
     if !p.expect(IF) { return false }
     p.FilterCondition()
     if !p.expect(THEN) { return false }
-    p.Insert()
+    p.Statement()
     for {
         if p.accept(FI) {
             break
         }
-        p.Insert()
+        if !p.Statement() {
+            return false
+        }
     }
     return true
 }

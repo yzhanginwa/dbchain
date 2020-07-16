@@ -59,6 +59,7 @@ func TestParser_ParseTrigger(t *testing.T) {
             s: `if this.corp_id.parent.created_id == this.created_id then
                 insert("corp", "name", "foo", "mailing", "100 main st")
                 insert("corp", "name", "bar", "mailing", "110 main st")
+                return(false)
                 fi
                 insert("corp", "name", "bar1", "mailing", "111 main st")
                 insert("corp", "name", "bar2", "mailing", "112 main st")
