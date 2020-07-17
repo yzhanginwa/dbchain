@@ -28,11 +28,7 @@ func NewProgram(appId uint, tableName string, newRecord map[string]string, scrip
     }
 }
 
-func (p *Program) ParseTrigger() {
-
-}
-
-func (p *Program) ParseFilter() {
+func (p *Program) ParseScript() {
 
 }
 
