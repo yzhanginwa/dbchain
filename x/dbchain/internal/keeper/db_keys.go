@@ -93,11 +93,6 @@ func getTableOptionsKey(appId uint, tableName string) string {
     return fmt.Sprintf("%s:%d:%s:opt:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName)
 }
 
-// to store the insert filters for a table
-func getTableInsertFilterKey(appId uint, tableName string) string {
-    return fmt.Sprintf("%s:%d:%s:insfltr:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName)
-}
-
 func getColumnOptionsKey(appId uint, tableName string, fieldName string) string {
     return fmt.Sprintf("%s:%d:%s:fldopt:%s:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName, fieldName)
 }

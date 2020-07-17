@@ -233,53 +233,42 @@ func (k Keeper) AddInsertFilter(ctx sdk.Context, appId uint, owner sdk.AccAddres
     if !validateInsertFilterSyntax(k, ctx, appId, tableName, filter) {
         return false
     } 
-    store := ctx.KVStore(k.storeKey)
-    key := getTableInsertFilterKey(appId, tableName)
-    var filters []string
 
-    bz := store.Get([]byte(key))
-    if bz != nil {
-        k.cdc.MustUnmarshalBinaryBare(bz, &filters)
+    table, err := k.GetTable(ctx, appId, tableName)
+    if err != nil {
+        return false
     }
 
-    filters = append(filters, filter)
-    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(filters))
+    if len(table.Filter) > 0 {
+        return false
+    }
+
+    table.Filter = filter
+
+    store := ctx.KVStore(k.storeKey)
+    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
     return true
 }
 
 func (k Keeper) DropInsertFilter(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, index int) bool {
-    store := ctx.KVStore(k.storeKey)
-    key := getTableInsertFilterKey(appId, tableName)
-    var filters []string
-
-    bz := store.Get([]byte(key))
-    if bz != nil {
-        k.cdc.MustUnmarshalBinaryBare(bz, &filters)
-    }
-
-    l := len(filters)
-    if index < 0 || index > (l - 1) {
+    table, err := k.GetTable(ctx, appId, tableName)
+    if err != nil {
         return false
     }
 
-    filters[index] = filters[l-1]
-    filters[l-1] = ""
-    filters = filters[:l-1]
-    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(filters))
+    table.Filter = ""
+    store := ctx.KVStore(k.storeKey)
+    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
     return true
 }
 
-func (k Keeper) GetInsertFilters(ctx sdk.Context, appId uint, tableName string) []string {
-    store := ctx.KVStore(k.storeKey)
-    key := getTableInsertFilterKey(appId, tableName)
-    var filters []string
-
-    bz := store.Get([]byte(key))
-    if bz != nil {
-        k.cdc.MustUnmarshalBinaryBare(bz, &filters)
+func (k Keeper) GetInsertFilter(ctx sdk.Context, appId uint, tableName string) string {
+    table, err := k.GetTable(ctx, appId, tableName)
+    if err != nil {
+        return ""
     }
 
-    return filters
+    return table.Filter
 }
 
 func (k Keeper) AddTrigger(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, trigger string) bool {
