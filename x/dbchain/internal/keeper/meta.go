@@ -479,7 +479,8 @@ func validateInsertFilterSyntax(k Keeper, ctx sdk.Context, appId uint, tableName
 
     parser := ss.NewParser(strings.NewReader(filter), fn1, fn2)
     parser.Start()
-    if !parser.FilterCondition() {
+    err := parser.Script()
+    if err != nil {
         return false
     }
     return true

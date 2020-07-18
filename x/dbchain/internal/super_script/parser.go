@@ -131,6 +131,7 @@ func (p *Parser) FilterCondition() bool {
 func (p *Parser) SingleValue() bool {
     switch p.tok {
     case QUOTEDLIT:
+        p.accept(QUOTEDLIT)
         return true
     case THIS:
         if !p.ThisExpr() { return false }
@@ -138,7 +139,6 @@ func (p *Parser) SingleValue() bool {
         p.err = fmt.Errorf("found %q, expected double quote or \"this\"", p.lit)
         return false
     }
-
     return true
 }
 
@@ -228,7 +228,9 @@ func (p *Parser) Where() bool {
 }
 
 func (p *Parser) Field() bool {
+    fieldName := p.lit
     if p.accept(IDENT) {
+        p.currentField = fieldName
         if p.vtf(p.currentTable, p.currentField) {
             return true
         } else {
