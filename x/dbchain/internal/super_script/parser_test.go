@@ -6,7 +6,7 @@ import (
     "testing"
 )
 
-func TestParser_ParseFilterConditioon(t *testing.T) {
+func TestParser_ParseConditioon(t *testing.T) {
     var tests = []struct {
         s    string
         err  string
@@ -43,7 +43,7 @@ func TestParser_ParseFilterConditioon(t *testing.T) {
             },
         )
         parser.Start()
-        parser.FilterCondition()
+        parser.Condition()
         err := parser.err
         if !reflect.DeepEqual(tt.err, errstring(err)) {
             t.Errorf("%d. %q: error mismatch:\n  exp=%s\n  got=%s\n\n", i, tt.s, tt.err, err)

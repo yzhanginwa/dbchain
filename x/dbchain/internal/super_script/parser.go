@@ -100,7 +100,7 @@ func (p *Parser) Insert() bool {
 
 func (p *Parser) IfCondition() bool {
     if !p.expect(IF) { return false }
-    p.FilterCondition()
+    p.Condition()
     if !p.expect(THEN) { return false }
     p.Statement()
     for {
@@ -114,7 +114,7 @@ func (p *Parser) IfCondition() bool {
     return true
 }
 
-func (p *Parser) FilterCondition() bool {
+func (p *Parser) Condition() bool {
     if ! p.SingleValue() { return false }
 
     if p.accept(DEQUAL) {
