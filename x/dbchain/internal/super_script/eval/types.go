@@ -4,19 +4,12 @@ import (
 
 )
 
-type ConditionOperator int
-
-const (
-    EQUAL ConditionOperator = iota
-    IN
-)
-
 type Program struct {
     CurrentAppId uint
     CurrentTable string
     NewRecord map[string]string
     Script string
-    Code []Block
+    SyntaxTree []Statement
 }
 
 func NewProgram(appId uint, tableName string, newRecord map[string]string, script string) *Program {
@@ -32,20 +25,26 @@ func (p *Program) ParseScript() {
 
 }
 
-type Block struct {
-    Condition Condition           // when nil for just insert statements
+type Statement struct {
+    IfCondition IfCondition           // when nil for just insert statements
     Insert Insert
+    Return string
+}
+
+type IfCondition struct {
+    Condition Condition
+    Statements []Statement
 }
 
 type Condition struct {
-    left SingleValue
-    operator ConditionOperator
-    right interface{}              // single or multi value
+    Left SingleValue
+    Operator string                // "==" or "in"
+    Right interface{}              // single or multi value
 }
 
 type Insert struct {
-    tableName string
-    value map[string]string
+    TableName string
+    Value map[string]string
 }
 
 type SingleValue struct {
@@ -58,14 +57,24 @@ type ThisExpression struct {
 }
 
 type MultiValue struct {
-    tv TableValue
-    ll ListLiteral
+    TableValue TableValue
+    ListLiteral ListLiteral
 }
 
 type TableValue struct {
-    items []interface{}
+    Items []interface{}
 }
 
 type ListLiteral struct {
-    items []string
+    Items []string
+}
+
+type Where struct {          // parent is TableValue.Items
+    Field string             // field name of a table
+    Operator string
+    Right interface{}
+}
+
+type Field struct {
+    Item string
 }

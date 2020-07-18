@@ -22,7 +22,7 @@ type Parser struct {
     currentTable string
     currentField string
 
-    syntaxTree interface{} // eval.Condition or eval.
+    syntaxTree []eval.Statement
 }
 
 // NewParser returns a new instance of Parser.
@@ -35,54 +35,67 @@ func (p *Parser) Start() {
 }
 
 func (p *Parser) Script() error {
-    p.syntaxTree = []eval.Block{}
+    statements := []eval.Statement{}
     for {
         if p.tok == EOF {
             return nil
         }
-        if !p.Statement() {
+        if !p.Statement(&statements) {
             break
         }
     }
     if p.err != nil {
         return p.err
     }
+    p.syntaxTree = statements
     return nil
 }
 
-func (p *Parser) Statement() bool {
+func (p *Parser) Statement(parent *[]eval.Statement) bool {
+    thisStatement := eval.Statement{}
+
     switch p.tok {
     case IF:
-        if !p.IfCondition() { return false }
+        if !p.IfCondition(&thisStatement) { return false }
     case RETURN:
-        if !p.Return() { return false }
+        if !p.Return(&thisStatement) { return false }
     case INSERT:
-        if !p.Insert() { return false }
+        if !p.Insert(&thisStatement) { return false }
     default:
         p.err = fmt.Errorf("found %q, expected if condition or insert statement", p.lit)
         return false
     }
+    //p.syntaxTree = append(p.syntaxTree, thisStatement)
+    (*parent) = append((*parent), thisStatement)
     return true
 }
 
-func (p *Parser) Return() bool {
-    // return(true)
+func (p *Parser) Return(parent *eval.Statement) bool {
     if !p.expect(RETURN) { return false }
     if !p.expect(LPAREN) { return false }
+
+    returnedValue := p.lit
     if !p.accept(TRUE) {
         if !p.accept(FALSE) {
             p.err = fmt.Errorf("found %q, expected true or false", p.lit)
             return false
         }
     }
+
     if !p.expect(RPAREN) { return false }
+    parent.Return = returnedValue
     return true
 }
 
-func (p *Parser) Insert() bool {
+func (p *Parser) Insert(parent *eval.Statement) bool {
     // insert(tableName, field1, "value1", fields2, "value2)
+    insert := eval.Insert{}
     if !p.expect(INSERT) { return false }
     if !p.expect(LPAREN) { return false }
+
+    insert.TableName = p.lit
+    values := make(map[string]string)
+
     if !p.expect(QUOTEDLIT) { return false } // tableName
     fieldValuePairs := 0
     for {
@@ -90,85 +103,117 @@ func (p *Parser) Insert() bool {
             break
         }
         if !p.expect(COMMA) { return false }
+        k := p.lit
         if !p.expect(QUOTEDLIT) { return false }
         if !p.expect(COMMA) { return false }
+        values[k] = p.lit
         if !p.expect(QUOTEDLIT) { return false }
         fieldValuePairs += 1
     }
+    insert.Value = values
+    parent.Insert = insert
     return true
 }
 
-func (p *Parser) IfCondition() bool {
+func (p *Parser) IfCondition(parent *eval.Statement) bool {
+    ifCondition := eval.IfCondition{}
+    statements := []eval.Statement{}
+
     if !p.expect(IF) { return false }
-    p.Condition()
+    p.Condition(&ifCondition)
+
     if !p.expect(THEN) { return false }
-    p.Statement()
+    p.Statement(&statements)
     for {
         if p.accept(FI) {
             break
         }
-        if !p.Statement() {
+        if !p.Statement(&statements) {
             return false
         }
     }
+    ifCondition.Statements = statements
+    parent.IfCondition = ifCondition
     return true
 }
 
-func (p *Parser) Condition() bool {
-    if ! p.SingleValue() { return false }
+func (p *Parser) Condition(parent *eval.IfCondition) bool {
+    condition := eval.Condition{}
 
+    if ! p.SingleValue(&condition, "left") { return false }
+
+    condition.Operator = p.lit
     if p.accept(DEQUAL) {
-        if !p.SingleValue() { return false }
+        if !p.SingleValue(&condition, "right") { return false }
     } else if p.accept(IN) {
-        if !p.MultiValue() { return false }
+        if !p.MultiValue(&condition) { return false }
     } else {
         p.err = fmt.Errorf("found %q, expected \"==\" or \"in\"", p.lit)
         return false
     }
+    parent.Condition = condition
     return true
 }
 
-func (p *Parser) SingleValue() bool {
+func (p *Parser) SingleValue(parent *eval.Condition, l_or_r string) bool {
+    singleValue := eval.SingleValue{}
+
     switch p.tok {
     case QUOTEDLIT:
+        singleValue.QuotedLit = p.lit
         p.accept(QUOTEDLIT)
         return true
     case THIS:
-        if !p.ThisExpr() { return false }
+        if !p.ThisExpr(&singleValue) { return false }
     default:
         p.err = fmt.Errorf("found %q, expected double quote or \"this\"", p.lit)
         return false
     }
-    return true
-}
 
-func (p *Parser) ThisExpr() bool {
-    if !p.expect(THIS) { return false }
-    p.currentTable = ""
-    if !p.expect(DOT) { return false }
-    if !p.Field() { return false }
-    if p.accept(DOT) {
-        if !p.ParentField() { return false }
+    if l_or_r == "left" {
+        parent.Left = singleValue
+    } else {
+        parent.Right = singleValue
     }
     return true
 }
 
-func (p *Parser) MultiValue() bool {
+func (p *Parser) ThisExpr(parent *eval.SingleValue) bool {
+    thisExpr := eval.ThisExpression{}
+
+    if !p.expect(THIS) { return false }
+    p.currentTable = ""
+    if !p.expect(DOT) { return false }
+    if !p.Field(&thisExpr) { return false }
+    if p.accept(DOT) {
+        if !p.ParentField() { return false }
+    }
+    parent.ThisExpr = thisExpr
+    return true
+}
+
+func (p *Parser) MultiValue(parent *eval.Condition) bool {
+    multiValue := eval.MultiValue{}
+
     switch p.tok {
     case TABLE:
         p.TableValue()
     case LPAREN:
-        p.ListValue()
+        p.ListLiteral()
     default:
         p.err = fmt.Errorf("table or list is wanted")
         return false
     }
-
+    parent.Right = multiValue
     return true
 }
 
-func (p *Parser) ListValue() bool {
+func (p *Parser) ListLiteral(parent *eval.MultlValue) bool {
+    listLiteral := eval.ListLiteral{}
+    items := []string{}
+
     if !p.expect(LPAREN) { return false }
+    items = append(items, p.lit)
     if !p.expect(QUOTEDLIT) { return false } // first element of list
     for {
         if p.accept(RPAREN) {
@@ -176,20 +221,32 @@ func (p *Parser) ListValue() bool {
         }
 
         if !p.expect(COMMA) { return false }
+        items = append(items, p.lit)
         if !p.expect(QUOTEDLIT) { return false }
     }
+    listLiteral.Items = items
+    parent.ListLiteral = listLiteral
     return true
 }
 
-func (p *Parser) TableValue() bool {
+func (p *Parser) TableValue(parent *eval.MultiValue) bool {
+    tableValue := eval.TableValue{}
+    items := []interface{}{}
+
     if !p.expect(TABLE) { return false }
     if !p.expect(DOT) { return false }
+    items = append(items, p.lit)
     if !p.TableName() { return false }
     if !p.expect(DOT) { return false }
-    for ok := p.accept(WHERE); ok;  ok = p.accept(WHERE) {
-        if !p.expect(DOT) { break }
+    //for ok := p.accept(WHERE); ok;  ok = p.accept(WHERE) {
+    for {
+        if p.tok != WHERE { break }
+        if !p.Where(&items) { return false }
+        //if !p.expect(DOT) { break }
     } 
-    if !p.Field() { return false }
+    if !p.Field(&items) { return false }
+    tableValue.Items = items
+    parent.TableValue = tableValue
     return true
 }
 
@@ -217,13 +274,19 @@ func (p *Parser) TableName() bool {
     return false
 }
 
-func (p *Parser) Where() bool {
+func (p *Parser) Where(parent *[]interface{}) bool {
+    theWhere := eval.Where{}
+ 
     if !p.expect(WHERE) { return false }
     if !p.expect(LPAREN) { return false }
+    theWhere.Field = p.lit
     if !p.Field() { return false }
+    theWhere.Operator = p.lit
     if !p.expect(DEQUAL) { return false }
-    if !p.SingleValue() { return false }
+    if !p.SingleValue(&theWhere, "right") { return false }
     if !p.expect(LPAREN) { return false }
+    
+    (*parent) = append((*parent), theWhere)
     return true
 }
 
