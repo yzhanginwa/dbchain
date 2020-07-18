@@ -2,7 +2,6 @@ package dbchain
 
 import (
     "fmt"
-    "strconv"
     "strings"
     "bytes"
     "encoding/json"
@@ -304,13 +303,8 @@ func handleMsgDropInsertFilter(ctx sdk.Context, keeper Keeper, msg MsgDropInsert
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name does not exist!")
     }
 
-    index, err := strconv.Atoi(msg.Index)
-    if err == nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
-    }
-
-    if !keeper.DropInsertFilter(ctx, appId, msg.Owner, msg.TableName, index - 1) { // the index in msg starts from 1
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Index not valid")
+    if !keeper.DropInsertFilter(ctx, appId, msg.Owner, msg.TableName) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Failed to drop insert filter")
     }
 
     return &sdk.Result{}, nil

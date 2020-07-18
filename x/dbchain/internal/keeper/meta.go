@@ -250,7 +250,7 @@ func (k Keeper) AddInsertFilter(ctx sdk.Context, appId uint, owner sdk.AccAddres
     return true
 }
 
-func (k Keeper) DropInsertFilter(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, index int) bool {
+func (k Keeper) DropInsertFilter(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string) bool {
     table, err := k.GetTable(ctx, appId, tableName)
     if err != nil {
         return false

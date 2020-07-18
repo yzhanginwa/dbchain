@@ -661,16 +661,14 @@ type MsgDropInsertFilter struct {
     Owner sdk.AccAddress `json:"owner"`
     AppCode string       `json:"app_code"`
     TableName string     `json:"table_name"`
-    Index  string        `json:"index"`
 }
 
 // NewMsgCreatePoll is a constructor function for MsgCreatPoll
-func NewMsgDropInsertFilter(owner sdk.AccAddress, appCode string, tableName string, index string) MsgDropInsertFilter {
+func NewMsgDropInsertFilter(owner sdk.AccAddress, appCode string, tableName string) MsgDropInsertFilter {
     return MsgDropInsertFilter {
         Owner: owner,
         AppCode: appCode,
         TableName: tableName,
-        Index: index,
     }
 }
 
@@ -690,9 +688,6 @@ func (msg MsgDropInsertFilter) ValidateBasic() error {
     }
     if len(msg.TableName) == 0 {
         return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name cannot be empty")
-    }
-    if len(msg.Index) ==0 {
-        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Index cannot be empty")
     }
     return nil
 }
