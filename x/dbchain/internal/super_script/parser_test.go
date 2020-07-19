@@ -4,6 +4,7 @@ import (
     "reflect"
     "strings"
     "testing"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/eval"
 )
 
 func TestParser_ParseConditioon(t *testing.T) {
@@ -43,7 +44,7 @@ func TestParser_ParseConditioon(t *testing.T) {
             },
         )
         parser.Start()
-        parser.Condition()
+        parser.Condition(&(eval.IfCondition{}))
         err := parser.err
         if !reflect.DeepEqual(tt.err, errstring(err)) {
             t.Errorf("%d. %q: error mismatch:\n  exp=%s\n  got=%s\n\n", i, tt.s, tt.err, err)

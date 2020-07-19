@@ -53,7 +53,7 @@ type SingleValue struct {
 }
 
 type ThisExpression struct {
-    items []interface{}
+    Items []interface{}
 }
 
 type MultiValue struct {

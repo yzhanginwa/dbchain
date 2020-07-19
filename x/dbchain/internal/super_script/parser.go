@@ -65,7 +65,6 @@ func (p *Parser) Statement(parent *[]eval.Statement) bool {
         p.err = fmt.Errorf("found %q, expected if condition or insert statement", p.lit)
         return false
     }
-    //p.syntaxTree = append(p.syntaxTree, thisStatement)
     (*parent) = append((*parent), thisStatement)
     return true
 }
@@ -155,7 +154,8 @@ func (p *Parser) Condition(parent *eval.IfCondition) bool {
     return true
 }
 
-func (p *Parser) SingleValue(parent *eval.Condition, l_or_r string) bool {
+// SingleValue could be used in Condition and Where
+func (p *Parser) SingleValue(parent interface{}, l_or_r string) bool {
     singleValue := eval.SingleValue{}
 
     switch p.tok {
@@ -170,11 +170,25 @@ func (p *Parser) SingleValue(parent *eval.Condition, l_or_r string) bool {
         return false
     }
 
-    if l_or_r == "left" {
-        parent.Left = singleValue
-    } else {
-        parent.Right = singleValue
+    switch parent.(type) {
+    case *eval.Condition:
+        v := parent.(*eval.Condition)
+        if l_or_r == "left" {
+            v.Left = singleValue
+        } else {
+            v.Right = singleValue
+        }
+    case *eval.Where:
+        v := parent.(*eval.Condition)
+        if l_or_r == "left" {
+            v.Left = singleValue
+        } else {
+            v.Right = singleValue
+        }
+    default:
+        p.err = fmt.Errorf("This is impossible")
     }
+
     return true
 }
 
@@ -184,7 +198,10 @@ func (p *Parser) ThisExpr(parent *eval.SingleValue) bool {
     if !p.expect(THIS) { return false }
     p.currentTable = ""
     if !p.expect(DOT) { return false }
-    if !p.Field(&thisExpr) { return false }
+
+    thisExpr.Items = append(thisExpr.Items, p.lit)
+    if !p.Field() { return false }
+
     if p.accept(DOT) {
         if !p.ParentField() { return false }
     }
@@ -197,9 +214,9 @@ func (p *Parser) MultiValue(parent *eval.Condition) bool {
 
     switch p.tok {
     case TABLE:
-        p.TableValue()
+        p.TableValue(&multiValue)
     case LPAREN:
-        p.ListLiteral()
+        p.ListLiteral(&multiValue)
     default:
         p.err = fmt.Errorf("table or list is wanted")
         return false
@@ -208,7 +225,7 @@ func (p *Parser) MultiValue(parent *eval.Condition) bool {
     return true
 }
 
-func (p *Parser) ListLiteral(parent *eval.MultlValue) bool {
+func (p *Parser) ListLiteral(parent *eval.MultiValue) bool {
     listLiteral := eval.ListLiteral{}
     items := []string{}
 
@@ -244,7 +261,8 @@ func (p *Parser) TableValue(parent *eval.MultiValue) bool {
         if !p.Where(&items) { return false }
         //if !p.expect(DOT) { break }
     } 
-    if !p.Field(&items) { return false }
+    items = append(items, p.lit)
+    if !p.Field() { return false }
     tableValue.Items = items
     parent.TableValue = tableValue
     return true
