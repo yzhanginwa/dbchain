@@ -203,7 +203,7 @@ func (p *Parser) ThisExpr(parent *eval.SingleValue) bool {
     if !p.Field() { return false }
 
     if p.accept(DOT) {
-        if !p.ParentField() { return false }
+        if !p.ParentField(&thisExpr) { return false }
     }
     parent.ThisExpr = thisExpr
     return true
@@ -268,7 +268,9 @@ func (p *Parser) TableValue(parent *eval.MultiValue) bool {
     return true
 }
 
-func (p *Parser) ParentField() bool {
+func (p *Parser) ParentField(parent *eval.ThisExpression) bool {
+    pf := eval.ParentField{}
+
     if !p.expect(PARENT) { return false }
     tn, err := p.gpt(p.currentTable, p.currentField)
     if err != nil {
@@ -276,10 +278,16 @@ func (p *Parser) ParentField() bool {
         return false
     }
     p.currentTable = tn
+
     if !p.expect(DOT) { return false }
+
+    pf.ParentTable = tn
+    pf.Field = p.lit
+    parent.Items = append(parent.Items, pf)
+
     if !p.Field() { return false }
     if p.accept(DOT) {
-        if !p.ParentField() { return false }
+        if !p.ParentField(parent) { return false }
     }
     return true
 }

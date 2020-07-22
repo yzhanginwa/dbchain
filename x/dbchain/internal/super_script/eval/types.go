@@ -1,7 +1,7 @@
 package eval
 
 import (
-
+    "strconv"
 )
 
 type ReturnValue int
@@ -12,28 +12,28 @@ const (
 )
 
 type Program struct {
-    CurrentAppId uint
     CurrentTable string
     NewRecord    map[string]string
     Script       string
     SyntaxTree   []Statement
     Return       ReturnValue
+    InsertFunc   func(string, map[string]string)
+    GetFieldValueFunc func(string, uint, string) string // appId, tableName, id, fieldName
 }
 
-func NewProgram(appId uint, tableName string, newRecord map[string]string, script string) *Program {
+func NewProgram(tableName string, newRecord map[string]string, script string) *Program {
     return &Program{
-        CurrentAppId: appId,
         CurrentTable: tableName,
         NewRecord:    newRecord,
         Script:       script,
-        Return:       NIL
+        Return:       NIL,
     }
 }
 
 func (p *Program) EvaluateScript(syntaxTree []Statement) bool {
     for _, statement := range syntaxTree {
         statement.Evaluate(p)
-        if p.Return == FALSE
+        if p.Return == FALSE {
             return false
         } else if p.Return == TRUE {
             return true
@@ -58,11 +58,11 @@ func (s *Statement) Evaluate(p *Program) {
         return
     }
 
-    if s.Insert != nil {
-        (s.Insert).Evaluate(p)
+    if s.Insert.TableName != "" {
+        s.Insert.Evaluate(p)
     }
 
-    if s.IfCondition != nil {
+    if len(s.IfCondition.Statements) != 0 {
         (s.IfCondition).Evaluate(p)
     }
 }
@@ -76,10 +76,10 @@ func (ic *IfCondition) Evaluate(p *Program) {
     if (ic.Condition).Evaluate(p) {
         for _, statement := range ic.Statements{
             statement.Evaluate(p)
-            if p.Return == FALSE
-                return false
+            if p.Return == FALSE {
+                return
             } else if p.Return == TRUE {
-                return true
+                return
             }
         }
     }
@@ -92,7 +92,23 @@ type Condition struct {
 }
 
 func (c *Condition) Evaluate(p *Program) bool {
-    return true
+    left  := c.Left.Evaluate(p)
+    if c.Operator == "==" {
+        right := c.Right.(SingleValue)
+        rightValue := right.Evaluate(p)
+        if left == rightValue {
+            return true
+        }
+    } else if c.Operator == "in" {
+        right := c.Right.(MultiValue)
+        rightValue := right.Evaluate(p)
+        for _, v := range rightValue {
+            if left == v {
+                return true
+            }
+        }
+    }
+    return false
 }
 
 type Insert struct {
@@ -100,8 +116,8 @@ type Insert struct {
     Value map[string]string
 }
 
-func (c *Insert) Evaluate(p *Program) {
-
+func (i *Insert) Evaluate(p *Program) {
+    p.InsertFunc(i.TableName, i.Value)
 }
 
 type SingleValue struct {
@@ -109,16 +125,40 @@ type SingleValue struct {
     ThisExpr ThisExpression
 }
 
-func (s *SingleValue) Evaluate(p *Program) {
-
+func (s *SingleValue) Evaluate(p *Program) string {
+    if s.QuotedLit != "" {
+        return s.QuotedLit
+    }
+    return s.ThisExpr.Evaluate(p)
 }
 
 type ThisExpression struct {
     Items []interface{}
 }
 
-func (t *ThisExpression) Evaluate(p *Program) {
+func (t *ThisExpression) Evaluate(p *Program) string {
+    currentTable := ""
+    currentField := ""
+    currentValue := ""
+    for _, item := range t.Items {
+        if currentField == "" {
+            currentField = item.(string)
+            currentValue = p.NewRecord[currentField]
+        } else {
+            parentField := item.(ParentField)
+            currentTable = parentField.ParentTable
+            currentField = parentField.Field
+            id, _ := strconv.Atoi(currentValue)
+            currentValue = p.GetFieldValueFunc(currentTable, uint(id), currentField)
+        }
 
+    }
+    return currentValue
+}
+
+type ParentField struct {
+    ParentTable string
+    Field string
 }
 
 type MultiValue struct {
@@ -126,8 +166,8 @@ type MultiValue struct {
     ListLiteral ListLiteral
 }
 
-func (m *MultiValue) Evaluate(p *Program) {
-
+func (m *MultiValue) Evaluate(p *Program) []string {
+    return []string{}
 }
 
 type TableValue struct {
