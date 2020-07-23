@@ -1,9 +1,11 @@
 package super_script 
 
 import (
+    "errors"
     "reflect"
     "strings"
     "testing"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/eval"
 )
 
@@ -53,39 +55,58 @@ func TestParser_ParseConditioon(t *testing.T) {
 }
 
 func TestParser_ParseScript(t *testing.T) {
-    var tests = []struct {
-        s    string
-        err  string
-    }{
-        {
-            s: `if this.corp_id.parent.created_id == this.created_id then
+    script := `if this.corp_id.parent.created_by == this.created_by then
                 insert("corp", "name", "foo", "mailing", "100 main st")
                 insert("corp", "name", "bar", "mailing", "110 main st")
                 return(false)
                 fi
                 insert("corp", "name", "bar1", "mailing", "111 main st")
                 insert("corp", "name", "bar2", "mailing", "112 main st")
-               `,
-            err: "",
+               `
+
+    parser := NewParser(strings.NewReader(script),
+        func(table, field string) bool {
+            return true
         },
-
+        func(table, field string) (string, error) {
+            if tn, ok := utils.GetTableNameFromForeignKey(field); ok {
+                return tn, nil
+            } else {
+                return "", errors.New("Wrong reference field name")
+            }
+        },
+    )
+    parser.Start()
+    parser.Script()
+    if parser.err != nil {
+        t.Errorf("Failed to parse script")
+    }
+    if len(parser.syntaxTree) != 3 {
+        t.Errorf("syntax tree error")
+    }
+    if len(parser.syntaxTree[0].IfCondition.Statements) != 3 {
+        t.Errorf("syntax tree error")
+    }
+    if parser.syntaxTree[0].IfCondition.Condition.Left.ThisExpr.Items[0] != "corp_id" {
+        t.Errorf("syntax tree error")
+    }
+    pt := parser.syntaxTree[0].IfCondition.Condition.Left.ThisExpr.Items[1].(eval.ParentField)
+    if pt.ParentTable != "corp" {
+        t.Errorf("syntax tree error")
+    }
+    if pt.Field!= "created_by" {
+        t.Errorf("syntax tree error")
+    }
+    if parser.syntaxTree[0].IfCondition.Statements[2].Return != "false" {
+        t.Errorf("syntax tree error")
+    }
+    if parser.syntaxTree[2].Insert.TableName != "corp" {
+        t.Errorf("syntax tree error")
+    }
+    if parser.syntaxTree[2].Insert.Value["name"]!= "bar2" {
+        t.Errorf("syntax tree error")
     }
 
-    for i, tt := range tests {
-        parser := NewParser(strings.NewReader(tt.s),
-            func(table, field string) bool {
-                return true
-            },
-            func(table, field string) (string, error) {
-                return "foo", nil
-            },
-        )
-        parser.Start()
-        parser.Script()
-        if !reflect.DeepEqual(tt.err, errstring(parser.err)) {
-            t.Errorf("%d. %q: error mismatch:\n  exp=%s\n  got=%s\n\n", i, tt.s, tt.err, parser.err)
-        }
-    }
 }
 
 // errstring returns the string representation of an error.

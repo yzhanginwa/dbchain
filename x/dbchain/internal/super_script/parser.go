@@ -38,7 +38,7 @@ func (p *Parser) Script() error {
     statements := []eval.Statement{}
     for {
         if p.tok == EOF {
-            return nil
+            break
         }
         if !p.Statement(&statements) {
             break
@@ -92,7 +92,7 @@ func (p *Parser) Insert(parent *eval.Statement) bool {
     if !p.expect(INSERT) { return false }
     if !p.expect(LPAREN) { return false }
 
-    insert.TableName = p.lit
+    insert.TableName = p.lit[1:len(p.lit)-1]
     values := make(map[string]string)
 
     if !p.expect(QUOTEDLIT) { return false } // tableName
@@ -102,10 +102,10 @@ func (p *Parser) Insert(parent *eval.Statement) bool {
             break
         }
         if !p.expect(COMMA) { return false }
-        k := p.lit
+        k := p.lit[1:len(p.lit)-1]
         if !p.expect(QUOTEDLIT) { return false }
         if !p.expect(COMMA) { return false }
-        values[k] = p.lit
+        values[k] = p.lit[1:len(p.lit)-1]
         if !p.expect(QUOTEDLIT) { return false }
         fieldValuePairs += 1
     }
@@ -160,7 +160,7 @@ func (p *Parser) SingleValue(parent interface{}, l_or_r string) bool {
 
     switch p.tok {
     case QUOTEDLIT:
-        singleValue.QuotedLit = p.lit
+        singleValue.QuotedLit = p.lit[1:len(p.lit)-1]
         p.accept(QUOTEDLIT)
         return true
     case THIS:
@@ -230,7 +230,7 @@ func (p *Parser) ListLiteral(parent *eval.MultiValue) bool {
     items := []string{}
 
     if !p.expect(LPAREN) { return false }
-    items = append(items, p.lit)
+    items = append(items, p.lit[1:len(p.lit)-1])
     if !p.expect(QUOTEDLIT) { return false } // first element of list
     for {
         if p.accept(RPAREN) {
@@ -238,7 +238,7 @@ func (p *Parser) ListLiteral(parent *eval.MultiValue) bool {
         }
 
         if !p.expect(COMMA) { return false }
-        items = append(items, p.lit)
+        items = append(items, p.lit[1:len(p.lit)-1])
         if !p.expect(QUOTEDLIT) { return false }
     }
     listLiteral.Items = items
