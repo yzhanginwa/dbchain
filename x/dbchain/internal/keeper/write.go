@@ -2,12 +2,15 @@ package keeper
 
 import (
     "fmt"
+    "strings"
     "strconv"
     "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/other"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    ss "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/eval"
     shell "github.com/ipfs/go-ipfs-api"
 )
 
@@ -277,8 +280,30 @@ func (k Keeper) validateInsertionWithFieldOptions(ctx sdk.Context, appId uint, t
 }
 
 func (k Keeper) validateInsertionWithInsertFilter(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {
-    //filter := k.GetInsertFilter(ctx, appId, tableName)
-    return true
+    table, err := k.GetTable(ctx, appId, tableName)
+    if err != nil {
+        return false
+    }
+
+    filter := table.Filter
+
+    //TODO: create a database associated cache mapping of table script to syntax tree
+    //so that we don't have to parse the script for each insertion
+
+    fn1 := getScriptValidationCallbackOne(k, ctx, appId, tableName)
+    fn2 := getScriptValidationCallbackTwo(k, ctx, appId, tableName)
+
+    parser := ss.NewParser(strings.NewReader(filter), fn1, fn2)
+    parser.Start()
+    err = parser.Script()
+    if err != nil {
+        return false
+    }
+
+    program := eval.NewProgram(tableName, fields, filter)
+    result := program.EvaluateScript(parser.GetSyntaxTree())
+
+    return result
 }
 
 func (k Keeper) tryToPinFile(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {

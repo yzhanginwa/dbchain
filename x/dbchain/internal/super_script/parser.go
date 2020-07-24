@@ -34,6 +34,10 @@ func (p *Parser) Start() {
     p.nextSym()
 }
 
+func (p *Parser) GetSyntaxTree() []eval.Statement {
+    return p.syntaxTree
+}
+
 func (p *Parser) Script() error {
     statements := []eval.Statement{}
     for {
@@ -162,7 +166,6 @@ func (p *Parser) SingleValue(parent interface{}, l_or_r string) bool {
     case QUOTEDLIT:
         singleValue.QuotedLit = p.lit[1:len(p.lit)-1]
         p.accept(QUOTEDLIT)
-        return true
     case THIS:
         if !p.ThisExpr(&singleValue) { return false }
     default:
