@@ -143,18 +143,46 @@ func (p *Parser) IfCondition(parent *eval.Statement) bool {
 func (p *Parser) Condition(parent *eval.IfCondition) bool {
     condition := eval.Condition{}
 
-    if ! p.SingleValue(&condition, "left") { return false }
+    if p.tok == EXIST {
+        if !p.Exist(&condition) { return false }
+    } else {
+        if !p.Comparison(&condition) { return false }
+    }
 
-    condition.Operator = p.lit
+    parent.Condition = condition
+    return true
+}
+
+func (p *Parser) Exist(parent *eval.Condition) bool {
+    existing := eval.Exist{}
+
+    if !p.expect(EXIST) { return false }
+    if !p.expect(LPAREN) { return false }
+    if !p.TableValue(&existing) { return false }
+    if !p.expect(RPAREN) { return false }
+
+    parent.Type = "exist"
+    parent.Exist = existing
+    return true
+}
+
+func (p *Parser) Comparison(parent *eval.Condition) bool {
+    comparison := eval.Comparison{}
+
+    if ! p.SingleValue(&comparison, "left") { return false }
+
+    comparison.Operator = p.lit
     if p.accept(DEQUAL) {
-        if !p.SingleValue(&condition, "right") { return false }
+        if !p.SingleValue(&comparison, "right") { return false }
     } else if p.accept(IN) {
-        if !p.MultiValue(&condition) { return false }
+        if !p.ListLiteral(&comparison) { return false }
     } else {
         p.err = fmt.Errorf("found %q, expected \"==\" or \"in\"", p.lit)
         return false
     }
-    parent.Condition = condition
+
+    parent.Type = "comparison"
+    parent.Comparison = comparison
     return true
 }
 
@@ -174,17 +202,17 @@ func (p *Parser) SingleValue(parent interface{}, l_or_r string) bool {
     }
 
     switch parent.(type) {
-    case *eval.Condition:
-        v := parent.(*eval.Condition)
+    case *eval.Comparison:
+        v := parent.(*eval.Comparison)
         if l_or_r == "left" {
             v.Left = singleValue
         } else {
             v.Right = singleValue
         }
     case *eval.Where:
-        v := parent.(*eval.Condition)
+        v := parent.(*eval.Where)
         if l_or_r == "left" {
-            v.Left = singleValue
+            v.Field = singleValue.QuotedLit    // YI
         } else {
             v.Right = singleValue
         }
@@ -212,23 +240,7 @@ func (p *Parser) ThisExpr(parent *eval.SingleValue) bool {
     return true
 }
 
-func (p *Parser) MultiValue(parent *eval.Condition) bool {
-    multiValue := eval.MultiValue{}
-
-    switch p.tok {
-    case TABLE:
-        p.TableValue(&multiValue)
-    case LPAREN:
-        p.ListLiteral(&multiValue)
-    default:
-        p.err = fmt.Errorf("table or list is wanted")
-        return false
-    }
-    parent.Right = multiValue
-    return true
-}
-
-func (p *Parser) ListLiteral(parent *eval.MultiValue) bool {
+func (p *Parser) ListLiteral(parent *eval.Comparison) bool {
     listLiteral := eval.ListLiteral{}
     items := []string{}
 
@@ -245,11 +257,11 @@ func (p *Parser) ListLiteral(parent *eval.MultiValue) bool {
         if !p.expect(QUOTEDLIT) { return false }
     }
     listLiteral.Items = items
-    parent.ListLiteral = listLiteral
+    parent.Right = listLiteral
     return true
 }
 
-func (p *Parser) TableValue(parent *eval.MultiValue) bool {
+func (p *Parser) TableValue(parent *eval.Exist) bool {
     tableValue := eval.TableValue{}
     items := []interface{}{}
 
@@ -257,15 +269,11 @@ func (p *Parser) TableValue(parent *eval.MultiValue) bool {
     if !p.expect(DOT) { return false }
     items = append(items, p.lit)
     if !p.TableName() { return false }
-    if !p.expect(DOT) { return false }
-    //for ok := p.accept(WHERE); ok;  ok = p.accept(WHERE) {
     for {
-        if p.tok != WHERE { break }
+        if p.tok != DOT { break }
+        p.expect(DOT)
         if !p.Where(&items) { return false }
-        //if !p.expect(DOT) { break }
     } 
-    items = append(items, p.lit)
-    if !p.Field() { return false }
     tableValue.Items = items
     parent.TableValue = tableValue
     return true
@@ -313,7 +321,7 @@ func (p *Parser) Where(parent *[]interface{}) bool {
     theWhere.Operator = p.lit
     if !p.expect(DEQUAL) { return false }
     if !p.SingleValue(&theWhere, "right") { return false }
-    if !p.expect(LPAREN) { return false }
+    if !p.expect(RPAREN) { return false }
     
     (*parent) = append((*parent), theWhere)
     return true

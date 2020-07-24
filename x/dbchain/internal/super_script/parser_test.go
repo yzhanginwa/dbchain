@@ -20,12 +20,12 @@ func TestParser_ParseConditioon(t *testing.T) {
         },
 
         {
-            s: `this.corp_id in table.corp.id`,
+            s: `this.name in ("foo", "bar")`,
             err: "",
         },
 
         {
-            s: `this.corp_id in table.corp.where(type == "corp").name`,
+            s: `exist(table.corp.where(id == this.corp_id))`,
             err: "",
         },
 
@@ -92,10 +92,10 @@ func TestParser_ParseScript(t *testing.T) {
     if len(parser.syntaxTree[0].IfCondition.Statements) != 3 {
         t.Errorf("syntax tree error")
     }
-    if parser.syntaxTree[0].IfCondition.Condition.Left.ThisExpr.Items[0] != "corp_id" {
+    if parser.syntaxTree[0].IfCondition.Condition.Comparison.Left.ThisExpr.Items[0] != "corp_id" {
         t.Errorf("syntax tree error")
     }
-    pt := parser.syntaxTree[0].IfCondition.Condition.Left.ThisExpr.Items[1].(eval.ParentField)
+    pt := parser.syntaxTree[0].IfCondition.Condition.Comparison.Left.ThisExpr.Items[1].(eval.ParentField)
     if pt.ParentTable != "corp" {
         t.Errorf("syntax tree error")
     }

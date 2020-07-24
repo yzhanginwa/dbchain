@@ -86,12 +86,40 @@ func (ic *IfCondition) Evaluate(p *Program) {
 }
 
 type Condition struct {
-    Left SingleValue
-    Operator string                // "==" or "in"
-    Right interface{}              // single or multi value
+    Type       string
+    Exist      Exist
+    Comparison Comparison
 }
 
 func (c *Condition) Evaluate(p *Program) bool {
+    switch c.Type {
+    case "exist":
+        return c.Exist.Evaluate(p)
+    case "comparison":
+        return c.Comparison.Evaluate(p)
+    default:
+        return false
+    }
+}
+
+type Exist struct {
+    TableValue TableValue
+}
+
+func (e *Exist) Evaluate(p *Program) bool {
+    if len(e.TableValue.Evaluate(p)) > 0 {
+        return true
+    }
+    return false
+}
+
+type Comparison struct {
+    Left SingleValue
+    Operator string                // "==" or "in"
+    Right interface{}              // single or list value
+}
+
+func (c *Comparison) Evaluate(p *Program) bool {
     left  := c.Left.Evaluate(p)
     if c.Operator == "==" {
         right := c.Right.(SingleValue)
@@ -174,8 +202,8 @@ type TableValue struct {
     Items []interface{}
 }
 
-func (t *TableValue) Evaluate(p *Program) {
-
+func (t *TableValue) Evaluate(p *Program) []string {
+    return []string{}
 }
 
 type ListLiteral struct {

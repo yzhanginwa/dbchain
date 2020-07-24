@@ -18,9 +18,9 @@ package super_script
 //    condition = exist | comparison .                                         //
 //                                                                             //
 //    comparison = single_value "==" single_value                              //
-//               | single_value "in" multi_value .                             //
+//               | single_value "in" list_value .                              //
 //                                                                             //
-//    exist = "exist" "(" multi_value ")"                                      //
+//    exist = "exist" "(" table_value ")"                                      //
 //                                                                             //
 //    single_value = this_expr                                                 //
 //                 | string_literal .                                          //
@@ -31,11 +31,9 @@ package super_script
 //                                                                             //
 //    parent_field = "parent" "." field { "." parent_field } .                 //
 //                                                                             //
-//    multi_value = list_value | table_value .                                 //
-//                                                                             //
 //    list_value = "(" string_literal ["," string_listeral] ")" .              //
 //                                                                             //
-//    table_value = "table" "." table_name { "." where } "." field             //
+//    table_value = "table" "." table_name { "." where } .                     //
 //                                                                             //
 //    table_name = ident .                                                     //
 //                                                                             //
