@@ -29,6 +29,11 @@ func TestParser_ParseConditioon(t *testing.T) {
             err: "",
         },
 
+        {
+            s: `exist(table.corp.where(type == "corp").where(name == "Microsoft"))`,
+            err: "",
+        },
+
         // Errors
         {s: `this.corp_id.aa`, err: `found "aa", expected "parent"`},
         {s: `foo`, err: `found "foo", expected double quote or "this"`},

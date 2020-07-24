@@ -35,6 +35,7 @@ const (
     RETURN  // return
     TRUE    // true
     FALSE   // false
+    EXIST   // exist
 )
 
 var tokenDisplay = []string{

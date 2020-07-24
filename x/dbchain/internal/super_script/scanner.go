@@ -145,6 +145,8 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
         return TRUE, buf.String()
     case "FALSE":
         return FALSE, buf.String()
+    case "EXIST":
+        return EXIST, buf.String()
     }
 
     // Otherwise return as a regular identifier.
