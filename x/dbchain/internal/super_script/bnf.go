@@ -15,9 +15,10 @@ package super_script
 //                                                                             //
 //    if_condition = "if" condition "then" statement "fi" .                    //
 //                                                                             //
-//    condition = exist                                                        //
-//              | single_value "==" single_value                               //
-//              | single_value "in" multi_value .                              //
+//    condition = exist | comparison .                                         //
+//                                                                             //
+//    comparison = single_value "==" single_value                              //
+//               | single_value "in" multi_value .                             //
 //                                                                             //
 //    exist = "exist" "(" multi_value ")"                                      //
 //                                                                             //
