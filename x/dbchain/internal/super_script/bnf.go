@@ -13,10 +13,11 @@ package super_script
 //    insert = "insert" "(" table_name "," field_name ", " string_literal      //
 //             [ "," field_name "," string_literal ] ")" .                     //
 //                                                                             //
-//    if_condition = "if" filter_condition "then" statement "fi" .             //
+//    if_condition = "if" condition "then" statement "fi" .                    //
 //                                                                             //
-//    filter_condition = single_value "==" single_value .                      //
-//                     | single_value "in" multi_value .                       //
+//    condition = "exist" "(" multi_value ")"                                  //
+//              | single_value "==" single_value                               //
+//              | single_value "in" multi_value .                              //
 //                                                                             //
 //    single_value = this_expr                                                 //
 //                 | string_literal .                                          //
@@ -32,7 +33,6 @@ package super_script
 //    list_value = "(" string_literal ["," string_listeral] ")" .              //
 //                                                                             //
 //    table_value = table "." table_name { "." where } "." field               //
-//                | "(" string_literal { "," string_literal } ")" .            //
 //                                                                             //
 //    table_name = ident .                                                     //
 //                                                                             //
