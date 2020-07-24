@@ -123,7 +123,7 @@ func (p *Parser) IfCondition(parent *eval.Statement) bool {
     statements := []eval.Statement{}
 
     if !p.expect(IF) { return false }
-    p.Condition(&ifCondition)
+    if !p.Condition(&ifCondition) { return false }
 
     if !p.expect(THEN) { return false }
     p.Statement(&statements)
@@ -304,8 +304,9 @@ func (p *Parser) ParentField(parent *eval.ThisExpression) bool {
 }
 
 func (p *Parser) TableName() bool {
+    tableName := p.lit
     if p.accept(IDENT) {
-        p.currentTable = p.lit
+        p.currentTable = tableName
         return true
     }
     return false

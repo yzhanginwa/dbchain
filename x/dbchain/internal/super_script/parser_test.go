@@ -59,6 +59,36 @@ func TestParser_ParseConditioon(t *testing.T) {
     }
 }
 
+func TestParser_ParseExistCondition(t *testing.T) {
+    var tests = []struct {
+        s    string
+        err  string
+    }{
+        {
+            s: `if exist(table.corp.where(name == "aa")) then return(true) fi`,
+            err: "",
+        },
+
+    }
+
+    for i, tt := range tests {
+        parser := NewParser(strings.NewReader(tt.s),
+            func(table, field string) bool {
+                return true
+            },
+            func(table, field string) (string, error) {
+                return "foo", nil
+            },
+        )
+        parser.Start()
+        parser.Script()
+        err := parser.err
+        if !reflect.DeepEqual(tt.err, errstring(err)) {
+            t.Errorf("%d. %q: error mismatch:\n  exp=%s\n  got=%s\n\n", i, tt.s, tt.err, err)
+        }
+    }
+}
+
 func TestParser_ParseScript(t *testing.T) {
     script := `if this.corp_id.parent.created_by == this.created_by then
                 insert("corp", "name", "foo", "mailing", "100 main st")

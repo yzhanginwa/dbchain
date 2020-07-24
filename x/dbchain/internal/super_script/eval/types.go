@@ -39,7 +39,7 @@ func (p *Program) EvaluateScript(syntaxTree []Statement) bool {
             return true
         }
     }
-    return true
+    return false                      // if no explicit true/false, we invalidate the filter
 }
 
 type Statement struct {
