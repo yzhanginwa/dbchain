@@ -300,7 +300,11 @@ func (k Keeper) validateInsertionWithInsertFilter(ctx sdk.Context, appId uint, t
         return false
     }
 
-    program := eval.NewProgram(tableName, fields, filter)
+    fieldValueCallback := getGetFieldValueCallback(k, ctx, appId, owner)
+    tableValueCallback := getGetTableValueCallback(k, ctx, appId, owner)
+    insertCallback     := getInsertCallback(k, ctx, appId, owner)
+
+    program := eval.NewProgram(tableName, fields, filter, fieldValueCallback, tableValueCallback, insertCallback)
     result := program.EvaluateScript(parser.GetSyntaxTree())
 
     return result

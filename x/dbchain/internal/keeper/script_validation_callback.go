@@ -29,3 +29,35 @@ func getScriptValidationCallbackTwo(k Keeper, ctx sdk.Context, appId uint, table
         }
     }
 }
+
+func getGetFieldValueCallback(k Keeper, ctx sdk.Context, appId uint, owner sdk.AccAddress) func(string, uint, string) string {
+    return func(tableName string, id uint, fieldName string) string {
+        result, _ := k.FindField(ctx, appId, tableName, id, fieldName)
+        return result
+    }
+}
+
+func getGetTableValueCallback(k Keeper, ctx sdk.Context, appId uint, owner sdk.AccAddress) func([](map[string]string)) [](map[string]string) {
+    return func(querierObjs [](map[string]string)) [](map[string]string) {
+        qo := map[string]string{
+            "method": "select",
+            "fields": "id",
+        }
+        newQuerierObjs := append(querierObjs, qo)
+        result, err := querierSuperHandler(ctx, k, appId, newQuerierObjs, owner)
+        if err != nil {
+            return [](map[string]string){}
+        }
+        return result
+    }
+}
+
+func getInsertCallback(k Keeper, ctx sdk.Context, appId uint, owner sdk.AccAddress) func(string, map[string]string) {
+    return func(tableName string, value map[string]string) {
+        id, err := getNextId(k, ctx, appId, tableName)
+        if err != nil {
+            return
+        }
+        k.Write(ctx, appId, tableName, id, value, owner)
+    }
+}

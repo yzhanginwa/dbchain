@@ -11,22 +11,34 @@ const (
     TRUE
 )
 
+type getFieldValueCallback func(string, uint, string) string  // tableName, id, fieldName
+type getTableValueCallback func([](map[string]string)) [](map[string]string)  // input: querierObjs; outptu: rows of result set with only field "id"
+type insertCallback func(string, map[string]string)
+
 type Program struct {
     CurrentTable string
     NewRecord    map[string]string
     Script       string
     SyntaxTree   []Statement
     Return       ReturnValue
-    InsertFunc   func(string, map[string]string)
-    GetFieldValueFunc func(string, uint, string) string // appId, tableName, id, fieldName
+
+    GetFieldValueFunc getFieldValueCallback
+    GetTableValueFunc getTableValueCallback
+    InsertFunc        insertCallback
 }
 
-func NewProgram(tableName string, newRecord map[string]string, script string) *Program {
+func NewProgram(tableName string, newRecord map[string]string, script string,
+                fieldValueFunc getFieldValueCallback,
+                tableValueFunc getTableValueCallback,
+                insertFunc insertCallback) *Program {
     return &Program{
         CurrentTable: tableName,
         NewRecord:    newRecord,
         Script:       script,
         Return:       NIL,
+        GetFieldValueFunc: fieldValueFunc,
+        GetTableValueFunc: tableValueFunc,
+        InsertFunc:        insertFunc,
     }
 }
 
