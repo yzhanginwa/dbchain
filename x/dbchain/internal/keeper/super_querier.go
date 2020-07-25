@@ -99,8 +99,7 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
                Operator: "=",
                Value: qo["value"],
            }
-           where := []Condition{cond}
-           builders[j].Where = where
+           builders[j].Where = append(builders[j].Where, cond)
         }
     }
 
@@ -129,9 +128,25 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
                 builders[j].Ids = keeper.FindAll(ctx, appId, builders[j].Table, owner)
             }
         } else {
-            //TODO: we support one condition for now. Will support the logical operator and with multiple conditions
-            cond := builders[j].Where[0]
-            builders[j].Ids = keeper.Where(ctx, appId, builders[j].Table, cond.Field, cond.Operator, cond.Value, owner)
+            // to get the intersect of the result ids of all the where clauses
+            intersect := []uint{}
+            for index, cond := range builders[j].Where {
+                ids := keeper.Where(ctx, appId, builders[j].Table, cond.Field, cond.Operator, cond.Value, owner)
+                if index == 0 {
+                    intersect = ids
+                } else {
+                    new_intersect := []uint{}
+                    for _, a := range intersect {
+                        for _, b := range ids {
+                            if a == b {
+                                new_intersect = append(new_intersect, a)
+                            }
+                        }
+                    }
+                    intersect = new_intersect
+                }
+            }
+            builders[j].Ids = intersect
         }
 
         if builders[j].Limit == 0 || builders[j].Limit >= len(builders[j].Ids) {
