@@ -86,6 +86,29 @@ func TestParser_ParseExistCondition(t *testing.T) {
         if !reflect.DeepEqual(tt.err, errstring(err)) {
             t.Errorf("%d. %q: error mismatch:\n  exp=%s\n  got=%s\n\n", i, tt.s, tt.err, err)
         }
+
+       if len(parser.syntaxTree) != 1 {
+           t.Errorf("syntax tree error")
+       }
+       if len(parser.syntaxTree[0].IfCondition.Condition.Exist.TableValue.Items) != 2 {
+           t.Errorf("syntax tree error")
+       }
+
+
+       tableName := parser.syntaxTree[0].IfCondition.Condition.Exist.TableValue.Items[0].(string)
+       theWhere  := parser.syntaxTree[0].IfCondition.Condition.Exist.TableValue.Items[1].(eval.Where)
+       if tableName != "corp" {
+           t.Errorf("syntax tree error")
+       }
+       if theWhere.Field != "name" {
+           t.Errorf("syntax tree error")
+       }
+       if theWhere.Operator != "==" {
+           t.Errorf("syntax tree error")
+       }
+       if theWhere.Right.(eval.SingleValue).QuotedLit != "aa" {
+           t.Errorf("syntax tree error")
+       }
     }
 }
 
