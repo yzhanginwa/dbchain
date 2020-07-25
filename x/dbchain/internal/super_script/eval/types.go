@@ -214,8 +214,27 @@ type TableValue struct {
     Items []interface{}
 }
 
-func (t *TableValue) Evaluate(p *Program) []string {
-    return []string{}
+func (t *TableValue) Evaluate(p *Program) []map[string]string {
+    qo := map[string]string{
+        "method": "table",
+        "table": t.Items[0].(string),
+    }
+    querierObjs := []map[string]string{qo}
+
+    for _, item := range t.Items[1:] {
+        theWhere := item.(Where)
+        if theWhere.Operator != "==" {
+            continue
+        }
+        qo := map[string]string{
+            "method": "equal",
+            "field": theWhere.Field,
+            "value": theWhere.EvaluateRight(p),
+        }
+        querierObjs = append(querierObjs, qo)
+    }
+    result := p.GetTableValueFunc(querierObjs)
+    return result
 }
 
 type ListLiteral struct {
@@ -226,6 +245,16 @@ type Where struct {          // parent is TableValue.Items
     Field string             // field name of a table
     Operator string
     Right interface{}
+}
+
+func (w *Where) EvaluateRight(p *Program) string {
+    if right, ok := w.Right.(string); ok {
+        return right
+    }
+    if right, ok := w.Right.(ThisExpression); ok {
+        return right.Evaluate(p)
+    }
+    return ""
 }
 
 type Field struct {
