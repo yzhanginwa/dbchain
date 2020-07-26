@@ -106,7 +106,7 @@ func TestParser_ParseExistCondition(t *testing.T) {
        if theWhere.Operator != "==" {
            t.Errorf("syntax tree error")
        }
-       if theWhere.Right.(eval.SingleValue).QuotedLit != "aa" {
+       if theWhere.Right.QuotedLit != "aa" {
            t.Errorf("syntax tree error")
        }
     }

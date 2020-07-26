@@ -106,9 +106,11 @@ type Condition struct {
 func (c *Condition) Evaluate(p *Program) bool {
     switch c.Type {
     case "exist":
-        return c.Exist.Evaluate(p)
+        result := (c.Exist).Evaluate(p)
+        return result
     case "comparison":
-        return c.Comparison.Evaluate(p)
+        result := (c.Comparison).Evaluate(p)
+        return result
     default:
         return false
     }
@@ -140,9 +142,8 @@ func (c *Comparison) Evaluate(p *Program) bool {
             return true
         }
     } else if c.Operator == "in" {
-        right := c.Right.(MultiValue)
-        rightValue := right.Evaluate(p)
-        for _, v := range rightValue {
+        right := c.Right.([]string)
+        for _, v := range right {
             if left == v {
                 return true
             }
@@ -201,15 +202,6 @@ type ParentField struct {
     Field string
 }
 
-type MultiValue struct {
-    TableValue TableValue
-    ListLiteral ListLiteral
-}
-
-func (m *MultiValue) Evaluate(p *Program) []string {
-    return []string{}
-}
-
 type TableValue struct {
     Items []interface{}
 }
@@ -229,7 +221,7 @@ func (t *TableValue) Evaluate(p *Program) []map[string]string {
         qo := map[string]string{
             "method": "equal",
             "field": theWhere.Field,
-            "value": theWhere.EvaluateRight(p),
+            "value": theWhere.Right.Evaluate(p),
         }
         querierObjs = append(querierObjs, qo)
     }
@@ -244,17 +236,7 @@ type ListLiteral struct {
 type Where struct {          // parent is TableValue.Items
     Field string             // field name of a table
     Operator string
-    Right interface{}
-}
-
-func (w *Where) EvaluateRight(p *Program) string {
-    if right, ok := w.Right.(string); ok {
-        return right
-    }
-    if right, ok := w.Right.(ThisExpression); ok {
-        return right.Evaluate(p)
-    }
-    return ""
+    Right SingleValue
 }
 
 type Field struct {
