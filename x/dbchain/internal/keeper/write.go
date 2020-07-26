@@ -280,7 +280,6 @@ func (k Keeper) validateInsertionWithFieldOptions(ctx sdk.Context, appId uint, t
     return(true)
 }
 
-
 func (k Keeper) applyTrigger(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) {
     table, err := k.GetTable(ctx, appId, tableName)
     if err != nil {

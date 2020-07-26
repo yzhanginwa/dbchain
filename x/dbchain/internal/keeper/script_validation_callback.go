@@ -2,8 +2,10 @@ package keeper
 
 import (
     "errors"
+    "strconv"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/other"
 )
 
 // return the function which checks whether a table contains a field
@@ -58,6 +60,11 @@ func getInsertCallback(k Keeper, ctx sdk.Context, appId uint, owner sdk.AccAddre
         if err != nil {
             return
         }
+
+        value["id"] = strconv.Itoa(int(id))
+        value["created_by"] = owner.String()
+        value["created_at"] = other.GetCurrentBlockTime().String()
+
         k.Write(ctx, appId, tableName, id, value, owner)
     }
 }
