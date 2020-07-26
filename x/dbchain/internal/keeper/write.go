@@ -47,6 +47,7 @@ func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields typ
     k.Write(ctx, appId, tableName, id, fields, owner)
 
     k.updateIndex(ctx, appId, tableName, id, fields)
+    k.applyTrigger(ctx, appId, tableName, fields, owner)
     return id, nil
 }
 
@@ -279,6 +280,21 @@ func (k Keeper) validateInsertionWithFieldOptions(ctx sdk.Context, appId uint, t
     return(true)
 }
 
+
+func (k Keeper) applyTrigger(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) {
+    table, err := k.GetTable(ctx, appId, tableName)
+    if err != nil {
+        return
+    }
+
+    trigger := table.Trigger
+    if len(trigger) == 0 {
+        return
+    }
+
+    k.runFilterOrTrigger(ctx, appId, tableName, fields, owner, ss.TRIGGER, trigger)
+}
+
 func (k Keeper) validateInsertionWithInsertFilter(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {
     table, err := k.GetTable(ctx, appId, tableName)
     if err != nil {
@@ -286,15 +302,29 @@ func (k Keeper) validateInsertionWithInsertFilter(ctx sdk.Context, appId uint, t
     }
 
     filter := table.Filter
+    if len(filter) == 0 {
+        return true
+    }
 
+    result := k.runFilterOrTrigger(ctx, appId, tableName, fields, owner, ss.FILTER, filter)
+    return result
+}
+
+func (k Keeper) runFilterOrTrigger(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress, scriptType ss.ScriptType, script string) bool {
     //TODO: create a database associated cache mapping of table script to syntax tree
     //so that we don't have to parse the script for each insertion
 
     fn1 := getScriptValidationCallbackOne(k, ctx, appId, tableName)
     fn2 := getScriptValidationCallbackTwo(k, ctx, appId, tableName)
 
-    parser := ss.NewParser(strings.NewReader(filter), fn1, fn2)
-    err = parser.ParseFilter()
+    parser := ss.NewParser(strings.NewReader(script), fn1, fn2)
+    var err error
+    if scriptType == ss.FILTER {
+        err = parser.ParseFilter()
+    } else {
+        err = parser.ParseTrigger()
+    }
+
     if err != nil {
         return false
     }
@@ -303,7 +333,7 @@ func (k Keeper) validateInsertionWithInsertFilter(ctx sdk.Context, appId uint, t
     tableValueCallback := getGetTableValueCallback(k, ctx, appId, owner)
     insertCallback     := getInsertCallback(k, ctx, appId, owner)
 
-    program := eval.NewProgram(tableName, fields, filter, fieldValueCallback, tableValueCallback, insertCallback)
+    program := eval.NewProgram(tableName, fields, script, fieldValueCallback, tableValueCallback, insertCallback)
     result := program.EvaluateScript(parser.GetSyntaxTree())
 
     return result
