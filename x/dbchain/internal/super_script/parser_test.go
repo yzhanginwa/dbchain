@@ -50,7 +50,7 @@ func TestParser_ParseConditioon(t *testing.T) {
                 return "foo", nil
             },
         )
-        parser.Start()
+        parser.prepareParsing()
         parser.Condition(&(eval.IfCondition{}))
         err := parser.err
         if !reflect.DeepEqual(tt.err, errstring(err)) {
@@ -80,8 +80,7 @@ func TestParser_ParseExistCondition(t *testing.T) {
                 return "foo", nil
             },
         )
-        parser.Start()
-        parser.Script()
+        parser.ParseFilter()
         err := parser.err
         if !reflect.DeepEqual(tt.err, errstring(err)) {
             t.Errorf("%d. %q: error mismatch:\n  exp=%s\n  got=%s\n\n", i, tt.s, tt.err, err)
@@ -134,8 +133,7 @@ func TestParser_ParseScript(t *testing.T) {
             }
         },
     )
-    parser.Start()
-    parser.Script()
+    parser.ParseTrigger()
     if parser.err != nil {
         t.Errorf("Failed to parse script")
     }

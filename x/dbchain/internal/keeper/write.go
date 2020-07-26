@@ -294,8 +294,7 @@ func (k Keeper) validateInsertionWithInsertFilter(ctx sdk.Context, appId uint, t
     fn2 := getScriptValidationCallbackTwo(k, ctx, appId, tableName)
 
     parser := ss.NewParser(strings.NewReader(filter), fn1, fn2)
-    parser.Start()
-    err = parser.Script()
+    err = parser.ParseFilter()
     if err != nil {
         return false
     }

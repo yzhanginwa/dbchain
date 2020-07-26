@@ -6,12 +6,20 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/eval"
 )
 
+type ScriptType int
+const (
+    FILTER ScriptType = iota
+    TRIGGER
+)
+
 // validate field name in current or specified table
 type validateTableField func(string, string) bool
 type getParentTable func(string, string) (string, error)
 
 // Parser represents a parser.
 type Parser struct {
+    scriptType ScriptType    // FILTER or TRIGGER
+
     s   *Scanner
     tok Token  // last read token
     lit string // last read literal
@@ -30,15 +38,27 @@ func NewParser(r io.Reader, vtf validateTableField, gpt getParentTable) *Parser 
     return &Parser{s: NewScanner(r), vtf: vtf, gpt: gpt}
 }
 
-func (p *Parser) Start() {
-    p.nextSym()
-}
-
 func (p *Parser) GetSyntaxTree() []eval.Statement {
     return p.syntaxTree
 }
 
-func (p *Parser) Script() error {
+func (p *Parser) prepareParsing() {
+    p.nextSym()
+}
+
+func (p *Parser) ParseFilter() error {
+    p.scriptType = FILTER
+    p.prepareParsing()
+    return p.parseScript()
+}
+
+func (p *Parser) ParseTrigger() error {
+    p.scriptType = TRIGGER
+    p.prepareParsing()
+    return p.parseScript()
+}
+
+func (p *Parser) parseScript() error {
     statements := []eval.Statement{}
     for {
         if p.tok == EOF {
@@ -92,6 +112,10 @@ func (p *Parser) Return(parent *eval.Statement) bool {
 
 func (p *Parser) Insert(parent *eval.Statement) bool {
     // insert(tableName, field1, "value1", fields2, "value2)
+    if p.scriptType == FILTER {
+        p.err = fmt.Errorf("Insert is not allowed in filter scripts")
+        return false
+    }
     insert := eval.Insert{}
     if !p.expect(INSERT) { return false }
     if !p.expect(LPAREN) { return false }
