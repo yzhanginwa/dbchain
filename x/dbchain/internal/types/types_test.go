@@ -11,7 +11,7 @@ func TestMetaNames(t *testing.T) {
         name string
     }{
         { true, "abcd1234" },
-        { true, "a-b_c-1" },
+        { false, "a-b_c-1" },
         { false, "Abcd1234" },
         { false, "aBcd1234" },
         { false, "1abce" },
