@@ -24,3 +24,21 @@ func TestMetaNames(t *testing.T) {
         require.Equal(t, result, tc.valid)
     }
 }
+
+func TestEnumOption(t *testing.T) {
+    cases := []struct {
+        valid bool
+        enumOption string
+    }{
+        { true, `enum("aaa")` },
+        { true, `enum("aaa","bbb")` },
+        { true, `enum("aaa", "b-b_b" ,"c cc")` },
+        { false, `enum("aaa)` },
+        { false, `enum("aaa"` },
+    }
+
+    for _, tc := range cases {
+        result := ValidateEnumColumnOption(tc.enumOption)
+        require.Equal(t, result, tc.valid)
+    }
+}

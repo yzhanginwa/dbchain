@@ -335,7 +335,11 @@ func (k Keeper) GetWritableByGroups(ctx sdk.Context, appId uint, tableName strin
     return result
 }
 
-func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldName string, action string, option string) {
+func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldName string, action string, option string) bool {
+    if !validateColumnOption(option) {
+        return false
+    }
+
     store := ctx.KVStore(k.storeKey)
     key := getColumnOptionsKey(appId, tableName, fieldName)
     var options []string
@@ -346,11 +350,11 @@ func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAdd
         k.cdc.MustUnmarshalBinaryBare(bz, &options)
     }
 
-    optionExisted := utils.ItemExists(options, option)
+    optionExisted := isColumnOptionIncluded(options, option)
 
     if action == "add" {
         if optionExisted {
-            return
+            return false
         } else {
             result = append(options, option)
         }
@@ -363,7 +367,7 @@ func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAdd
                 result = append(result, opt)
             }
         } else {
-            return
+            return false
         }
     }
 
@@ -372,6 +376,8 @@ func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAdd
     } else {
         store.Delete([]byte(key))
     }
+
+    return true
 }
 
 func (k Keeper) GetColumnOption(ctx sdk.Context, appId uint, tableName string, fieldName string) ([]string, error) {
@@ -471,6 +477,39 @@ func preProcessFields(fields []string) []string {
         }
     }
     return result
+}
+
+func validateColumnOption(option string) bool {
+    switch option {
+    case "not-null":
+        return true
+    case "unique":
+        return true
+    case "own":
+        return true
+    case "file":
+        return true
+    }
+
+    if types.ValidateEnumColumnOption(option) {
+        return true
+    }
+
+    return false
+}
+
+func isColumnOptionIncluded(options []string, option string) bool {
+    for _, opt := range options {
+        if opt == option {
+            return true
+        }
+        if types.ValidateEnumColumnOption(opt) {
+            if types.ValidateEnumColumnOption(option) {
+                return true
+            }
+        }
+    }
+    return false
 }
 
 func validateInsertFilterSyntax(k Keeper, ctx sdk.Context, appId uint, tableName string, filter string) bool {

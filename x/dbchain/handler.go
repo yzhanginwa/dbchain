@@ -363,7 +363,9 @@ func handleMsgModifyColumnOption(ctx sdk.Context, keeper Keeper, msg MsgModifyCo
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name does not exist!")
     }
 
-    keeper.ModifyColumnOption(ctx, appId, msg.Owner, msg.TableName, msg.FieldName, msg.Action, msg.Option)
+    if !keeper.ModifyColumnOption(ctx, appId, msg.Owner, msg.TableName, msg.FieldName, msg.Action, msg.Option) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid column option!")
+    }
     return &sdk.Result{}, nil
 }
 
