@@ -235,49 +235,51 @@ func (k Keeper) validateInsertionWithFieldOptions(ctx sdk.Context, appId uint, t
             continue
         }
         fieldOptions, _ := k.GetColumnOption(ctx, appId, tableName, fieldName)
-        // TODO: use a constant for the possible options
-        if(utils.ItemExists(fieldOptions, string(types.FLDOPT_NOTNULL))) {
-            if value, ok := fields[fieldName]; ok {
-                if(len(value) < 1) {
-                    return(false)
-                }
-            } else {
-              return(false)
-            }
-        }
 
-        if(utils.ItemExists(fieldOptions, string(types.FLDOPT_UNIQUE))) {
-            if value, ok := fields[fieldName]; ok {
-                if(len(value)>0) {
-                    ids := k.FindBy(ctx, appId, tableName, fieldName, []string{value}, owner)
-                    if len(ids) > 0 {
+        for _, opt := range fieldOptions {
+            if opt == string(types.FLDOPT_NOTNULL) {
+                if value, ok := fields[fieldName]; ok {
+                    if(len(value) < 1) {
                         return(false)
+                    }
+                } else {
+                  return(false)
+                }
+            }
+
+            if opt == string(types.FLDOPT_UNIQUE) {
+                if value, ok := fields[fieldName]; ok {
+                    if(len(value)>0) {
+                        ids := k.FindBy(ctx, appId, tableName, fieldName, []string{value}, owner)
+                        if len(ids) > 0 {
+                            return(false)
+                        }
                     }
                 }
             }
-        }
 
-        if(utils.ItemExists(fieldOptions, string(types.FLDOPT_OWN))) {
-            if tn, ok := utils.GetTableNameFromForeignKey(fieldName); ok {
-                foreignId := fields[fieldName]
-                u64, err := strconv.ParseUint(foreignId, 10, 64)
-                if err != nil {
-                    return false
-                }
-                foreignOwner, err := k.FindField(ctx, appId, tn, uint(u64), "created_by")
-                if err == nil {
-                    if foreignOwner != owner.String() {
+            if opt == string(types.FLDOPT_OWN) {
+                if tn, ok := utils.GetTableNameFromForeignKey(fieldName); ok {
+                    foreignId := fields[fieldName]
+                    u64, err := strconv.ParseUint(foreignId, 10, 64)
+                    if err != nil {
+                        return false
+                    }
+                    foreignOwner, err := k.FindField(ctx, appId, tn, uint(u64), "created_by")
+                    if err == nil {
+                        if foreignOwner != owner.String() {
+                            return false
+                        }
+                    } else {
                         return false
                     }
                 } else {
                     return false
                 }
-            } else {
-                return false
             }
         }
     }
-    return(true)
+    return true
 }
 
 func (k Keeper) applyTrigger(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) {
