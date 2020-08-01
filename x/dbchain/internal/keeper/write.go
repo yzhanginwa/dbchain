@@ -277,6 +277,16 @@ func (k Keeper) validateInsertionWithFieldOptions(ctx sdk.Context, appId uint, t
                     return false
                 }
             }
+
+            if types.ValidateEnumColumnOption(opt) {
+                if value, ok := fields[fieldName]; ok {
+                    items := types.GetEnumColumnOptionItems(opt)
+                    if utils.StringIncluded(items, value) {
+                        return true
+                    }
+                    return false
+                }
+            }
         }
     }
     return true

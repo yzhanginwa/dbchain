@@ -32,7 +32,8 @@ func TestEnumOption(t *testing.T) {
     }{
         { true, `enum("aaa")` },
         { true, `enum("aaa","bbb")` },
-        { true, `enum("aaa", "b-b_b" ,"c cc")` },
+        { true, `enum("aaa", "b-b_b" ,"_c-cc")` },
+        { false, `enum("aa a")` },
         { false, `enum("aaa)` },
         { false, `enum("aaa"` },
     }
@@ -41,4 +42,11 @@ func TestEnumOption(t *testing.T) {
         result := ValidateEnumColumnOption(tc.enumOption)
         require.Equal(t, result, tc.valid)
     }
+}
+
+func TestEnumOptionItems(t *testing.T) {
+    items := GetEnumColumnOptionItems(`enum("foo", "bar")`)
+    require.Equal(t, len(items), 2)
+    require.Equal(t, items[0], "foo")
+    require.Equal(t, items[1], "bar")
 }
