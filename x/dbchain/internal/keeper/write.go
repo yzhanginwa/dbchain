@@ -27,16 +27,16 @@ func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields typ
         return 0, errors.New(fmt.Sprintf("Failed validation when inserting table %s", tableName))
     }
 
+    if(!k.preprocessPayment(ctx, appId, tableName, fields, owner)) {
+        return 0, errors.New(fmt.Sprintf("Failed validation of record of payment table %s", tableName))
+    }
+
     // as far the first go routine to be used
     go k.tryToPinFile(ctx, appId, tableName, fields, owner)
 
     id, err := getNextId(k, ctx, appId, tableName)
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get id for table %s", tableName))
-    }
-
-    if(!k.preprocessPayment(ctx, appId, tableName, fields, owner)) {
-        return 0, errors.New(fmt.Sprintf("Failed validation of record of payment table %s", tableName))
     }
 
     // to set the 2 special fields
@@ -50,7 +50,6 @@ func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields typ
     k.applyTrigger(ctx, appId, tableName, fields, owner)
     return id, nil
 }
-
 
 // TODO: need to think over how and when to allow updating
 func (k Keeper) Update(ctx sdk.Context, appId uint, tableName string, id uint, fields types.RowFields, owner sdk.AccAddress) (uint, error){
