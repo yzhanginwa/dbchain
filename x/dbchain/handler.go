@@ -89,8 +89,8 @@ func handleMsgCreateApplication(ctx sdk.Context, keeper Keeper, msg MsgCreateApp
 
     if version.Name == CommunityEdition {
         var apps = keeper.GetAllAppCode(ctx)
-        if len(apps) > 9 {
-            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 10 apps allowed")
+        if len(apps) > 2 {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 2 apps allowed")
         }
     }
     // We use the term database for internal use. To outside we use application to make users understand easily
