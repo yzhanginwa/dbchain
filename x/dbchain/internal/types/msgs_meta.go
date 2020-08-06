@@ -609,7 +609,6 @@ type MsgDropTrigger struct {
     Owner sdk.AccAddress `json:"owner"`
     AppCode string       `json:"app_code"`
     TableName string     `json:"table_name"`
-    Trigger string       `json:"trigger"`
 }
 
 // NewMsgCreatePoll is a constructor function for MsgCreatPoll
