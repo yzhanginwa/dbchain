@@ -10,8 +10,8 @@ package super_script
 //                                                                             //
 //    return = "return" "(" ( "true" | "false" ) ")" .                         //
 //                                                                             //
-//    insert = "insert" "(" table_name "," field_name ", " string_literal      //
-//             [ "," field_name "," string_literal ] ")" .                     //
+//    insert = "insert" "(" table_name "," field_name ", " single_value        //
+//             [ "," field_name "," single_value ] ")" .                       //
 //                                                                             //
 //    if_condition = "if" condition "then" statement "fi" .                    //
 //                                                                             //

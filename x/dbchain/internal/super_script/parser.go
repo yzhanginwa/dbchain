@@ -121,7 +121,7 @@ func (p *Parser) Insert(parent *eval.Statement) bool {
     if !p.expect(LPAREN) { return false }
 
     insert.TableName = p.lit[1:len(p.lit)-1]
-    values := make(map[string]string)
+    values := make(map[string]eval.SingleValue)    // see bnf file
 
     if !p.expect(QUOTEDLIT) { return false } // tableName
     fieldValuePairs := 0
@@ -133,8 +133,8 @@ func (p *Parser) Insert(parent *eval.Statement) bool {
         k := p.lit[1:len(p.lit)-1]
         if !p.expect(QUOTEDLIT) { return false }
         if !p.expect(COMMA) { return false }
-        values[k] = p.lit[1:len(p.lit)-1]
-        if !p.expect(QUOTEDLIT) { return false }
+        if ! p.SingleValue(values, k) { return false }
+
         fieldValuePairs += 1
     }
     insert.Value = values
@@ -240,6 +240,9 @@ func (p *Parser) SingleValue(parent interface{}, l_or_r string) bool {
         } else {
             v.Right = singleValue
         }
+    case map[string]eval.SingleValue:
+        v := parent.(map[string]eval.SingleValue)
+        v[l_or_r] = singleValue     // the l_or_r is the key of the map
     default:
         p.err = fmt.Errorf("This is impossible")
     }

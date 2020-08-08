@@ -118,7 +118,7 @@ func TestParser_ParseScript(t *testing.T) {
                 return(false)
                 fi
                 insert("corp", "name", "bar1", "mailing", "111 main st")
-                insert("corp", "name", "bar2", "mailing", "112 main st")
+                insert("corp", "name", "bar2", "mailing", this.mailing)
                `
 
     parser := NewParser(strings.NewReader(script),
@@ -159,7 +159,10 @@ func TestParser_ParseScript(t *testing.T) {
     if parser.syntaxTree[2].Insert.TableName != "corp" {
         t.Errorf("syntax tree error")
     }
-    if parser.syntaxTree[2].Insert.Value["name"]!= "bar2" {
+    if parser.syntaxTree[2].Insert.Value["name"].QuotedLit != "bar2" {
+        t.Errorf("syntax tree error")
+    }
+    if parser.syntaxTree[2].Insert.Value["mailing"].ThisExpr.Items[0] != "mailing" {
         t.Errorf("syntax tree error")
     }
 

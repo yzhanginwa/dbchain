@@ -154,11 +154,15 @@ func (c *Comparison) Evaluate(p *Program) bool {
 
 type Insert struct {
     TableName string
-    Value map[string]string
+    Value map[string]SingleValue
 }
 
 func (i *Insert) Evaluate(p *Program) {
-    p.InsertFunc(i.TableName, i.Value)
+    record := map[string]string{}
+    for k, v := range i.Value {
+        record[k] = v.Evaluate(p)
+    }
+    p.InsertFunc(i.TableName, record)
 }
 
 type SingleValue struct {
