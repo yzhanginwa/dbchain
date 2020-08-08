@@ -248,8 +248,9 @@ func tryToSendToken(addr sdk.AccAddress) {
 
     if accNum == 0 {
         //TODO: find a better way to delay transaction
-        time.Sleep(6 * time.Second)
-        oracle.SendFirstTokenTo(addr)
+        // for now, we just skip it
+        //time.Sleep(6 * time.Second)
+        //oracle.SendFirstTokenTo(addr)
     }
 }
 
