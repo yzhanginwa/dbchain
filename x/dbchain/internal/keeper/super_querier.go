@@ -26,6 +26,7 @@ type QuerierBuilder struct {
     Where []Condition
     Order []string
     Limit int
+    Last bool
 }
 
 
@@ -93,6 +94,8 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
            builders[j].Ids = []uint{uint(id)}
         case "first":
            builders[j].Limit = 1
+        case "last":
+           builders[j].Last = true
         case "equal":
            cond := Condition{
                Field: qo["field"],
@@ -149,10 +152,15 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
             builders[j].Ids = intersect
         }
 
-        if builders[j].Limit == 0 || builders[j].Limit >= len(builders[j].Ids) {
-            ids = builders[j].Ids
+        if builders[j].Last {
+            length := len(builders[j].Ids)
+            ids = builders[j].Ids[length-1:]
         } else {
-            ids = builders[j].Ids[:(builders[j].Limit)]
+            if builders[j].Limit == 0 || builders[j].Limit >= len(builders[j].Ids) {
+                ids = builders[j].Ids
+            } else {
+                ids = builders[j].Ids[:(builders[j].Limit)]
+            }
         }
     }
 
