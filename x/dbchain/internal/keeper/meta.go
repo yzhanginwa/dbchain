@@ -356,6 +356,10 @@ func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAdd
         if optionExisted {
             return false
         } else {
+            // unique field should not contain duplicate values before becoming unique
+            if option == "unique" && !isColumnValuesUnique(k, ctx, appId, tableName, fieldName) {
+                return false
+            }
             result = append(options, option)
         }
     } else {
@@ -532,6 +536,24 @@ func validateTriggerSyntax(k Keeper, ctx sdk.Context, appId uint, tableName stri
     err := parser.ParseTrigger()
     if err != nil {
         return false
+    }
+    return true
+}
+
+func isColumnValuesUnique(k Keeper, ctx sdk.Context, appId uint, tableName string, fieldName string) bool {
+    store := ctx.KVStore(k.storeKey)
+    flag := make(map[string]bool)
+
+    start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
+    iter := store.Iterator([]byte(start), []byte(end))
+    var mold string
+    for ; iter.Valid(); iter.Next() {
+        val := iter.Value()
+        k.cdc.MustUnmarshalBinaryBare(val, &mold)
+        if _, ok := flag[mold]; ok {
+            return false
+        }
+        flag[mold] = true
     }
     return true
 }
