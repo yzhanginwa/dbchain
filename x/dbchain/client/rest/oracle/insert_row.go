@@ -7,11 +7,11 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
-func InsertRows(appCode string, tableName string, rowFieldss []types.RowFields) {
+func GetInsertRowMsgs(appCode string, tableName string, rowFieldss []types.RowFields) []UniversalMsg {
     privKey, err := LoadPrivKey()
     if err != nil {
         fmt.Println("Failed to load oracle's private key!!!")
-        return
+        return []UniversalMsg{}
     }
 
     oracleAccAddr := sdk.AccAddress(privKey.PubKey().Address())
@@ -21,7 +21,7 @@ func InsertRows(appCode string, tableName string, rowFieldss []types.RowFields) 
         rowFieldsJson, err := json.Marshal(rowFields)
         if err != nil {
             fmt.Println("Oracle: Failed to to json.Marshal!!!")
-            return
+            return []UniversalMsg{}
         }
 
 
@@ -29,12 +29,19 @@ func InsertRows(appCode string, tableName string, rowFieldss []types.RowFields) 
         err = msg.ValidateBasic()
         if err != nil {
             fmt.Println("Oracle: Failed validate new message!!!")
-            return
+            return []UniversalMsg{}
         }
 
         msgs = append(msgs, msg)
     }
-    BuildTxsAndBroadcast(msgs)
+    return msgs
+}
+
+func InsertRows(appCode string, tableName string, rowFieldss []types.RowFields) {
+    msgs := GetInsertRowMsgs(appCode, tableName, rowFieldss)
+    if len(msgs) > 0 {
+        BuildTxsAndBroadcast(msgs)
+    }
 }
 
 func InsertRow(appCode string, tableName string, rowFields types.RowFields) {
