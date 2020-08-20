@@ -2,6 +2,7 @@ package oracle
 
 import (
     "fmt"
+    "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -16,15 +17,15 @@ func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) MsgSend {
     return MsgSend{FromAddress: fromAddr, ToAddress: toAddr, Amount: amount}
 }
 
-func SendFirstTokenTo(addr sdk.AccAddress) {
+func GetSendTokenMsg(addr sdk.AccAddress) (UniversalMsg, error) {
     privKey, err := LoadPrivKey()
     if err != nil {
         fmt.Println("Failed to load oracle's private key!!!")
-        return
+        return nil, errors.New("Failed to load oracle's private key!!!")
     }
     oracleAccAddr := sdk.AccAddress(privKey.PubKey().Address())
 
     oneCoin := sdk.NewCoin("dbctoken", sdk.NewInt(1))
     msg := NewMsgSend(oracleAccAddr, addr, []sdk.Coin{oneCoin})
-    buildTxAndBroadcast(msg)
+    return msg, nil
 }

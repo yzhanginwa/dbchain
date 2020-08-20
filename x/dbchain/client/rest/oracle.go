@@ -108,7 +108,6 @@ func oracleVerifyVerfCode(cliCtx context.CLIContext, storeName string) http.Hand
 
         if VerifyVerfCode(addr.String(), mobile, verificationCode) {
             saveToAuthTable(addr, "mobile", newMobile(mobile))
-            tryToSendToken(addr)
             rest.PostProcessResponse(w, cliCtx, "Success")
         } else {
             rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to verify")
@@ -131,7 +130,6 @@ func oracleVerifyNameAndIdNumber(cliCtx context.CLIContext, storeName string) ht
 
         if verifyNameAndIdNumber(name, idNumber) {
             saveToAuthTable(addr, "idcard", newIdCard(name, idNumber))
-            tryToSendToken(addr)
             rest.PostProcessResponse(w, cliCtx, "Success")
         } else {
             rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to verify")
@@ -161,7 +159,6 @@ func oracleVerifyCorpInfo(cliCtx context.CLIContext, storeName string) http.Hand
 
         if verifyCorpInfo(idNumber, corpName, regNumber, creditCode) {
             saveToAuthTable(addr, "corp", newCorpInfo(corpName, regNumber, creditCode))
-            tryToSendToken(addr)
             rest.PostProcessResponse(w, cliCtx, "Success")
         } else {
             rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to verify")
@@ -236,22 +233,18 @@ func saveToAuthTable(addr sdk.AccAddress, authType string, value interface{}) {
         return
     }
     rowFields["value"] = string(bz)
-    oracle.InsertRow("0000000001", "authentication", rowFields)
-}
+    msgs := oracle.GetInsertRowMsgs("0000000001", "authentication", []types.RowFields{rowFields})
 
-func tryToSendToken(addr sdk.AccAddress) {
     accNum, _, err := oracle.GetAccountInfo(addr.String())
-    if err != nil {
-        fmt.Println("Failed to load oracle's account info!!!")
-        return
+    if err == nil && accNum == 0 {
+        //oracle.SendFirstTokenTo(addr)
+        msg, err := oracle.GetSendTokenMsg(addr)
+        if err == nil {
+            msgs = append(msgs, msg)
+        }
     }
 
-    if accNum == 0 {
-        //TODO: find a better way to delay transaction
-        // for now, we just skip it
-        //time.Sleep(6 * time.Second)
-        //oracle.SendFirstTokenTo(addr)
-    }
+    oracle.BuildTxsAndBroadcast(msgs)
 }
 
 func verifyCorpInfo(idNumber, corpName, regNumber, creditCode string) bool {
