@@ -10,7 +10,7 @@ import (
 
 type UniversalMsg interface{}
 
-func buildTxAndBroadcast(msg UniversalMsg) {
+func BuildTxsAndBroadcast(msgs []UniversalMsg) {
     privKey, err := LoadPrivKey()
     if err != nil {
         fmt.Println("Failed to load oracle's private key!!!")
@@ -23,11 +23,19 @@ func buildTxAndBroadcast(msg UniversalMsg) {
         return
     }
 
-    txBytes, err := buildAndSignAndBuildTxBytes(msg, accNum, seq, privKey)
-    if err != nil {
-        return
+    for _, msg := range msgs {
+        txBytes, err := buildAndSignAndBuildTxBytes(msg, accNum, seq, privKey)
+        if err != nil {
+            return
+        }
+        broadcastTxBytes(txBytes)
+        seq += 1
     }
-    broadcastTxBytes(txBytes)
+}
+
+func buildTxAndBroadcast(msg UniversalMsg) {
+    msgs := []UniversalMsg{msg}
+    BuildTxsAndBroadcast(msgs)
 }
 
 func buildAndSignAndBuildTxBytes(msg UniversalMsg, accNum uint64, seq uint64, privKey secp256k1.PrivKeySecp256k1) ([]byte, error) {
