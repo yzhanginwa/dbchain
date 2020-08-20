@@ -25,7 +25,7 @@ func GetInsertRowMsgs(appCode string, tableName string, rowFieldss []types.RowFi
         }
 
 
-        msg := types.NewMsgInsertRow(oracleAccAddr, "0000000001", "authentication", rowFieldsJson)
+        msg := types.NewMsgInsertRow(oracleAccAddr, appCode, tableName, rowFieldsJson)
         err = msg.ValidateBasic()
         if err != nil {
             fmt.Println("Oracle: Failed validate new message!!!")
