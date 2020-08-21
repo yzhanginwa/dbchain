@@ -8,6 +8,10 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+    BatchSize int = 10
+)
+
 type UniversalMsg interface{}
 
 func BuildTxsAndBroadcast(msgs []UniversalMsg) {
@@ -23,8 +27,9 @@ func BuildTxsAndBroadcast(msgs []UniversalMsg) {
         return
     }
 
-    for _, msg := range msgs {
-        txBytes, err := buildAndSignAndBuildTxBytes(msg, accNum, seq, privKey)
+    batchMsgs := makeBatches(msgs, BatchSize)
+    for _, batch := range batchMsgs {
+        txBytes, err := buildAndSignAndBuildTxBytes(batch, accNum, seq, privKey)
         if err != nil {
             return
         }
@@ -38,9 +43,9 @@ func buildTxAndBroadcast(msg UniversalMsg) {
     BuildTxsAndBroadcast(msgs)
 }
 
-func buildAndSignAndBuildTxBytes(msg UniversalMsg, accNum uint64, seq uint64, privKey secp256k1.PrivKeySecp256k1) ([]byte, error) {
-    msgs := []UniversalMsg{msg}
-    stdFee := NewStdFee(200000, sdk.Coins{sdk.NewCoin("dbctoken", sdk.NewInt(1))})
+func buildAndSignAndBuildTxBytes(msgs []UniversalMsg, accNum uint64, seq uint64, privKey secp256k1.PrivKeySecp256k1) ([]byte, error) {
+    size := len(msgs)
+    stdFee := NewStdFee(uint64(200000 * size), sdk.Coins{sdk.NewCoin("dbctoken", sdk.NewInt(int64(0)))})
     chainId := viper.GetString("chain-id")
     stdSignMsgBytes := StdSignBytes(chainId, accNum, seq, stdFee, msgs, "")
 
@@ -78,4 +83,22 @@ func broadcastTxBytes(txBytes []byte) {
         fmt.Printf("failted to broadcast transaction: %v\n", err)
         return
     }
+}
+
+func makeBatches(msgs []UniversalMsg, batchSize int) [][]UniversalMsg {
+    result := [][]UniversalMsg{}
+    if len(msgs) == 0 || batchSize < 1 {
+        return result
+    }
+
+    for len(msgs) >= batchSize  {
+        result = append(result, msgs[:batchSize])
+        msgs = msgs[batchSize:]
+    }
+
+    if len(msgs) > 0 {
+        result = append(result, msgs[:])
+    }
+
+    return result
 }
