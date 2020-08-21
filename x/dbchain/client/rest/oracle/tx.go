@@ -3,7 +3,7 @@ package oracle
 import (
     "fmt"
     "github.com/spf13/viper"
-    rpcclient "github.com/tendermint/tendermint/rpc/client"
+    rpchttp "github.com/tendermint/tendermint/rpc/client/http"
     "github.com/tendermint/tendermint/crypto/secp256k1"
     sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -67,7 +67,7 @@ func buildAndSignAndBuildTxBytes(msg UniversalMsg, accNum uint64, seq uint64, pr
 }
 
 func broadcastTxBytes(txBytes []byte) {
-    rpc, err := rpcclient.NewHTTP("http://localhost:26657", "/websocket")
+    rpc, err := rpchttp.New("http://localhost:26657", "/websocket")
     if err != nil {
         fmt.Printf("failted to get client: %v\n", err)
         return
