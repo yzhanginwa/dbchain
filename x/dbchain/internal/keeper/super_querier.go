@@ -154,7 +154,9 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
 
         if builders[j].Last {
             length := len(builders[j].Ids)
-            ids = builders[j].Ids[length-1:]
+            if length > 0 {
+                ids = builders[j].Ids[length-1:]
+            }
         } else {
             if builders[j].Limit == 0 || builders[j].Limit >= len(builders[j].Ids) {
                 ids = builders[j].Ids
