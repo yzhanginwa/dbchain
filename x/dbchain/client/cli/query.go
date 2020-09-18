@@ -38,6 +38,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdShowPendingFriends(storeKey, cdc),
         GetCmdGetAccessCode(storeKey, cdc),
         GetCmdGetOracleInfo(storeKey, cdc),
+        GetCmdExportDatabase(storeKey, cdc),
     )...)
     return dbchainQueryCmd
 }
@@ -327,6 +328,31 @@ func GetCmdGetOracleInfo(queryRoute string, cdc *codec.Codec) *cobra.Command {
             }
             accAddr := sdk.AccAddress(privKey.PubKey().Address())
             return cliCtx.PrintOutput(fmt.Sprintf("Address: %s", accAddr.String()))
+        },
+    }
+}
+
+func GetCmdExportDatabase (queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "export-db",
+        Short: "export database schema",
+        Args: cobra.ExactArgs(1),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            appCode    := args[0]
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/export_database/%s", queryRoute, appCode), nil)
+            if err != nil {
+                fmt.Printf("Failed to export database")
+                return nil
+            }
+
+            var out []string
+            cdc.MustUnmarshalJSON(res, &out)
+            for _, line := range out {
+                fmt.Println(line)
+            }
+            return cliCtx.PrintOutput("")
         },
     }
 }

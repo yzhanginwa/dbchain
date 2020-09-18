@@ -3,6 +3,7 @@ package keeper
 import (
     "fmt"
     "strconv"
+    "strings"
     //"encoding/hex"
 
     "github.com/cosmos/cosmos-sdk/codec"
@@ -30,6 +31,7 @@ const (
     QueryFriends  = "friends"
     QueryPendingFriends  = "pending_friends"
     QueryQuerier  = "querier"
+    QueryExportDB = "export_database"
 )
 
 
@@ -77,6 +79,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryPendingFriends(ctx, path[1:], req, keeper)
         case QueryQuerier:
             return queryQuerier(ctx, path[1:], req, keeper)
+        case QueryExportDB:
+            return queryExportDatabase(ctx, path[1:], req, keeper)
         default:
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown dbchain query endpoint")
         }
@@ -502,6 +506,85 @@ func queryGroup(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
     return res, nil
 }
 
+/////////////////////
+//                 //
+// export database //
+//                 //
+/////////////////////
+
+func queryExportDatabase (ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    appCode := path[0]
+    result := []string{}
+
+    appId, err := keeper.GetDatabaseId(ctx, appCode)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    // handle groups
+    groups := keeper.ShowGroups(ctx, appId)
+    result = append(result, "Groups:")
+    for _, group := range groups {
+        result = append(result, fmt.Sprintf("\t%s", group))
+        groupMembers := keeper.ShowGroup(ctx, appId, group)
+        for _, groupMember := range groupMembers {
+            result = append(result, fmt.Sprintf("\t\t%s", groupMember.String()))
+        }
+    }
+
+    // handle tables
+    tables := keeper.GetTables(ctx, appId)
+    result = append(result, "Tables:")
+    for _, table := range tables {
+        tableOptions, err := keeper.GetOption(ctx, appId, table)
+        if err != nil {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Failed to get table options")
+        }
+
+        result = append(result, "")
+        if len(tableOptions) > 0 {
+            result = append(result, fmt.Sprintf("\t%s (%s)", table, strings.Join(tableOptions, ", ")))
+        } else {
+            result = append(result, fmt.Sprintf("\t%s", table))
+        }
+
+        tableObj, err := keeper.GetTable(ctx, appId, table)
+        if err != nil {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Failed to get table columns")
+        }
+
+        if len(tableObj.Filter) > 0 {
+            result = append(result, fmt.Sprintf("\t%s", "Filter:"))
+            result = append(result, fmt.Sprintf("\t\t%s", tableObj.Filter))
+        }
+
+        if len(tableObj.Trigger) > 0 {
+            result = append(result, fmt.Sprintf("\t%s", "Trigger:"))
+            result = append(result, fmt.Sprintf("\t\t%s", tableObj.Trigger))
+        }
+
+        // handle fields
+        for _, field := range tableObj.Fields {
+            fieldOptions, err := keeper.GetColumnOption(ctx, appId, table, field)
+            if err != nil {
+                return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Failed to get table columns")
+            }
+
+            if len(fieldOptions) > 0 {
+                result = append(result, fmt.Sprintf("\t\t%s (%s)", field, strings.Join(fieldOptions, ", ")))
+            } else {
+                result = append(result, fmt.Sprintf("\t\t%s", field))
+            }
+        }
+    }
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, result)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
 
 //////////////////
 //              //
