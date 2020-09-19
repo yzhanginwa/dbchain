@@ -22,10 +22,15 @@ type Database struct {
     Name string           `json:"name"`
     Description string    `json:"description"`
     Permissioned bool     `json:"permissioned"`
+    SchemaFrozen bool     `json:"schema_frozen"`
+    DataFrozen bool       `json:"data_frozen"`
 }
 
 func NewDatabase() Database {
-    return Database{}
+    return Database{
+        SchemaFrozen: false,
+        DataFrozen: false,
+    }
 }
 
 func (d Database) String() string {
