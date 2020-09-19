@@ -151,3 +151,52 @@ func (msg MsgCreateSysDatabase) GetSignBytes() []byte {
 func (msg MsgCreateSysDatabase) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
+
+///////////////////////////
+//                       //
+// NewMsgSetSchemaStatus //
+//                       //
+///////////////////////////
+
+// MsgSetSchemaStatus sets the status of SchemaFrozen of a database
+type MsgSetSchemaStatus struct {
+    Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
+    Status bool          `json:"status"`
+}
+
+// NewMsgSetSchemaStatus is a constructor function for MsgCreatTable
+func NewMsgSetSchemaStatus(owner sdk.AccAddress, appCode string, status bool) MsgSetSchemaStatus {
+    return MsgSetSchemaStatus {
+        Owner: owner,
+        AppCode: appCode,
+        Status: status,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgSetSchemaStatus) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgSetSchemaStatus) Type() string { return "set_schema_status" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgSetSchemaStatus) ValidateBasic() error {
+    if msg.Owner.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Application Code cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgSetSchemaStatus) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgSetSchemaStatus) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}

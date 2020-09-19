@@ -72,6 +72,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgAddFriend(ctx, keeper, msg)
         case MsgRespondFriend:
             return handleMsgRespondFriend(ctx, keeper, msg)
+        case MsgSetSchemaStatus:
+            return handleMsgSetSchemaStatus(ctx, keeper, msg)
         default:
             errMsg := fmt.Sprintf("Unrecognized dbchain Msg type: %v", msg.Type())
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
@@ -511,6 +513,23 @@ func handleMsgAddFriend(ctx sdk.Context, keeper Keeper, msg MsgAddFriend) (*sdk.
 
 func handleMsgRespondFriend(ctx sdk.Context, keeper Keeper, msg MsgRespondFriend) (*sdk.Result, error) {
     err := keeper.RespondFriend(ctx, msg.Owner, msg.FriendAddr, msg.Action)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
+    return &sdk.Result{}, nil
+}
+
+func handleMsgSetSchemaStatus(ctx sdk.Context, keeper Keeper, msg MsgSetSchemaStatus) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Invalid app code")
+    }
+
+    if !isSysAdmin(ctx, keeper, msg.Owner) && !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
+    }
+
+    err = keeper.SetSchemaStatus(ctx, msg.Owner, msg.AppCode, msg.Status)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
     }

@@ -20,6 +20,10 @@ func GetDatabase(appCode string) (types.Database, bool) {
     return value, ok
 }
 
+func VoidDatabase(appCode string) {
+    delete(database, appCode)
+}
+
 func SetDatabase(appCode string, db types.Database) {
     database[appCode] = db
     appIdToCode[db.AppId] = appCode

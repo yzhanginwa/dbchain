@@ -185,6 +185,26 @@ func (k Keeper) IsDatabaseUser(ctx sdk.Context, appId uint, owner sdk.AccAddress
     }
 }
 
+func (k Keeper) SetSchemaStatus(ctx sdk.Context, owner sdk.AccAddress, appCode string, status bool) error {
+    store := ctx.KVStore(k.storeKey)
+    key := getDatabaseKey(appCode)
+    bz := store.Get([]byte(key))
+    if bz == nil {
+        return errors.New(fmt.Sprintf("App code %s is invalid!", appCode))
+    }
+    var database types.Database
+    k.cdc.MustUnmarshalBinaryBare(bz, &database)
+
+    if database.SchemaFrozen == status {
+        return errors.New("No need to do anything!")
+    }
+
+    database.SchemaFrozen = status
+    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(database))
+    cache.VoidDatabase(appCode)
+    return nil
+}
+
 ////////////////////
 //                //
 // helper methods //

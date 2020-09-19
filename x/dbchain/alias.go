@@ -22,6 +22,7 @@ type (
     Keeper          = keeper.Keeper
     MsgCreateApplication = types.MsgCreateApplication
     MsgCreateSysDatabase = types.MsgCreateSysDatabase
+    MsgSetSchemaStatus   = types.MsgSetSchemaStatus
     MsgAddDatabaseUser   = types.MsgAddDatabaseUser
     MsgCreateTable  = types.MsgCreateTable
     MsgDropTable    = types.MsgDropTable

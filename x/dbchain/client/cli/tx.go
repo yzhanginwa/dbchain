@@ -53,6 +53,8 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdModifyGroupMember(cdc),
         GetCmdAddFriend(cdc),
         GetCmdRespondFriend(cdc),
+        GetCmdFreezeSchema(cdc),
+        GetCmdUnfreezeSchema(cdc),
     )...)
 
     return dbchainTxCmd
@@ -726,6 +728,53 @@ func GetCmdRespondFriend(cdc * codec.Codec) *cobra.Command {
     }
 }
 
+////////////////////////////
+//                        //
+// Freeze/Unfreeze schema //
+//                        //
+////////////////////////////
+
+func GetCmdFreezeSchema(cdc * codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "freeze-schema [database]",
+        Short: "Freeze the schma of a database",
+        Args:  cobra.ExactArgs(1),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode := args[0]
+            msg := types.NewMsgSetSchemaStatus(cliCtx.GetFromAddress(), appCode, true)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+func GetCmdUnfreezeSchema(cdc * codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "unfreeze-schema [database]",
+        Short: "Unfreeze the schma of a database",
+        Args:  cobra.ExactArgs(1),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode := args[0]
+            msg := types.NewMsgSetSchemaStatus(cliCtx.GetFromAddress(), appCode, false)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
 
 //////////////////////
 //                  //
