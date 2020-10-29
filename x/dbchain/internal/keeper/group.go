@@ -157,6 +157,20 @@ func (k Keeper) ShowGroup(ctx sdk.Context, appId uint, groupName string) []sdk.A
     return addresses
 }
 
+func (k Keeper) ShowGroupMemo(ctx sdk.Context, appId uint, groupName string) string {
+    store := ctx.KVStore(k.storeKey)
+    key := getGroupMemoKey(appId, groupName)
+    bz := store.Get([]byte(key))
+
+    if bz == nil {
+        return ""
+    }
+
+    var memo string
+    k.cdc.MustUnmarshalBinaryBare(bz, &memo)
+    return memo
+}
+
 func (k Keeper) ShowGroups(ctx sdk.Context, appId uint) []string {
     store := ctx.KVStore(k.storeKey)
     key := getGroupsKey(appId)

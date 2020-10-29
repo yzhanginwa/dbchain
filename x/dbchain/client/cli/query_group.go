@@ -43,3 +43,26 @@ func GetCmdShowGroup(queryRoute string, cdc *codec.Codec) *cobra.Command {
     }
 }
 
+func GetCmdShowGroupMemo(queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "show-group-memo",
+        Short: "show group memo",
+        Args: cobra.MinimumNArgs(3),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            accessCode := args[0]
+            appCode    := args[1]
+            groupName  := args[2]
+
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/group_memo/%s/%s/%s", queryRoute, accessCode, appCode, groupName), nil)
+            if err != nil {
+                fmt.Printf("could not show members of %s %s", appCode, groupName)
+                return nil
+            }
+            var out string
+            cdc.MustUnmarshalJSON(res, &out)
+            return cliCtx.PrintOutput(out)
+        },
+    }
+}
