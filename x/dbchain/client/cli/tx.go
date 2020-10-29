@@ -50,6 +50,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdDeleteRow(cdc),
         GetCmdFreezeRow(cdc),
         GetCmdModifyGroup(cdc),
+        GetCmdSetGroupMemo(cdc),
         GetCmdModifyGroupMember(cdc),
         GetCmdAddFriend(cdc),
         GetCmdRespondFriend(cdc),
@@ -668,6 +669,36 @@ func GetCmdModifyGroup(cdc * codec.Codec) *cobra.Command {
             groupName := args[2]
 
             msg := types.NewMsgModifyGroup(appCode, action, groupName, cliCtx.GetFromAddress())
+            err := msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+////////////////////
+//                //
+// Set group memo //
+//                //
+////////////////////
+
+func GetCmdSetGroupMemo(cdc * codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "set-group-memo [appCode] [group] [memo]",
+        Short: "set group memo",
+        Args:  cobra.ExactArgs(3),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode   := args[0]
+            groupName := args[1]
+            memo      := args[2]
+
+            msg := types.NewMsgSetGroupMemo(appCode, groupName, memo, cliCtx.GetFromAddress())
             err := msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
