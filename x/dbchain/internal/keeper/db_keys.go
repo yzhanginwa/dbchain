@@ -19,6 +19,7 @@ const (
     KeyPrefixData  = "dt"
     KeyPrefixIndex = "ix"
     KeyPrefixGroup = "grp"
+    KeyPrefixGroupMemo = "grp_mm"
     KeyPrefixGroups = "grps"
 )
 
@@ -175,6 +176,10 @@ func getGroupsKey(appId uint) string {
 
 func getGroupKey(appId uint, groupName string) string {
     return fmt.Sprintf("%s:%d:%s:%s", KeyPrefixDb, appId, KeyPrefixGroup, groupName)
+}
+
+func getGroupMemoKey(appId uint, groupName string) string {
+    return fmt.Sprintf("%s:%d:%s:%s", KeyPrefixDb, appId, KeyPrefixGroupMemo, groupName)
 }
 
 func getAdminGroupKey(appId uint) string {

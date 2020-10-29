@@ -45,6 +45,7 @@ type (
     MsgAddFriend    = types.MsgAddFriend
     MsgRespondFriend   = types.MsgRespondFriend
     MsgModifyGroup     = types.MsgModifyGroup
+    MsgSetGroupMemo    = types.MsgSetGroupMemo
     MsgModifyGroupMember  = types.MsgModifyGroupMember
 
     Table           = types.Table

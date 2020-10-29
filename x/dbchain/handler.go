@@ -66,6 +66,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgFreezeRow(ctx, keeper, msg)
         case MsgModifyGroup:
             return handleMsgModifyGroup(ctx, keeper, msg)
+        case MsgSetGroupMemo:
+            return handleMsgSetGroupMemo(ctx, keeper, msg)
         case MsgModifyGroupMember:
             return handleMsgModifyGroupMember(ctx, keeper, msg)
         case MsgAddFriend:
@@ -477,6 +479,24 @@ func handleMsgModifyGroup(ctx sdk.Context, keeper Keeper, msg MsgModifyGroup) (*
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
     }
+    return &sdk.Result{}, nil
+}
+
+func handleMsgSetGroupMemo(ctx sdk.Context, keeper Keeper, msg MsgSetGroupMemo) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Invalid app code")
+    }
+
+    if msg.Group == "admin" {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"No need to set memo for admin")
+    }
+
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Not authorized")
+    }
+
+    keeper.SetGroupMemo(ctx, appId, msg.Group, msg.Memo)
     return &sdk.Result{}, nil
 }
 

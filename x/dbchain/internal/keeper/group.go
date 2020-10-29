@@ -90,6 +90,12 @@ func (k Keeper) ModifyGroup(ctx sdk.Context, appId uint, action string, groupNam
     return nil
 }
 
+func (k Keeper) SetGroupMemo(ctx sdk.Context, appId uint, groupName string, memo string) {
+    store := ctx.KVStore(k.storeKey)
+    key := getGroupMemoKey(appId, groupName)
+    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(memo))
+}
+
 func (k Keeper) ModifyGroupMember(ctx sdk.Context, appId uint, group string, action string, member sdk.AccAddress) error {
     groups := k.ShowGroups(ctx, appId)
     if !utils.ItemExists(groups, group) {
