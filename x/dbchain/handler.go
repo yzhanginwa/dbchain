@@ -507,7 +507,7 @@ func handleMsgModifyGroupMember(ctx sdk.Context, keeper Keeper, msg MsgModifyGro
     }
 
     if msg.Group == "admin" {
-        if !isSysAdmin(ctx, keeper, msg.Owner) {
+        if !(isSysAdmin(ctx, keeper, msg.Owner) || isAdmin(ctx, keeper, appId, msg.Owner)) {
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Not authorized")
         }
     } else {
