@@ -122,6 +122,13 @@ func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name strin
     // Add owner into the admin group of the database
     k.ModifyGroup(ctx, appId, "add", "admin")
     k.ModifyGroupMember(ctx, appId, "admin", "add", owner)
+
+    // Add owner as one of database users if this application requires permission for users
+    if permissioned {
+        if err := k.AddDatabaseUser(ctx, owner, newAppCode, owner); err != nil {
+            return errors.New("Failed to add owner as database user!")
+        }
+    }
     return nil 
 }
 
