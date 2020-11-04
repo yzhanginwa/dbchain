@@ -384,6 +384,26 @@ func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAdd
     return true
 }
 
+func (k Keeper) SetColumnMemo(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldName string, memo string) bool {
+    table, err := k.GetTable(ctx, appId, tableName)
+    if err != nil {
+        return false
+    }
+    for i, f := range(table.Fields) {
+        if f == fieldName {
+            fieldsLength := len(table.Fields)
+            for len(table.Memos) < fieldsLength {
+                table.Memos = append(table.Memos, "")
+            }
+            table.Memos[i] = memo
+            store := ctx.KVStore(k.storeKey)
+            store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+            return true
+        }
+    }
+    return false
+}
+
 func (k Keeper) GetColumnOption(ctx sdk.Context, appId uint, tableName string, fieldName string) ([]string, error) {
     store := ctx.KVStore(k.storeKey)
     key := getColumnOptionsKey(appId, tableName, fieldName)

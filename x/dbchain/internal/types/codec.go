@@ -24,6 +24,7 @@ func RegisterCodec(cdc *codec.Codec) {
     cdc.RegisterConcrete(MsgRenameColumn{}, "dbchain/RenameColumn", nil)
     cdc.RegisterConcrete(MsgModifyOption{}, "dbchain/ModifyOption", nil)
     cdc.RegisterConcrete(MsgModifyColumnOption{}, "dbchain/ModifyColumnOption", nil)
+    cdc.RegisterConcrete(MsgSetColumnMemo{}, "dbchain/SetColumnMemo", nil)
     cdc.RegisterConcrete(MsgCreateIndex{}, "dbchain/CreateIndex", nil)
     cdc.RegisterConcrete(MsgDropIndex{}, "dbchain/DropIndex", nil)
     cdc.RegisterConcrete(MsgAddInsertFilter{}, "dbchain/AddInsertFilter", nil)

@@ -45,6 +45,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdAddTrigger(cdc),
         GetCmdDropTrigger(cdc),
         GetCmdModifyColumnOption(cdc),
+        GetCmdSetColumnMemo(cdc),
         GetCmdInsertRow(cdc),
         GetCmdUpdateRow(cdc),
         GetCmdDeleteRow(cdc),
@@ -360,6 +361,37 @@ func GetCmdModifyColumnOption(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+/////////////////////
+//                 //
+// Set column memo //
+//                 //
+/////////////////////
+
+func GetCmdSetColumnMemo(cdc * codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "set-column-memo [appCode] [table] [field] [memo]",
+        Short: "set column memo",
+        Args:  cobra.ExactArgs(4),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode   := args[0]
+            tableName := args[1]
+            fieldName := args[2]
+            memo      := args[3]
+
+            msg := types.NewMsgSetColumnMemo(appCode, tableName, fieldName, memo, cliCtx.GetFromAddress())
+            err := msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
             return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
         },
     }

@@ -67,6 +67,7 @@ type Table struct {
     Owner sdk.AccAddress      `json:"owner"`
     Name string               `json:"name"`
     Fields []string           `json:"fields"`
+    Memos []string            `json:"memos"`
     Filter string             `json:"filter"`
     Trigger string            `json:"trigger"`
 }

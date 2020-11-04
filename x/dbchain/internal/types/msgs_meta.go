@@ -772,3 +772,61 @@ func (msg MsgModifyColumnOption) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
+
+//////////////////////
+//                  //
+// MsgSetColumnMemo //
+//                  //
+//////////////////////
+
+
+type MsgSetColumnMemo struct {
+    AppCode string           `json:"app_code"`
+    TableName string         `json:"table_name"`
+    FieldName string         `json:"field_name"`
+    Memo string              `json:"memo"`
+    Owner sdk.AccAddress     `json:"owner"`
+}
+
+func NewMsgSetColumnMemo(appCode, tableName, fieldName, memo string, owner sdk.AccAddress) MsgSetColumnMemo {
+    return MsgSetColumnMemo {
+        AppCode: appCode,
+        TableName: tableName,
+        FieldName: fieldName,
+        Memo: memo,
+        Owner: owner,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgSetColumnMemo) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgSetColumnMemo) Type() string { return "set_column_memo" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgSetColumnMemo) ValidateBasic() error {
+    if len(msg.AppCode) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
+    }
+    if len(msg.TableName) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "Table name cannot be empty")
+    }
+    if len(msg.FieldName) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "Column name cannot be empty")
+    }
+    if msg.Owner.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgSetColumnMemo) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgSetColumnMemo) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
