@@ -44,6 +44,7 @@ type (
     MsgFreezeRow    = types.MsgFreezeRow
 
     MsgAddFriend    = types.MsgAddFriend
+    MsgDropFriend   = types.MsgDropFriend
     MsgRespondFriend   = types.MsgRespondFriend
     MsgModifyGroup     = types.MsgModifyGroup
     MsgSetGroupMemo    = types.MsgSetGroupMemo

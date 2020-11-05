@@ -54,6 +54,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdSetGroupMemo(cdc),
         GetCmdModifyGroupMember(cdc),
         GetCmdAddFriend(cdc),
+        GetCmdDropFriend(cdc),
         GetCmdRespondFriend(cdc),
         GetCmdFreezeSchema(cdc),
         GetCmdUnfreezeSchema(cdc),
@@ -760,6 +761,33 @@ func GetCmdAddFriend(cdc * codec.Codec) *cobra.Command {
             address   := args[1]
             name      := args[2]
             msg := types.NewMsgAddFriend(cliCtx.GetFromAddress(), ownerName, address, name)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+/////////////////
+//             //
+// drop friend //
+//             //
+/////////////////
+
+func GetCmdDropFriend(cdc * codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "drop-friend [address]",
+        Short: "drop a friend ",
+        Args:  cobra.ExactArgs(1),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            address   := args[0]
+            msg := types.NewMsgDropFriend(cliCtx.GetFromAddress(), address)
             err := msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))

@@ -17,6 +17,11 @@ func (k Keeper) AddFriend(ctx sdk.Context, owner sdk.AccAddress, ownerName strin
     return nil
 }
 
+func (k Keeper) DropFriend(ctx sdk.Context, owner sdk.AccAddress, friendAddr string) error {
+    ownerAddr:= owner.String()
+    return k.deleteFriend(ctx, ownerAddr, friendAddr)
+}
+
 func (k Keeper) RespondFriend(ctx sdk.Context, owner sdk.AccAddress, friendAddr string, action string) error {
     ownerAddr:= owner.String()
     if action == "delete" {

@@ -63,6 +63,53 @@ func (msg MsgAddFriend) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
+///////////////////
+//               //
+// MsgDropFriend //
+//               //
+///////////////////
+
+type MsgDropFriend struct {
+    Owner sdk.AccAddress    `json:"owner"`
+    FriendAddr string       `json:"friend_addr"`
+}
+
+// NewMsgDropFriend is a constructor function for MsgCreatTable
+func NewMsgDropFriend(owner sdk.AccAddress, friendAddr string) MsgDropFriend {
+    return MsgDropFriend {
+        Owner: owner,
+        FriendAddr: friendAddr,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgDropFriend) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgDropFriend) Type() string { return "drop_friend" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgDropFriend) ValidateBasic() error {
+    if msg.Owner.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    if len(msg.FriendAddr) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "Friend address cannot be empty")
+    }
+
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgDropFriend) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgDropFriend) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
+
 //////////////////////
 //                  //
 // MsgRespondFriend //

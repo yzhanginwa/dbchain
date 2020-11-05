@@ -74,6 +74,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgModifyGroupMember(ctx, keeper, msg)
         case MsgAddFriend:
             return handleMsgAddFriend(ctx, keeper, msg)
+        case MsgDropFriend:
+            return handleMsgDropFriend(ctx, keeper, msg)
         case MsgRespondFriend:
             return handleMsgRespondFriend(ctx, keeper, msg)
         case MsgSetSchemaStatus:
@@ -546,6 +548,14 @@ func handleMsgModifyGroupMember(ctx sdk.Context, keeper Keeper, msg MsgModifyGro
 
 func handleMsgAddFriend(ctx sdk.Context, keeper Keeper, msg MsgAddFriend) (*sdk.Result, error) {
     err := keeper.AddFriend(ctx, msg.Owner, msg.OwnerName, msg.FriendAddr, msg.FriendName)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
+    return &sdk.Result{}, nil
+}
+
+func handleMsgDropFriend(ctx sdk.Context, keeper Keeper, msg MsgDropFriend) (*sdk.Result, error) {
+    err := keeper.DropFriend(ctx, msg.Owner, msg.FriendAddr)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
     }
