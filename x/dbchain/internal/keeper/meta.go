@@ -55,6 +55,11 @@ func (k Keeper) CreateTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, n
     table.Owner = owner
     table.Name = name
     table.Fields = preProcessFields(fields)
+    // make Memos the same length as Fields
+    fieldsLength := len(table.Fields)
+    for len(table.Memos) < fieldsLength {
+        table.Memos = append(table.Memos, "")
+    }
     store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
 
     var tables []string
@@ -116,6 +121,7 @@ func (k Keeper) AddColumn(ctx sdk.Context, appId uint, name string, field string
     }
 
     table.Fields = append(table.Fields, field)
+    table.Memos = append(table.Memos, "")
 
     store := ctx.KVStore(k.storeKey)
     store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
@@ -138,6 +144,7 @@ func (k Keeper) DropColumn(ctx sdk.Context, appId uint, name string, field strin
         if field == fld {
             foundField = true
             table.Fields = append(table.Fields[:i], table.Fields[i+1:]...)
+            table.Memos  = append(table.Memos[:i],  table.Memos[i+1:]...)
             break
         }
     }
