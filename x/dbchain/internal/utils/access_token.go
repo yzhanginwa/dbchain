@@ -42,6 +42,9 @@ func MakeAccessCode(privKey secp256k1.PrivKeySecp256k1) string {
 
 func VerifyAccessCode(accessCode string) (sdk.AccAddress, error) {
     parts := strings.Split(accessCode, ":")
+    if len(parts) != 3 {
+        return nil, errors.New("Wrong access code format")
+    }
     pubKeyBytes, _ := base58.Decode(parts[0])
     timeStamp      := parts[1]
     signature, _   := base58.Decode(parts[2])
