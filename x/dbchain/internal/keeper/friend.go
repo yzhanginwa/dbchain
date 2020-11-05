@@ -100,8 +100,11 @@ func (k Keeper) addFriend(ctx sdk.Context, ownerAddr string, friendAddr string, 
 func (k Keeper) deleteFriend(ctx sdk.Context, ownerAddr string, friendAddr string) error {
     store := ctx.KVStore(k.storeKey)
     key := getFriendKey(ownerAddr, friendAddr)
-    store.Delete([]byte(key))
-    return nil
+    if store.Has([]byte(key)) {
+        store.Delete([]byte(key))
+        return nil
+    }
+    return errors.New("Friend doesn't exist")
 }
 
 func (k Keeper) addPendingFriend(ctx sdk.Context, ownerAddr string, ownerName string, friendAddr string) error {
