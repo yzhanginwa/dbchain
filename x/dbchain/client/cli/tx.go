@@ -836,7 +836,7 @@ func GetCmdFreezeSchema(cdc * codec.Codec) *cobra.Command {
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
-            msg := types.NewMsgSetSchemaStatus(cliCtx.GetFromAddress(), appCode, true)
+            msg := types.NewMsgSetSchemaStatus(cliCtx.GetFromAddress(), appCode, "frozen")
             err := msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
@@ -857,7 +857,7 @@ func GetCmdUnfreezeSchema(cdc * codec.Codec) *cobra.Command {
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
-            msg := types.NewMsgSetSchemaStatus(cliCtx.GetFromAddress(), appCode, false)
+            msg := types.NewMsgSetSchemaStatus(cliCtx.GetFromAddress(), appCode, "unfrozen" )
             err := msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))

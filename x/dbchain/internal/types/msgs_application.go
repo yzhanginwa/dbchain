@@ -162,11 +162,11 @@ func (msg MsgCreateSysDatabase) GetSigners() []sdk.AccAddress {
 type MsgSetSchemaStatus struct {
     Owner sdk.AccAddress `json:"owner"`
     AppCode string       `json:"app_code"`
-    Status bool          `json:"status"`
+    Status string        `json:"status"`
 }
 
 // NewMsgSetSchemaStatus is a constructor function for MsgCreatTable
-func NewMsgSetSchemaStatus(owner sdk.AccAddress, appCode string, status bool) MsgSetSchemaStatus {
+func NewMsgSetSchemaStatus(owner sdk.AccAddress, appCode, status string) MsgSetSchemaStatus {
     return MsgSetSchemaStatus {
         Owner: owner,
         AppCode: appCode,
@@ -187,6 +187,12 @@ func (msg MsgSetSchemaStatus) ValidateBasic() error {
     }
     if len(msg.AppCode) == 0 {
         return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Application Code cannot be empty")
+    }
+    if len(msg.Status) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Status cannot be empty")
+    }
+    if msg.Status != "frozen" && msg.Status != "unfrozen" {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Status has to be either frozen of unfrozen")
     }
     return nil
 }

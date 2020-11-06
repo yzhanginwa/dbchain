@@ -192,7 +192,12 @@ func (k Keeper) IsDatabaseUser(ctx sdk.Context, appId uint, owner sdk.AccAddress
     }
 }
 
-func (k Keeper) SetSchemaStatus(ctx sdk.Context, owner sdk.AccAddress, appCode string, status bool) error {
+func (k Keeper) SetSchemaStatus(ctx sdk.Context, owner sdk.AccAddress, appCode, status string) error {
+    frozen_status := true
+    if status == "unfrozen" {    // status must be either "frozen" or "unfrozen"
+        frozen_status = false
+    }
+
     store := ctx.KVStore(k.storeKey)
     key := getDatabaseKey(appCode)
     bz := store.Get([]byte(key))
@@ -202,11 +207,11 @@ func (k Keeper) SetSchemaStatus(ctx sdk.Context, owner sdk.AccAddress, appCode s
     var database types.Database
     k.cdc.MustUnmarshalBinaryBare(bz, &database)
 
-    if database.SchemaFrozen == status {
+    if database.SchemaFrozen == frozen_status {
         return errors.New("No need to do anything!")
     }
 
-    database.SchemaFrozen = status
+    database.SchemaFrozen = frozen_status
     store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(database))
     cache.VoidDatabase(appCode)
     return nil
