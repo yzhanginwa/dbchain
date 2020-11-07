@@ -11,6 +11,18 @@ import (
     "github.com/gorilla/mux"
 )
 
+func showIsSysAdminHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        vars := mux.Vars(r)
+        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/is_sys_admin/%s", storeName, vars["accessToken"]), nil)
+        if err != nil {
+            rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+            return
+        }
+        rest.PostProcessResponse(w, cliCtx, res)
+    }
+}
+
 func showApplicationsHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)

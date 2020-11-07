@@ -8,6 +8,7 @@ import (
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) {
+    r.HandleFunc(fmt.Sprintf("/%s/is_sys_admin/{%s}", storeName, "accessToken"), showIsSysAdminHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/application/{%s}", storeName, "accessToken"), showApplicationsHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/application/{%s}/{%s}", storeName, "accessToken", "appCode"), showApplicationHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/admin_apps/{%s}", storeName, "accessToken"), showAdminAppsHandler(cliCtx, storeName)).Methods("GET")
