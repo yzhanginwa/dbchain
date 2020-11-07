@@ -23,6 +23,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         RunE:                       client.ValidateCmd,
     }
     dbchainQueryCmd.AddCommand(flags.GetCommands(
+        GetCmdIsSysAdmin(storeKey, cdc),
         GetCmdApplication(storeKey, cdc),
         GetCmdAppUsers(storeKey, cdc),
         GetCmdIsAppUser(storeKey, cdc),
@@ -42,6 +43,28 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdExportDatabase(storeKey, cdc),
     )...)
     return dbchainQueryCmd
+}
+
+func GetCmdIsSysAdmin(queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "is-sys-admin",
+        Short: "check whether user is system administrator",
+        Args: cobra.ExactArgs(1),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            accessCode := args[0]
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/is_sys_admin/%s", queryRoute, accessCode), nil)
+            if err != nil {
+                fmt.Printf("Failed to check whether you are a system administrator")
+                return nil
+            }
+
+            var out types.QueryOfBoolean
+            cdc.MustUnmarshalJSON(res, &out)
+            return cliCtx.PrintOutput(out)
+        },
+    }
 }
 
 func GetCmdApplication(queryRoute string, cdc *codec.Codec) *cobra.Command {

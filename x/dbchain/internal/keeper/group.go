@@ -35,6 +35,16 @@ func (k Keeper) GetSysAdmins(ctx sdk.Context) []sdk.AccAddress {
     return sysAdmins
 }
 
+func (k Keeper) IsSysAdmin(ctx sdk.Context, addr sdk.AccAddress) bool {
+    sysAdmins := k.GetSysAdmins(ctx)
+    for _, sysAdmin := range sysAdmins {
+        if addr.Equals(sysAdmin) {
+            return true
+        }
+    }
+    return false
+}
+
 ////////////////////
 //                //
 // Database level //

@@ -15,6 +15,7 @@ import (
 
 // query endpoints supported by the dbchain service Querier
 const (
+    QueryIsSysAdmin    = "is_sys_admin"
     QueryApplication   = "application"
     QueryAppUsers      = "app_users"
     QueryIsAppUser     = "is_app_user"
@@ -40,6 +41,8 @@ const (
 func NewQuerier(keeper Keeper) sdk.Querier {
     return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err error) {
         switch path[0] {
+        case QueryIsSysAdmin:
+            return queryIsSysAdmin(ctx, path[1:], req, keeper)
         case QueryApplication:
             if len(path) > 2 {
                 return queryApplication(ctx, path[1:], req, keeper)
@@ -88,6 +91,29 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown dbchain query endpoint")
         }
     }
+}
+
+////////////////////////////////////
+//                                //
+// query whether user is sysadmin //
+//                                //
+////////////////////////////////////
+
+func queryIsSysAdmin(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    addr, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    isSysAdmin:= keeper.IsSysAdmin(ctx, addr)
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, isSysAdmin)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
 }
 
 ////////////////////////////////
