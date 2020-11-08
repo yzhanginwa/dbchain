@@ -44,7 +44,10 @@ func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields typ
     fields["created_by"] = owner.String()
     fields["created_at"] = other.GetCurrentBlockTime().String()
 
-    k.Write(ctx, appId, tableName, id, fields, owner)
+    id, err = k.Write(ctx, appId, tableName, id, fields, owner)
+    if err != nil {
+        return id, err
+    }
 
     k.updateIndex(ctx, appId, tableName, id, fields)
     k.applyTrigger(ctx, appId, tableName, fields, owner)
@@ -236,6 +239,14 @@ func (k Keeper) validateInsertionWithFieldOptions(ctx sdk.Context, appId uint, t
         fieldOptions, _ := k.GetColumnOption(ctx, appId, tableName, fieldName)
 
         for _, opt := range fieldOptions {
+            if opt == string(types.FLDOPT_INT) {
+                if value, ok := fields[fieldName]; ok {
+                    if _, err := strconv.Atoi(value); err != nil {
+                       return false
+                    }
+                }
+            }
+
             if opt == string(types.FLDOPT_NOTNULL) {
                 if value, ok := fields[fieldName]; ok {
                     if(len(value) < 1) {

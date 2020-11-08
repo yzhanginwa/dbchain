@@ -512,6 +512,8 @@ func preProcessFields(fields []string) []string {
 
 func validateColumnOption(option string) bool {
     switch option {
+    case "int":
+        return true
     case "not-null":
         return true
     case "unique":

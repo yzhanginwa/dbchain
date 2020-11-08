@@ -117,6 +117,7 @@ const (
     FLDOPT_UNIQUE     FieldOption = "unique"
     FLDOPT_FILE       FieldOption = "file"
     FLDOPT_OWN        FieldOption = "own"
+    FLDOPT_INT        FieldOption = "int"
 )
 
 
