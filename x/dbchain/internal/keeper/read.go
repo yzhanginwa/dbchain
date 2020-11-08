@@ -2,6 +2,7 @@ package keeper
 
 import (
     "fmt"
+    "strconv"
     "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
@@ -126,6 +127,7 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
 func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field string, operator string, value string, owner sdk.AccAddress) []uint {
     //TODO: consider if the field has index and how to make use of it
     store := ctx.KVStore(k.storeKey)
+    isInteger := k.isTypeOfInteger(ctx, appId, tableName, field)
     results := []uint{}
 
     start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, field)
@@ -136,29 +138,7 @@ func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field strin
         val := iter.Value()
         k.cdc.MustUnmarshalBinaryBare(val, &mold)
 
-        matching := false
-        switch operator {
-        case "=", "==" :
-            if mold == value {
-                matching = true
-            }
-        case ">" :
-            if mold > value {
-                matching = true
-            }
-        case ">=" :
-            if mold >= value {
-                matching = true
-            }
-        case "<" :
-            if mold < value {
-                matching = true
-            }
-        case "<=" :
-            if mold <= value {
-                matching = true
-            }
-        }
+        matching := fieldValueCompare(isInteger, operator, mold, value)
         if matching {
             id := getIdFromDataKey(key)
             results = append(results, id)
@@ -222,4 +202,72 @@ func (k Keeper) filterOwnIds(ctx sdk.Context, appId uint,  tableName string, ids
         }
     }
     return result
+}
+
+func (k Keeper) isTypeOfInteger(ctx sdk.Context, appId uint, tableName, fieldName string) bool {
+    fieldOptions, _ := k.GetColumnOption(ctx, appId, tableName, fieldName)
+    return utils.StringIncluded(fieldOptions, string(types.FLDOPT_INT))
+}
+
+func fieldValueCompare(isInteger bool, operator, left, right string) bool {
+    matching := false
+
+    if isInteger {
+        l, err := strconv.Atoi(left)
+        if err != nil {
+            return false
+        }
+        r, err := strconv.Atoi(right)
+        if err != nil {
+            return false
+        }
+
+        switch operator {
+        case "=", "==" :
+            if l == r{
+                matching = true
+            }
+        case ">" :
+            if l > r {
+                matching = true
+            }
+        case ">=" :
+            if l >= r {
+                matching = true
+            }
+        case "<" :
+            if l < r {
+                matching = true
+            }
+        case "<=" :
+            if l <= r {
+                matching = true
+            }
+        }
+
+    } else {
+        switch operator {
+        case "=", "==" :
+            if left == right {
+                matching = true
+            }
+        case ">" :
+            if left > right {
+                matching = true
+            }
+        case ">=" :
+            if left >= right {
+                matching = true
+            }
+        case "<" :
+            if left < right {
+                matching = true
+            }
+        case "<=" :
+            if left <= right {
+                matching = true
+            }
+        }
+    }
+    return matching
 }
