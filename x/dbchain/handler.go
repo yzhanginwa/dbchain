@@ -194,7 +194,11 @@ func handleMsgDropColumn(ctx sdk.Context, keeper Keeper, msg MsgDropColumn) (*sd
     if !keeper.HasField(ctx, appId, msg.TableName, msg.Field) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s of table %s does not exist yet!", msg.Field, msg.TableName))
     }
-    keeper.DropColumn(ctx, appId, msg.TableName, msg.Field)
+
+    _, err = keeper.DropColumn(ctx, appId, msg.TableName, msg.Field)
+    if err != nil {
+        return nil, err
+    }
     return &sdk.Result{}, nil
 }
 

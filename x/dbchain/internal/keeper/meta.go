@@ -135,7 +135,7 @@ func (k Keeper) DropColumn(ctx sdk.Context, appId uint, name string, field strin
         return false, err
     }
 
-    if field == "id" {
+    if isSystemField(field) {
         return false, errors.New(fmt.Sprintf("cannot remove field id"))
     }
 
