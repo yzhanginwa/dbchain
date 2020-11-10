@@ -363,9 +363,12 @@ func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAdd
         if optionExisted {
             return false
         } else {
+            switch types.FieldOption(option) {
             // unique field should not contain duplicate values before becoming unique
-            if option == "unique" && !isColumnValuesUnique(k, ctx, appId, tableName, fieldName) {
-                return false
+            case types.FLDOPT_UNIQUE:
+                if !isColumnValuesUnique(k, ctx, appId, tableName, fieldName) {
+                    return false
+                }
             }
             result = append(options, option)
         }
@@ -511,16 +514,16 @@ func preProcessFields(fields []string) []string {
 }
 
 func validateColumnOption(option string) bool {
-    switch option {
-    case "int":
+    switch types.FieldOption(option) {
+    case types.FLDOPT_INT:
         return true
-    case "not-null":
+    case types.FLDOPT_NOTNULL:
         return true
-    case "unique":
+    case types.FLDOPT_UNIQUE:
         return true
-    case "own":
+    case types.FLDOPT_OWN:
         return true
-    case "file":
+    case types.FLDOPT_FILE:
         return true
     }
 
