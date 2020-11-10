@@ -133,11 +133,6 @@ func (k Keeper) Freeze(ctx sdk.Context, appId uint, tableName string, id uint, o
 //              //
 //////////////////
 
-func isSystemField(fieldName string) bool {
-    systemFields := []string{"id", "created_by", "created_at"}
-    return utils.ItemExists(systemFields, fieldName)
-}
-
 func (k Keeper) haveWritePermission(ctx sdk.Context, appId uint, tableName string, owner sdk.AccAddress) bool {
     writableGroups := k.GetWritableByGroups(ctx, appId, tableName)
     if len(writableGroups) == 0 {
