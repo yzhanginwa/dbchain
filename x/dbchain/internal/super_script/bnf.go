@@ -13,7 +13,7 @@ package super_script
 //    insert = "insert" "(" table_name "," field_name ", " single_value        //
 //             [ "," field_name "," single_value ] ")" .                       //
 //                                                                             //
-//    if_condition = "if" condition "then" statement "fi" .                    //
+//    if_condition = "if" "(" condition ")" "{" statement "}" .                //
 //                                                                             //
 //    condition = exist | comparison .                                         //
 //                                                                             //

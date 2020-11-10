@@ -52,6 +52,10 @@ func (s *Scanner) Scan() (tok Token, lit string) {
         return LPAREN, string(ch)
     case ')':
         return RPAREN, string(ch)
+    case '{':
+        return LCB, string(ch)
+    case '}':
+        return RCB, string(ch)
     }
 
     return ILLEGAL, string(ch)
@@ -133,10 +137,6 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
         return IN, buf.String()
     case "IF":
         return IF, buf.String()
-    case "THEN":
-        return THEN, buf.String()
-    case "FI":
-        return FI, buf.String()
     case "INSERT":
         return INSERT, buf.String()
     case "RETURN":

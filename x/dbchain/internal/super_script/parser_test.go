@@ -65,7 +65,7 @@ func TestParser_ParseExistCondition(t *testing.T) {
         err  string
     }{
         {
-            s: `if exist(table.corp.where(name == "aa")) then return(true) fi`,
+            s: `if (exist(table.corp.where(name == "aa"))) { return(true) }`,
             err: "",
         },
 
@@ -112,11 +112,11 @@ func TestParser_ParseExistCondition(t *testing.T) {
 }
 
 func TestParser_ParseScript(t *testing.T) {
-    script := `if this.corp_id.parent.created_by == this.created_by then
+    script := `if(this.corp_id.parent.created_by == this.created_by) {
                 insert("corp", "name", "foo", "mailing", "100 main st")
                 insert("corp", "name", "bar", "mailing", "110 main st")
                 return(false)
-                fi
+                }
                 insert("corp", "name", "bar1", "mailing", "111 main st")
                 insert("corp", "name", "bar2", "mailing", this.mailing)
                `

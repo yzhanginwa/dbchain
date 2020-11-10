@@ -147,12 +147,14 @@ func (p *Parser) IfCondition(parent *eval.Statement) bool {
     statements := []eval.Statement{}
 
     if !p.expect(IF) { return false }
+    if !p.expect(LPAREN) { return false }
     if !p.Condition(&ifCondition) { return false }
+    if !p.expect(RPAREN) { return false }
 
-    if !p.expect(THEN) { return false }
+    if !p.expect(LCB) { return false }
     p.Statement(&statements)
     for {
-        if p.accept(FI) {
+        if p.accept(RCB) {
             break
         }
         if !p.Statement(&statements) {

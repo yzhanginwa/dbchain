@@ -22,6 +22,8 @@ func TestScanner_Scan(t *testing.T) {
         // Misc characters
         {s: "(", tok: LPAREN, lit: "("},
         {s: ")", tok: RPAREN, lit: ")"},
+        {s: "{", tok: LCB, lit: "{"},
+        {s: "}", tok: RCB, lit: "}"},
 
         // Identifiers
         {s: `foo`, tok: IDENT, lit: `foo`},
@@ -37,8 +39,6 @@ func TestScanner_Scan(t *testing.T) {
         {s: `=`, tok: EQUAL, lit: "="},
         {s: `==`, tok: DEQUAL, lit: "=="},
         {s: `if`, tok: IF, lit: "if"},
-        {s: `then`, tok: THEN, lit: "then"},
-        {s: `fi`, tok: FI, lit: "fi"},
         {s: `insert`, tok: INSERT, lit: "insert"},
         {s: `return`, tok: RETURN, lit: "return"},
         {s: `true`, tok: TRUE, lit: "true"},

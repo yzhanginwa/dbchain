@@ -18,6 +18,8 @@ const (
     LPAREN   // (
     RPAREN   // )
 
+    LCB      // {
+    RCB      // }
     QUOTEDLIT // "xxxxxxx"
 
     // Keywords
@@ -29,8 +31,6 @@ const (
     IN      // in
     WHERE   // where
     IF      // if
-    THEN    // then
-    FI      // fi
     INSERT  // insert
     RETURN  // return
     TRUE    // true
@@ -41,7 +41,7 @@ const (
 var tokenDisplay = []string{
     "illegal", "eof", "whitespace",
     "identity", "comma", "dot",
-    "left parenthesis", "right parenthesis", "quoted string",
+    "left parenthesis", "right parenthesis", "left brace", "right brace", "quoted string",
     "this", "parent", "table",
     "=" , "==", "in",
     "where",
