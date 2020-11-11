@@ -502,7 +502,7 @@ func queryGroups(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    groups := keeper.ShowGroups(ctx, appId)
+    groups := keeper.getGroups(ctx, appId)
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, groups)
     if err != nil {
@@ -574,7 +574,7 @@ func queryExportDatabase (ctx sdk.Context, path []string, req abci.RequestQuery,
     }
 
     // handle groups
-    groups := keeper.ShowGroups(ctx, appId)
+    groups := keeper.getGroups(ctx, appId)
     result = append(result, "Groups:")
     for _, group := range groups {
         result = append(result, fmt.Sprintf("\t%s", group))

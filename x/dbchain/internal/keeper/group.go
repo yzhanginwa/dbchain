@@ -107,7 +107,7 @@ func (k Keeper) SetGroupMemo(ctx sdk.Context, appId uint, groupName string, memo
 }
 
 func (k Keeper) ModifyGroupMember(ctx sdk.Context, appId uint, group string, action string, member sdk.AccAddress) error {
-    groups := k.ShowGroups(ctx, appId)
+    groups := k.getGroups(ctx, appId)
     if !utils.ItemExists(groups, group) {
         return errors.New(fmt.Sprintf("Group %s does not exist", group))
     }
@@ -181,7 +181,7 @@ func (k Keeper) ShowGroupMemo(ctx sdk.Context, appId uint, groupName string) str
     return memo
 }
 
-func (k Keeper) ShowGroups(ctx sdk.Context, appId uint) []string {
+func (k Keeper) getGroups(ctx sdk.Context, appId uint) []string {
     store := ctx.KVStore(k.storeKey)
     key := getGroupsKey(appId)
 
