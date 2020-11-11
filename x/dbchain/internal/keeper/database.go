@@ -15,7 +15,7 @@ import (
 )
 
 func (k Keeper) GetDatabaseAdmins(ctx sdk.Context, appId uint) []sdk.AccAddress {
-    return k.ShowGroup(ctx, appId, "admin")
+    return k.getGroupMembers(ctx, appId, "admin")
 }
 
 func (k Keeper) GetAllAppCode(ctx sdk.Context) ([]string) {
@@ -43,7 +43,7 @@ func (k Keeper) getAdminAppCode(ctx sdk.Context, address sdk.AccAddress) ([]stri
         if err != nil {
             return []string{}
         }
-        adminAddresses := k.ShowGroup(ctx, appId, "admin")
+        adminAddresses := k.getGroupMembers(ctx, appId, "admin")
         for _, addr := range adminAddresses {
             if bytes.Compare(address, addr) == 0 {
                 result = append(result, appCode)
@@ -224,7 +224,7 @@ func (k Keeper) SetSchemaStatus(ctx sdk.Context, owner sdk.AccAddress, appCode, 
 ////////////////////
 
 func (k Keeper) isAdmin(ctx sdk.Context, appId uint, addr sdk.AccAddress) bool {
-    admins := k.ShowGroup(ctx, appId, "admin")
+    admins := k.getGroupMembers(ctx, appId, "admin")
     if utils.AddressIncluded(admins, addr) {
         return true
     }

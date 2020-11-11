@@ -79,7 +79,7 @@ func (k Keeper) ModifyGroup(ctx sdk.Context, appId uint, action string, groupNam
             return errors.New("You should not drop Admin group")
         }
         if position > -1 {
-            if len(k.ShowGroup(ctx, appId, groupName)) > 0 {
+            if len(k.getGroupMembers(ctx, appId, groupName)) > 0 {
                 return errors.New("Group is not empty")
             }
 
@@ -154,7 +154,7 @@ func (k Keeper) ModifyGroupMember(ctx sdk.Context, appId uint, group string, act
     return nil
 }
 
-func (k Keeper) ShowGroup(ctx sdk.Context, appId uint, groupName string) []sdk.AccAddress {
+func (k Keeper) getGroupMembers(ctx sdk.Context, appId uint, groupName string) []sdk.AccAddress {
     store := ctx.KVStore(k.storeKey)
     key := getGroupKey(appId, groupName)
 
@@ -167,7 +167,7 @@ func (k Keeper) ShowGroup(ctx sdk.Context, appId uint, groupName string) []sdk.A
     return addresses
 }
 
-func (k Keeper) ShowGroupMemo(ctx sdk.Context, appId uint, groupName string) string {
+func (k Keeper) getGroupMembersMemo(ctx sdk.Context, appId uint, groupName string) string {
     store := ctx.KVStore(k.storeKey)
     key := getGroupMemoKey(appId, groupName)
     bz := store.Get([]byte(key))

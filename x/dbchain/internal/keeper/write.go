@@ -140,7 +140,7 @@ func (k Keeper) haveWritePermission(ctx sdk.Context, appId uint, tableName strin
     }
 
     for _, group := range writableGroups {
-        members := k.ShowGroup(ctx, appId, group)
+        members := k.getGroupMembers(ctx, appId, group)
         if utils.AddressIncluded(members, owner) {
             return true
         }

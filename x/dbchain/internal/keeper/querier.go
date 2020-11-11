@@ -525,7 +525,7 @@ func queryGroup(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
     }
 
     groupName := path[2]
-    addresses := keeper.ShowGroup(ctx, appId, groupName)
+    addresses := keeper.getGroupMembers(ctx, appId, groupName)
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, addresses)
     if err != nil {
@@ -548,7 +548,7 @@ func queryGroupMemo(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
     }
 
     groupName := path[2]
-    memo := keeper.ShowGroupMemo(ctx, appId, groupName)
+    memo := keeper.getGroupMembersMemo(ctx, appId, groupName)
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, memo)
     if err != nil {
@@ -578,7 +578,7 @@ func queryExportDatabase (ctx sdk.Context, path []string, req abci.RequestQuery,
     result = append(result, "Groups:")
     for _, group := range groups {
         result = append(result, fmt.Sprintf("\t%s", group))
-        groupMembers := keeper.ShowGroup(ctx, appId, group)
+        groupMembers := keeper.getGroupMembers(ctx, appId, group)
         for _, groupMember := range groupMembers {
             result = append(result, fmt.Sprintf("\t\t%s", groupMember.String()))
         }
