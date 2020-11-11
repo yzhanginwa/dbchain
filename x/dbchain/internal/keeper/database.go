@@ -10,7 +10,6 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/other"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
 )
 
@@ -157,10 +156,6 @@ func (k Keeper) DatabaseUserExists(ctx sdk.Context, appId uint, user sdk.AccAddr
 }
 
 func (k Keeper) GetDatabaseUsers(ctx sdk.Context, appId uint, owner sdk.AccAddress) []string {
-    if !k.isAdmin(ctx, appId, owner) {
-        return []string{}
-    }
-
     store := ctx.KVStore(k.storeKey)
     start, end := getDatabaseUserIteratorStartAndEndKey(appId)
     iter := store.Iterator([]byte(start), []byte(end))
@@ -222,14 +217,6 @@ func (k Keeper) SetSchemaStatus(ctx sdk.Context, owner sdk.AccAddress, appCode, 
 // helper methods //
 //                //
 ////////////////////
-
-func (k Keeper) isAdmin(ctx sdk.Context, appId uint, addr sdk.AccAddress) bool {
-    admins := k.getGroupMembers(ctx, appId, "admin")
-    if utils.AddressIncluded(admins, addr) {
-        return true
-    }
-    return false
-}
 
 func generateNewAppCode(owner sdk.AccAddress) string {
     blockTime := other.GetCurrentBlockTime().String()

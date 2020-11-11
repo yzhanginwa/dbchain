@@ -176,6 +176,10 @@ func queryAppUsers(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
+    if !keeper.isAdmin(ctx, appId, addr) {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Admin privilege is needed!")
+    }
+
     users := keeper.GetDatabaseUsers(ctx, appId, addr)
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, users)
