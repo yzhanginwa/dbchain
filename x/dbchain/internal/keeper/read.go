@@ -243,6 +243,10 @@ func fieldValueCompare(isInteger bool, operator, left, right string) bool {
             if l <= r {
                 matching = true
             }
+        case "<>" :
+            if l != r {
+                matching = true
+            }
         }
 
     } else {
@@ -265,6 +269,10 @@ func fieldValueCompare(isInteger bool, operator, left, right string) bool {
             }
         case "<=" :
             if left <= right {
+                matching = true
+            }
+        case "<>" :
+            if left != right {
                 matching = true
             }
         }
