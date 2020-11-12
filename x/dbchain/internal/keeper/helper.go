@@ -91,7 +91,7 @@ func (k Keeper) validateOwnField(ctx sdk.Context, appId uint, tableName, fieldNa
         val := iter.Value()
         k.cdc.MustUnmarshalBinaryBare(val, &mold)
 
-        if !k.hasForeignRecord(ctx, appId, foreignTableName, mold, ownerStr) {
+        if !k.hasForeignRecordOfOwn(ctx, appId, foreignTableName, mold, ownerStr) {
             return false
         }
     }
@@ -104,10 +104,10 @@ func (k Keeper) validateOwnFieldOnValue(ctx sdk.Context, appId uint, fieldName, 
         return false
     }
 
-    return k.hasForeignRecord(ctx, appId, foreignTableName, value, owner.String())
+    return k.hasForeignRecordOfOwn(ctx, appId, foreignTableName, value, owner.String())
 }
 
-func (k Keeper) hasForeignRecord(ctx sdk.Context, appId uint, tableName, idStr, ownerAddr string) bool {
+func (k Keeper) hasForeignRecordOfOwn(ctx sdk.Context, appId uint, tableName, idStr, ownerAddr string) bool {
     u64, err := strconv.ParseUint(idStr, 10, 64)
     if err != nil {
         return false
