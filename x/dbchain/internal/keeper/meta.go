@@ -364,13 +364,20 @@ func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAdd
             return false
         } else {
             switch types.FieldOption(option) {
-            // unique field should not contain duplicate values before becoming unique
+            case types.FLDOPT_NOTNULL:
+                if !k.validateNotNullField(ctx, appId, tableName, fieldName) {
+                    return false
+                }
             case types.FLDOPT_UNIQUE:
                 if !isColumnValuesUnique(k, ctx, appId, tableName, fieldName) {
                     return false
                 }
             case types.FLDOPT_OWN:
                 if !k.validateOwnField(ctx, appId, tableName, fieldName, owner) {
+                    return false
+                }
+            case types.FLDOPT_INT:
+                if !k.validateIntField(ctx, appId, tableName, fieldName) {
                     return false
                 }
             }

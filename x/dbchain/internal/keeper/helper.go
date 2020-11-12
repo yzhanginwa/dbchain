@@ -19,6 +19,43 @@ func (k Keeper) isAdmin(ctx sdk.Context, appId uint, addr sdk.AccAddress) bool {
     return false
 }
 
+func (k Keeper) validateNotNullField(ctx sdk.Context, appId uint, tableName, fieldName string) bool {
+    store := ctx.KVStore(k.storeKey)
+
+    start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
+    iter := store.Iterator([]byte(start), []byte(end))
+    var mold string
+    var lastId uint = 0
+    for ; iter.Valid(); iter.Next() {
+        key := iter.Key()
+        id := getIdFromDataKey(key)
+        val := iter.Value()
+        k.cdc.MustUnmarshalBinaryBare(val, &mold)
+        if mold == "" || (id - lastId > 1) {
+            return false
+        }
+        lastId = id
+    }
+    return true
+}
+
+func (k Keeper) validateIntField(ctx sdk.Context, appId uint, tableName, fieldName string) bool {
+    store := ctx.KVStore(k.storeKey)
+
+    start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
+    iter := store.Iterator([]byte(start), []byte(end))
+    var mold string
+
+    for ; iter.Valid(); iter.Next() {
+        val := iter.Value()
+        k.cdc.MustUnmarshalBinaryBare(val, &mold)
+        if _, err := strconv.Atoi(mold); err != nil {
+            return false
+        }
+    }
+    return true
+}
+
 func (k Keeper) validateOwnField(ctx sdk.Context, appId uint, tableName, fieldName string, owner sdk.AccAddress) bool {
     foreignTableName, ok := utils.GetTableNameFromForeignKey(fieldName)
     if !ok {
