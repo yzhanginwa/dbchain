@@ -1,9 +1,10 @@
 package keeper
 
 import (
+    "strconv"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     sdk "github.com/cosmos/cosmos-sdk/types"
-    "strconv"
+    "github.com/ipfs/go-cid"
 )
 
 func isSystemField(fieldName string) bool {
@@ -50,6 +51,23 @@ func (k Keeper) validateIntField(ctx sdk.Context, appId uint, tableName, fieldNa
         val := iter.Value()
         k.cdc.MustUnmarshalBinaryBare(val, &mold)
         if _, err := strconv.Atoi(mold); err != nil {
+            return false
+        }
+    }
+    return true
+}
+
+func (k Keeper) validateFileField(ctx sdk.Context, appId uint, tableName, fieldName string) bool {
+    store := ctx.KVStore(k.storeKey)
+
+    start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
+    iter := store.Iterator([]byte(start), []byte(end))
+    var mold string
+
+    for ; iter.Valid(); iter.Next() {
+        val := iter.Value()
+        k.cdc.MustUnmarshalBinaryBare(val, &mold)
+        if _, err := cid.Decode(mold); err != nil {
             return false
         }
     }

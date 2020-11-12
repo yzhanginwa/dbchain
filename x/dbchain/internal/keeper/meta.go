@@ -380,6 +380,10 @@ func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAdd
                 if !k.validateIntField(ctx, appId, tableName, fieldName) {
                     return false
                 }
+            case types.FLDOPT_FILE:
+                if !k.validateFileField(ctx, appId, tableName, fieldName) {
+                    return false
+                }
             }
             result = append(options, option)
         }
