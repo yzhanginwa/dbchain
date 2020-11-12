@@ -74,24 +74,29 @@ func (k Keeper) validateFileField(ctx sdk.Context, appId uint, tableName, fieldN
     return true
 }
 
-func (k Keeper) validateOwnField(ctx sdk.Context, appId uint, tableName, fieldName string, owner sdk.AccAddress) bool {
+func (k Keeper) validateOwnField(ctx sdk.Context, appId uint, tableName, fieldName string) bool {
     foreignTableName, ok := utils.GetTableNameFromForeignKey(fieldName)
     if !ok {
         return false
     }
 
     store := ctx.KVStore(k.storeKey)
-    ownerStr := owner.String()
 
     start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
     iter := store.Iterator([]byte(start), []byte(end))
     var mold string
 
     for ; iter.Valid(); iter.Next() {
+        key := iter.Key()
+        id := getIdFromDataKey(key)
+        owner, err := k.FindField(ctx, appId, tableName, id, "created_by")
+        if err != nil {
+            return false
+        }
+
         val := iter.Value()
         k.cdc.MustUnmarshalBinaryBare(val, &mold)
-
-        if !k.hasForeignRecordOfOwn(ctx, appId, foreignTableName, mold, ownerStr) {
+        if !k.hasForeignRecordOfOwn(ctx, appId, foreignTableName, mold, owner) {
             return false
         }
     }

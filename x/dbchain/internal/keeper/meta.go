@@ -373,7 +373,7 @@ func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAdd
                     return false
                 }
             case types.FLDOPT_OWN:
-                if !k.validateOwnField(ctx, appId, tableName, fieldName, owner) {
+                if !k.validateOwnField(ctx, appId, tableName, fieldName) {
                     return false
                 }
             case types.FLDOPT_INT:
