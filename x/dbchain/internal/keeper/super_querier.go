@@ -96,10 +96,10 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
            builders[j].Limit = 1
         case "last":
            builders[j].Last = true
-        case "equal":
+        case "where":
            cond := Condition{
                Field: qo["field"],
-               Operator: "=",
+               Operator: qo["operator"],
                Value: qo["value"],
            }
            builders[j].Where = append(builders[j].Where, cond)
