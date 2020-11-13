@@ -464,7 +464,7 @@ func (k Keeper) GetCanAddColumnOption(ctx sdk.Context, appId uint, tableName, fi
             return false
         }
     }
-    return false
+    return true
 }
 
 /////////////////////////////
