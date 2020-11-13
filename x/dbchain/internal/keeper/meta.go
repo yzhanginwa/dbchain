@@ -441,6 +441,32 @@ func (k Keeper) GetColumnOption(ctx sdk.Context, appId uint, tableName string, f
     return options, nil
 }
 
+func (k Keeper) GetCanAddColumnOption(ctx sdk.Context, appId uint, tableName, fieldName, option string) bool {
+    switch types.FieldOption(option) {
+    case types.FLDOPT_NOTNULL:
+        if !k.validateNotNullField(ctx, appId, tableName, fieldName) {
+            return false
+        }
+    case types.FLDOPT_UNIQUE:
+        if !isColumnValuesUnique(k, ctx, appId, tableName, fieldName) {
+            return false
+        }
+    case types.FLDOPT_OWN:
+        if !k.validateOwnField(ctx, appId, tableName, fieldName) {
+            return false
+        }
+    case types.FLDOPT_INT:
+        if !k.validateIntField(ctx, appId, tableName, fieldName) {
+            return false
+        }
+    case types.FLDOPT_FILE:
+        if !k.validateFileField(ctx, appId, tableName, fieldName) {
+            return false
+        }
+    }
+    return false
+}
+
 /////////////////////////////
 //                         //
 // index related functions //

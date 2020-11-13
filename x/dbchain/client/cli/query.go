@@ -31,6 +31,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdIndex(storeKey, cdc),
         GetCmdOption(storeKey, cdc),
         GetCmdColumnOption(storeKey, cdc),
+        GetCmdCanAddColumnOption(storeKey, cdc),
         GetCmdFindRow(storeKey, cdc),
         GetCmdFindIdsBy(storeKey, cdc),
         GetCmdFindAllIds(storeKey, cdc),
@@ -252,6 +253,33 @@ func GetCmdColumnOption(queryRoute string, cdc *codec.Codec) *cobra.Command {
             }
 
             var out types.QueryTables // QueryTables is a []string. It could be reused here
+            cdc.MustUnmarshalJSON(res, &out)
+            return cliCtx.PrintOutput(out)
+        },
+    }
+}
+
+func GetCmdCanAddColumnOption (queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "can-add-column-option",
+        Short: "test whether field option can be added",
+        Args: cobra.ExactArgs(5),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            accessCode := args[0]
+            appCode    := args[1]
+            tableName  := args[2]
+            fieldName  := args[3]
+            option     := args[4]
+
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/can_add_column_option/%s/%s/%s/%s/%s", queryRoute, accessCode, appCode, tableName, fieldName, option), nil)
+            if err != nil {
+                fmt.Printf("Failed to check whether field option can be added")
+                return nil
+            }
+
+            var out bool
             cdc.MustUnmarshalJSON(res, &out)
             return cliCtx.PrintOutput(out)
         },
