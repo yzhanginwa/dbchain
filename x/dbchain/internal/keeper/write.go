@@ -16,25 +16,15 @@ import (
 
 
 func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) (uint, error){
-    if !k.IsDatabaseUser(ctx, appId, owner) {
-        return 0, errors.New(fmt.Sprintf("Do not have user permission on database %d", appId))
-    }
-    if(!k.haveWritePermission(ctx, appId, tableName, owner)) {
-        return 0, errors.New(fmt.Sprintf("Do not have permission inserting table %s", tableName))
-    }
-
-    if(!k.validateInsertion(ctx, appId, tableName, fields, owner)) {
-        return 0, errors.New(fmt.Sprintf("Failed validation when inserting table %s", tableName))
-    }
-
-    if(!k.preprocessPayment(ctx, appId, tableName, fields, owner)) {
-        return 0, errors.New(fmt.Sprintf("Failed validation of record of payment table %s", tableName))
+    id, err := k.PreInsertCheck(ctx, appId, tableName, fields, owner)
+    if err != nil {
+        return id, err
     }
 
     // as far the first go routine to be used
     go k.tryToPinFile(ctx, appId, tableName, fields, owner)
 
-    id, err := getNextId(k, ctx, appId, tableName)
+    id, err = getNextId(k, ctx, appId, tableName)
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get id for table %s", tableName))
     }
@@ -132,6 +122,25 @@ func (k Keeper) Freeze(ctx sdk.Context, appId uint, tableName string, id uint, o
 // helper funcs //
 //              //
 //////////////////
+
+func (k Keeper) PreInsertCheck(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) (uint, error) {
+    if !k.IsDatabaseUser(ctx, appId, owner) {
+        return 0, errors.New(fmt.Sprintf("Do not have user permission on database %d", appId))
+    }
+    if(!k.haveWritePermission(ctx, appId, tableName, owner)) {
+        return 0, errors.New(fmt.Sprintf("Do not have permission inserting table %s", tableName))
+    }
+
+    if(!k.validateInsertion(ctx, appId, tableName, fields, owner)) {
+        return 0, errors.New(fmt.Sprintf("Failed validation when inserting table %s", tableName))
+    }
+
+    if(!k.preprocessPayment(ctx, appId, tableName, fields, owner)) {
+        return 0, errors.New(fmt.Sprintf("Failed validation of record of payment table %s", tableName))
+    }
+
+    return 0, nil
+}
 
 func (k Keeper) haveWritePermission(ctx sdk.Context, appId uint, tableName string, owner sdk.AccAddress) bool {
     writableGroups := k.GetWritableByGroups(ctx, appId, tableName)
