@@ -4,13 +4,14 @@ import (
     "fmt"
     "strconv"
     "strings"
-    //"encoding/hex"
+    "encoding/json"
 
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
     abci "github.com/tendermint/tendermint/abci/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
 // query endpoints supported by the dbchain service Querier
@@ -25,6 +26,7 @@ const (
     QueryOption   = "option"
     QueryColumnOption   = "column_option"
     QueryCanAddColumnOption = "can_add_column_option"
+    QueryCanInsertRow = "can_insert_row"
     QueryRow      = "find"
     QueryIdsBy    = "find_by"
     QueryAllIds   = "find_all"
@@ -70,6 +72,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryColumnOption(ctx, path[1:], req, keeper)
         case QueryCanAddColumnOption:
             return queryCanAddColumnOption(ctx, path[1:], req, keeper)
+        case QueryCanInsertRow:
+            return queryCanInsertRow(ctx, path[1:], req, keeper)
         case QueryRow:
             return queryRow(ctx, path[1:], req, keeper)
         case QueryIdsBy:
@@ -387,6 +391,40 @@ func queryCanAddColumnOption(ctx sdk.Context, path []string, req abci.RequestQue
     option    := path[4]
 
     result := keeper.GetCanAddColumnOption(ctx, appId, tableName, fieldName, option)
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, result)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+ func queryCanInsertRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    addr, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    tableName     := path[2]
+    rowFieldsJson := path[3]
+
+    var rowFields types.RowFields
+    if err := json.Unmarshal([]byte(rowFieldsJson), &rowFields); err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Failed to parse row fields!")
+    }
+
+    result := true
+    _, err = keeper.PreInsertCheck(ctx, appId, tableName, rowFields, addr)
+    if err != nil {
+        result = false
+    }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, result)
     if err != nil {

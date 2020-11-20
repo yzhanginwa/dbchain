@@ -2,6 +2,8 @@ package cli
 
 import (
     "fmt"
+    "strings"
+    "encoding/json"
     "github.com/mr-tron/base58"
     "github.com/tendermint/tendermint/crypto/secp256k1"
     sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,6 +34,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdOption(storeKey, cdc),
         GetCmdColumnOption(storeKey, cdc),
         GetCmdCanAddColumnOption(storeKey, cdc),
+        GetCmdCanInsertRow(storeKey, cdc),
         GetCmdFindRow(storeKey, cdc),
         GetCmdFindIdsBy(storeKey, cdc),
         GetCmdFindAllIds(storeKey, cdc),
@@ -276,6 +279,46 @@ func GetCmdCanAddColumnOption (queryRoute string, cdc *codec.Codec) *cobra.Comma
             res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/can_add_column_option/%s/%s/%s/%s/%s", queryRoute, accessCode, appCode, tableName, fieldName, option), nil)
             if err != nil {
                 fmt.Printf("Failed to check whether field option can be added")
+                return nil
+            }
+
+            var out bool
+            cdc.MustUnmarshalJSON(res, &out)
+            return cliCtx.PrintOutput(out)
+        },
+    }
+}
+
+func GetCmdCanInsertRow(queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "can-insert-row",
+        Short: "test whether row can be inserted without violating any column option restricts",
+        Args: cobra.ExactArgs(5),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            accessCode := args[0]
+            appCode    := args[1]
+            tableName  := args[2]
+            fields     := strings.Split(args[3], ",")
+            values     := strings.Split(args[4], ",")
+
+            rowFields := make(types.RowFields)
+            for i, field := range fields {
+                if i < len(values) {
+                    rowFields[field] = values[i]
+                }
+            }
+
+            rowFieldsJson, err := json.Marshal(rowFields)
+            if err != nil {
+                fmt.Printf("Failed to marshal to json for rowFields")
+                return nil
+            }
+
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/can_insert_row/%s/%s/%s/%s", queryRoute, accessCode, appCode, tableName, rowFieldsJson), nil)
+            if err != nil {
+                fmt.Printf("Failed to check whether row can be inserted")
                 return nil
             }
 
