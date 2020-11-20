@@ -44,6 +44,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdDropInsertFilter(cdc),
         GetCmdAddTrigger(cdc),
         GetCmdDropTrigger(cdc),
+        GetCmdSetTableMemo(cdc),
         GetCmdModifyColumnOption(cdc),
         GetCmdSetColumnMemo(cdc),
         GetCmdInsertRow(cdc),
@@ -339,6 +340,37 @@ func GetCmdModifyOption(cdc *codec.Codec) *cobra.Command {
         },
     }
 }
+
+////////////////////
+//                //
+// Set table memo //
+//                //
+////////////////////
+
+func GetCmdSetTableMemo(cdc * codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "set-table-memo [appCode] [table] [memo]",
+        Short: "set table memo",
+        Args:  cobra.ExactArgs(3),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode   := args[0]
+            tableName := args[1]
+            memo      := args[2]
+
+            msg := types.NewMsgSetTableMemo(appCode, tableName, memo, cliCtx.GetFromAddress())
+            err := msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
 
 func GetCmdModifyColumnOption(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{

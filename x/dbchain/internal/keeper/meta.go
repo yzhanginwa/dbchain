@@ -311,6 +311,18 @@ func (k Keeper) DropTrigger(ctx sdk.Context, appId uint, owner sdk.AccAddress, t
     return true
 }
 
+func (k Keeper) SetTableMemo(ctx sdk.Context, appId uint, tableName, memo string, owner sdk.AccAddress) bool {
+    table, err := k.GetTable(ctx, appId, tableName)
+    if err != nil {
+        return false
+    }
+
+    table.Memo = memo
+    store := ctx.KVStore(k.storeKey)
+    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    return true
+}
+
 func (k Keeper) GetOption(ctx sdk.Context, appId uint, tableName string) ([]string, error) {
     store := ctx.KVStore(k.storeKey)
     key := getTableOptionsKey(appId, tableName)

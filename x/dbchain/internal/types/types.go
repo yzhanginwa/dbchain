@@ -62,7 +62,7 @@ func (f Friend) String() string {
 //       //
 ///////////
 
-// the key would be like "poll:[name]"
+// Memo is for the table and Memos are for the fields
 type Table struct {
     Owner sdk.AccAddress      `json:"owner"`
     Name string               `json:"name"`
@@ -70,6 +70,7 @@ type Table struct {
     Memos []string            `json:"memos"`
     Filter string             `json:"filter"`
     Trigger string            `json:"trigger"`
+    Memo string               `json:"memo"`
 }
 
 func NewTable() Table {

@@ -31,6 +31,7 @@ func RegisterCodec(cdc *codec.Codec) {
     cdc.RegisterConcrete(MsgDropInsertFilter{}, "dbchain/DropInsertFilter", nil)
     cdc.RegisterConcrete(MsgAddTrigger{}, "dbchain/AddTrigger", nil)
     cdc.RegisterConcrete(MsgDropTrigger{}, "dbchain/DropTrigger", nil)
+    cdc.RegisterConcrete(MsgSetTableMemo{}, "dbchain/SetTableMemo", nil)
     cdc.RegisterConcrete(MsgInsertRow{}, "dbchain/InsertRow", nil)
     cdc.RegisterConcrete(MsgUpdateRow{}, "dbchain/UpdateRow", nil)
     cdc.RegisterConcrete(MsgDeleteRow{}, "dbchain/DeleteRow", nil)

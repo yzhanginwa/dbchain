@@ -34,6 +34,7 @@ type (
     MsgDropInsertFilter   = types.MsgDropInsertFilter
     MsgAddTrigger   = types.MsgAddTrigger
     MsgDropTrigger  = types.MsgDropTrigger
+    MsgSetTableMemo = types.MsgSetTableMemo
     MsgModifyColumnOption = types.MsgModifyColumnOption
     MsgSetColumnMemo      = types.MsgSetColumnMemo
     MsgCreateIndex  = types.MsgCreateIndex

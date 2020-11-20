@@ -404,3 +404,55 @@ func (msg MsgDropInsertFilter) GetSignBytes() []byte {
 func (msg MsgDropInsertFilter) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
+
+/////////////////////
+//                 //
+// MsgSetTableMemo //
+//                 //
+/////////////////////
+
+type MsgSetTableMemo struct {
+    AppCode string           `json:"app_code"`
+    TableName string         `json:"table_name"`
+    Memo string              `json:"memo"`
+    Owner sdk.AccAddress     `json:"owner"`
+}
+
+func NewMsgSetTableMemo(appCode, tableName, memo string, owner sdk.AccAddress) MsgSetTableMemo {
+    return MsgSetTableMemo {
+        AppCode: appCode,
+        TableName: tableName,
+        Memo: memo,
+        Owner: owner,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgSetTableMemo) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgSetTableMemo) Type() string { return "set_table_memo" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgSetTableMemo) ValidateBasic() error {
+    if len(msg.AppCode) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
+    }
+    if len(msg.TableName) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "Table name cannot be empty")
+    }
+    if msg.Owner.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgSetTableMemo) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgSetTableMemo) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
