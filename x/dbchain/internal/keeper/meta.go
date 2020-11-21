@@ -154,6 +154,9 @@ func (k Keeper) DropColumn(ctx sdk.Context, appId uint, tableName string, fieldN
 
     store := ctx.KVStore(k.storeKey)
     store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+
+    // Remove data of this dropped column
+    removeDataOfColumn(k, ctx, appId, tableName, fieldName)
     return true, nil
 }
 
@@ -641,4 +644,15 @@ func isColumnValuesUnique(k Keeper, ctx sdk.Context, appId uint, tableName strin
         flag[mold] = true
     }
     return true
+}
+
+func removeDataOfColumn(k Keeper, ctx sdk.Context, appId uint, tableName, fieldName string) {
+    store := ctx.KVStore(k.storeKey)
+
+    start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
+    iter := store.Iterator([]byte(start), []byte(end))
+    for ; iter.Valid(); iter.Next() {
+        key := iter.Key()
+        store.Delete([]byte(key))
+    }
 }
