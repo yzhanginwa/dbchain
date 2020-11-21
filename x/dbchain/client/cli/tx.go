@@ -31,7 +31,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
     dbchainTxCmd.AddCommand(flags.PostCommands(
         GetCmdCreateApplication(cdc),
         GetCmdCreateSysDatabase(cdc),
-        GetCmdAddAppUser(cdc),
+        GetCmdModifyAppUser(cdc),
         GetCmdCreateTable(cdc),
         GetCmdDropTable(cdc),
         GetCmdAddColumn(cdc),
@@ -118,24 +118,25 @@ func GetCmdCreateSysDatabase(cdc *codec.Codec) *cobra.Command {
     }
 }
 
-func GetCmdAddAppUser(cdc *codec.Codec) *cobra.Command {
+func GetCmdModifyAppUser(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "add-app-user [appCode] [address]",
-        Short: "add application user",
-        Args:  cobra.ExactArgs(2),
+        Use:   "modify-app-user [appCode] [action] [address]",
+        Short: "modify application user",
+        Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
-            address := args[1]
+            action  := args[1]   // action has to be either 'add' or 'drop'
+            address := args[2]
             user, err := sdk.AccAddressFromBech32(address)
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
 
-            msg := types.NewMsgAddDatabaseUser(cliCtx.GetFromAddress(), appCode, user)
+            msg := types.NewMsgModifyDatabaseUser(cliCtx.GetFromAddress(), appCode, action, user)
             err = msg.ValidateBasic()
             if err != nil {
                 return err

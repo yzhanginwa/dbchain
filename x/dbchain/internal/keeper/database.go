@@ -124,14 +124,14 @@ func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name strin
 
     // Add owner as one of database users if this application requires permission for users
     if permissioned {
-        if err := k.AddDatabaseUser(ctx, owner, newAppCode, owner); err != nil {
+        if err := k.ModifyDatabaseUser(ctx, owner, newAppCode, "add", owner); err != nil {
             return errors.New("Failed to add owner as database user!")
         }
     }
     return nil 
 }
 
-func (k Keeper) AddDatabaseUser(ctx sdk.Context, owner sdk.AccAddress, appCode string, user sdk.AccAddress) error {
+func (k Keeper) ModifyDatabaseUser(ctx sdk.Context, owner sdk.AccAddress, appCode, action string, user sdk.AccAddress) error {
     store := ctx.KVStore(k.storeKey)
 
     appId, err := k.GetDatabaseId(ctx, appCode)
@@ -139,8 +139,22 @@ func (k Keeper) AddDatabaseUser(ctx sdk.Context, owner sdk.AccAddress, appCode s
         return errors.New(fmt.Sprintf("Application code %s does not exist!", appCode))
     }
 
-    key := getDatabaseUserKey(appId, user.String())
-    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(user))
+
+    if k.DatabaseUserExists(ctx, appId, user) {
+        if action == "add" {
+            return errors.New("Database user existed already!")
+        } else {
+            key := getDatabaseUserKey(appId, user.String())
+            store.Delete([]byte(key))
+        }
+    } else {
+        if action == "add" {
+            key := getDatabaseUserKey(appId, user.String())
+            store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(user))
+        } else {
+            return errors.New("Database user does not exist!")
+        }
+    }
     return nil
 }
 

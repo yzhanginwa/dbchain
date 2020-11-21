@@ -59,40 +59,44 @@ func (msg MsgCreateApplication) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
-////////////////////////
-//                    //
-// MsgAddDatabaseUser //
-//                    //
-////////////////////////
+///////////////////////////
+//                       //
+// MsgModifyDatabaseUser //
+//                       //
+///////////////////////////
 
-type MsgAddDatabaseUser struct {
+type MsgModifyDatabaseUser struct {
     Owner sdk.AccAddress `json:"owner"`
     AppCode string       `json:"app_code"`
+    Action string        `json:"action"`
     User sdk.AccAddress  `json:"description"`
 }
 
-// NewMsgAddDatabaseUser is a constructor function for MsgCreatTable
-func NewMsgAddDatabaseUser(owner sdk.AccAddress, appcode string, user sdk.AccAddress) MsgAddDatabaseUser {
-    return MsgAddDatabaseUser {
+func NewMsgModifyDatabaseUser(owner sdk.AccAddress, appcode, action string, user sdk.AccAddress) MsgModifyDatabaseUser {
+    return MsgModifyDatabaseUser {
         Owner: owner,
         AppCode: appcode,
+        Action: action,
         User: user,
     }
 }
 
 // Route should return the name of the module
-func (msg MsgAddDatabaseUser) Route() string { return RouterKey }
+func (msg MsgModifyDatabaseUser) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgAddDatabaseUser) Type() string { return "add_database_user" }
+func (msg MsgModifyDatabaseUser) Type() string { return "modify_database_user" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgAddDatabaseUser) ValidateBasic() error {
+func (msg MsgModifyDatabaseUser) ValidateBasic() error {
     if msg.Owner.Empty() {
         return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
     }
     if len(msg.AppCode) == 0 {
         return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Application Code cannot be empty")
+    }
+    if msg.Action != "add" && msg.Action != "drop" {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Action has to be either add or drop")
     }
     if msg.User.Empty() {
         return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "User cannot be empty")
@@ -101,12 +105,12 @@ func (msg MsgAddDatabaseUser) ValidateBasic() error {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgAddDatabaseUser) GetSignBytes() []byte {
+func (msg MsgModifyDatabaseUser) GetSignBytes() []byte {
     return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg MsgAddDatabaseUser) GetSigners() []sdk.AccAddress {
+func (msg MsgModifyDatabaseUser) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 

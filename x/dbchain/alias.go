@@ -23,7 +23,7 @@ type (
     MsgCreateApplication = types.MsgCreateApplication
     MsgCreateSysDatabase = types.MsgCreateSysDatabase
     MsgSetSchemaStatus   = types.MsgSetSchemaStatus
-    MsgAddDatabaseUser   = types.MsgAddDatabaseUser
+    MsgModifyDatabaseUser = types.MsgModifyDatabaseUser
     MsgCreateTable  = types.MsgCreateTable
     MsgDropTable    = types.MsgDropTable
     MsgAddColumn    = types.MsgAddColumn

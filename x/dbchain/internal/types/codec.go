@@ -16,7 +16,7 @@ func RegisterCodec(cdc *codec.Codec) {
     cdc.RegisterConcrete(MsgCreateApplication{}, "dbchain/CreateApplication", nil)
     cdc.RegisterConcrete(MsgCreateSysDatabase{}, "dbchain/CreateSysDatabase", nil)
     cdc.RegisterConcrete(MsgSetSchemaStatus{}, "dbchain/SetSchemaStatus", nil)
-    cdc.RegisterConcrete(MsgAddDatabaseUser{}, "dbchain/AddDatabaseUser", nil)
+    cdc.RegisterConcrete(MsgModifyDatabaseUser{}, "dbchain/ModifyDatabaseUser", nil)
     cdc.RegisterConcrete(MsgCreateTable{}, "dbchain/CreateTable", nil)
     cdc.RegisterConcrete(MsgDropTable{}, "dbchain/DropTable", nil)
     cdc.RegisterConcrete(MsgAddColumn{}, "dbchain/AddColumn", nil)

@@ -28,8 +28,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgCreateApplication(ctx, keeper, msg)
         case MsgCreateSysDatabase:
             return handleMsgCreateSysDatabase(ctx, keeper, msg)
-        case MsgAddDatabaseUser:
-            return handleMsgAddDatabaseUser(ctx, keeper, msg)
+        case MsgModifyDatabaseUser:
+            return handleMsgModifyDatabaseUser(ctx, keeper, msg)
         case MsgCreateTable:
             return handleMsgCreateTable(ctx, keeper, msg)
         case MsgDropTable:
@@ -118,9 +118,9 @@ func handleMsgCreateSysDatabase(ctx sdk.Context, keeper Keeper, msg MsgCreateSys
     return &sdk.Result{}, nil
 }
 
-func handleMsgAddDatabaseUser(ctx sdk.Context, keeper Keeper, msg MsgAddDatabaseUser) (*sdk.Result, error) {
+func handleMsgModifyDatabaseUser(ctx sdk.Context, keeper Keeper, msg MsgModifyDatabaseUser) (*sdk.Result, error) {
     // We use the term database for internal use. To outside we use application to make users understand easily
-    keeper.AddDatabaseUser(ctx, msg.Owner, msg.AppCode, msg.User)
+    keeper.ModifyDatabaseUser(ctx, msg.Owner, msg.AppCode, msg.Action, msg.User)
     return &sdk.Result{}, nil
 }
 
