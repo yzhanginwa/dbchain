@@ -16,14 +16,14 @@ type RowFieldsJson []byte
 /////////////////
 
 type Database struct {
-    Owner sdk.AccAddress  `json:"owner"`
-    AppCode string        `json:"appcode"`
-    AppId uint            `json:"appid"`
-    Name string           `json:"name"`
-    Description string    `json:"description"`
-    Permissioned bool     `json:"permissioned"`
-    SchemaFrozen bool     `json:"schema_frozen"`
-    DataFrozen bool       `json:"data_frozen"`
+    Owner sdk.AccAddress    `json:"owner"`
+    AppCode string          `json:"appcode"`
+    AppId uint              `json:"appid"`
+    Name string             `json:"name"`
+    Description string      `json:"description"`
+    PermissionRequired bool `json:"permission_required"`
+    SchemaFrozen bool       `json:"schema_frozen"`
+    DataFrozen bool         `json:"data_frozen"`
 }
 
 func NewDatabase() Database {

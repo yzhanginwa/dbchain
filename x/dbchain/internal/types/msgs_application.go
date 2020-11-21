@@ -13,19 +13,19 @@ import (
 
 // MsgCreateApplication defines a CreateApplication message
 type MsgCreateApplication struct {
-    Owner sdk.AccAddress `json:"owner"`
-    Name string          `json:"name"`
-    Description string   `json:"description"`
-    Permissioned bool    `json:"permissioned"`
+    Owner sdk.AccAddress    `json:"owner"`
+    Name string             `json:"name"`
+    Description string      `json:"description"`
+    PermissionRequired bool `json:"permission_required"`
 }
 
 // NewMsgCreateApplication is a constructor function for MsgCreatTable
-func NewMsgCreateApplication(owner sdk.AccAddress, name string, description string, permissioned bool) MsgCreateApplication {
+func NewMsgCreateApplication(owner sdk.AccAddress, name string, description string, permissionRequired bool) MsgCreateApplication {
     return MsgCreateApplication {
         Owner: owner,
         Name: name,
         Description: description,
-        Permissioned: permissioned,
+        PermissionRequired: permissionRequired,
     }
 }
 

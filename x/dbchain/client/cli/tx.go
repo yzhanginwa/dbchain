@@ -82,11 +82,11 @@ func GetCmdCreateApplication(cdc *codec.Codec) *cobra.Command {
 
             name := args[0]
             description := args[1]
-            var permissioned = true
+            var permissionRequired = true
             if args[2] == "no" || args[2] == "false" {
-                permissioned = false
+                permissionRequired = false
             }
-            msg := types.NewMsgCreateApplication(cliCtx.GetFromAddress(), name, description, permissioned)
+            msg := types.NewMsgCreateApplication(cliCtx.GetFromAddress(), name, description, permissionRequired)
             err := msg.ValidateBasic()
             if err != nil {
                 return err

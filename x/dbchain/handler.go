@@ -104,7 +104,7 @@ func handleMsgCreateApplication(ctx sdk.Context, keeper Keeper, msg MsgCreateApp
         }
     }
     // We use the term database for internal use. To outside we use application to make users understand easily
-    keeper.CreateDatabase(ctx, msg.Owner, msg.Name, msg.Description, msg.Permissioned, false)
+    keeper.CreateDatabase(ctx, msg.Owner, msg.Name, msg.Description, msg.PermissionRequired, false)
     return &sdk.Result{}, nil
 }
 

@@ -95,7 +95,7 @@ func (k Keeper) getDatabaseRaw(ctx sdk.Context, appCode string) (types.Database,
     return database, nil
 }
 
-func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name string, description string, permissioned bool, system bool) error {
+func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name string, description string, permissionRequired bool, system bool) error {
     store := ctx.KVStore(k.storeKey)
     newAppCode := generateNewAppCode(owner)
     if system {
@@ -113,7 +113,7 @@ func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name strin
     db.Owner = owner
     db.Name = name
     db.Description = description
-    db.Permissioned = permissioned
+    db.PermissionRequired = permissionRequired
     db.AppCode = newAppCode
     db.AppId = appId
     store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(db))
@@ -123,7 +123,7 @@ func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name strin
     k.ModifyGroupMember(ctx, appId, "admin", "add", owner)
 
     // Add owner as one of database users if this application requires permission for users
-    if permissioned {
+    if permissionRequired {
         if err := k.ModifyDatabaseUser(ctx, owner, newAppCode, "add", owner); err != nil {
             return errors.New("Failed to add owner as database user!")
         }
@@ -190,7 +190,7 @@ func (k Keeper) IsDatabaseUser(ctx sdk.Context, appId uint, owner sdk.AccAddress
     if err != nil {
         return false
     }
-    if database.Permissioned {
+    if database.PermissionRequired {
         if k.DatabaseUserExists(ctx, appId, owner) {
             return true
         } else {
