@@ -69,7 +69,7 @@ type MsgModifyDatabaseUser struct {
     Owner sdk.AccAddress `json:"owner"`
     AppCode string       `json:"app_code"`
     Action string        `json:"action"`
-    User sdk.AccAddress  `json:"description"`
+    User sdk.AccAddress  `json:"user"`
 }
 
 func NewMsgModifyDatabaseUser(owner sdk.AccAddress, appcode, action string, user sdk.AccAddress) MsgModifyDatabaseUser {
