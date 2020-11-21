@@ -30,18 +30,18 @@ func (k Keeper) GetTables(ctx sdk.Context, appId uint) []string {
 
 
 // Check if the table is present in the store or not
-func (k Keeper) HasTable(ctx sdk.Context, appId uint, name string) bool {
+func (k Keeper) HasTable(ctx sdk.Context, appId uint, tableName string) bool {
     store := ctx.KVStore(k.storeKey)
-    return store.Has([]byte(getTableKey(appId, name)))
+    return store.Has([]byte(getTableKey(appId, tableName)))
 }
 
-func (k Keeper) HasField(ctx sdk.Context, appId uint, tableName string, field string) bool {
+func (k Keeper) HasField(ctx sdk.Context, appId uint, tableName string, fieldName string) bool {
     table, err := k.GetTable(ctx, appId, tableName)
     if err != nil {
         return false
     }
     for _, f := range(table.Fields) {
-        if f == field {
+        if f == fieldName {
             return true
         }
     }
@@ -49,12 +49,12 @@ func (k Keeper) HasField(ctx sdk.Context, appId uint, tableName string, field st
 }
 
 // Create a new table
-func (k Keeper) CreateTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, name string, fields []string) {
+func (k Keeper) CreateTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldNames []string) {
     store := ctx.KVStore(k.storeKey)
     table := types.NewTable()
     table.Owner = owner
-    table.Name = name
-    table.Fields = preProcessFields(fields)
+    table.Name = tableName
+    table.Fields = preProcessFields(fieldNames)
     // make Memos the same length as Fields
     fieldsLength := len(table.Fields)
     for len(table.Memos) < fieldsLength {
@@ -74,21 +74,21 @@ func (k Keeper) CreateTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, n
 }
 
 // Remove a table
-func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, name string) {
+func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string) {
     store := ctx.KVStore(k.storeKey)
     var tables []string
     bz :=store.Get([]byte(getTablesKey(appId)))
     if bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &tables)
         for i, tbl := range tables {
-            if name == tbl {
+            if tableName == tbl {
                 tables = append(tables[:i], tables[i+1:]...)
                 if len(tables) < 1 {
                     store.Delete([]byte(getTablesKey(appId)))
                 } else {
                     store.Set([]byte(getTablesKey(appId)), k.cdc.MustMarshalBinaryBare(tables))
                 }
-                store.Delete([]byte(getTableKey(appId, name)))
+                store.Delete([]byte(getTableKey(appId, tableName)))
                 break
             }
         }
@@ -96,11 +96,11 @@ func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, nam
 }
 
 // Get a table 
-func (k Keeper) GetTable(ctx sdk.Context, appId uint, name string) (types.Table, error) {
+func (k Keeper) GetTable(ctx sdk.Context, appId uint, tableName string) (types.Table, error) {
     store := ctx.KVStore(k.storeKey)
-    bz := store.Get([]byte(getTableKey(appId, name)))
+    bz := store.Get([]byte(getTableKey(appId, tableName)))
     if bz == nil {
-        return types.Table{}, errors.New(fmt.Sprintf("table %s not found", name))
+        return types.Table{}, errors.New(fmt.Sprintf("table %s not found", tableName))
     }
     var table types.Table
     k.cdc.MustUnmarshalBinaryBare(bz, &table)
@@ -108,19 +108,19 @@ func (k Keeper) GetTable(ctx sdk.Context, appId uint, name string) (types.Table,
 }
 
 // Add a field
-func (k Keeper) AddColumn(ctx sdk.Context, appId uint, name string, field string) (bool, error) {
-    table, err := k.GetTable(ctx, appId, name)
+func (k Keeper) AddColumn(ctx sdk.Context, appId uint, tableName string, fieldName string) (bool, error) {
+    table, err := k.GetTable(ctx, appId, tableName)
     if err != nil {
         return false, err
     }
 
     for _, fld := range table.Fields {
-        if field == fld {
-            return false, errors.New(fmt.Sprintf("field %s existed already", field))
+        if fieldName == fld {
+            return false, errors.New(fmt.Sprintf("field %s existed already", fieldName))
         }
     }
 
-    table.Fields = append(table.Fields, field)
+    table.Fields = append(table.Fields, fieldName)
     table.Memos = append(table.Memos, "")
 
     store := ctx.KVStore(k.storeKey)
@@ -129,19 +129,19 @@ func (k Keeper) AddColumn(ctx sdk.Context, appId uint, name string, field string
 }
 
 // Remove a field
-func (k Keeper) DropColumn(ctx sdk.Context, appId uint, name string, field string) (bool, error){
-    table, err := k.GetTable(ctx, appId, name)
+func (k Keeper) DropColumn(ctx sdk.Context, appId uint, tableName string, fieldName string) (bool, error){
+    table, err := k.GetTable(ctx, appId, tableName)
     if err != nil {
         return false, err
     }
 
-    if isSystemField(field) {
-        return false, errors.New(fmt.Sprintf("cannot remove field id"))
+    if isSystemField(fieldName) {
+        return false, errors.New(fmt.Sprintf("cannot remove system fields"))
     }
 
     var foundField = false 
     for i, fld := range table.Fields {
-        if field == fld {
+        if fieldName == fld {
             foundField = true
             table.Fields = append(table.Fields[:i], table.Fields[i+1:]...)
             table.Memos  = append(table.Memos[:i],  table.Memos[i+1:]...)
@@ -149,7 +149,7 @@ func (k Keeper) DropColumn(ctx sdk.Context, appId uint, name string, field strin
         }
     }
     if !foundField {
-        return false, errors.New(fmt.Sprintf("field %s not existed", field))
+        return false, errors.New(fmt.Sprintf("field %s not existed", fieldName))
     }
 
     store := ctx.KVStore(k.storeKey)
@@ -158,8 +158,8 @@ func (k Keeper) DropColumn(ctx sdk.Context, appId uint, name string, field strin
 }
 
 // Rename a field
-func (k Keeper) RenameColumn(ctx sdk.Context, appId uint, name string, oldField string, newField string) (bool, error) {
-    table, err := k.GetTable(ctx, appId, name)
+func (k Keeper) RenameColumn(ctx sdk.Context, appId uint, tableName string, oldField string, newField string) (bool, error) {
+    table, err := k.GetTable(ctx, appId, tableName)
     if err != nil {
         return false, err
     }
@@ -486,7 +486,7 @@ func (k Keeper) GetCanAddColumnOption(ctx sdk.Context, appId uint, tableName, fi
 /////////////////////////////
 
 // for now we only support indexes on single field
-func (k Keeper) CreateIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, field string) {
+func (k Keeper) CreateIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldName string) {
     store := ctx.KVStore(k.storeKey)
     key := getMetaTableIndexKey(appId, tableName)
     var index_fields []string
@@ -495,12 +495,12 @@ func (k Keeper) CreateIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, t
     if bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &index_fields)
     }
-    index_fields = append(index_fields, field)
+    index_fields = append(index_fields, fieldName)
     store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(index_fields))
     // TODO: to create index data for the existing records of the table
 }
 
-func (k Keeper) DropIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, field string) {
+func (k Keeper) DropIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldName string) {
     store := ctx.KVStore(k.storeKey)
     key := getMetaTableIndexKey(appId, tableName)
     var indexFields []string
@@ -509,7 +509,7 @@ func (k Keeper) DropIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
     if bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &indexFields)
         for i, fld := range indexFields {
-            if field == fld {
+            if fieldName == fld {
                 indexFields = append(indexFields[:i], indexFields[i+1:]...)
                 if len(indexFields) < 1 {
                     store.Delete([]byte(key))
@@ -546,12 +546,12 @@ func (k Keeper) GetIndex(ctx sdk.Context, appId uint, tableName string) ([]strin
 // to preprocess the new table field names
 // to make sure the fields be lowercase
 // to make sure field id be in place
-func preProcessFields(fields []string) []string {
+func preProcessFields(fieldNames []string) []string {
     var result = []string{"id", "created_by", "created_at"}
     m := make(map[string]bool)
     m["id"] = true
 
-    for _, field := range fields {
+    for _, field := range fieldNames {
         newName := strings.ToLower(field)
         if newName == "" {
             continue
