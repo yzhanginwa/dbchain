@@ -32,6 +32,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdCreateApplication(cdc),
         GetCmdCreateSysDatabase(cdc),
         GetCmdModifyAppUser(cdc),
+        GetCmdSetAppPermission(cdc),
         GetCmdCreateTable(cdc),
         GetCmdDropTable(cdc),
         GetCmdAddColumn(cdc),
@@ -113,6 +114,28 @@ func GetCmdCreateSysDatabase(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+func GetCmdSetAppPermission(cdc * codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "set-app-permission [database] [permission_required]",
+        Short: "Set the permission_required status of database",
+        Args:  cobra.ExactArgs(2),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode            := args[0]
+            permissionRequired := args[1]
+            msg := types.NewMsgSetDatabasePermission(cliCtx.GetFromAddress(), appCode, permissionRequired)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
             return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
         },
     }

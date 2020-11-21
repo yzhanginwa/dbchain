@@ -82,6 +82,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgRespondFriend(ctx, keeper, msg)
         case MsgSetSchemaStatus:
             return handleMsgSetSchemaStatus(ctx, keeper, msg)
+        case MsgSetDatabasePermission:
+            return handleMsgSetDatabasePermission(ctx, keeper, msg)
         default:
             errMsg := fmt.Sprintf("Unrecognized dbchain Msg type: %v", msg.Type())
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
@@ -607,6 +609,23 @@ func handleMsgSetSchemaStatus(ctx sdk.Context, keeper Keeper, msg MsgSetSchemaSt
     }
 
     err = keeper.SetSchemaStatus(ctx, msg.Owner, msg.AppCode, msg.Status)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
+    return &sdk.Result{}, nil
+}
+
+func handleMsgSetDatabasePermission(ctx sdk.Context, keeper Keeper, msg MsgSetDatabasePermission) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Invalid app code")
+    }
+
+    if !isSysAdmin(ctx, keeper, msg.Owner) && !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
+    }
+
+    err = keeper.SetDatabasePermission(ctx, msg.Owner, msg.AppCode, msg.PermissionRequired)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
     }

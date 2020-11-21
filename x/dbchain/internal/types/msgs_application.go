@@ -210,3 +210,58 @@ func (msg MsgSetSchemaStatus) GetSignBytes() []byte {
 func (msg MsgSetSchemaStatus) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
+
+/////////////////////////////////
+//                             //
+// NewMsgSetDatabasePermission //
+//                             //
+/////////////////////////////////
+
+// MsgSetDatabasePermission sets the PermissionRequired of a database
+type MsgSetDatabasePermission struct {
+    Owner sdk.AccAddress       `json:"owner"`
+    AppCode string             `json:"app_code"`
+    PermissionRequired string  `json:"permission_required"`
+}
+
+// NewMsgSetDatabasePermission is a constructor function for MsgCreatTable
+func NewMsgSetDatabasePermission(owner sdk.AccAddress, appCode, permissionRequired string) MsgSetDatabasePermission {
+    return MsgSetDatabasePermission {
+        Owner: owner,
+        AppCode: appCode,
+        PermissionRequired: permissionRequired,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgSetDatabasePermission) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgSetDatabasePermission) Type() string { return "set_database_permission" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgSetDatabasePermission) ValidateBasic() error {
+    if msg.Owner.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Application Code cannot be empty")
+    }
+    if len(msg.PermissionRequired) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Permission cannot be empty")
+    }
+    if msg.PermissionRequired != "required" && msg.PermissionRequired != "unrequired" {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Permission has to be either required or unrequired")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgSetDatabasePermission) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgSetDatabasePermission) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}

@@ -226,6 +226,31 @@ func (k Keeper) SetSchemaStatus(ctx sdk.Context, owner sdk.AccAddress, appCode, 
     return nil
 }
 
+func (k Keeper) SetDatabasePermission(ctx sdk.Context, owner sdk.AccAddress, appCode, permissionRequired string) error {
+    permissionStatus := true
+    if permissionRequired == "unrequired" {    // permission must be either "required" or "unrequired"
+        permissionStatus = false
+    }
+
+    store := ctx.KVStore(k.storeKey)
+    key := getDatabaseKey(appCode)
+    bz := store.Get([]byte(key))
+    if bz == nil {
+        return errors.New(fmt.Sprintf("App code %s is invalid!", appCode))
+    }
+    var database types.Database
+    k.cdc.MustUnmarshalBinaryBare(bz, &database)
+
+    if database.PermissionRequired == permissionStatus {
+        return errors.New("No need to do anything!")
+    }
+
+    database.PermissionRequired = permissionStatus
+    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(database))
+    cache.VoidDatabase(appCode)
+    return nil
+}
+
 ////////////////////
 //                //
 // helper methods //
