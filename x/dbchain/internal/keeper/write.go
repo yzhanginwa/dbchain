@@ -106,7 +106,7 @@ func (k Keeper) Freeze(ctx sdk.Context, appId uint, tableName string, id uint, o
     keyAt := getDataKeyBytes(appId, tableName, types.FLD_FROZEN_AT, id)
     bz := store.Get(keyAt)
     if bz != nil {
-        return id, nil
+        return id, errors.New("Record is already frozen")
     }
     store.Set(keyAt, k.cdc.MustMarshalBinaryBare(other.GetCurrentBlockTime().String()))
 
