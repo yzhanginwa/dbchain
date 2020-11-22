@@ -4,45 +4,31 @@ import (
     "fmt"
     "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
-func (k Keeper) updateIndex(ctx sdk.Context, appId uint, tableName string, id uint, fields types.RowFields) (uint, error){
+func (k Keeper) appendIndexForRow(ctx sdk.Context, appId uint, tableName string, id uint) (uint, error){
     store := ctx.KVStore(k.storeKey)
-
-    oldRecord, _ := k.DoFind(ctx, appId, tableName, id)
-
     indexFields, err := k.GetIndexFields(ctx, appId, tableName)
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get index for table %s", tableName))
     }
-
     if id == 0 {
         return 0, errors.New(fmt.Sprintf("Id for table %s is invalid", tableName))
     }
 
     var mold []string
-
     for _, indexField := range indexFields {
-        if value, ok := fields[indexField]; ok {
-            if oldRecord != nil {
-                if oldValue, oldOk := oldRecord[indexField]; oldOk {
-                    oldKey := getIndexKey(appId, tableName, indexField, oldValue)
-                    bz := store.Get([]byte(oldKey))
-                    if bz != nil {
-                        k.cdc.MustUnmarshalBinaryBare(bz, &mold)
-                        mold = removeItemFromSet(mold, fmt.Sprint(id))
-                        if len(mold) > 0 {
-                            store.Set([]byte(oldKey), k.cdc.MustMarshalBinaryBare(mold))
-                        } else {
-                            store.Delete([]byte(oldKey))
-                        }
-                    }
-                }
-            }
-            key := getIndexKey(appId, tableName, indexField, value)
-            store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(id)) 
+        value, err := k.FindField(ctx, appId, tableName, id, indexField)
+        if err != nil {
+            return id, nil    // the value for this field is empty. we don't need to do anything. Because people would not search on an empty value.
         }
+        key := getIndexKey(appId, tableName, indexField, value)
+        bz := store.Get([]byte(key))
+        if bz != nil {
+            k.cdc.MustUnmarshalBinaryBare(bz, &mold)
+        }
+        mold = append(mold, fmt.Sprint(id))
+        store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(mold))
     }
 
     return id, nil
@@ -54,13 +40,3 @@ func (k Keeper) updateIndex(ctx sdk.Context, appId uint, tableName string, id ui
 //                  //
 //////////////////////
 
-func removeItemFromSet(set []string, item string) []string {
-    for i, v := range set {
-        if v == item {
-            set[i] = set[len(set)-1]
-            set[len(set)-1] = ""    // probably keep from mem leaking
-            return set[:len(set)-1]
-        }
-    }
-    return set
-}

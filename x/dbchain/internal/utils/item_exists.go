@@ -39,3 +39,14 @@ func StringIncluded(strSlice []string, str string) bool {
     }
     return false
 }
+
+func removeStringFromSet(set []string, item string) []string {
+    for i, v := range set {
+        if v == item {
+            set[i] = set[len(set)-1]
+            set[len(set)-1] = ""    // probably keep from mem leaking
+            return set[:len(set)-1]
+        }
+    }
+    return set
+}

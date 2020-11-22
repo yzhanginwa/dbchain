@@ -39,16 +39,20 @@ func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields typ
         return id, err
     }
 
-    k.updateIndex(ctx, appId, tableName, id, fields)
+    _, err = k.appendIndexForRow(ctx, appId, tableName, id)
+    if err != nil {
+        return id, err
+    }
+
     k.applyTrigger(ctx, appId, tableName, fields, owner)
     return id, nil
 }
 
 // TODO: need to think over how and when to allow updating
 func (k Keeper) Update(ctx sdk.Context, appId uint, tableName string, id uint, fields types.RowFields, owner sdk.AccAddress) (uint, error){
-    // TODO: need to check the ownership of the record
-    k.Write(ctx, appId, tableName, id, fields, owner)
-    k.updateIndex(ctx, appId, tableName, id, fields)
+//    // TODO: need to check the ownership of the record
+//    k.Write(ctx, appId, tableName, id, fields, owner)
+//    k.updateIndex(ctx, appId, tableName, id, fields)
     return id, nil
 }
 
