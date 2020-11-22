@@ -78,7 +78,7 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
     store := ctx.KVStore(k.storeKey)
 
     hasIndex := false
-    indexFields, err := k.GetIndex(ctx, appId, tableName)
+    indexFields, err := k.GetIndexFields(ctx, appId, tableName)
     if err == nil {
         for _, item := range(indexFields) {
             if item == field {

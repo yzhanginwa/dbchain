@@ -304,7 +304,7 @@ func queryIndex(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
     }
 
     tableName := path[2]
-    index, err := keeper.GetIndex(ctx, appId, tableName)
+    index, err := keeper.GetIndexFields(ctx, appId, tableName)
 
     if err != nil {
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Table %s does not exist",  tableName))

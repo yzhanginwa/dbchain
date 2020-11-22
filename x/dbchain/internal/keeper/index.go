@@ -12,7 +12,7 @@ func (k Keeper) updateIndex(ctx sdk.Context, appId uint, tableName string, id ui
 
     oldRecord, _ := k.DoFind(ctx, appId, tableName, id)
 
-    indexFields, err := k.GetIndex(ctx, appId, tableName)
+    indexFields, err := k.GetIndexFields(ctx, appId, tableName)
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get index for table %s", tableName))
     }

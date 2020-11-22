@@ -256,7 +256,7 @@ func handleMsgDropIndex(ctx sdk.Context, keeper Keeper, msg MsgDropIndex) (*sdk.
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s of table %s does not exist yet!", msg.Field, msg.TableName))
     }
 
-    existingIndex, err := keeper.GetIndex(ctx, appId, msg.TableName)
+    existingIndex, err := keeper.GetIndexFields(ctx, appId, msg.TableName)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Table %s does not have any index yet!", msg.TableName))
     }

@@ -527,7 +527,7 @@ func (k Keeper) DropIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
     // TODO: to delete index data for the existing records of the table
 }
 
-func (k Keeper) GetIndex(ctx sdk.Context, appId uint, tableName string) ([]string, error) {
+func (k Keeper) GetIndexFields(ctx sdk.Context, appId uint, tableName string) ([]string, error) {
     store := ctx.KVStore(k.storeKey)
     key := getMetaTableIndexKey(appId, tableName)
     bz := store.Get([]byte(key))
