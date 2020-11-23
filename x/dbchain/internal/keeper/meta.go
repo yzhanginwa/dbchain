@@ -503,6 +503,9 @@ func (k Keeper) CreateIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, t
     if bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &indexFields)
     }
+    if utils.StringIncluded(indexFields, fieldName) {
+        return errors.New(fmt.Sprintf("Fields %s is indexed already!", fieldName))
+    }
     indexFields = append(indexFields, fieldName)
     store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(indexFields))
     return nil
