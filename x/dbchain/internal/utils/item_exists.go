@@ -40,7 +40,7 @@ func StringIncluded(strSlice []string, str string) bool {
     return false
 }
 
-func removeStringFromSet(set []string, item string) []string {
+func RemoveStringFromSet(set []string, item string) []string {
     for i, v := range set {
         if v == item {
             set[i] = set[len(set)-1]

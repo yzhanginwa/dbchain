@@ -37,23 +37,22 @@ func (k Keeper) CreateIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, t
 
 func (k Keeper) DropIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldName string) error {
     store := ctx.KVStore(k.storeKey)
-    key := getMetaTableIndexKey(appId, tableName)
-    var indexFields []string
 
-    bz := store.Get([]byte(key))
-    if bz != nil {
-        k.cdc.MustUnmarshalBinaryBare(bz, &indexFields)
-        for i, fld := range indexFields {
-            if fieldName == fld {
-                indexFields = append(indexFields[:i], indexFields[i+1:]...)
-                if len(indexFields) < 1 {
-                    store.Delete([]byte(key))
-                } else {
-                    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(indexFields))
-                }
-                break
-            }
-        }
+    indexFields, err := k.GetIndexFields(ctx, appId, tableName)
+    if err != nil {
+        return errors.New(fmt.Sprintf("Table %s does not have any index yet!", tableName))
+    }
+
+    if !utils.StringIncluded(indexFields, fieldName) {
+        return errors.New(fmt.Sprintf("Table %s does not have index on %s yet!", tableName, fieldName))
+    }
+
+    utils.RemoveStringFromSet(indexFields, fieldName)
+    key := getMetaTableIndexKey(appId, tableName)
+    if len(indexFields) < 1 {
+        store.Delete([]byte(key))
+    } else {
+        store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(indexFields))
     }
 
     return nil
