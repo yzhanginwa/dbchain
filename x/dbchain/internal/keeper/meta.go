@@ -578,6 +578,12 @@ func isColumnValuesUnique(k Keeper, ctx sdk.Context, appId uint, tableName strin
     iter := store.Iterator([]byte(start), []byte(end))
     var mold string
     for ; iter.Valid(); iter.Next() {
+        dataKey := iter.Key()
+        id := getIdFromDataKey(dataKey)
+        if isRowFrozen(store, appId, tableName, id) {
+            continue
+        }
+
         val := iter.Value()
         k.cdc.MustUnmarshalBinaryBare(val, &mold)
         if _, ok := flag[mold]; ok {
