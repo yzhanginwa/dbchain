@@ -111,6 +111,9 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
             k.cdc.MustUnmarshalBinaryBare(val, &mold)
             if utils.StringIncluded(values, mold) {
                 id := getIdFromDataKey(key)
+                if isRowFrozen(store, appId, tableName, id) {
+                    continue;
+                }
                 results = append(results, id)
             }
         }
@@ -141,6 +144,9 @@ func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field strin
         matching := fieldValueCompare(isInteger, operator, mold, value)
         if matching {
             id := getIdFromDataKey(key)
+            if isRowFrozen(store, appId, tableName, id) {
+                continue;
+            }
             results = append(results, id)
         }
     }
@@ -163,6 +169,9 @@ func (k Keeper) FindAll(ctx sdk.Context, appId uint, tableName string, owner sdk
     for ; iter.Valid(); iter.Next() {
         key := iter.Key()
         id := getIdFromDataKey(key)
+        if isRowFrozen(store, appId, tableName, id) {
+            continue;
+        }
         result = append(result, id)
     }
 
