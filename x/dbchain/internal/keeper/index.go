@@ -35,7 +35,7 @@ func (k Keeper) CreateIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, t
     return nil
 }
 
-func (k Keeper) DropIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldName string) {
+func (k Keeper) DropIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldName string) error {
     store := ctx.KVStore(k.storeKey)
     key := getMetaTableIndexKey(appId, tableName)
     var indexFields []string
@@ -56,6 +56,7 @@ func (k Keeper) DropIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
         }
     }
 
+    return nil
     // TODO: to delete index data for the existing records of the table
 }
 
