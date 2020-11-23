@@ -239,7 +239,9 @@ func handleMsgCreateIndex(ctx sdk.Context, keeper Keeper, msg MsgCreateIndex) (*
     if !keeper.HasField(ctx, appId, msg.TableName, msg.Field) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s of table %s does not exist yet!", msg.Field, msg.TableName))
     }
-    keeper.CreateIndex(ctx, appId, msg.Owner, msg.TableName, msg.Field)
+    if err = keeper.CreateIndex(ctx, appId, msg.Owner, msg.TableName, msg.Field); err != nil {
+        return nil, err
+    }
     return &sdk.Result{}, nil
 }
 

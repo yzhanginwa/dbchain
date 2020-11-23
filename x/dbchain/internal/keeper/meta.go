@@ -489,17 +489,23 @@ func (k Keeper) GetCanAddColumnOption(ctx sdk.Context, appId uint, tableName, fi
 /////////////////////////////
 
 // for now we only support indexes on single field
-func (k Keeper) CreateIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldName string) {
+func (k Keeper) CreateIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldName string) error {
+    // exclude the unwanted fields
+    if fieldName == "id" {
+        return errors.New("No index can be created on field id")
+    }
+
     store := ctx.KVStore(k.storeKey)
     key := getMetaTableIndexKey(appId, tableName)
-    var index_fields []string
+    var indexFields []string
 
     bz := store.Get([]byte(key))
     if bz != nil {
-        k.cdc.MustUnmarshalBinaryBare(bz, &index_fields)
+        k.cdc.MustUnmarshalBinaryBare(bz, &indexFields)
     }
-    index_fields = append(index_fields, fieldName)
-    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(index_fields))
+    indexFields = append(indexFields, fieldName)
+    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(indexFields))
+    return nil
     // TODO: to create index data for the existing records of the table
 }
 
