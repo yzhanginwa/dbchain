@@ -4,7 +4,73 @@ import (
     "fmt"
     "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
 )
+
+// for now we only support indexes on single field
+func (k Keeper) CreateIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldName string) error {
+    // exclude the unwanted fields
+    if fieldName == "id" {
+        return errors.New("No index can be created on field id")
+    }
+
+    store := ctx.KVStore(k.storeKey)
+    key := getMetaTableIndexKey(appId, tableName)
+    var indexFields []string
+
+    bz := store.Get([]byte(key))
+    if bz != nil {
+        k.cdc.MustUnmarshalBinaryBare(bz, &indexFields)
+    }
+    if utils.StringIncluded(indexFields, fieldName) {
+        return errors.New(fmt.Sprintf("Fields %s is indexed already!", fieldName))
+    }
+    indexFields = append(indexFields, fieldName)
+    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(indexFields))
+
+    if err := createIndexData(k, ctx, appId, tableName, fieldName); err != nil {
+        return err
+    }
+
+    return nil
+}
+
+func (k Keeper) DropIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldName string) {
+    store := ctx.KVStore(k.storeKey)
+    key := getMetaTableIndexKey(appId, tableName)
+    var indexFields []string
+
+    bz := store.Get([]byte(key))
+    if bz != nil {
+        k.cdc.MustUnmarshalBinaryBare(bz, &indexFields)
+        for i, fld := range indexFields {
+            if fieldName == fld {
+                indexFields = append(indexFields[:i], indexFields[i+1:]...)
+                if len(indexFields) < 1 {
+                    store.Delete([]byte(key))
+                } else {
+                    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(indexFields))
+                }
+                break
+            }
+        }
+    }
+
+    // TODO: to delete index data for the existing records of the table
+}
+
+func (k Keeper) GetIndexFields(ctx sdk.Context, appId uint, tableName string) ([]string, error) {
+    store := ctx.KVStore(k.storeKey)
+    key := getMetaTableIndexKey(appId, tableName)
+    bz := store.Get([]byte(key))
+    if bz == nil {
+        return []string{}, nil
+    }
+
+    var index_fields []string
+    k.cdc.MustUnmarshalBinaryBare(bz, &index_fields)
+    return index_fields, nil
+}
 
 func (k Keeper) appendIndexForRow(ctx sdk.Context, appId uint, tableName string, id uint) (uint, error){
     store := ctx.KVStore(k.storeKey)
@@ -40,3 +106,32 @@ func (k Keeper) appendIndexForRow(ctx sdk.Context, appId uint, tableName string,
 //                  //
 //////////////////////
 
+func createIndexData(k Keeper, ctx sdk.Context, appId uint, tableName, fieldName string) error {
+    var dataValue string
+    var indexValue []string
+
+    store := ctx.KVStore(k.storeKey)
+    start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
+    iter := store.Iterator([]byte(start), []byte(end))
+    for ; iter.Valid(); iter.Next() {
+        dataKey := iter.Key()
+        id := getIdFromDataKey(dataKey)
+        if isRowFrozen(store, appId, tableName, id) {
+            continue
+        }
+
+        val := iter.Value()
+        k.cdc.MustUnmarshalBinaryBare(val, &dataValue)
+
+        indexKey := getIndexKey(appId, tableName, fieldName, dataValue)
+        bz := store.Get([]byte(indexKey))
+        if bz != nil {
+            k.cdc.MustUnmarshalBinaryBare(bz, &indexValue)
+        } else {
+            indexValue = []string{}
+        }
+        indexValue = append(indexValue, fmt.Sprint(id))
+        store.Set([]byte(indexKey), k.cdc.MustMarshalBinaryBare(indexValue))
+    }
+    return nil
+}
