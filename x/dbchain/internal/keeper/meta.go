@@ -679,17 +679,32 @@ func createIndexData(k Keeper, ctx sdk.Context, appId uint, tableName, fieldName
     iter := store.Iterator([]byte(start), []byte(end))
     for ; iter.Valid(); iter.Next() {
         dataKey := iter.Key()
-        val := iter.Value()
         id := getIdFromDataKey(dataKey)
+        if isRowFrozen(store, appId, tableName, id) {
+            continue
+        }
+
+        val := iter.Value()
         k.cdc.MustUnmarshalBinaryBare(val, &dataValue)
 
         indexKey := getIndexKey(appId, tableName, fieldName, dataValue)
         bz := store.Get([]byte(indexKey))
         if bz != nil {
             k.cdc.MustUnmarshalBinaryBare(bz, &indexValue)
+        } else {
+            indexValue = []string{}
         }
         indexValue = append(indexValue, fmt.Sprint(id))
         store.Set([]byte(indexKey), k.cdc.MustMarshalBinaryBare(indexValue))
     }
     return nil
+}
+
+func isRowFrozen(store sdk.KVStore, appId uint, tableName string, id uint) bool {
+    key := getDataKeyBytes(appId, tableName, types.FLD_FROZEN_AT, id)
+    bz := store.Get(key)
+    if bz != nil {
+        return true
+    }
+    return false
 }
