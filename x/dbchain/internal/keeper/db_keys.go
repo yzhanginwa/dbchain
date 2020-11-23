@@ -105,9 +105,16 @@ func getColumnOptionsKey(appId uint, tableName string, fieldName string) string 
 //              //
 //////////////////
 
-// to store the id of a indexed field
+// to store the index data (ids) of an index field
 func getIndexKey(appId uint, tableName string, fieldName string, value string) string {
     return fmt.Sprintf("%s:%d:%s:%s:%s:%s", KeyPrefixDb, appId, KeyPrefixIndex, tableName, fieldName, value)
+}
+
+// to get the start and end parameters of iterator which seeks index data for certain field
+func getIndexDataIteratorStartAndEndKey(appId uint, tableName string, fieldName string) (string, string) {
+    start := fmt.Sprintf("%s:%d:%s:%s:%s:", KeyPrefixDb, appId, KeyPrefixIndex, tableName, fieldName)
+    end   := fmt.Sprintf("%s:%d:%s:%s:%s;", KeyPrefixDb, appId, KeyPrefixIndex, tableName, fieldName)
+    return start, end
 }
 
 // to store the value of a fields on a record of a table.

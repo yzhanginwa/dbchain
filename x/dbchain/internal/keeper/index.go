@@ -55,8 +55,11 @@ func (k Keeper) DropIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
         store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(indexFields))
     }
 
+    // to delete index data for the existing records of the table
+    if err := dropIndexData(k, ctx, appId, tableName, fieldName); err != nil {
+        return err
+    }
     return nil
-    // TODO: to delete index data for the existing records of the table
 }
 
 func (k Keeper) GetIndexFields(ctx sdk.Context, appId uint, tableName string) ([]string, error) {
@@ -132,6 +135,17 @@ func createIndexData(k Keeper, ctx sdk.Context, appId uint, tableName, fieldName
         }
         indexValue = append(indexValue, fmt.Sprint(id))
         store.Set([]byte(indexKey), k.cdc.MustMarshalBinaryBare(indexValue))
+    }
+    return nil
+}
+
+func dropIndexData(k Keeper, ctx sdk.Context, appId uint, tableName, fieldName string) error {
+    store := ctx.KVStore(k.storeKey)
+    start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
+    iter := store.Iterator([]byte(start), []byte(end))
+    for ; iter.Valid(); iter.Next() {
+        indexKey := iter.Key()
+        store.Delete([]byte(indexKey))
     }
     return nil
 }
