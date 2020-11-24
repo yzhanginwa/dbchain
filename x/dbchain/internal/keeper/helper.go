@@ -20,6 +20,14 @@ func (k Keeper) isAdmin(ctx sdk.Context, appId uint, addr sdk.AccAddress) bool {
     return false
 }
 
+func (k Keeper) isAuditor(ctx sdk.Context, appId uint, addr sdk.AccAddress) bool {
+    auditors := k.getGroupMembers(ctx, appId, "audit")
+    if utils.AddressIncluded(auditors, addr) {
+        return true
+    }
+    return false
+}
+
 func (k Keeper) validateNotNullField(ctx sdk.Context, appId uint, tableName, fieldName string) bool {
     store := ctx.KVStore(k.storeKey)
 

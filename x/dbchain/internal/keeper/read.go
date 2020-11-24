@@ -63,7 +63,7 @@ func (k Keeper) Find(ctx sdk.Context, appId uint, tableName string, id uint, use
     ids = append(ids, id)
 
     // if public table, return all ids
-    if !k.isTablePublic(ctx, appId, tableName) {
+    if !k.isTablePublic(ctx, appId, tableName) && !k.isAuditor(ctx, appId, user) {
         ids = k.filterOwnIds(ctx, appId, tableName, ids, user)
         if len(ids) < 1 {
             return nil, errors.New(fmt.Sprintf("Failed to get fields for id %d", id))
@@ -119,8 +119,8 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
         }
     }
 
-    // if public table, return all ids
-    if k.isTablePublic(ctx, appId, tableName) {
+    // if public table or auditor user, return all ids
+    if k.isTablePublic(ctx, appId, tableName) || k.isAuditor(ctx, appId, user) {
         return results
     } else {
         return k.filterOwnIds(ctx, appId, tableName, results, user)
@@ -151,8 +151,7 @@ func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field strin
         }
     }
 
-    // if public table, return all ids
-    if k.isTablePublic(ctx, appId, tableName) {
+    if k.isTablePublic(ctx, appId, tableName) || k.isAuditor(ctx, appId, user) {
         return results
     } else {
         return k.filterOwnIds(ctx, appId, tableName, results, user)
@@ -175,8 +174,7 @@ func (k Keeper) FindAll(ctx sdk.Context, appId uint, tableName string, user sdk.
         result = append(result, id)
     }
 
-    // if public table, return all ids
-    if k.isTablePublic(ctx, appId, tableName) {
+    if k.isTablePublic(ctx, appId, tableName) || k.isAuditor(ctx, appId, user) {
         return result
     } else {
         return k.filterOwnIds(ctx, appId, tableName, result, user)
