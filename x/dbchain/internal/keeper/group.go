@@ -75,8 +75,8 @@ func (k Keeper) ModifyGroup(ctx sdk.Context, appId uint, action string, groupNam
             groups = append(groups, groupName)
         }
     } else {
-        if groupName == "admin" {
-            return errors.New("You should not drop Admin group")
+        if groupName == "admin" || groupName == "auditor" {
+            return errors.New("You are not supposed to delete system group")
         }
         if position > -1 {
             if len(k.getGroupMembers(ctx, appId, groupName)) > 0 {

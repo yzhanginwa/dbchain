@@ -122,6 +122,9 @@ func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name strin
     k.ModifyGroup(ctx, appId, "add", "admin")
     k.ModifyGroupMember(ctx, appId, "admin", "add", owner)
 
+    // create auditor group without adding member for now
+    k.ModifyGroup(ctx, appId, "add", "auditor")
+
     // Add owner as one of database users if this application requires permission for users
     if permissionRequired {
         if err := k.ModifyDatabaseUser(ctx, owner, newAppCode, "add", owner); err != nil {
