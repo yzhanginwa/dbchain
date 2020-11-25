@@ -6,6 +6,8 @@ package super_script
 //                                                                             //
 /////////////////////////////////////////////////////////////////////////////////
 //                                                                             //
+//    statements = statement [ statements]                                     //
+//                                                                             //
 //    statement = if_condition | return | insert .                             //
 //                                                                             //
 //    return = "return" "(" ( "true" | "false" ) ")" .                         //
@@ -13,7 +15,8 @@ package super_script
 //    insert = "insert" "(" table_name "," field_name ", " single_value        //
 //             [ "," field_name "," single_value ] ")" .                       //
 //                                                                             //
-//    if_condition = "if" "(" condition ")" "{" statement "}" .                //
+//    if_condition = "if" "(" condition ")" "{" statements "}"                 //
+//                   [ "else" "{" statements "}" ] .                           //
 //                                                                             //
 //    condition = exist | comparison .                                         //
 //                                                                             //
