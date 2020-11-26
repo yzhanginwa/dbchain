@@ -39,6 +39,7 @@ func TestScanner_Scan(t *testing.T) {
         {s: `=`, tok: EQUAL, lit: "="},
         {s: `==`, tok: DEQUAL, lit: "=="},
         {s: `if`, tok: IF, lit: "if"},
+        {s: `else`, tok: ELSE, lit: "else"},
         {s: `insert`, tok: INSERT, lit: "insert"},
         {s: `return`, tok: RETURN, lit: "return"},
         {s: `true`, tok: TRUE, lit: "true"},

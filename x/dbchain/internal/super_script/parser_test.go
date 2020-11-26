@@ -68,6 +68,16 @@ func TestParser_ParseExistCondition(t *testing.T) {
             s: `if (exist(table.corp.where(name == "aa"))) { return(true) }`,
             err: "",
         },
+        {
+            s: `if (exist(table.corp.where(name == "aa"))) {
+                    return(true)
+                } else {
+                  if(exist(table.foo.where(name == "bb"))) {
+                      return(false)
+                  }
+                }`,
+            err: "",
+        },
 
     }
 

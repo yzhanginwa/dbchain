@@ -86,7 +86,7 @@ func (p *Parser) Statement(parent *[]eval.Statement) bool {
     case INSERT:
         if !p.Insert(&thisStatement) { return false }
     default:
-        p.err = fmt.Errorf("found %q, expected if condition or insert statement", p.lit)
+        p.err = fmt.Errorf("found %q, expected if condition, insert statement, or return statement", p.lit)
         return false
     }
     (*parent) = append((*parent), thisStatement)
@@ -144,7 +144,8 @@ func (p *Parser) Insert(parent *eval.Statement) bool {
 
 func (p *Parser) IfCondition(parent *eval.Statement) bool {
     ifCondition := eval.IfCondition{}
-    statements := []eval.Statement{}
+    ifStatements := []eval.Statement{}
+    elseStatements := []eval.Statement{}
 
     if !p.expect(IF) { return false }
     if !p.expect(LPAREN) { return false }
@@ -152,16 +153,31 @@ func (p *Parser) IfCondition(parent *eval.Statement) bool {
     if !p.expect(RPAREN) { return false }
 
     if !p.expect(LCB) { return false }
-    p.Statement(&statements)
+    p.Statement(&ifStatements)
     for {
         if p.accept(RCB) {
             break
         }
-        if !p.Statement(&statements) {
+        if !p.Statement(&ifStatements) {
             return false
         }
     }
-    ifCondition.IfStatements = statements
+
+    if p.accept(ELSE) {
+        if !p.expect(LCB) { return false }
+        p.Statement(&elseStatements)
+        for {
+            if p.accept(RCB) {
+                break
+            }
+            if !p.Statement(&elseStatements) {
+                return false
+            }
+        }
+    }
+
+    ifCondition.IfStatements = ifStatements
+    ifCondition.ElseStatements = elseStatements
     parent.IfCondition = ifCondition
     return true
 }

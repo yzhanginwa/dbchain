@@ -82,6 +82,7 @@ func (s *Statement) Evaluate(p *Program) {
 type IfCondition struct {
     Condition Condition
     IfStatements []Statement
+    ElseStatements []Statement
 }
 
 func (ic *IfCondition) Evaluate(p *Program) {

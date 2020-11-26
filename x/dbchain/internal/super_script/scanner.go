@@ -137,6 +137,8 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
         return IN, buf.String()
     case "IF":
         return IF, buf.String()
+    case "ELSE":
+        return ELSE, buf.String()
     case "INSERT":
         return INSERT, buf.String()
     case "RETURN":

@@ -31,6 +31,7 @@ const (
     IN      // in
     WHERE   // where
     IF      // if
+    ELSE    // else
     INSERT  // insert
     RETURN  // return
     TRUE    // true
