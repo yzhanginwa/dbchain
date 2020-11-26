@@ -140,7 +140,7 @@ func TestParser_ParseScript(t *testing.T) {
     if len(parser.syntaxTree) != 3 {
         t.Errorf("syntax tree error")
     }
-    if len(parser.syntaxTree[0].IfCondition.Statements) != 3 {
+    if len(parser.syntaxTree[0].IfCondition.IfStatements) != 3 {
         t.Errorf("syntax tree error")
     }
     if parser.syntaxTree[0].IfCondition.Condition.Comparison.Left.ThisExpr.Items[0] != "corp_id" {
@@ -153,7 +153,7 @@ func TestParser_ParseScript(t *testing.T) {
     if pt.Field!= "created_by" {
         t.Errorf("syntax tree error")
     }
-    if parser.syntaxTree[0].IfCondition.Statements[2].Return != "false" {
+    if parser.syntaxTree[0].IfCondition.IfStatements[2].Return != "false" {
         t.Errorf("syntax tree error")
     }
     if parser.syntaxTree[2].Insert.TableName != "corp" {

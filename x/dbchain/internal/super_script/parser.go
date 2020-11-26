@@ -161,7 +161,7 @@ func (p *Parser) IfCondition(parent *eval.Statement) bool {
             return false
         }
     }
-    ifCondition.Statements = statements
+    ifCondition.IfStatements = statements
     parent.IfCondition = ifCondition
     return true
 }
