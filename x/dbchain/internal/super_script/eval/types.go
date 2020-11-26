@@ -74,7 +74,7 @@ func (s *Statement) Evaluate(p *Program) {
         s.Insert.Evaluate(p)
     }
 
-    if len(s.IfCondition.IfStatements) != 0 {
+    if len(s.IfCondition.IfStatements) != 0 || len(s.IfCondition.ElseStatements) != 0 {
         (s.IfCondition).Evaluate(p)
     }
 }
@@ -86,14 +86,18 @@ type IfCondition struct {
 }
 
 func (ic *IfCondition) Evaluate(p *Program) {
+    var statements []Statement
     if (ic.Condition).Evaluate(p) {
-        for _, statement := range ic.IfStatements{
-            statement.Evaluate(p)
-            if p.Return == FALSE {
-                return
-            } else if p.Return == TRUE {
-                return
-            }
+        statements = ic.IfStatements
+    } else {
+        statements = ic.ElseStatements
+    } 
+    for _, statement := range statements {
+        statement.Evaluate(p)
+        if p.Return == FALSE {
+            return
+        } else if p.Return == TRUE {
+            return
         }
     }
 }
