@@ -247,7 +247,3 @@ type Where struct {          // parent is TableValue.Items
     Operator string
     Right SingleValue
 }
-
-type Field struct {
-    Item string
-}
