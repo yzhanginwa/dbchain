@@ -126,6 +126,8 @@ func TestParser_ParseScript(t *testing.T) {
                 insert("corp", "name", "foo", "mailing", "100 main st")
                 insert("corp", "name", "bar", "mailing", "110 main st")
                 return(false)
+                } else {
+                return(true)
                 }
                 insert("corp", "name", "bar1", "mailing", "111 main st")
                 insert("corp", "name", "bar2", "mailing", this.mailing)
@@ -164,6 +166,12 @@ func TestParser_ParseScript(t *testing.T) {
         t.Errorf("syntax tree error")
     }
     if parser.syntaxTree[0].IfCondition.IfStatements[2].Return != "false" {
+        t.Errorf("syntax tree error")
+    }
+    if len(parser.syntaxTree[0].IfCondition.ElseStatements) != 1 {
+        t.Errorf("syntax tree error")
+    }
+    if parser.syntaxTree[0].IfCondition.ElseStatements[0].Return != "true" {
         t.Errorf("syntax tree error")
     }
     if parser.syntaxTree[2].Insert.TableName != "corp" {
