@@ -16,6 +16,7 @@ import (
 
 // query endpoints supported by the dbchain service Querier
 const (
+    QueryCheckChainId  = "check_chain_id"
     QueryIsSysAdmin    = "is_sys_admin"
     QueryApplication   = "application"
     QueryAppUsers      = "app_users"
@@ -44,6 +45,8 @@ const (
 func NewQuerier(keeper Keeper) sdk.Querier {
     return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err error) {
         switch path[0] {
+        case QueryCheckChainId:
+            return queryCheckChainId(ctx, path[1:], req, keeper)
         case QueryIsSysAdmin:
             return queryIsSysAdmin(ctx, path[1:], req, keeper)
         case QueryApplication:
@@ -98,6 +101,34 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown dbchain query endpoint")
         }
     }
+}
+
+/////////////////////////////////////////////////
+//                                             //
+// query whether the given chain Id is correct //
+//                                             //
+/////////////////////////////////////////////////
+
+func queryCheckChainId(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    if len(path) != 2 {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Number of query parameters is wrong!")
+    }
+    accessCode:= path[0]
+    _, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    testChainId := path[1]
+    chainId := ctx.ChainID()
+    result := (testChainId == chainId)
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, result)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
 }
 
 ////////////////////////////////////
