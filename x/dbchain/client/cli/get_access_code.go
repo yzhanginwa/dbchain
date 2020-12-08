@@ -14,7 +14,7 @@ import (
     cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
     "github.com/mr-tron/base58"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
-    "github.com/tendermint/tendermint/crypto/secp256k1"
+    "github.com/dbchaincloud/tendermint/crypto/sm2"
 )
 
 func GetCmdGetAccessCode(queryRoute string, cdc *codec.Codec) *cobra.Command {
@@ -60,7 +60,7 @@ func signForToken(kb cryptoKeys.Keybase, name string, str string) (string, bool)
         return "", false
     }
 
-    if pk, ok := pubKey.(secp256k1.PubKeySecp256k1); ok {
+    if pk, ok := pubKey.(sm2.PubKeySm2); ok {
         out := base58.Encode(pk[:]) + ":" + str + ":" + base58.Encode(signature)
         return out, true
     } else {

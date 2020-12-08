@@ -7,7 +7,7 @@ import (
     "errors"
     "time"
     "github.com/mr-tron/base58"
-    "github.com/tendermint/tendermint/crypto/secp256k1"
+    "github.com/dbchaincloud/tendermint/crypto/sm2"
 
     sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -23,7 +23,7 @@ const (
 //              //
 //////////////////
 
-func MakeAccessCode(privKey secp256k1.PrivKeySecp256k1) string {
+func MakeAccessCode(privKey sm2.PrivKeySm2) string {
     now := time.Now().UnixNano() / 1000000
     timeStamp := strconv.Itoa(int(now))
 
@@ -33,7 +33,7 @@ func MakeAccessCode(privKey secp256k1.PrivKeySecp256k1) string {
     }
 
     pubKey := privKey.PubKey()
-    pubKeyArray := pubKey.(secp256k1.PubKeySecp256k1)
+    pubKeyArray := pubKey.(sm2.PubKeySm2)
 
     encodedPubKey := base58.Encode(pubKeyArray[:])
     encodedSig    := base58.Encode(signature)
@@ -65,7 +65,7 @@ func VerifyAccessCodeWithoutTimeChecking(accessCode string) (sdk.AccAddress, int
     timeStamp      := parts[1]
     signature, _   := base58.Decode(parts[2])
 
-    var pubKey secp256k1.PubKeySecp256k1
+    var pubKey sm2.PubKeySm2
     copy(pubKey[:], pubKeyBytes)
 
     if ! pubKey.VerifyBytes([]byte(timeStamp), []byte(signature)) {

@@ -10,7 +10,7 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/mr-tron/base58"
     "github.com/spf13/cobra"
-    "github.com/tendermint/tendermint/crypto/secp256k1"
+    "github.com/dbchaincloud/tendermint/crypto/sm2"
     "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "strings"
@@ -552,7 +552,7 @@ func GetCmdGetOracleInfo(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
             privKey, err := oracle.LoadPrivKey()
             if err != nil {
-                privKey := secp256k1.GenPrivKey()
+                privKey := sm2.GenPrivKey()
                 base58Str := base58.Encode(privKey[:])
                 return cliCtx.PrintOutput(fmt.Sprintf("%s: %s", oracle.OracleEncryptedPrivKey, base58Str))
             }
