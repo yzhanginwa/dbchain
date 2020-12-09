@@ -1,7 +1,7 @@
 package types
 
 import (
-    sdk "github.com/cosmos/cosmos-sdk/types"
+    sdk "github.com/dbchaincloud/cosmos-sdk/types"
 )
 
 type GenesisState struct {

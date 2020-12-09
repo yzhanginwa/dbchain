@@ -3,7 +3,7 @@ package keeper
 import (
     "fmt"
     "errors"
-    sdk "github.com/cosmos/cosmos-sdk/types"
+    sdk "github.com/dbchaincloud/cosmos-sdk/types"
 )
 
 func (k Keeper) getTableFields(ctx sdk.Context, appId uint, tableName string) ([]string, error) {

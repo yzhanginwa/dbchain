@@ -2,8 +2,8 @@ package dbchain
 
 import (
     "errors"
-    sdk "github.com/cosmos/cosmos-sdk/types"
-    abci "github.com/tendermint/tendermint/abci/types"
+    sdk "github.com/dbchaincloud/cosmos-sdk/types"
+    abci "github.com/dbchaincloud/tendermint/abci/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 

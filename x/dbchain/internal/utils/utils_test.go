@@ -3,9 +3,9 @@ package utils
 import (
     "testing"
     "bytes"
-    sdk "github.com/cosmos/cosmos-sdk/types"
+    sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/stretchr/testify/require"
-    "github.com/tendermint/tendermint/crypto/secp256k1"
+    "github.com/dbchaincloud/tendermint/crypto/secp256k1"
 )
 
 

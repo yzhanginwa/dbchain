@@ -5,7 +5,7 @@ import (
     "regexp"
     "strconv"
     "errors"
-    sdk "github.com/cosmos/cosmos-sdk/types"
+    sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "strings"

@@ -9,7 +9,7 @@ import (
     "github.com/mr-tron/base58"
     "github.com/dbchaincloud/tendermint/crypto/sm2"
 
-    sdk "github.com/cosmos/cosmos-sdk/types"
+    sdk "github.com/dbchaincloud/cosmos-sdk/types"
 )
 
 const (

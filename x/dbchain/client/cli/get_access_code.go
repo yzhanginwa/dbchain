@@ -6,12 +6,12 @@ import (
     "time"
     "github.com/spf13/cobra"
     "github.com/spf13/viper"
-    sdk "github.com/cosmos/cosmos-sdk/types"
-    "github.com/cosmos/cosmos-sdk/client/context"
-    "github.com/cosmos/cosmos-sdk/codec"
-    "github.com/cosmos/cosmos-sdk/client/flags"
-    "github.com/cosmos/cosmos-sdk/client/keys"
-    cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+    sdk "github.com/dbchaincloud/cosmos-sdk/types"
+    "github.com/dbchaincloud/cosmos-sdk/client/context"
+    "github.com/dbchaincloud/cosmos-sdk/codec"
+    "github.com/dbchaincloud/cosmos-sdk/client/flags"
+    "github.com/dbchaincloud/cosmos-sdk/client/keys"
+    cryptoKeys "github.com/dbchaincloud/cosmos-sdk/crypto/keys"
     "github.com/mr-tron/base58"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/dbchaincloud/tendermint/crypto/sm2"
@@ -47,7 +47,7 @@ func GetCmdGetAccessCode(queryRoute string, cdc *codec.Codec) *cobra.Command {
         },
     }
 
-    // borrowed from github.com/cosmos/cosmos-sdk/client/keys/root.go
+    // borrowed from github.com/dbchaincloud/cosmos-sdk/client/keys/root.go
     resultCmd.PersistentFlags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
     viper.BindPFlag(flags.FlagKeyringBackend, resultCmd.Flags().Lookup(flags.FlagKeyringBackend))
 

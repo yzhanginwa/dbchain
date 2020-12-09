@@ -6,11 +6,11 @@ import (
     "strings"
     "bytes"
     "encoding/json"
-    sdk "github.com/cosmos/cosmos-sdk/types"
-    sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+    sdk "github.com/dbchaincloud/cosmos-sdk/types"
+    sdkerrors "github.com/dbchaincloud/cosmos-sdk/types/errors"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
-    "github.com/cosmos/cosmos-sdk/version"
+    "github.com/dbchaincloud/cosmos-sdk/version"
 )
 
 const (
@@ -21,7 +21,7 @@ var (
     AllowCreateApplication bool
 )
 
-// NewHandler returns a handler for "nameservice" type messages.
+// NewHandler returns a handler for "hain" type messages.
 func NewHandler(keeper Keeper) sdk.Handler {
     return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
         var result *sdk.Result

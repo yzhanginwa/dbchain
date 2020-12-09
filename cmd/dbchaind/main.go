@@ -4,23 +4,23 @@ import (
     "encoding/json"
     "io"
 
-    "github.com/cosmos/cosmos-sdk/server"
-    "github.com/cosmos/cosmos-sdk/x/staking"
+    "github.com/dbchaincloud/cosmos-sdk/server"
+    "github.com/dbchaincloud/cosmos-sdk/x/staking"
 
     "github.com/spf13/cobra"
-    "github.com/tendermint/tendermint/libs/cli"
-    "github.com/tendermint/tendermint/libs/log"
+    "github.com/dbchaincloud/tendermint/libs/cli"
+    "github.com/dbchaincloud/tendermint/libs/log"
 
-    sdk "github.com/cosmos/cosmos-sdk/types"
-    "github.com/cosmos/cosmos-sdk/x/auth"
-    genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+    sdk "github.com/dbchaincloud/cosmos-sdk/types"
+    "github.com/dbchaincloud/cosmos-sdk/x/auth"
+    genutilcli "github.com/dbchaincloud/cosmos-sdk/x/genutil/client/cli"
     app "github.com/yzhanginwa/dbchain"
     bankmodule "github.com/yzhanginwa/dbchain/x/bank"
     dbcmodule "github.com/yzhanginwa/dbchain/x/dbchain"
     dbchaincli "github.com/yzhanginwa/dbchain/x/dbchain/client/cli"
 
-    abci "github.com/tendermint/tendermint/abci/types"
-    tmtypes "github.com/tendermint/tendermint/types"
+    abci "github.com/dbchaincloud/tendermint/abci/types"
+    tmtypes "github.com/dbchaincloud/tendermint/types"
     dbm "github.com/tendermint/tm-db"
 )
 
