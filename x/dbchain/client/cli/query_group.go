@@ -2,15 +2,15 @@ package cli
 
 import (
     "fmt"
-    "github.com/cosmos/cosmos-sdk/client/context"
-    "github.com/cosmos/cosmos-sdk/codec"
+    "github.com/dbchaincloud/cosmos-sdk/client/context"
+    "github.com/dbchaincloud/cosmos-sdk/codec"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/spf13/cobra"
 )
 
 func GetCmdShowGroup(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "show-group",
+        Use: "show-group [accessCode] [appCode]",
         Short: "show group",
         Args: cobra.MinimumNArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
@@ -45,7 +45,7 @@ func GetCmdShowGroup(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 func GetCmdShowGroupMemo(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "show-group-memo",
+        Use: "show-group-memo [accessCode] [appCode] [groupName]",
         Short: "show group memo",
         Args: cobra.MinimumNArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {

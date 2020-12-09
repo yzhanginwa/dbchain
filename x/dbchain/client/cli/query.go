@@ -3,12 +3,14 @@ package cli
 import (
     "encoding/json"
     "fmt"
-    "github.com/cosmos/cosmos-sdk/client"
-    "github.com/cosmos/cosmos-sdk/client/context"
-    "github.com/cosmos/cosmos-sdk/client/flags"
-    "github.com/cosmos/cosmos-sdk/codec"
-    sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/mr-tron/base58"
+    "github.com/dbchaincloud/tendermint/crypto/sm2"
+    sdk "github.com/dbchaincloud/cosmos-sdk/types"
+    "github.com/dbchaincloud/cosmos-sdk/client"
+    "github.com/dbchaincloud/cosmos-sdk/client/context"
+    "github.com/dbchaincloud/cosmos-sdk/client/flags"
+    "github.com/dbchaincloud/cosmos-sdk/codec"
+
     "github.com/spf13/cobra"
     "github.com/dbchaincloud/tendermint/crypto/sm2"
     "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
@@ -64,7 +66,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
 func GetCmdIsSysAdmin(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "is-sys-admin",
+        Use: "is-sys-admin [access-code]",
         Short: "check whether user is system administrator",
         Args: cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
@@ -167,7 +169,7 @@ func GetCmdAppUserUsedFileVolume(queryRoute string, cdc *codec.Codec) *cobra.Com
 
 func GetCmdAppUsers(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "app-users",
+        Use: "app-users [accessCode] [appCode]",
         Short: "show app users",
         Args: cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
@@ -214,7 +216,7 @@ func GetCmdIsAppUser(queryRoute string, cdc *codec.Codec) *cobra.Command {
 // GetCmdTables lists all table names
 func GetCmdTable(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "table",
+        Use: "table", //args[0] and args[1] should be accessCode and appCode
         Short: "query tables",
         Args: cobra.MaximumNArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
@@ -250,7 +252,7 @@ func GetCmdTable(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 func GetCmdIndex(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "index",
+        Use: "index [accessCode] [appCode] [tableName]",
         Short: "show index",
         Args: cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
@@ -274,7 +276,7 @@ func GetCmdIndex(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 func GetCmdOption(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "table-option",
+        Use: "table-option [accessCode] [appCode] [tableName]",
         Short: "show table options",
         Args: cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
@@ -322,7 +324,7 @@ func GetCmdAssociation(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 func GetCmdColumnOption(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "column-option",
+        Use: "column-option [accessCode] [appCode] [tableName] [fieldName]",
         Short: "show column options",
         Args: cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
@@ -372,7 +374,7 @@ func GetCmdColumnDataType(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 func GetCmdCanAddColumnOption (queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "can-add-column-option",
+        Use: "can-add-column-option [accessCode] [appCode] [tableName] [fieldName] [option]",
         Short: "test whether field option can be added",
         Args: cobra.ExactArgs(5),
         RunE: func(cmd *cobra.Command, args []string) error {
@@ -426,7 +428,7 @@ func GetCmdCanSetColumnDataType (queryRoute string, cdc *codec.Codec) *cobra.Com
 
 func GetCmdCanInsertRow(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "can-insert-row",
+        Use: "can-insert-row [accessCode] [appCode] [tableName] [fields] [values]",
         Short: "test whether row can be inserted without violating any column option restricts",
         Args: cobra.ExactArgs(5),
         RunE: func(cmd *cobra.Command, args []string) error {
@@ -466,7 +468,7 @@ func GetCmdCanInsertRow(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 func GetCmdFindRow(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "find",
+        Use: "find [accessCode] [appCode] [tableName] [id]",
         Short: "find row",
         Args: cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
@@ -491,7 +493,7 @@ func GetCmdFindRow(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 func GetCmdFindIdsBy(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "find-by",
+        Use: "find-by [accessCode] [appCode] [tableName] [fieldName] [value]",
         Short: "find by",
         Args: cobra.ExactArgs(5),
         RunE: func(cmd *cobra.Command, args []string) error {
@@ -519,7 +521,7 @@ func GetCmdFindIdsBy(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 func GetCmdFindAllIds(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "find-all",
+        Use: "find-all [accessCode] [appCode] [tableName]",
         Short: "find all",
         Args: cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
@@ -564,7 +566,7 @@ func GetCmdGetOracleInfo(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 func GetCmdExportDatabase (queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "export-db",
+        Use: "export-db [appCode]",
         Short: "export database schema",
         Args: cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {

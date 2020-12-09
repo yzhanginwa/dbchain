@@ -2,15 +2,15 @@ package cli
 
 import (
     "fmt"
-    "github.com/cosmos/cosmos-sdk/client/context"
-    "github.com/cosmos/cosmos-sdk/codec"
+    "github.com/dbchaincloud/cosmos-sdk/client/context"
+    "github.com/dbchaincloud/cosmos-sdk/codec"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/spf13/cobra"
 )
 
 func GetCmdShowFriends(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "show-friends",
+        Use: "show-friends [accessCode]",
         Short: "show friends",
         Args: cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
@@ -32,7 +32,7 @@ func GetCmdShowFriends(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 func GetCmdShowPendingFriends(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "show-pending-friends",
+        Use: "show-pending-friends [accessCode]",
         Short: "show pending friends",
         Args: cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
