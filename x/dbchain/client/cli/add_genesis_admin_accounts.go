@@ -13,7 +13,7 @@ import (
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/dbchaincloud/cosmos-sdk/x/genutil"
 
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+    "github.com/yzhanginwa/dbchain-sm/x/dbchain/internal/types"
 )
 
 const (

@@ -1,4 +1,4 @@
-module github.com/yzhanginwa/dbchain
+module github.com/yzhanginwa/dbchain-sm
 
 go 1.13
 

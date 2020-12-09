@@ -14,7 +14,7 @@ import (
     authcmd "github.com/dbchaincloud/cosmos-sdk/x/auth/client/cli"
     authrest "github.com/dbchaincloud/cosmos-sdk/x/auth/client/rest"
     bankcmd "github.com/dbchaincloud/cosmos-sdk/x/bank/client/cli"
-    app "github.com/yzhanginwa/dbchain"
+    app "github.com/yzhanginwa/dbchain-sm"
     "github.com/spf13/cobra"
     "github.com/spf13/viper"
     amino "github.com/tendermint/go-amino"

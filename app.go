@@ -32,7 +32,7 @@ import (
     "github.com/dbchaincloud/cosmos-sdk/x/staking"
     "github.com/dbchaincloud/cosmos-sdk/x/supply"
 
-    "github.com/yzhanginwa/dbchain/x/dbchain"
+    "github.com/yzhanginwa/dbchain-sm/x/dbchain"
 )
 
 const (

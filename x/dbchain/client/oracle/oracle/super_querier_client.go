@@ -7,7 +7,7 @@ import (
     "io/ioutil"
     "encoding/json"
     "github.com/mr-tron/base58"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    "github.com/yzhanginwa/dbchain-sm/x/dbchain/internal/utils"
 )
 
 type SuperQuerierClient struct {

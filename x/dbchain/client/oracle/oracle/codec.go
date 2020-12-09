@@ -6,7 +6,7 @@ import (
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/dbchaincloud/cosmos-sdk/x/auth/exported"
     authtypes "github.com/dbchaincloud/cosmos-sdk/x/auth/types"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+    "github.com/yzhanginwa/dbchain-sm/x/dbchain/internal/types"
 )
 
 var aminoCdc = amino.NewCodec()

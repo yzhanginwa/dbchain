@@ -5,8 +5,8 @@ import (
     "errors"
     "bytes"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    "github.com/yzhanginwa/dbchain-sm/x/dbchain/internal/types"
+    "github.com/yzhanginwa/dbchain-sm/x/dbchain/internal/utils"
 )
 
 //////////////////

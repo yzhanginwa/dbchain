@@ -4,7 +4,7 @@ import (
     "net/http"
 
     "github.com/dbchaincloud/cosmos-sdk/client/context"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+    "github.com/yzhanginwa/dbchain-sm/x/dbchain/internal/types"
 
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/dbchaincloud/cosmos-sdk/types/rest"

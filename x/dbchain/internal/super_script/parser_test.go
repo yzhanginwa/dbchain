@@ -5,8 +5,8 @@ import (
     "reflect"
     "strings"
     "testing"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/eval"
+    "github.com/yzhanginwa/dbchain-sm/x/dbchain/internal/utils"
+    "github.com/yzhanginwa/dbchain-sm/x/dbchain/internal/super_script/eval"
 )
 
 func TestParser_ParseConditioon(t *testing.T) {
