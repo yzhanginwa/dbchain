@@ -29,13 +29,16 @@ func (k Keeper) isAuditor(ctx sdk.Context, appId uint, addr sdk.AccAddress) bool
 }
 
 func (k Keeper) validateNotNullField(ctx sdk.Context, appId uint, tableName, fieldName string) bool {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
 
     start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
     iter := store.Iterator([]byte(start), []byte(end))
     var mold string
     var lastId uint = 0
     for ; iter.Valid(); iter.Next() {
+        if iter.Error() != nil{
+            return false
+        }
         key := iter.Key()
         id := getIdFromDataKey(key)
         val := iter.Value()
@@ -49,13 +52,16 @@ func (k Keeper) validateNotNullField(ctx sdk.Context, appId uint, tableName, fie
 }
 
 func (k Keeper) validateIntField(ctx sdk.Context, appId uint, tableName, fieldName string) bool {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
 
     start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
     iter := store.Iterator([]byte(start), []byte(end))
     var mold string
 
     for ; iter.Valid(); iter.Next() {
+        if iter.Error() != nil{
+            return false
+        }
         val := iter.Value()
         k.cdc.MustUnmarshalBinaryBare(val, &mold)
         if _, err := strconv.Atoi(mold); err != nil {
@@ -66,13 +72,16 @@ func (k Keeper) validateIntField(ctx sdk.Context, appId uint, tableName, fieldNa
 }
 
 func (k Keeper) validateFileField(ctx sdk.Context, appId uint, tableName, fieldName string) bool {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
 
     start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
     iter := store.Iterator([]byte(start), []byte(end))
     var mold string
 
     for ; iter.Valid(); iter.Next() {
+        if iter.Error() != nil{
+            return false
+        }
         val := iter.Value()
         k.cdc.MustUnmarshalBinaryBare(val, &mold)
         if _, err := cid.Decode(mold); err != nil {
@@ -88,13 +97,16 @@ func (k Keeper) validateOwnField(ctx sdk.Context, appId uint, tableName, fieldNa
         return false
     }
 
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
 
     start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
     iter := store.Iterator([]byte(start), []byte(end))
     var mold string
 
     for ; iter.Valid(); iter.Next() {
+        if iter.Error() != nil{
+            return false
+        }
         key := iter.Key()
         id := getIdFromDataKey(key)
         owner, err := k.FindField(ctx, appId, tableName, id, "created_by")

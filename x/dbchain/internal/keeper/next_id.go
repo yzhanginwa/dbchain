@@ -23,7 +23,7 @@ func (k Keeper) PeekNextId(ctx sdk.Context, appId uint, tableName string) (uint,
 }
 
 func getNextId(k Keeper, ctx sdk.Context, appId uint, tableName string) (uint, error) {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     mutex.Lock()
     defer mutex.Unlock()
 
@@ -31,28 +31,36 @@ func getNextId(k Keeper, ctx sdk.Context, appId uint, tableName string) (uint, e
     var nextId uint
     var found bool
     if nextId, found = NextIds[nextIdKey]; found {
-    } else if bz := store.Get([]byte(nextIdKey)); bz != nil {
+    } else if bz, err := store.Get([]byte(nextIdKey)); bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &nextId)
-    } else if bz = store.Get([]byte(getTableKey(appId, tableName))); bz != nil {
+    } else if bz, err = store.Get([]byte(getTableKey(appId, tableName))); bz != nil {
         nextId = 1
-    } else {
+    } else if err != nil{
+        return 0, err
+    }else {
         return 0, errors.New(fmt.Sprintf("Invalid table name %s", tableName))
     }
 
-    store.Set([]byte(nextIdKey), k.cdc.MustMarshalBinaryBare(nextId + 1))
+    err := store.Set([]byte(nextIdKey), k.cdc.MustMarshalBinaryBare(nextId + 1))
+    if err != nil{
+        return 0, err
+    }
     NextIds[nextIdKey] = nextId + 1
 
     return nextId, nil
 }
 
 func registerDatabaseId(k Keeper, ctx sdk.Context, appCode string) (uint, error) {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     mutex.Lock()
     defer mutex.Unlock()
 
     var nextAppIdKey = getDatabaseNextIdKey()
     if nextAppId < 1 {
-        bz := store.Get([]byte(nextAppIdKey))
+        bz, err := store.Get([]byte(nextAppIdKey))
+        if err != nil{
+            return 0, err
+        }
         if bz == nil {
             nextAppId = 1
         } else {
@@ -60,7 +68,10 @@ func registerDatabaseId(k Keeper, ctx sdk.Context, appCode string) (uint, error)
         }
     }
 
-    store.Set([]byte(nextAppIdKey), k.cdc.MustMarshalBinaryBare(nextAppId + 1))
+    err := store.Set([]byte(nextAppIdKey), k.cdc.MustMarshalBinaryBare(nextAppId + 1))
+    if err != nil{
+        return 0, err
+    }
     currentAppId := nextAppId
     nextAppId += 1
     return currentAppId, nil

@@ -11,7 +11,7 @@ import (
 
 
 func (k Keeper) DoFind(ctx sdk.Context, appId uint, tableName string, id uint) (types.RowFields, error){
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
 
     fieldNames, err := k.getTableFields(ctx, appId, tableName)
     if err != nil {
@@ -27,7 +27,10 @@ func (k Keeper) DoFind(ctx sdk.Context, appId uint, tableName string, id uint) (
 
     for _, fieldName := range fieldNames {
         key := getDataKeyBytes(appId, tableName, fieldName, id)
-        bz := store.Get(key)
+        bz, err := store.Get(key)
+        if err != nil{
+            return nil,err
+        }
         if bz != nil {
             k.cdc.MustUnmarshalBinaryBare(bz, &value)
             fields[fieldName] = value
@@ -38,7 +41,7 @@ func (k Keeper) DoFind(ctx sdk.Context, appId uint, tableName string, id uint) (
 }
 
 func (k Keeper) FindField(ctx sdk.Context, appId uint, tableName string, id uint, fieldName string) (string, error){
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
 
     if !k.HasField(ctx, appId, tableName, fieldName) {
         return "", errors.New("Field not existed")
@@ -49,7 +52,10 @@ func (k Keeper) FindField(ctx sdk.Context, appId uint, tableName string, id uint
     }
 
     key := getDataKeyBytes(appId, tableName, fieldName, id)
-    bz := store.Get(key)
+    bz, err := store.Get(key)
+    if err != nil{
+        return "", err
+    }
     if bz != nil {
         var value string
         k.cdc.MustUnmarshalBinaryBare(bz, &value)
@@ -75,7 +81,7 @@ func (k Keeper) Find(ctx sdk.Context, appId uint, tableName string, id uint, use
 
 // Find by an attribute in the r.Fields
 func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field string,  values []string, user sdk.AccAddress) []uint {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
 
     hasIndex := false
     indexFields, err := k.GetIndexFields(ctx, appId, tableName)
@@ -93,7 +99,10 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
         for i := 0; i < len(values); i++ {
             value := values[i]
             key := getIndexKey(appId, tableName, field, value)
-            bz := store.Get([]byte(key))
+            bz, err := store.Get([]byte(key))
+            if err != nil{
+                return nil
+            }
             var result []uint
             if bz != nil {
                 k.cdc.MustUnmarshalBinaryBare(bz, &result)
@@ -106,6 +115,9 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
         iter := store.Iterator([]byte(start), []byte(end))
         var mold string
         for ; iter.Valid(); iter.Next() {
+            if iter.Error() != nil{
+                return nil
+            }
             key := iter.Key()
             val := iter.Value()
             k.cdc.MustUnmarshalBinaryBare(val, &mold)
@@ -129,7 +141,7 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
 
 func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field string, operator string, value string, user sdk.AccAddress) []uint {
     //TODO: consider if the field has index and how to make use of it
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     isInteger := k.isTypeOfInteger(ctx, appId, tableName, field)
     results := []uint{}
 
@@ -137,6 +149,9 @@ func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field strin
     iter := store.Iterator([]byte(start), []byte(end))
     var mold string
     for ; iter.Valid(); iter.Next() {
+        if iter.Error() != nil{
+            return nil
+        }
         key := iter.Key()
         val := iter.Value()
         k.cdc.MustUnmarshalBinaryBare(val, &mold)
@@ -159,13 +174,16 @@ func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field strin
 }
 
 func (k Keeper) FindAll(ctx sdk.Context, appId uint, tableName string, user sdk.AccAddress) []uint {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     var result []uint
 
     // full table scanning
     start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, "id")
     iter := store.Iterator([]byte(start), []byte(end))
     for ; iter.Valid(); iter.Next() {
+        if iter.Error() != nil{
+            return nil
+        }
         key := iter.Key()
         id := getIdFromDataKey(key)
         if isRowFrozen(store, appId, tableName, id) {
@@ -193,14 +211,17 @@ func (k Keeper) isTablePublic(ctx sdk.Context, appId uint, tableName string) boo
 }
 
 func (k Keeper) filterOwnIds(ctx sdk.Context, appId uint,  tableName string, ids []uint, user sdk.AccAddress) []uint {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     var userString string = user.String()
 
     var result = []uint{}
     var mold string
     for _, id := range ids {
         key := getDataKeyBytes(appId, tableName, "created_by", uint(id))
-        bz := store.Get(key)
+        bz, err := store.Get(key)
+        if err != nil{
+            return nil
+        }
         if bz != nil {
             k.cdc.MustUnmarshalBinaryBare(bz, &mold)
             if mold == userString {

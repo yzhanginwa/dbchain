@@ -1,17 +1,17 @@
 package keeper
 
 import (
-    "fmt"
-    "strings"
-    "strconv"
     "errors"
+    "fmt"
     sdk "github.com/cosmos/cosmos-sdk/types"
+    shell "github.com/ipfs/go-ipfs-api"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/other"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     ss "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/eval"
-    shell "github.com/ipfs/go-ipfs-api"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    "strconv"
+    "strings"
 )
 
 
@@ -58,7 +58,7 @@ func (k Keeper) Update(ctx sdk.Context, appId uint, tableName string, id uint, f
 
 
 func (k Keeper) Write(ctx sdk.Context, appId uint, tableName string, id uint, fields types.RowFields, owner sdk.AccAddress) (uint, error){
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
 
     fieldNames, err := k.getTableFields(ctx, appId, tableName)
     if err != nil {
@@ -72,7 +72,10 @@ func (k Keeper) Write(ctx sdk.Context, appId uint, tableName string, id uint, fi
     for _, fieldName := range fieldNames {
         if value, ok := fields[fieldName]; ok {
             key := getDataKeyBytes(appId, tableName, fieldName, id)
-            store.Set(key, k.cdc.MustMarshalBinaryBare(value))
+            err := store.Set(key, k.cdc.MustMarshalBinaryBare(value))
+            if err != nil{
+                return 0,err
+            }
         }
     }
 
@@ -80,7 +83,7 @@ func (k Keeper) Write(ctx sdk.Context, appId uint, tableName string, id uint, fi
 }
 
 func (k Keeper) Delete(ctx sdk.Context, appId uint, tableName string, id uint, owner sdk.AccAddress) (uint, error){
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
 
     fieldNames, err := k.getTableFields(ctx, appId, tableName)
     if err != nil {
@@ -93,7 +96,10 @@ func (k Keeper) Delete(ctx sdk.Context, appId uint, tableName string, id uint, o
 
     for _, fieldName := range fieldNames {
         key := getDataKeyBytes(appId, tableName, fieldName, id)
-        store.Delete(key)
+        err := store.Delete(key)
+        if err != nil{
+            return 0, err
+        }
     }
 
     // TODO: to remove the related indexes
@@ -101,14 +107,17 @@ func (k Keeper) Delete(ctx sdk.Context, appId uint, tableName string, id uint, o
 }
 
 func (k Keeper) Freeze(ctx sdk.Context, appId uint, tableName string, id uint, owner sdk.AccAddress) (uint, error){
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
 
     if id == 0 {
         return 0, errors.New("Id cannot be empty")
     }
 
     keyAt := getDataKeyBytes(appId, tableName, types.FLD_FROZEN_AT, id)
-    bz := store.Get(keyAt)
+    bz, err := store.Get(keyAt)
+    if err != nil{
+        return 0, err
+    }
     if bz != nil {
         return id, errors.New("Record is already frozen")
     }
@@ -368,7 +377,8 @@ func (k Keeper) runFilterOrTrigger(ctx sdk.Context, appId uint, tableName string
     return result
 }
 
-func (k Keeper) tryToPinFile(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {
+func (k Keeper) tryToPinFile(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) (result bool) {
+
     fieldNames, err := k.getTableFields(ctx, appId, tableName)
     if err != nil {
         return(false)

@@ -16,7 +16,7 @@ import (
 //////////////////
 
 func (k Keeper) CreateGenesisAdminGroup(ctx sdk.Context, genesisState types.GenesisState) {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
 
     key := getSysAdminGroupKey()
     adminAddresses := genesisState.AdminAddresses
@@ -24,11 +24,14 @@ func (k Keeper) CreateGenesisAdminGroup(ctx sdk.Context, genesisState types.Gene
 }
 
 func (k Keeper) GetSysAdmins(ctx sdk.Context) []sdk.AccAddress {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
 
     var sysAdmins []sdk.AccAddress
     key := getSysAdminGroupKey()
-    bz := store.Get([]byte(key))
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return sysAdmins
+    }
     if bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &sysAdmins)
     }
@@ -52,10 +55,13 @@ func (k Keeper) IsSysAdmin(ctx sdk.Context, addr sdk.AccAddress) bool {
 ////////////////////
 
 func (k Keeper) ModifyGroup(ctx sdk.Context, appId uint, action string, groupName string) error {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getGroupsKey(appId)
     var groups []string
-    bz := store.Get([]byte(key))
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return err
+    }
     if bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &groups)
     }
@@ -101,7 +107,7 @@ func (k Keeper) ModifyGroup(ctx sdk.Context, appId uint, action string, groupNam
 }
 
 func (k Keeper) SetGroupMemo(ctx sdk.Context, appId uint, groupName string, memo string) {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getGroupMemoKey(appId, groupName)
     store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(memo))
 }
@@ -112,11 +118,14 @@ func (k Keeper) ModifyGroupMember(ctx sdk.Context, appId uint, group string, act
         return errors.New(fmt.Sprintf("Group %s does not exist", group))
     }
 
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getGroupKey(appId, group)
 
     var members []sdk.AccAddress
-    bz := store.Get([]byte(key))
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return err
+    }
     if bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &members)
     }
@@ -155,11 +164,11 @@ func (k Keeper) ModifyGroupMember(ctx sdk.Context, appId uint, group string, act
 }
 
 func (k Keeper) getGroupMembers(ctx sdk.Context, appId uint, groupName string) []sdk.AccAddress {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getGroupKey(appId, groupName)
 
-    bz := store.Get([]byte(key))
-    if bz == nil {
+    bz, err := store.Get([]byte(key))
+    if bz == nil || err != nil{
         return []sdk.AccAddress{}
     }
     var addresses []sdk.AccAddress
@@ -168,11 +177,11 @@ func (k Keeper) getGroupMembers(ctx sdk.Context, appId uint, groupName string) [
 }
 
 func (k Keeper) getGroupMembersMemo(ctx sdk.Context, appId uint, groupName string) string {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getGroupMemoKey(appId, groupName)
-    bz := store.Get([]byte(key))
+    bz, err := store.Get([]byte(key))
 
-    if bz == nil {
+    if bz == nil || err != nil{
         return ""
     }
 
@@ -182,11 +191,11 @@ func (k Keeper) getGroupMembersMemo(ctx sdk.Context, appId uint, groupName strin
 }
 
 func (k Keeper) getGroups(ctx sdk.Context, appId uint) []string {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getGroupsKey(appId)
 
-    bz := store.Get([]byte(key))
-    if bz == nil {
+    bz, err := store.Get([]byte(key))
+    if bz == nil || err != nil{
         return []string{}
     }
     var groups []string

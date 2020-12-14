@@ -18,12 +18,15 @@ func (k Keeper) GetDatabaseAdmins(ctx sdk.Context, appId uint) []sdk.AccAddress 
 }
 
 func (k Keeper) GetAllAppCode(ctx sdk.Context) ([]string) {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     start, end := getDatabaseIteratorStartAndEndKey()
     iter := store.Iterator([]byte(start), []byte(end))
     var result []string
 
     for ; iter.Valid(); iter.Next() {
+        if iter.Error() != nil{
+            return nil
+        }
         key := iter.Key()
         keyString := string(key)
         appCode := getAppCodeFromDatabaseKey(keyString)
@@ -84,9 +87,12 @@ func (k Keeper) getDatabase(ctx sdk.Context, appCode string) (types.Database, er
 }
 
 func (k Keeper) getDatabaseRaw(ctx sdk.Context, appCode string) (types.Database, error) {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getDatabaseKey(appCode)
-    bz := store.Get([]byte(key))
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return types.Database{},err
+    }
     if bz == nil {
         return types.Database{}, errors.New(fmt.Sprintf("App code %s is invalid!", appCode))
     }
@@ -96,14 +102,17 @@ func (k Keeper) getDatabaseRaw(ctx sdk.Context, appCode string) (types.Database,
 }
 
 func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name string, description string, permissionRequired bool, system bool) error {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     newAppCode := generateNewAppCode(owner)
     if system {
         newAppCode = "0000000001"
     }
 
     key := getDatabaseKey(newAppCode)
-    bz := store.Get([]byte(key))
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return err
+    }
     if bz != nil {
         return errors.New(fmt.Sprintf("Application code %s existed already!", newAppCode))
     }
@@ -116,7 +125,10 @@ func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name strin
     db.PermissionRequired = permissionRequired
     db.AppCode = newAppCode
     db.AppId = appId
-    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(db))
+    err = store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(db))
+    if err != nil{
+        return err
+    }
 
     // Add owner into the admin group of the database
     k.ModifyGroup(ctx, appId, "add", "admin")
@@ -135,7 +147,7 @@ func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name strin
 }
 
 func (k Keeper) ModifyDatabaseUser(ctx sdk.Context, owner sdk.AccAddress, appCode, action string, user sdk.AccAddress) error {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
 
     appId, err := k.GetDatabaseId(ctx, appCode)
     if err != nil {
@@ -148,12 +160,18 @@ func (k Keeper) ModifyDatabaseUser(ctx sdk.Context, owner sdk.AccAddress, appCod
             return errors.New("Database user existed already!")
         } else {
             key := getDatabaseUserKey(appId, user.String())
-            store.Delete([]byte(key))
+            err := store.Delete([]byte(key))
+            if err != nil{
+                return err
+            }
         }
     } else {
         if action == "add" {
             key := getDatabaseUserKey(appId, user.String())
-            store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(user))
+            err := store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(user))
+            if err != nil{
+                return err
+            }
         } else {
             return errors.New("Database user does not exist!")
         }
@@ -162,23 +180,26 @@ func (k Keeper) ModifyDatabaseUser(ctx sdk.Context, owner sdk.AccAddress, appCod
 }
 
 func (k Keeper) DatabaseUserExists(ctx sdk.Context, appId uint, user sdk.AccAddress) bool {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
 
     key := getDatabaseUserKey(appId, user.String())
-    bz := store.Get([]byte(key))
-    if bz == nil {
+    bz, err := store.Get([]byte(key))
+    if bz == nil || err != nil{
         return false
     }
     return true
 }
 
 func (k Keeper) GetDatabaseUsers(ctx sdk.Context, appId uint, owner sdk.AccAddress) []string {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     start, end := getDatabaseUserIteratorStartAndEndKey(appId)
     iter := store.Iterator([]byte(start), []byte(end))
     var result = []string{}
 
     for ; iter.Valid(); iter.Next() {
+        if iter.Error() != nil{
+            return nil
+        }
         key := iter.Key()
         keyString := string(key)
         user := getUserFromDatabaseUserKey(keyString)
@@ -210,9 +231,12 @@ func (k Keeper) SetSchemaStatus(ctx sdk.Context, owner sdk.AccAddress, appCode, 
         frozen_status = false
     }
 
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getDatabaseKey(appCode)
-    bz := store.Get([]byte(key))
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return err
+    }
     if bz == nil {
         return errors.New(fmt.Sprintf("App code %s is invalid!", appCode))
     }
@@ -235,9 +259,12 @@ func (k Keeper) SetDatabasePermission(ctx sdk.Context, owner sdk.AccAddress, app
         permissionStatus = false
     }
 
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getDatabaseKey(appCode)
-    bz := store.Get([]byte(key))
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return err
+    }
     if bz == nil {
         return errors.New(fmt.Sprintf("App code %s is invalid!", appCode))
     }

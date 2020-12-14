@@ -59,12 +59,12 @@ func queryQuerier(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
     if err := json.Unmarshal(querierObjJson, &querierObjs); err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Failed to parse querier objects!")
     }
-   
+
     result, err := querierSuperHandler(ctx, keeper, appId, querierObjs, addr)
     if err != nil {
         return nil, err
     }
-        
+
     res, err := codec.MarshalJSONIndent(keeper.cdc, result)
     if err != nil {
         panic("could not marshal result to JSON")
@@ -75,7 +75,7 @@ func queryQuerier(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
 func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs [](map[string]string), owner sdk.AccAddress) ([](map[string]string), error) {
     builders := []QuerierBuilder{}
     j := -1
-    
+
     for i := 0; i < len(querierObjs); i++ {
         qo := querierObjs[i]
         switch qo["method"] {
@@ -175,13 +175,16 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
         builders[j].Select = table.Fields
     }
 
-    store := ctx.KVStore(keeper.storeKey)
+    store := DbChainStore(ctx, keeper.storeKey)
     var result = [](map[string]string){}
     for _, id := range ids {
         record := map[string]string{}
         for _, f := range builders[j].Select {
             key := getDataKeyBytes(appId, builders[j].Table, f, id)
-            bz := store.Get(key)
+            bz, err := store.Get(key)
+            if err != nil{
+                return nil, err
+            }
             var value string
             if bz != nil {
                 keeper.cdc.MustUnmarshalBinaryBare(bz, &value)
@@ -200,11 +203,14 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
 //////////////////
 
 func getIdsFromLeftToRight(ctx sdk.Context, keeper Keeper, appId uint, preTable string, ids []uint, field string) []uint {
-    store := ctx.KVStore(keeper.storeKey)
+    store := DbChainStore(ctx, keeper.storeKey)
     var result []uint
     for i:= 0; i < len(ids); i++ {
         key := getDataKeyBytes(appId, preTable, field, ids[i])
-        bz := store.Get(key)
+        bz, err := store.Get(key)
+        if err != nil{
+            return nil
+        }
         var value string
         if bz != nil {
             keeper.cdc.MustUnmarshalBinaryBare(bz, &value)

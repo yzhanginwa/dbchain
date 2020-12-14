@@ -43,7 +43,7 @@ func (k Keeper) RespondFriend(ctx sdk.Context, owner sdk.AccAddress, friendAddr 
 }
 
 func (k Keeper) GetFriends(ctx sdk.Context, owner sdk.AccAddress) []types.Friend {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     bech32 := owner.String()
 
     start, end := getFriendIteratorStartAndEndKey(bech32)
@@ -51,6 +51,9 @@ func (k Keeper) GetFriends(ctx sdk.Context, owner sdk.AccAddress) []types.Friend
     var mold types.Friend
     var friends []types.Friend
     for ; iter.Valid(); iter.Next() {
+        if iter.Error() != nil{
+            return nil
+        }
         val := iter.Value()
         k.cdc.MustUnmarshalBinaryBare(val, &mold)
         friends = append(friends, mold)
@@ -59,7 +62,7 @@ func (k Keeper) GetFriends(ctx sdk.Context, owner sdk.AccAddress) []types.Friend
 }
 
 func (k Keeper) GetPendingFriends(ctx sdk.Context, owner sdk.AccAddress) []types.Friend {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     bech32 := owner.String()
 
     start, end := getPendingFriendIteratorStartAndEndKey(bech32)
@@ -67,6 +70,9 @@ func (k Keeper) GetPendingFriends(ctx sdk.Context, owner sdk.AccAddress) []types
     var mold types.Friend
     var friends []types.Friend
     for ; iter.Valid(); iter.Next() {
+        if iter.Error() != nil{
+            return nil
+        }
         val := iter.Value()
         k.cdc.MustUnmarshalBinaryBare(val, &mold)
         friends = append(friends, mold)
@@ -81,10 +87,13 @@ func (k Keeper) GetPendingFriends(ctx sdk.Context, owner sdk.AccAddress) []types
 //////////////////////
 
 func (k Keeper) addFriend(ctx sdk.Context, ownerAddr string, friendAddr string, friendName string) error {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getFriendKey(ownerAddr, friendAddr)
 
-    bz := store.Get([]byte(key))
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return err
+    }
     if bz != nil {
         return errors.New("Friend existed already")
     }
@@ -98,19 +107,27 @@ func (k Keeper) addFriend(ctx sdk.Context, ownerAddr string, friendAddr string, 
 }
 
 func (k Keeper) deleteFriend(ctx sdk.Context, ownerAddr string, friendAddr string) error {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getFriendKey(ownerAddr, friendAddr)
-    if store.Has([]byte(key)) {
-        store.Delete([]byte(key))
+    if has, err := store.Has([]byte(key)); has {
+        err = store.Delete([]byte(key))
+        if err != nil{
+            return err
+        }
         return nil
+    }else if err != nil{
+        return err
     }
     return errors.New("Friend doesn't exist")
 }
 
 func (k Keeper) addPendingFriend(ctx sdk.Context, ownerAddr string, ownerName string, friendAddr string) error {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getPendingFriendKey(friendAddr, ownerAddr)
-    bz := store.Get([]byte(key))
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return err
+    }
     if bz != nil {
         return nil  // no need to return error
     }
@@ -124,9 +141,12 @@ func (k Keeper) addPendingFriend(ctx sdk.Context, ownerAddr string, ownerName st
 }
 
 func (k Keeper) getPendingFriend(ctx sdk.Context, ownerAddr string, friendAddr string) (types.Friend, error) {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getPendingFriendKey(ownerAddr, friendAddr)
-    bz := store.Get([]byte(key))
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return types.Friend{}, err
+    }
     if bz == nil {
         return types.Friend{}, errors.New("Pending friend not found")
     }
@@ -136,8 +156,11 @@ func (k Keeper) getPendingFriend(ctx sdk.Context, ownerAddr string, friendAddr s
 }
 
 func (k Keeper) deletePendingFriend(ctx sdk.Context, ownerAddr string, friendAddr string) error {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getPendingFriendKey(ownerAddr, friendAddr)
-    store.Delete([]byte(key))
+    err := store.Delete([]byte(key))
+    if err != nil{
+        return err
+    }
     return nil
 }

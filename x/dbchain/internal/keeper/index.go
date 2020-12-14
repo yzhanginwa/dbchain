@@ -14,11 +14,14 @@ func (k Keeper) CreateIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, t
         return errors.New("No index can be created on field id")
     }
 
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getMetaTableIndexKey(appId, tableName)
     var indexFields []string
 
-    bz := store.Get([]byte(key))
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return err
+    }
     if bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &indexFields)
     }
@@ -36,7 +39,7 @@ func (k Keeper) CreateIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, t
 }
 
 func (k Keeper) DropIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldName string) error {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
 
     indexFields, err := k.GetIndexFields(ctx, appId, tableName)
     if err != nil {
@@ -50,9 +53,15 @@ func (k Keeper) DropIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
     utils.RemoveStringFromSet(indexFields, fieldName)
     key := getMetaTableIndexKey(appId, tableName)
     if len(indexFields) < 1 {
-        store.Delete([]byte(key))
+        err := store.Delete([]byte(key))
+        if err != nil{
+            return err
+        }
     } else {
-        store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(indexFields))
+        err := store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(indexFields))
+        if err != nil{
+            return err
+        }
     }
 
     // to delete index data for the existing records of the table
@@ -63,9 +72,12 @@ func (k Keeper) DropIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
 }
 
 func (k Keeper) GetIndexFields(ctx sdk.Context, appId uint, tableName string) ([]string, error) {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getMetaTableIndexKey(appId, tableName)
-    bz := store.Get([]byte(key))
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return nil, err
+    }
     if bz == nil {
         return []string{}, nil
     }
@@ -76,7 +88,7 @@ func (k Keeper) GetIndexFields(ctx sdk.Context, appId uint, tableName string) ([
 }
 
 func (k Keeper) appendIndexForRow(ctx sdk.Context, appId uint, tableName string, id uint) (uint, error){
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     indexFields, err := k.GetIndexFields(ctx, appId, tableName)
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get index for table %s", tableName))
@@ -92,7 +104,10 @@ func (k Keeper) appendIndexForRow(ctx sdk.Context, appId uint, tableName string,
             return id, nil    // the value for this field is empty. we don't need to do anything. Because people would not search on an empty value.
         }
         key := getIndexKey(appId, tableName, indexField, value)
-        bz := store.Get([]byte(key))
+        bz, err := store.Get([]byte(key))
+        if err != nil{
+            return id, err
+        }
         if bz != nil {
             k.cdc.MustUnmarshalBinaryBare(bz, &mold)
         }
@@ -113,10 +128,13 @@ func createIndexData(k Keeper, ctx sdk.Context, appId uint, tableName, fieldName
     var dataValue string
     var indexValue []string
 
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
     iter := store.Iterator([]byte(start), []byte(end))
     for ; iter.Valid(); iter.Next() {
+        if iter.Error() != nil{
+            return iter.Error()
+        }
         dataKey := iter.Key()
         id := getIdFromDataKey(dataKey)
         if isRowFrozen(store, appId, tableName, id) {
@@ -127,25 +145,37 @@ func createIndexData(k Keeper, ctx sdk.Context, appId uint, tableName, fieldName
         k.cdc.MustUnmarshalBinaryBare(val, &dataValue)
 
         indexKey := getIndexKey(appId, tableName, fieldName, dataValue)
-        bz := store.Get([]byte(indexKey))
+        bz, err := store.Get([]byte(indexKey))
+        if err != nil{
+            return err
+        }
         if bz != nil {
             k.cdc.MustUnmarshalBinaryBare(bz, &indexValue)
         } else {
             indexValue = []string{}
         }
         indexValue = append(indexValue, fmt.Sprint(id))
-        store.Set([]byte(indexKey), k.cdc.MustMarshalBinaryBare(indexValue))
+        err = store.Set([]byte(indexKey), k.cdc.MustMarshalBinaryBare(indexValue))
+        if err != nil{
+            return err
+        }
     }
     return nil
 }
 
 func dropIndexData(k Keeper, ctx sdk.Context, appId uint, tableName, fieldName string) error {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
     iter := store.Iterator([]byte(start), []byte(end))
     for ; iter.Valid(); iter.Next() {
+        if iter.Error() != nil{
+            return iter.Error()
+        }
         indexKey := iter.Key()
-        store.Delete([]byte(indexKey))
+        err := store.Delete([]byte(indexKey))
+        if err != nil{
+            return err
+        }
     }
     return nil
 }

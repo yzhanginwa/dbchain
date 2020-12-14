@@ -18,10 +18,10 @@ import (
 /////////////////////////////
 
 func (k Keeper) GetTables(ctx sdk.Context, appId uint) []string {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     tablesKey := getTablesKey(appId)
-    bz := store.Get([]byte(tablesKey))
-    if bz == nil {
+    bz, err := store.Get([]byte(tablesKey))
+    if bz == nil || err != nil{
         return []string{}
     }
     var tableNames []string
@@ -32,8 +32,12 @@ func (k Keeper) GetTables(ctx sdk.Context, appId uint) []string {
 
 // Check if the table is present in the store or not
 func (k Keeper) HasTable(ctx sdk.Context, appId uint, tableName string) bool {
-    store := ctx.KVStore(k.storeKey)
-    return store.Has([]byte(getTableKey(appId, tableName)))
+    store := DbChainStore(ctx, k.storeKey)
+    has ,err := store.Has([]byte(getTableKey(appId, tableName)))
+    if err != nil{
+        return false
+    }
+    return has
 }
 
 func (k Keeper) HasField(ctx sdk.Context, appId uint, tableName string, fieldName string) bool {
@@ -51,7 +55,7 @@ func (k Keeper) HasField(ctx sdk.Context, appId uint, tableName string, fieldNam
 
 // Create a new table
 func (k Keeper) CreateTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldNames []string) {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     table := types.NewTable()
     table.Owner = owner
     table.Name = tableName
@@ -61,10 +65,16 @@ func (k Keeper) CreateTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, t
     for len(table.Memos) < fieldsLength {
         table.Memos = append(table.Memos, "")
     }
-    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    err := store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    if err != nil{
+        return
+    }
 
     var tables []string
-    bz :=store.Get([]byte(getTablesKey(appId)))
+    bz, err :=store.Get([]byte(getTablesKey(appId)))
+    if err != nil{
+        return
+    }
     if bz == nil {
         tables = append(tables, table.Name)
     } else {
@@ -76,9 +86,12 @@ func (k Keeper) CreateTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, t
 
 // Remove a table
 func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string) {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     var tables []string
-    bz :=store.Get([]byte(getTablesKey(appId)))
+    bz, err :=store.Get([]byte(getTablesKey(appId)))
+    if err != nil{
+        return
+    }
     if bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &tables)
         for i, tbl := range tables {
@@ -111,8 +124,11 @@ func (k Keeper)GetTable(ctx sdk.Context, appId uint, tableName string) (types.Ta
 
 // Get a table 
 func (k Keeper) RawGetTable(ctx sdk.Context, appId uint, tableName string) (types.Table, error) {
-    store := ctx.KVStore(k.storeKey)
-    bz := store.Get([]byte(getTableKey(appId, tableName)))
+    store := DbChainStore(ctx, k.storeKey)
+    bz, err := store.Get([]byte(getTableKey(appId, tableName)))
+    if err != nil{
+        return types.Table{}, err
+    }
     if bz == nil {
         return types.Table{}, errors.New(fmt.Sprintf("table %s not found", tableName))
     }
@@ -137,8 +153,11 @@ func (k Keeper) AddColumn(ctx sdk.Context, appId uint, tableName string, fieldNa
     table.Fields = append(table.Fields, fieldName)
     table.Memos = append(table.Memos, "")
 
-    store := ctx.KVStore(k.storeKey)
-    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    store := DbChainStore(ctx, k.storeKey)
+    err = store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    if err != nil{
+        return false, err
+    }
     //void cache appTable
     cache.VoidTable(appId,table.Name)
     return true, nil
@@ -168,8 +187,11 @@ func (k Keeper) DropColumn(ctx sdk.Context, appId uint, tableName string, fieldN
         return false, errors.New(fmt.Sprintf("field %s not existed", fieldName))
     }
 
-    store := ctx.KVStore(k.storeKey)
-    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    store := DbChainStore(ctx, k.storeKey)
+    err = store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    if err != nil{
+        return false, err
+    }
 
     //void cache appTable
     cache.VoidTable(appId,table.Name)
@@ -215,20 +237,26 @@ func (k Keeper) RenameColumn(ctx sdk.Context, appId uint, tableName string, oldF
 
     table.Fields[index] = newField
 
-    store := ctx.KVStore(k.storeKey)
-    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    store := DbChainStore(ctx, k.storeKey)
+    err = store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    if err != nil{
+        return false, err
+    }
     //void cache appTable
     cache.VoidTable(appId,table.Name)
     return true, nil
 }
 
 func (k Keeper) ModifyOption(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, action string, option string) {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getTableOptionsKey(appId, tableName)
     var options []string
     var result []string
 
-    bz := store.Get([]byte(key))
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return
+    }
     if bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &options)
     }
@@ -275,8 +303,11 @@ func (k Keeper) AddInsertFilter(ctx sdk.Context, appId uint, owner sdk.AccAddres
 
     table.Filter = filter
 
-    store := ctx.KVStore(k.storeKey)
-    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    store := DbChainStore(ctx, k.storeKey)
+    err = store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    if err != nil{
+        return false
+    }
     return true
 }
 
@@ -287,8 +318,11 @@ func (k Keeper) DropInsertFilter(ctx sdk.Context, appId uint, owner sdk.AccAddre
     }
 
     table.Filter = ""
-    store := ctx.KVStore(k.storeKey)
-    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    store := DbChainStore(ctx, k.storeKey)
+    err = store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    if err != nil{
+        return false
+    }
     return true
 }
 
@@ -317,8 +351,11 @@ func (k Keeper) AddTrigger(ctx sdk.Context, appId uint, owner sdk.AccAddress, ta
 
     table.Trigger = trigger
 
-    store := ctx.KVStore(k.storeKey)
-    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    store := DbChainStore(ctx, k.storeKey)
+    err = store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    if err != nil{
+        return false
+    }
     return true
 }
 
@@ -329,8 +366,11 @@ func (k Keeper) DropTrigger(ctx sdk.Context, appId uint, owner sdk.AccAddress, t
     }
 
     table.Trigger = ""
-    store := ctx.KVStore(k.storeKey)
-    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    store := DbChainStore(ctx, k.storeKey)
+    err = store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    if err != nil{
+        return false
+    }
     return true
 }
 
@@ -341,15 +381,21 @@ func (k Keeper) SetTableMemo(ctx sdk.Context, appId uint, tableName, memo string
     }
 
     table.Memo = memo
-    store := ctx.KVStore(k.storeKey)
-    store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    store := DbChainStore(ctx, k.storeKey)
+    err = store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    if err != nil{
+        return false
+    }
     return true
 }
 
 func (k Keeper) GetOption(ctx sdk.Context, appId uint, tableName string) ([]string, error) {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getTableOptionsKey(appId, tableName)
-    bz := store.Get([]byte(key))
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return nil, err
+    }
     if bz == nil {
         return []string{}, nil
     }
@@ -382,12 +428,15 @@ func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAdd
         return false
     }
 
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getColumnOptionsKey(appId, tableName, fieldName)
     var options []string
     var result []string
 
-    bz := store.Get([]byte(key))
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return false
+    }
     if bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &options)
     }
@@ -436,11 +485,13 @@ func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAdd
     }
 
     if len(result) > 0 {
-        store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(result))
+        err = store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(result))
     } else {
-        store.Delete([]byte(key))
+        err = store.Delete([]byte(key))
     }
-
+    if err != nil{
+        return false
+    }
     return true
 }
 
@@ -456,8 +507,11 @@ func (k Keeper) SetColumnMemo(ctx sdk.Context, appId uint, owner sdk.AccAddress,
                 table.Memos = append(table.Memos, "")
             }
             table.Memos[i] = memo
-            store := ctx.KVStore(k.storeKey)
-            store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+            store := DbChainStore(ctx, k.storeKey)
+            err := store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+            if err != nil{
+                return false
+            }
             return true
         }
     }
@@ -465,9 +519,12 @@ func (k Keeper) SetColumnMemo(ctx sdk.Context, appId uint, owner sdk.AccAddress,
 }
 
 func (k Keeper) GetColumnOption(ctx sdk.Context, appId uint, tableName string, fieldName string) ([]string, error) {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     key := getColumnOptionsKey(appId, tableName, fieldName)
-    bz := store.Get([]byte(key))
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return nil, err
+    }
     if bz == nil {
         return []string{}, nil
     }
@@ -591,13 +648,16 @@ func validateTriggerSyntax(k Keeper, ctx sdk.Context, appId uint, tableName stri
 }
 
 func isColumnValuesUnique(k Keeper, ctx sdk.Context, appId uint, tableName string, fieldName string) bool {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
     flag := make(map[string]bool)
 
     start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
     iter := store.Iterator([]byte(start), []byte(end))
     var mold string
     for ; iter.Valid(); iter.Next() {
+        if iter.Error() != nil{
+            return false
+        }
         dataKey := iter.Key()
         id := getIdFromDataKey(dataKey)
         if isRowFrozen(store, appId, tableName, id) {
@@ -615,20 +675,26 @@ func isColumnValuesUnique(k Keeper, ctx sdk.Context, appId uint, tableName strin
 }
 
 func removeDataOfColumn(k Keeper, ctx sdk.Context, appId uint, tableName, fieldName string) {
-    store := ctx.KVStore(k.storeKey)
+    store := DbChainStore(ctx, k.storeKey)
 
     start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
     iter := store.Iterator([]byte(start), []byte(end))
     for ; iter.Valid(); iter.Next() {
+        if iter.Error() != nil{
+            return
+        }
         key := iter.Key()
-        store.Delete([]byte(key))
+        err := store.Delete([]byte(key))
+        if err != nil{
+            return
+        }
     }
 }
 
-func isRowFrozen(store sdk.KVStore, appId uint, tableName string, id uint) bool {
+func isRowFrozen(store *SafeStore, appId uint, tableName string, id uint) bool {
     key := getDataKeyBytes(appId, tableName, types.FLD_FROZEN_AT, id)
-    bz := store.Get(key)
-    if bz != nil {
+    bz,_ := store.Get(key)
+    if bz != nil{
         return true
     }
     return false
