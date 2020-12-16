@@ -3,6 +3,7 @@ package keeper
 import (
     "fmt"
     "errors"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
     "strings"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
@@ -95,8 +96,21 @@ func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
     }
 }
 
+func (k Keeper)GetTable(ctx sdk.Context, appId uint, tableName string) (types.Table, error){
+    cTable, err := cache.GetTable(appId, tableName)
+    if err == nil{
+        return cTable, nil
+    }
+    table, err := k.RawGetTable(ctx, appId, tableName)
+    if err != nil{
+        return types.Table{}, err
+    }
+    cache.SetTable(appId, tableName, table)
+    return table, nil
+}
+
 // Get a table 
-func (k Keeper) GetTable(ctx sdk.Context, appId uint, tableName string) (types.Table, error) {
+func (k Keeper) RawGetTable(ctx sdk.Context, appId uint, tableName string) (types.Table, error) {
     store := ctx.KVStore(k.storeKey)
     bz := store.Get([]byte(getTableKey(appId, tableName)))
     if bz == nil {
@@ -125,6 +139,8 @@ func (k Keeper) AddColumn(ctx sdk.Context, appId uint, tableName string, fieldNa
 
     store := ctx.KVStore(k.storeKey)
     store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    //void cache appTable
+    cache.VoidTable(appId,table.Name)
     return true, nil
 }
 
@@ -155,6 +171,8 @@ func (k Keeper) DropColumn(ctx sdk.Context, appId uint, tableName string, fieldN
     store := ctx.KVStore(k.storeKey)
     store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
 
+    //void cache appTable
+    cache.VoidTable(appId,table.Name)
     // Remove data of this dropped column
     removeDataOfColumn(k, ctx, appId, tableName, fieldName)
     return true, nil
@@ -199,6 +217,8 @@ func (k Keeper) RenameColumn(ctx sdk.Context, appId uint, tableName string, oldF
 
     store := ctx.KVStore(k.storeKey)
     store.Set([]byte(getTableKey(appId, table.Name)), k.cdc.MustMarshalBinaryBare(table))
+    //void cache appTable
+    cache.VoidTable(appId,table.Name)
     return true, nil
 }
 
