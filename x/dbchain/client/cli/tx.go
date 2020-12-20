@@ -33,6 +33,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdCreateSysDatabase(cdc),
         GetCmdModifyAppUser(cdc),
         GetCmdSetAppPermission(cdc),
+        GetCmdAddFunction(cdc),
         GetCmdCreateTable(cdc),
         GetCmdDropTable(cdc),
         GetCmdAddColumn(cdc),
