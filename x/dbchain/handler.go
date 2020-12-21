@@ -30,6 +30,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgCreateSysDatabase(ctx, keeper, msg)
         case MsgModifyDatabaseUser:
             return handleMsgModifyDatabaseUser(ctx, keeper, msg)
+        case MsgAddFunction:
+            return handleMsgAddFunction(ctx, keeper, msg)
         case MsgCreateTable:
             return handleMsgCreateTable(ctx, keeper, msg)
         case MsgDropTable:
@@ -125,6 +127,28 @@ func handleMsgModifyDatabaseUser(ctx sdk.Context, keeper Keeper, msg MsgModifyDa
     keeper.ModifyDatabaseUser(ctx, msg.Owner, msg.AppCode, msg.Action, msg.User)
     return &sdk.Result{}, nil
 }
+
+func handleMsgAddFunction(ctx sdk.Context, keeper Keeper, msg MsgAddFunction) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return nil, err
+    }
+
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
+    }
+
+    if version.Name == CommunityEdition {
+        tables := keeper.GetTables(ctx, appId)
+        if len(tables) > 29 {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 30 tables allowed")
+        }
+    }
+
+    keeper.AddFunction(ctx, appId, msg.FunctionName, msg.Parameter, msg.Body, msg.Owner)
+    return &sdk.Result{}, nil
+}
+
 
 // Handle a message to create table 
 func handleMsgCreateTable(ctx sdk.Context, keeper Keeper, msg MsgCreateTable) (*sdk.Result, error) {

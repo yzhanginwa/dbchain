@@ -98,6 +98,15 @@ func GetColumnOptionsKey(appId uint, tableName string, fieldName string) string 
     return fmt.Sprintf("%s:%d:%s:fldopt:%s:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName, fieldName)
 }
 
+//////////////////////
+//                  //
+// function related //
+//                  //
+//////////////////////
+
+func GetFunctionKey(appId uint, functionName string) string {
+    return fmt.Sprintf("%s:%d:%s:func:%s", KeyPrefixDb, appId, KeyPrefixMeta, functionName)
+}
 
 //////////////////
 //              //

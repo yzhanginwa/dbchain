@@ -43,6 +43,13 @@ var (
     
     getColumnOptionsKey = dbk.GetColumnOptionsKey
     
+    //////////////////////
+    //                  //
+    // function related //
+    //                  //
+    //////////////////////
+
+    getFunctionKey = dbk.GetFunctionKey
     
     //////////////////
     //              //

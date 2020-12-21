@@ -37,6 +37,23 @@ func (d Database) String() string {
     return strings.TrimSpace(fmt.Sprintf(`AppCoe: %s`, d.AppCode))
 }
 
+//////////////
+//          //
+// function //
+//          //
+//////////////
+
+type Function struct {
+    Owner sdk.AccAddress   `json:"owner"`
+    Name string            `json:"name"`
+    Parameter []string     `json:"parameter"`
+    Body string            `json:"body"`
+}
+
+func NewFunction() Function {
+    return Function{}
+}
+
 ////////////
 //        //
 // friend //
