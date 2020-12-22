@@ -225,7 +225,7 @@ func showCanInsertRowHandler(cliCtx context.CLIContext, storeName string) http.H
             rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
             return
         }
-        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/can_insert_row/%s/%s/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["tableName"], rowFieldsJson), nil)
+        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/can_insert_row/%s/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["tableName"], rowFieldsJson), nil)
         if err != nil {
             rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
             return

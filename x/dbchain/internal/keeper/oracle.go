@@ -4,7 +4,7 @@ import (
     "sort"
     "encoding/json"
     sdk "github.com/cosmos/cosmos-sdk/types"
-    "github.com/yzhanginwa/dbchain/x/dbchain/client/rest/oracle"
+    "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 

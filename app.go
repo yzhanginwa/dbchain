@@ -27,14 +27,22 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain"
 )
 
-const appName = "dbchain"
+const (
+	appName     = "dbchain"
+	OracleHome  = dbchain.OracleHome
+	CLIHome     = dbchain.CLIHome
+	NodeHome    = dbchain.NodeHome
+)
 
 var (
+    // default OracleHome directories for the application oracle
+    DefaultOracleHome = os.ExpandEnv(OracleHome)
+
     // default home directories for the application CLI
-    DefaultCLIHome = os.ExpandEnv("$HOME/.dbchaincli")
+    DefaultCLIHome = os.ExpandEnv(CLIHome)
 
     // DefaultNodeHome sets the folder where the applcation data and configuration will be stored
-    DefaultNodeHome = os.ExpandEnv("$HOME/.dbchaind")
+    DefaultNodeHome = os.ExpandEnv(NodeHome)
 
     // NewBasicManager is in charge of setting up basic module elemnets
     ModuleBasics = module.NewBasicManager(

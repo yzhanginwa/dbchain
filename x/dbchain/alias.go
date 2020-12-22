@@ -9,6 +9,9 @@ const (
     ModuleName = types.ModuleName
     RouterKey  = types.RouterKey
     StoreKey   = types.StoreKey
+    OracleHome = types.OracleHome
+    CLIHome    = types.CLIHome
+    NodeHome   = types.NodeHome
 )
 
 var (

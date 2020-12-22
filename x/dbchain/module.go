@@ -1,6 +1,7 @@
 package dbchain
 
 import (
+    "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle"
     "time"
     "encoding/json"
 
@@ -56,7 +57,11 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 
 // Register rest routes
 func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-    rest.RegisterRoutes(ctx, rtr, StoreKey)
+    if ctx.HomeDir == CLIHome{
+        rest.RegisterRoutes(ctx, rtr, StoreKey)
+    }else{
+        oracle.RegisterRoutes(ctx, rtr, StoreKey)
+    }
 }
 
 // Get the root query command of this module

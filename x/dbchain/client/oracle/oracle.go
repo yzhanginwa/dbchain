@@ -1,4 +1,4 @@
-package rest
+package oracle
 
 import (
     "fmt"
@@ -15,7 +15,7 @@ import (
 
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
-    "github.com/yzhanginwa/dbchain/x/dbchain/client/rest/oracle"
+    "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
 
     "github.com/aliyun/alibaba-cloud-sdk-go/services/dysmsapi"
 )

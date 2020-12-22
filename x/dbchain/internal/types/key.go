@@ -6,4 +6,9 @@ const (
 
     // StoreKey to be used when creating the KVStore
     StoreKey = ModuleName
+
+    //the folder where the applcation data and configuration will be stored
+    OracleHome = "$HOME/.dbchainoracle"
+    CLIHome = "$HOME/.dbchaincli"
+    NodeHome = "$HOME/.dbchaind"
 )

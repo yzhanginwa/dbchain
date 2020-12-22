@@ -11,7 +11,7 @@ import (
     "github.com/cosmos/cosmos-sdk/client/context"
     "github.com/cosmos/cosmos-sdk/client/flags"
     "github.com/cosmos/cosmos-sdk/codec"
-    "github.com/yzhanginwa/dbchain/x/dbchain/client/rest/oracle"
+    "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/spf13/cobra"
 )
