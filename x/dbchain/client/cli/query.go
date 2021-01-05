@@ -45,6 +45,8 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdGetAccessCode(storeKey, cdc),
         GetCmdGetOracleInfo(storeKey, cdc),
         GetCmdExportDatabase(storeKey, cdc),
+        GetCmdFunction(storeKey,cdc),
+        GetCmdFunctionInfo(storeKey,cdc),
     )...)
     return dbchainQueryCmd
 }
@@ -448,6 +450,54 @@ func GetCmdExportDatabase (queryRoute string, cdc *codec.Codec) *cobra.Command {
                 fmt.Println(line)
             }
             return cliCtx.PrintOutput("")
+        },
+    }
+}
+
+
+func GetCmdFunction (queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "functions [accessCode] [appCode]",
+        Short: "query functions",
+        Args: cobra.ExactArgs(2),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            accessCode := args[0]
+            appCode    := args[1]
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/functions/%s/%s", queryRoute, accessCode, appCode), nil)
+            if err != nil {
+                fmt.Printf("could not get functions")
+                return nil
+            }
+
+            var out []string
+            cdc.MustUnmarshalJSON(res, &out)
+            return cliCtx.PrintOutput(out)
+        },
+    }
+}
+
+func GetCmdFunctionInfo (queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "function-info [accessCode] [appCode] [functionName]",
+        Short: "query function specific information",
+        Args: cobra.ExactArgs(3),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            accessCode   := args[0]
+            appCode      := args[1]
+            functionName := args[2]
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/functionInfo/%s/%s/%s", queryRoute, accessCode, appCode, functionName), nil)
+            if err != nil {
+                fmt.Printf("could not get functions")
+                return nil
+            }
+
+            var out types.Function
+            cdc.MustUnmarshalJSON(res, &out)
+            return cliCtx.PrintOutput(out)
         },
     }
 }

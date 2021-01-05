@@ -144,8 +144,11 @@ func handleMsgAddFunction(ctx sdk.Context, keeper Keeper, msg MsgAddFunction) (*
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 30 tables allowed")
         }
     }
-
-    keeper.AddFunction(ctx, appId, msg.FunctionName, msg.Parameter, msg.Body, msg.Owner)
+    //TODO Does it need to be checked that if the function has been added
+    err = keeper.AddFunction(ctx, appId, msg.FunctionName, msg.Parameter, msg.Body, msg.Owner)
+    if err != nil{
+        return nil, err
+    }
     return &sdk.Result{}, nil
 }
 

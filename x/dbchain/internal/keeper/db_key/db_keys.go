@@ -105,7 +105,12 @@ func GetColumnOptionsKey(appId uint, tableName string, fieldName string) string 
 //////////////////////
 
 func GetFunctionKey(appId uint, functionName string) string {
-    return fmt.Sprintf("%s:%d:%s:func:%s", KeyPrefixDb, appId, KeyPrefixMeta, functionName)
+    return fmt.Sprintf("%s:%d:%s:functionInfo:%s", KeyPrefixDb, appId, KeyPrefixMeta, functionName)
+}
+
+// to store name of all funcS
+func GetFunctionsKey(appId uint) string {
+    return fmt.Sprintf("%s:%d:%s:functions", KeyPrefixDb, appId, KeyPrefixMeta)
 }
 
 //////////////////

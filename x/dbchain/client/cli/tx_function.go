@@ -16,7 +16,7 @@ func GetCmdAddFunction(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use:   "add-function [appCode] [name] [parameters] [code]",
         Short: "add a function",
-        Args:  cobra.ExactArgs(3),
+        Args:  cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             inBuf := bufio.NewReader(cmd.InOrStdin())

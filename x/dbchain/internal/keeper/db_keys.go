@@ -50,6 +50,7 @@ var (
     //////////////////////
 
     getFunctionKey = dbk.GetFunctionKey
+    getFunctionsKey = dbk.GetFunctionsKey
     
     //////////////////
     //              //
