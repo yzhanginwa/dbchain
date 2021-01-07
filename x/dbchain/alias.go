@@ -26,6 +26,7 @@ type (
     MsgSetDatabasePermission = types.MsgSetDatabasePermission
     MsgModifyDatabaseUser    = types.MsgModifyDatabaseUser
     MsgAddFunction  = types.MsgAddFunction
+    MsgCallFunction = types.MsgCallFunction
     MsgCreateTable  = types.MsgCreateTable
     MsgDropTable    = types.MsgDropTable
     MsgAddColumn    = types.MsgAddColumn

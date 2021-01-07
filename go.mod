@@ -16,4 +16,5 @@ require (
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/tendermint v0.33.7
 	github.com/tendermint/tm-db v0.5.1
+	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da
 )

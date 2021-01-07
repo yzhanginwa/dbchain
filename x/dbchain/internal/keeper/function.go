@@ -1,9 +1,10 @@
 package keeper
 
 import (
-    "errors"
     "encoding/json"
+    "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
+    lua "github.com/yuin/gopher-lua"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
@@ -38,6 +39,41 @@ func (k Keeper) AddFunction(ctx sdk.Context, appId uint, functionName, parameter
         functions = append(functions,function.Name)
     }
     return  store.Set([]byte(getFunctionsKey(appId)),k.cdc.MustMarshalBinaryBare(functions))
+}
+
+func (k Keeper) CallFunction(ctx sdk.Context, appId uint, owner sdk.AccAddress, FunctionName, Argument string)error{
+    functionInfo := k.GetFunctionInfo(ctx, appId, FunctionName)
+    var arguments = make([]string,0)
+    if err := json.Unmarshal([]byte(Argument), &arguments); err != nil {
+        return errors.New("argument should be json encoded array!")
+    }
+    //get lua script and params
+    body := functionInfo.Body
+    params := make([]lua.LValue,0)
+    for _,v := range arguments{
+        params = append(params, lua.LString(v))
+    }
+    //point : get go function
+    goExportFunc := getGoExportFunc(ctx, appId, k, owner)
+    L := lua.NewState()
+    defer L.Close()
+    //register go function
+    for name, fn := range goExportFunc{
+        L.SetGlobal(name, L.NewFunction(fn))
+    }
+    //compile lua script
+    if err := L.DoString(body); err != nil{
+        return err
+    }
+    //call lua script
+    if err := L.CallByParam(lua.P{
+        Fn:      L.GetGlobal(FunctionName),
+        NRet:    0,       //脚本返回参数个数，暂时不用返回参数
+        Protect: true,    //这里设置为ture表示当执行脚本出现panic时，以error返回
+    }, params...); err != nil{
+        return err
+    }
+    return nil
 }
 
 func (k Keeper) GetFunctions(ctx sdk.Context, appId uint) []string {

@@ -32,6 +32,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgModifyDatabaseUser(ctx, keeper, msg)
         case MsgAddFunction:
             return handleMsgAddFunction(ctx, keeper, msg)
+        case MsgCallFunction:
+            return handleMsgCallFunction(ctx, keeper, msg)
         case MsgCreateTable:
             return handleMsgCreateTable(ctx, keeper, msg)
         case MsgDropTable:
@@ -152,6 +154,22 @@ func handleMsgAddFunction(ctx sdk.Context, keeper Keeper, msg MsgAddFunction) (*
     return &sdk.Result{}, nil
 }
 
+func handleMsgCallFunction(ctx sdk.Context, keeper Keeper, msg MsgCallFunction) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return nil, err
+    }
+
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
+    }
+
+    err = keeper.CallFunction(ctx, appId, msg.Owner, msg.FunctionName, msg.Argument)
+    if err != nil{
+        return nil, err
+    }
+    return &sdk.Result{}, nil
+}
 
 // Handle a message to create table 
 func handleMsgCreateTable(ctx sdk.Context, keeper Keeper, msg MsgCreateTable) (*sdk.Result, error) {
