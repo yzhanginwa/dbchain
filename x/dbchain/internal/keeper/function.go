@@ -55,7 +55,9 @@ func (k Keeper) CallFunction(ctx sdk.Context, appId uint, owner sdk.AccAddress, 
     }
     //point : get go function
     goExportFunc := getGoExportFunc(ctx, appId, k, owner)
-    L := lua.NewState()
+    L := lua.NewState(lua.Options{
+        SkipOpenLibs : true, //set SkipOpenLibs true to prevent lua open libs,because this libs can call os function and operate files
+    })
     defer L.Close()
     //register go function
     for name, fn := range goExportFunc{

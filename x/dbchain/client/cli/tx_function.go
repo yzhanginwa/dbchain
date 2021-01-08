@@ -3,6 +3,7 @@ package cli
 import (
     "bufio"
     "github.com/spf13/cobra"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/tailor_lua"
 
     "github.com/cosmos/cosmos-sdk/client/context"
     "github.com/cosmos/cosmos-sdk/codec"
@@ -26,8 +27,14 @@ func GetCmdAddFunction(cdc *codec.Codec) *cobra.Command {
             funcName  := args[1]
             parameter := args[2]
             body      := args[3]
+
+            err := tailor_lua.CompileAndCheckLuaScript(body)
+            if err != nil{
+                return err
+            }
+
             msg := types.NewMsgAddFunction(cliCtx.GetFromAddress(), appCode, funcName, parameter, body)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return err
             }
