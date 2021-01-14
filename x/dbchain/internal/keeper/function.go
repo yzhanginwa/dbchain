@@ -70,12 +70,21 @@ func (k Keeper) CallFunction(ctx sdk.Context, appId uint, owner sdk.AccAddress, 
     //call lua script
     if err := L.CallByParam(lua.P{
         Fn:      L.GetGlobal(FunctionName),
-        NRet:    0,       //脚本返回参数个数，暂时不用返回参数
+        NRet:    1,       //脚本返回参数个数
         Protect: true,    //这里设置为ture表示当执行脚本出现panic时，以error返回
     }, params...); err != nil{
         return err
     }
-    return nil
+    //handle return
+    if k := L.GetTop(); k == 1{
+        strErr := L.Get(1).String()
+        if strErr != "" && strErr != "nil"{
+            return errors.New(strErr)
+        }
+        return nil
+    }
+
+    return errors.New("lua return err")
 }
 
 func (k Keeper) GetFunctions(ctx sdk.Context, appId uint) []string {

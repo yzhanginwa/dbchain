@@ -371,7 +371,7 @@ func GetCmdFindIdsBy(queryRoute string, cdc *codec.Codec) *cobra.Command {
             value      := args[4]
 
             // args are accessCode, appCode, tableName, fieldName, and value respectively
-            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find_by/%s/%s/%s", queryRoute, accessCode, appCode, tableName, fieldName, value), nil)
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find_by/%s/%s/%s/%s/%s", queryRoute, accessCode, appCode, tableName, fieldName, value), nil)
             if err != nil {
                 fmt.Printf("could not find ids")
                 return nil

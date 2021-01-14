@@ -14,6 +14,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	lua "github.com/yuin/gopher-lua"
+	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 	"strings"
 )
 
@@ -22,10 +23,65 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 		"LCT": func(L *lua.LState) int {
 			tableName := L.ToString(1)
 			sFieldName := L.ToString(2)
-			fieldNames := strings.Split(sFieldName,",")
+			fieldNames := strings.Split(sFieldName, ",")
 			keeper.CreateTable(ctx, appId, owner, tableName, fieldNames)
+			L.Push(lua.LString(""))
+			return 1
+		},
+
+		"Insert": func(L *lua.LState) int {
+			ParamsNum := L.GetTop()
+			if ParamsNum == 2 || ParamsNum == 4 { //Normal inserttab,fields
+				tableName := L.ToString(1)
+				sFieldAndValues := L.ToString(2)
+				fieldAndValues, err := getFieldValueMap(ctx, appId, keeper, tableName, sFieldAndValues)
+				if err != nil {
+					L.Push(lua.LNumber(-1))
+					L.Push(lua.LString(err.Error()))
+					return 2
+				}
+				if ParamsNum == 4 { //when number of params is 4,it mean there is a foreign
+					fTableName := L.ToString(3)
+					fId := L.ToString(4)
+					fKey := strings.ToLower(fTableName + "_id")
+					fieldAndValues[fKey] = fId
+				}
+				Id, err := keeper.Insert(ctx, appId, tableName, fieldAndValues, owner)
+				if err != nil {
+					L.Push(lua.LNumber(-1))
+					L.Push(lua.LString(err.Error()))
+					return 2
+				}
+				L.Push(lua.LNumber(Id))
+				L.Push(lua.LString(""))
+			} else {
+				L.Push(lua.LNumber(-1))
+				L.Push(lua.LString("num of param wrong"))
+			}
+			return 2
+		},
+		"GetForeignkeyCreator" : func(L *lua.LState) int {
+
 			return 1
 		},
 		//add other functions which need to be exported
 	}
+}
+
+func getFieldValueMap(ctx sdk.Context, appId uint, keep Keeper, tableName string, s string) (types.RowFields, error) {
+	tbFields, err := keep.getTableFields(ctx, appId, tableName)
+	if err != nil {
+		return nil, err
+	}
+
+	values := strings.Split(s, ",")
+	rowFields := make(types.RowFields)
+	for i := 3; i < len(tbFields); i++ {
+		if i < len(values)+3 {
+			field := tbFields[i]
+			rowFields[field] = values[i-3]
+		}
+	}
+
+	return rowFields, nil
 }
