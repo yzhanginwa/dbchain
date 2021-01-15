@@ -2,6 +2,7 @@ package keeper
 
 import (
     "fmt"
+    lua "github.com/yuin/gopher-lua"
     "strconv"
     "strings"
     "encoding/json"
@@ -458,7 +459,11 @@ func queryCanAddColumnOption(ctx sdk.Context, path []string, req abci.RequestQue
     }
 
     result := true
-    _, err = keeper.PreInsertCheck(ctx, appId, tableName, rowFields, addr)
+     L := lua.NewState(lua.Options{
+         SkipOpenLibs : true,
+     })
+     defer L.Close()
+    _, err = keeper.PreInsertCheck(ctx, appId, tableName, rowFields, addr, L)
     if err != nil {
         result = false
     }

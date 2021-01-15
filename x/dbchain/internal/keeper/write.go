@@ -5,6 +5,7 @@ import (
     "fmt"
     sdk "github.com/cosmos/cosmos-sdk/types"
     shell "github.com/ipfs/go-ipfs-api"
+    lua "github.com/yuin/gopher-lua"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/other"
     ss "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/eval"
@@ -16,7 +17,11 @@ import (
 
 
 func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) (uint, error){
-    id, err := k.PreInsertCheck(ctx, appId, tableName, fields, owner)
+    L := lua.NewState(lua.Options{
+        SkipOpenLibs : true,
+    })
+    defer L.Close()
+    id, err := k.PreInsertCheck(ctx, appId, tableName, fields, owner, L)
     if err != nil {
         return id, err
     }
@@ -44,7 +49,7 @@ func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields typ
         return id, err
     }
 
-    k.applyTrigger(ctx, appId, tableName, fields, owner)
+    k.applyTrigger(ctx, appId, tableName, fields, owner, L)
     return id, nil
 }
 
@@ -136,7 +141,7 @@ func (k Keeper) Freeze(ctx sdk.Context, appId uint, tableName string, id uint, o
 //              //
 //////////////////
 
-func (k Keeper) PreInsertCheck(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) (uint, error) {
+func (k Keeper) PreInsertCheck(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress, L *lua.LState) (uint, error) {
     if !k.IsDatabaseUser(ctx, appId, owner) {
         return 0, errors.New(fmt.Sprintf("Do not have user permission on database %d", appId))
     }
@@ -144,7 +149,7 @@ func (k Keeper) PreInsertCheck(ctx sdk.Context, appId uint, tableName string, fi
         return 0, errors.New(fmt.Sprintf("Do not have permission inserting table %s", tableName))
     }
 
-    if(!k.validateInsertion(ctx, appId, tableName, fields, owner)) {
+    if(!k.validateInsertion(ctx, appId, tableName, fields, owner, L)) {
         return 0, errors.New(fmt.Sprintf("Failed validation when inserting table %s", tableName))
     }
 
@@ -219,14 +224,14 @@ func (k Keeper) preprocessPayment(ctx sdk.Context, appId uint, tableName string,
     return true
 }
 
-func (k Keeper) validateInsertion(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {
+func (k Keeper) validateInsertion(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress, L *lua.LState) bool {
     if ok := k.validateInsertionWithTableOptions(ctx, appId, tableName, fields, owner); !ok {
         return false
     }
     if ok := k.validateInsertionWithFieldOptions(ctx, appId, tableName, fields, owner); !ok {
         return false
     }
-    if ok := k.validateInsertionWithInsertFilter(ctx, appId, tableName, fields, owner); !ok {
+    if ok := k.validateInsertionWithInsertFilter(ctx, appId, tableName, fields, owner, L); !ok {
         return false
     }
     return true
@@ -319,7 +324,7 @@ func (k Keeper) validateInsertionWithFieldOptions(ctx sdk.Context, appId uint, t
     return true
 }
 
-func (k Keeper) applyTrigger(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) {
+func (k Keeper) applyTrigger(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress, L *lua.LState) {
     table, err := k.GetTable(ctx, appId, tableName)
     if err != nil {
         return
@@ -330,10 +335,10 @@ func (k Keeper) applyTrigger(ctx sdk.Context, appId uint, tableName string, fiel
         return
     }
 
-    k.runFilterOrTrigger(ctx, appId, tableName, fields, owner, ss.TRIGGER, trigger)
+    k.runLuaFilter(ctx, appId, tableName, fields, owner, trigger, L)
 }
 
-func (k Keeper) validateInsertionWithInsertFilter(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {
+func (k Keeper) validateInsertionWithInsertFilter(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress, L *lua.LState) bool {
     table, err := k.GetTable(ctx, appId, tableName)
     if err != nil {
         return false
@@ -344,10 +349,67 @@ func (k Keeper) validateInsertionWithInsertFilter(ctx sdk.Context, appId uint, t
         return true
     }
 
-    result := k.runFilterOrTrigger(ctx, appId, tableName, fields, owner, ss.FILTER, filter)
+    result := k.runLuaFilter(ctx, appId, tableName, fields, owner, filter, L)
     return result
 }
 
+func (k Keeper) runLuaFilter(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress, script string, L *lua.LState) bool {
+    if !k.registerThisData(ctx, appId, tableName, fields, owner, L) { return false }
+
+    //point : get go function
+    goExportFunc := getGoExportFunc(ctx, appId, k, owner)
+    //register go function
+    for name, fn := range goExportFunc{
+        L.SetGlobal(name, L.NewFunction(fn))
+    }
+    //compile lua script
+    if err := L.DoString(script); err != nil{
+        return false
+    }
+
+    //handle return
+    strSuccess := L.Get(1).String()
+    if strSuccess == "true" {
+        return true
+    }
+    return false
+}
+
+func (k Keeper) registerThisData(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress, L *lua.LState) bool{
+    this := L.NewTable()
+    tbFields, err := k.getTableFields(ctx, appId, tableName)
+    if err != nil { return false }
+    for _, field := range tbFields {
+        v , ok := fields[field]
+        if ok {
+            if !strings.HasSuffix(field, "_id"){
+                this.RawSetString(field, lua.LString(v))
+            }
+        } else if field == "created_by"{
+            this.RawSetString(field, lua.LString(owner.String()))
+        } else {
+            this.RawSetString(field, lua.LString("nil"))
+        }
+
+        if strings.HasSuffix(field, "_id") && ok {// has parent table and the value is not null
+            foreignKey := L.NewTable()
+            parent := L.NewTable()
+            parentTableName := field[:len(field)-3]
+
+            id , err := strconv.ParseUint(v, 10, 64)
+            if err != nil { return false }
+            RowFields, err := k.DoFind(ctx, appId, parentTableName, uint(id))
+            if err != nil { return false }
+            for key , value  := range RowFields {
+                parent.RawSetString(key, lua.LString(value))
+            }
+            foreignKey.RawSetString("parent", parent)
+            this.RawSetString(field, foreignKey)
+        }
+    }
+    L.SetGlobal("this", this) //register this table
+    return true
+}
 func (k Keeper) runFilterOrTrigger(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress, scriptType ss.ScriptType, script string) bool {
     //TODO: create a database associated cache mapping of table script to syntax tree
     //so that we don't have to parse the script for each insertion

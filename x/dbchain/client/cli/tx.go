@@ -4,6 +4,7 @@ import (
     "bufio"
     "fmt"
     "errors"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
     "strings"
     "strconv"
     "encoding/json"
@@ -482,6 +483,17 @@ func GetCmdAddInsertFilter(cdc *codec.Codec) *cobra.Command {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
 
+            //preProcess filter
+            p := super_script.NewPreprocessor(strings.NewReader(filter))
+            p.Process()
+            if p.Success {
+                filter = p.Reconstruct()
+                msg.Filter = filter
+            } else {
+                return errors.New("syntax error")
+            }
+
+
             return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
         },
     }
@@ -535,6 +547,16 @@ func GetCmdAddTrigger(cdc *codec.Codec) *cobra.Command {
             err := msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
+            }
+
+            //preProcess filter
+            p := super_script.NewPreprocessor(strings.NewReader(trigger))
+            p.Process()
+            if p.Success {
+                trigger = p.Reconstruct()
+                msg.Trigger = trigger
+            } else {
+                return errors.New("syntax error")
             }
 
             return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})

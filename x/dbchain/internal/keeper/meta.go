@@ -3,12 +3,12 @@ package keeper
 import (
     "fmt"
     "errors"
+    "github.com/yuin/gopher-lua/parse"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
     "strings"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
-    ss "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
 )
 
 /////////////////////////////
@@ -288,7 +288,7 @@ func (k Keeper) ModifyOption(ctx sdk.Context, appId uint, owner sdk.AccAddress, 
 }
 
 func (k Keeper) AddInsertFilter(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, filter string) bool {
-    if !validateInsertFilterSyntax(k, ctx, appId, tableName, filter) {
+    if !validateScriptSyntax(k, ctx, appId, tableName, filter) {
         return false
     } 
 
@@ -336,7 +336,7 @@ func (k Keeper) GetInsertFilter(ctx sdk.Context, appId uint, tableName string) s
 }
 
 func (k Keeper) AddTrigger(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, trigger string) bool {
-    if !validateTriggerSyntax(k, ctx, appId, tableName, trigger) {
+    if !validateScriptSyntax(k, ctx, appId, tableName, trigger) {
         return false
     }
 
@@ -623,24 +623,8 @@ func isColumnOptionIncluded(options []string, option string) bool {
     return false
 }
 
-func validateInsertFilterSyntax(k Keeper, ctx sdk.Context, appId uint, tableName string, filter string) bool {
-    fn1 := getScriptValidationCallbackOne(k, ctx, appId, tableName)
-    fn2 := getScriptValidationCallbackTwo(k, ctx, appId, tableName)
-
-    parser := ss.NewParser(strings.NewReader(filter), fn1, fn2)
-    err := parser.ParseFilter()
-    if err != nil {
-        return false
-    }
-    return true
-}
-
-func validateTriggerSyntax(k Keeper, ctx sdk.Context, appId uint, tableName string, trigger string) bool {
-    fn1 := getScriptValidationCallbackOne(k, ctx, appId, tableName)
-    fn2 := getScriptValidationCallbackTwo(k, ctx, appId, tableName)
-
-    parser := ss.NewParser(strings.NewReader(trigger), fn1, fn2)
-    err := parser.ParseTrigger()
+func validateScriptSyntax(k Keeper, ctx sdk.Context, appId uint, tableName string, filter string) bool {
+    _,err := parse.Parse(strings.NewReader(filter),"<string>")
     if err != nil {
         return false
     }

@@ -31,6 +31,7 @@ const (
     IN      // in
     WHERE   // where
     IF      // if
+    ELSEIF  //elseif
     ELSE    // else
     INSERT  // insert
     RETURN  // return
@@ -46,4 +47,5 @@ var tokenDisplay = []string{
     "this", "parent", "table",
     "=" , "==", "in",
     "where",
+    "if", "elseif", "else", "insert", "return", "true", "false", "exist",
 }
