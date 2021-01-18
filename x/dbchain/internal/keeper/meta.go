@@ -308,6 +308,8 @@ func (k Keeper) AddInsertFilter(ctx sdk.Context, appId uint, owner sdk.AccAddres
     if err != nil{
         return false
     }
+    //void cache appTable
+    cache.VoidTable(appId,table.Name)
     return true
 }
 
@@ -323,6 +325,8 @@ func (k Keeper) DropInsertFilter(ctx sdk.Context, appId uint, owner sdk.AccAddre
     if err != nil{
         return false
     }
+    //void cache appTable
+    cache.VoidTable(appId,table.Name)
     return true
 }
 
@@ -356,6 +360,8 @@ func (k Keeper) AddTrigger(ctx sdk.Context, appId uint, owner sdk.AccAddress, ta
     if err != nil{
         return false
     }
+    //void cache appTable
+    cache.VoidTable(appId,table.Name)
     return true
 }
 
@@ -371,6 +377,8 @@ func (k Keeper) DropTrigger(ctx sdk.Context, appId uint, owner sdk.AccAddress, t
     if err != nil{
         return false
     }
+    //void cache appTable
+    cache.VoidTable(appId,table.Name)
     return true
 }
 
@@ -386,6 +394,8 @@ func (k Keeper) SetTableMemo(ctx sdk.Context, appId uint, tableName, memo string
     if err != nil{
         return false
     }
+    //void cache appTable
+    cache.VoidTable(appId,table.Name)
     return true
 }
 
@@ -512,6 +522,8 @@ func (k Keeper) SetColumnMemo(ctx sdk.Context, appId uint, owner sdk.AccAddress,
             if err != nil{
                 return false
             }
+            //void cache appTable
+            cache.VoidTable(appId,table.Name)
             return true
         }
     }
