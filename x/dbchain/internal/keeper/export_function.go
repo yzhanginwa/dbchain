@@ -44,7 +44,7 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 					for i := 3; i < ParamsNum; i+=2{
 						fTableName := L.ToString(i)
 						fId := L.ToString(i+1)
-						fKey := strings.ToLower(fTableName + "_id")
+						fKey := strings.ToLower(fTableName)
 						fieldAndValues[fKey] = fId
 					}
 
@@ -62,6 +62,49 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 				L.Push(lua.LString("num of param wrong"))
 			}
 			return 2
+		},
+		"MultInsert": func(L *lua.LState) int{ //往同一张表插入多条数据
+			ParamsNum := L.GetTop()
+			if ParamsNum < 2 {
+				L.Push(lua.LNumber(-1))
+				L.Push(lua.LString("num of param wrong"))
+				return 2
+			}
+			tableName := L.ToString(1)
+			count := 0
+			for i := 2 ; i <= ParamsNum; i++{
+				sFieldAndValues := L.ToString(i)
+				fieldAndValues, err := getFieldValueMap(ctx, appId, keeper, tableName, sFieldAndValues)
+				if err != nil {
+					L.Push(lua.LNumber(count))
+					L.Push(lua.LString(err.Error()))
+					return 2
+				}
+				_, err = keeper.Insert(ctx, appId, tableName, fieldAndValues, owner)
+				if err != nil {
+					L.Push(lua.LNumber(count))
+					L.Push(lua.LString(err.Error()))
+					return 2
+				}
+				count++
+			}
+			L.Push(lua.LNumber(count))
+			L.Push(lua.LString(""))
+			return 2
+		},
+		"MultFreeze" : func(L *lua.LState) int {
+			ParamsNum := L.GetTop()
+			if ParamsNum < 2 {
+				L.Push(lua.LString("num of param wrong"))
+				return 1
+			}
+			tableName := L.ToString(1)
+			for i := 2 ; i <= ParamsNum; i++ {
+				id := L.ToInt(i)
+				keeper.Freeze(ctx, appId, tableName, uint(id), owner)
+			}
+			L.Push(lua.LString(""))
+			return 1
 		},
 		"fieldIn" : func(L *lua.LState) int {
 			ParamsNum := L.GetTop()
@@ -133,15 +176,6 @@ func getFieldValueMap(ctx sdk.Context, appId uint, keep Keeper, tableName string
 	表的前三个字段固定 由系统创建 id create_by create_at,如果有外键，外键为第一个字段，否则会添加数据出错
 	*/
 	tbFields = tbFields[3:]
-	i := 0
-	for ; i < len(tbFields); i++{
-		field := tbFields[i]
-		if !strings.HasSuffix(field, "_id"){
-			break
-		}
-	}
-	tbFields = tbFields[i:]
-
 	for i := 0; i < len(tbFields); i++ {
 		if i < len(values) {
 			field := tbFields[i]

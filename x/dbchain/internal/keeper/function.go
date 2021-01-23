@@ -36,7 +36,16 @@ func (k Keeper) AddFunction(ctx sdk.Context, appId uint, functionName, parameter
         functions = append(functions,function.Name)
     }else{
         k.cdc.MustUnmarshalBinaryBare(bz,&functions)
-        functions = append(functions,function.Name)
+        i := 0
+        for ; i < len(functions);i++{
+            if functions[i] == function.Name{
+                break
+            }
+        }
+        if i >= len(functions) {
+            functions = append(functions,function.Name)
+        }
+
     }
     return  store.Set([]byte(getFunctionsKey(appId)),k.cdc.MustMarshalBinaryBare(functions))
 }

@@ -19,10 +19,10 @@ func CompileAndCheckLuaScript(luaScript string) error {
 	if len(chunk) != 1 {
 		return errors.New("Only one function can be defined ")
 	}
-	if st, ok := chunk[0].(*ast.FuncDefStmt); !ok {
+	if _, ok := chunk[0].(*ast.FuncDefStmt); !ok {
 		return errors.New("Only starting with defined function is supported ")
 	} else {
-		hasLoop, err := CheckLuaLoop(st.Func.Stmts)
+		hasLoop, err := CheckLuaLoop(chunk)
 		if err != nil {
 			return err
 		}
