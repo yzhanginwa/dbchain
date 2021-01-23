@@ -2,6 +2,7 @@ package rest
 
 import (
     "fmt"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "net/http"
     "github.com/mr-tron/base58"
     "github.com/cosmos/cosmos-sdk/client/context"
@@ -289,6 +290,22 @@ func showGroupMemo(cliCtx context.CLIContext, storeName string) http.HandlerFunc
             return
         }
         rest.PostProcessResponse(w, cliCtx, res)
+    }
+}
+
+func appNewOneCoin(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        vars := mux.Vars(r)
+        accessCode      := vars["accessToken"]
+
+        addr, err := utils.VerifyAccessCode(accessCode)
+        if err != nil {
+            rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+            return
+        }
+        saveToAuthTable(addr, "app", newMobile("***********"))
+        rest.PostProcessResponse(w, cliCtx, "Success")
+        return
     }
 }
 
