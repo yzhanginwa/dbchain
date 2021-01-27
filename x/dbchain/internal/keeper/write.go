@@ -37,7 +37,8 @@ func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields typ
     // to set the 2 special fields
     fields["id"] = strconv.Itoa(int(id))
     fields["created_by"] = owner.String()
-    fields["created_at"] = other.GetCurrentBlockTime().String()
+    //测试改为时间戳
+    fields["created_at"] = fmt.Sprintf("%d",other.GetCurrentBlockTime().Unix())
 
     id, err = k.Write(ctx, appId, tableName, id, fields, owner)
     if err != nil {
