@@ -15,9 +15,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	lua "github.com/yuin/gopher-lua"
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+	"strconv"
 	"strings"
 )
 
+const tablePrefix = "tableName__"
 func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAddress) map[string]lua.LGFunction {
 	return map[string]lua.LGFunction{
 		"LCT": func(L *lua.LState) int {
@@ -70,10 +72,19 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 				L.Push(lua.LString("num of param wrong"))
 				return 2
 			}
+			//By default, the first parameter is the table name
 			tableName := L.ToString(1)
+			if strings.HasPrefix(tableName,tablePrefix) {
+				tableName = strings.TrimPrefix(tableName,tablePrefix)
+			}
 			count := 0
 			for i := 2 ; i <= ParamsNum; i++{
 				sFieldAndValues := L.ToString(i)
+				//change table
+				if strings.HasPrefix(sFieldAndValues,tablePrefix) {
+					tableName = strings.TrimPrefix(sFieldAndValues, tablePrefix)
+					continue
+				}
 				fieldAndValues, err := getFieldValueMap(ctx, appId, keeper, tableName, sFieldAndValues)
 				if err != nil {
 					L.Push(lua.LNumber(count))
@@ -99,8 +110,20 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 				return 1
 			}
 			tableName := L.ToString(1)
+			//By default, the first parameter is the table name
+			if strings.HasPrefix(tableName,tablePrefix) {
+				tableName = strings.TrimPrefix(tableName,tablePrefix)
+			}
 			for i := 2 ; i <= ParamsNum; i++ {
-				id := L.ToInt(i)
+				isTable := L.ToString(i)
+				if strings.HasPrefix(isTable,tablePrefix) {
+					tableName = strings.TrimPrefix(isTable,tablePrefix)
+					continue
+				}
+				id, err  := strconv.Atoi(isTable)
+				if err != nil {
+					continue
+				}
 				keeper.Freeze(ctx, appId, tableName, uint(id), owner)
 			}
 			L.Push(lua.LString(""))
@@ -164,6 +187,54 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 	}
 }
 
+func getGoExportQueryFunc(ctx sdk.Context, appId uint, keeper Keeper, addr sdk.AccAddress) map[string]lua.LGFunction {
+	return map[string]lua.LGFunction {
+		"findRow" : func(L *lua.LState) int {
+			tableName := L.ToString(1)
+			id := L.ToInt(2)
+			fields, err := keeper.Find(ctx, appId, tableName, uint(id), addr)
+			if err != nil {
+				setLuaFuncRes(L, createLuaTable(false), lua.LString(""))
+				return 2
+			}
+			fieldsTab := createLuaTable(fields)
+			setLuaFuncRes(L, fieldsTab, lua.LString(""))
+			return 2
+		},
+		"findRows" : func(L *lua.LState) int {
+			tableName := L.ToString(1)
+			ids := L.ToTable(2)
+			res := make([]types.RowFields, 0)
+			ids.ForEach(func(lId lua.LValue, val lua.LValue) {
+				id := val.(lua.LNumber)
+				fields, err := keeper.Find(ctx, appId, tableName, uint(id), addr)
+				if err != nil {
+					return
+				}
+				res = append(res, fields)
+			})
+			sliceFieldTab := createLuaTable(res)
+			setLuaFuncRes(L, sliceFieldTab, lua.LString(""))
+			return 2
+		},
+		"findIdsBy" : func(L *lua.LState) int {
+			tableName := L.ToString(1)
+			fieldName := L.ToString(2)
+			value := L.ToString(3)
+			ids := keeper.FindBy(ctx, appId, tableName, fieldName, []string{value}, addr)
+			idsTable := createLuaTable(ids)
+			setLuaFuncRes(L, idsTable,lua.LString(""))
+			return 2
+		},
+		"findAllIds" : func(L *lua.LState) int {
+			tableName := L.ToString(1)
+			ids := keeper.FindAll(ctx, appId, tableName, addr)
+			idsTable := createLuaTable(ids)
+			setLuaFuncRes(L, idsTable,lua.LString(""))
+			return 2
+		},
+	}
+}
 func getFieldValueMap(ctx sdk.Context, appId uint, keep Keeper, tableName string, s string) (types.RowFields, error) {
 	tbFields, err := keep.getTableFields(ctx, appId, tableName)
 	if err != nil {
@@ -184,4 +255,72 @@ func getFieldValueMap(ctx sdk.Context, appId uint, keep Keeper, tableName string
 	}
 
 	return rowFields, nil
+}
+
+func createLuaTable(src interface{}) *lua.LTable{
+	L := lua.NewState()
+	defer L.Close()
+	tb := L.NewTable()
+	switch src.(type) {
+	case types.RowFields:
+		ns := src.(types.RowFields)
+		for key, val := range ns {
+			tb.RawSetString(key,lua.LString(val))
+		}
+	case []uint:
+		ns := src.([]uint)
+		for id, val := range ns {
+			tb.RawSetInt(id+1,lua.LNumber(val))
+		}
+	case []types.RowFields:
+		ns := src.([]types.RowFields)
+		for index, m := range ns {
+			subTb := L.NewTable()
+			for key, val := range m {
+				subTb.RawSetString(key,lua.LString(val))
+			}
+			tb.RawSetInt(index+1,subTb)
+		}
+	default:
+		return tb
+	}
+	return tb
+}
+
+func convertLuaTableToGo(table *lua.LTable) interface{}{
+	resMap := make(map[string]string)
+	resSlice := make([]uint, 0)
+	resSliceMap := make([]map[string]string, 0)
+	table.ForEach(func(key lua.LValue, val lua.LValue) {
+		nKey,ok  := key.(lua.LString)
+		if ok { //it means the format of this table is map[string]string
+			nVal := val.(lua.LString)
+			resMap[nKey.String()] = nVal.String()
+		} else  {
+			nVal, ok  := val.(lua.LNumber)
+			if ok { //map[int]int
+				resSlice = append(resSlice, uint(nVal))
+			} else { //[]map[string]string
+				temp := make(map[string]string)
+				tVal := val.(*lua.LTable)
+				tVal.ForEach(func(k lua.LValue, v lua.LValue) {
+					temp[k.String()] = v.String()
+				})
+				resSliceMap = append(resSliceMap, temp)
+			}
+
+		}
+	})
+	if len(resMap) > 0 {
+		return resMap
+	} else if len(resSlice) > 0{
+		return resSlice
+	} else {
+		return resSliceMap
+	}
+}
+
+func setLuaFuncRes(L *lua.LState, value, err lua.LValue){
+	L.Push(value)
+	L.Push(err)
 }

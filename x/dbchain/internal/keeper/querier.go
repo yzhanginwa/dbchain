@@ -41,6 +41,9 @@ const (
     QueryExportDB = "export_database"
     QueryFunctions = "functions"
     QueryFunctionInfo = "functionInfo"
+    QueryCustomQueriers  = "customQueriers"
+    QueryCustomQuerierInfo = "customQuerierInfo"
+    QueryCallCustomQuerier = "callCustomQuerier"
 )
 
 
@@ -104,6 +107,12 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryFunctions(ctx, path[1:], req, keeper)
         case QueryFunctionInfo:
             return queryFunctionsInfo(ctx, path[1:], req, keeper)
+        case QueryCustomQueriers:
+            return queryCustomQueriers(ctx, path[1:], req, keeper)
+        case QueryCustomQuerierInfo:
+            return queryCustomQuerierInfo(ctx, path[1:], req, keeper)
+        case QueryCallCustomQuerier:
+            return queryCallCustomQuerier(ctx, path[1:], req, keeper)
         default:
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown dbchain query endpoint")
         }
@@ -768,7 +777,7 @@ func queryFunctions(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    functions := keeper.GetFunctions(ctx, appId)
+    functions := keeper.GetFunctions(ctx, appId, 0)
     res, err := codec.MarshalJSONIndent(keeper.cdc, functions)
     if err != nil {
         panic("could not marshal result to JSON")
@@ -790,7 +799,7 @@ func queryFunctionsInfo(ctx sdk.Context, path []string, req abci.RequestQuery, k
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    functionInfo := keeper.GetFunctionInfo(ctx, appId, path[2])
+    functionInfo := keeper.GetFunctionInfo(ctx, appId, path[2], 0)
     res, err := codec.MarshalJSONIndent(keeper.cdc, functionInfo)
     if err != nil {
         panic("could not marshal result to JSON")
@@ -798,6 +807,79 @@ func queryFunctionsInfo(ctx sdk.Context, path []string, req abci.RequestQuery, k
 
     return res, nil
 }
+
+
+/////////////////////
+//                 //
+// query queriers //
+//                 //
+/////////////////////
+
+func queryCustomQueriers(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    _, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    functions := keeper.GetFunctions(ctx, appId, 1)
+    res, err := codec.MarshalJSONIndent(keeper.cdc, functions)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+
+func queryCustomQuerierInfo(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    _, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    querierInfo := keeper.GetFunctionInfo(ctx, appId, path[2], 1)
+    res, err := codec.MarshalJSONIndent(keeper.cdc, querierInfo)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryCallCustomQuerier(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    addr, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    querierInfo := keeper.GetFunctionInfo(ctx, appId, path[2], 1)
+    res , err := keeper.DoCustomQuerier(ctx, appId, querierInfo, path[3], addr)
+    //res, err := codec.MarshalJSONIndent(keeper.cdc, functionInfo)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
 //////////////////
 //              //
 // helper funcs //

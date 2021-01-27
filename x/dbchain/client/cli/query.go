@@ -47,6 +47,9 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdExportDatabase(storeKey, cdc),
         GetCmdFunction(storeKey,cdc),
         GetCmdFunctionInfo(storeKey,cdc),
+        GetCmdCustomQuerier(storeKey,cdc),
+        GetCmdCustomQuerierInfo(storeKey,cdc),
+        GetCmdCallCustomQuerier(storeKey,cdc),
     )...)
     return dbchainQueryCmd
 }
@@ -491,7 +494,7 @@ func GetCmdFunctionInfo (queryRoute string, cdc *codec.Codec) *cobra.Command {
             functionName := args[2]
             res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/functionInfo/%s/%s/%s", queryRoute, accessCode, appCode, functionName), nil)
             if err != nil {
-                fmt.Printf("could not get functions")
+                fmt.Printf("could not get functionInfo")
                 return nil
             }
 
@@ -500,4 +503,99 @@ func GetCmdFunctionInfo (queryRoute string, cdc *codec.Codec) *cobra.Command {
             return cliCtx.PrintOutput(out)
         },
     }
+}
+
+func GetCmdCustomQuerier (queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "custom-queriers [accessCode] [appCode]",
+        Short: "query queriers",
+        Args: cobra.ExactArgs(2),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            accessCode := args[0]
+            appCode    := args[1]
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/customQueriers/%s/%s", queryRoute, accessCode, appCode), nil)
+            if err != nil {
+                fmt.Printf("could not get queriers")
+                return nil
+            }
+
+            var out []string
+            cdc.MustUnmarshalJSON(res, &out)
+            return cliCtx.PrintOutput(out)
+        },
+    }
+}
+
+func GetCmdCustomQuerierInfo (queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "custom-querier-info [accessCode] [appCode] [functionName]",
+        Short: "query querier specific information",
+        Args: cobra.ExactArgs(3),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            accessCode   := args[0]
+            appCode      := args[1]
+            functionName := args[2]
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/customQuerierInfo/%s/%s/%s", queryRoute, accessCode, appCode, functionName), nil)
+            if err != nil {
+                fmt.Printf("could not get querierInfo")
+                return nil
+            }
+
+            var out types.Function
+            cdc.MustUnmarshalJSON(res, &out)
+            return cliCtx.PrintOutput(out)
+        },
+    }
+}
+
+func GetCmdCallCustomQuerier (queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "call-custom-querier [accessCode] [appCode] [querierName] [params]",
+        Short: "call custom querier to query data",
+        Args: cobra.MinimumNArgs(4),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            accessCode   := args[0]
+            appCode      := args[1]
+            querierName  := args[2]
+            params       := args[3]
+
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/callCustomQuerier/%s/%s/%s/%s", queryRoute, accessCode, appCode, querierName, params), nil)
+            if err != nil {
+                fmt.Printf("could not get data")
+                return nil
+            }
+            //TODO What kind of format is needed here
+            var out = unmarshalCustomData(res, cdc)
+            if out == nil {
+                fmt.Println("invalid lua res data")
+                return nil
+            }
+            return cliCtx.PrintOutput(out)
+        },
+    }
+}
+
+func unmarshalCustomData(bz []byte, cdc *codec.Codec)interface{}{
+    res1 := make([]uint, 0)
+    err := cdc.UnmarshalJSON(bz, &res1)
+    if err == nil{
+        return res1
+    }
+    res2 := make(map[string]string)
+    err = cdc.UnmarshalJSON(bz, &res2)
+    if err == nil{
+        return res2
+    }
+    res3 := make([]map[string]string, 0)
+    err = cdc.UnmarshalJSON(bz, &res3)
+    if err == nil{
+        return res3
+    }
+    return nil
 }
