@@ -51,6 +51,15 @@ var (
 
     getFunctionKey = dbk.GetFunctionKey
     getFunctionsKey = dbk.GetFunctionsKey
+
+    //////////////////////
+    //                  //
+    // querier related  //
+    //                  //
+    //////////////////////
+
+    getQuerierKey = dbk.GetQuerierKey
+    getQueriersKey = dbk.GetQueriersKey
     
     //////////////////
     //              //

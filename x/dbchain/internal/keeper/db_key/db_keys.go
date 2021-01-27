@@ -113,6 +113,21 @@ func GetFunctionsKey(appId uint) string {
     return fmt.Sprintf("%s:%d:%s:functions", KeyPrefixDb, appId, KeyPrefixMeta)
 }
 
+//////////////////////
+//                  //
+// Querier  related //
+//                  //
+//////////////////////
+
+func GetQuerierKey(appId uint, querierName string) string {
+    return fmt.Sprintf("%s:%d:%s:querierInfo:%s", KeyPrefixDb, appId, KeyPrefixMeta, querierName)
+}
+
+// to store name of all funcS
+func GetQueriersKey(appId uint) string {
+    return fmt.Sprintf("%s:%d:%s:queriers", KeyPrefixDb, appId, KeyPrefixMeta)
+}
+
 //////////////////
 //              //
 // data related //

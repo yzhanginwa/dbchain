@@ -67,3 +67,34 @@ func GetCmdCallFunction(cdc *codec.Codec) *cobra.Command {
         },
     }
 }
+
+func GetCmdAddCustomQuerier(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "add-custom-querier [appCode] [name] [parameters] [code]",
+        Short: "add a function",
+        Args:  cobra.ExactArgs(4),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode      := args[0]
+            querierName  := args[1]
+            parameter    := args[2]
+            body         := args[3]
+
+            err := tailor_lua.CompileAndCheckLuaScript(body)
+            if err != nil{
+                return err
+            }
+
+            msg := types.NewMsgAddCustomQuerier(cliCtx.GetFromAddress(), appCode, querierName, parameter, body)
+            err = msg.ValidateBasic()
+            if err != nil {
+                return err
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}

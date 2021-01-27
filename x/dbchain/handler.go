@@ -34,6 +34,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             return handleMsgAddFunction(ctx, keeper, msg)
         case MsgCallFunction:
             return handleMsgCallFunction(ctx, keeper, msg)
+        case MsgAddCustomQuerier:
+            return handleMsgAddCustomQuerier(ctx, keeper, msg)
         case MsgCreateTable:
             return handleMsgCreateTable(ctx, keeper, msg)
         case MsgDropTable:
@@ -147,7 +149,7 @@ func handleMsgAddFunction(ctx sdk.Context, keeper Keeper, msg MsgAddFunction) (*
         }
     }
     //TODO Does it need to be checked that if the function has been added
-    err = keeper.AddFunction(ctx, appId, msg.FunctionName, msg.Parameter, msg.Body, msg.Owner)
+    err = keeper.AddFunction(ctx, appId, msg.FunctionName, msg.Parameter, msg.Body, msg.Owner, 0)
     if err != nil{
         return nil, err
     }
@@ -160,11 +162,31 @@ func handleMsgCallFunction(ctx sdk.Context, keeper Keeper, msg MsgCallFunction) 
         return nil, err
     }
 
+    err = keeper.CallFunction(ctx, appId, msg.Owner, msg.FunctionName, msg.Argument)
+    if err != nil{
+        return nil, err
+    }
+    return &sdk.Result{}, nil
+}
+
+func handleMsgAddCustomQuerier(ctx sdk.Context, keeper Keeper, msg MsgAddCustomQuerier) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return nil, err
+    }
+
     if !isAdmin(ctx, keeper, appId, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
 
-    err = keeper.CallFunction(ctx, appId, msg.Owner, msg.FunctionName, msg.Argument)
+    if version.Name == CommunityEdition {
+        tables := keeper.GetTables(ctx, appId)
+        if len(tables) > 29 {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 30 tables allowed")
+        }
+    }
+    //TODO Does it need to be checked that if the function has been added
+    err = keeper.AddFunction(ctx, appId, msg.QuerierName, msg.Parameter, msg.Body, msg.Owner, 1)
     if err != nil{
         return nil, err
     }
