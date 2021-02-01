@@ -97,6 +97,8 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 			registerRoutesFn(rs)
 			rs.registerSwaggerUI()
 
+			// Start check verify code
+			go loopCheckVerfCode()
 			// Start the rest server and return error if one exists
 			err = rs.Start(
 				viper.GetString(FlagListenOracleAddr),
@@ -106,7 +108,6 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 				viper.GetBool(flags.FlagUnsafeCORS),
 				viper.GetInt64(FlagMaxBodyBytes),
 			)
-
 			return err
 		},
 	}

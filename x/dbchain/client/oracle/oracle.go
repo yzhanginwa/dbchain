@@ -23,6 +23,8 @@ import (
 type MobileVerfCode struct {
     Mobile string     `json:"mobile"`
     VerfCode string   `json:"verf_code"`
+    StartTime int64   `json:"start_time"`
+    InputTimes int    `json:"input_times"`
 }
 
 type Mobile struct {
@@ -182,6 +184,8 @@ func cacheMobileAndVerificationCode(strAddr string, mobile string, verificationC
     mobileVerfCode := MobileVerfCode {
         Mobile: mobile,
         VerfCode: verificationCode,
+        StartTime: time.Now().Unix(),
+        InputTimes: 0,
     }
 
     associationMap[strAddr] = mobileVerfCode
@@ -215,9 +219,18 @@ func sendVerificationCode(mobile string, verificationCode string) bool {
 
 func VerifyVerfCode(strAddr string , mobile string, verificationCode string) bool {
     if mobileCode, ok := associationMap[strAddr]; ok {
-        delete(associationMap, strAddr)
+        nt := time.Now().Unix()
+        //Valid in 5 minutes, only 5 times user can input
+        if nt - mobileCode.StartTime > 300 || mobileCode.InputTimes >= 5{
+            delete(associationMap, strAddr)
+            return false
+        }
         if mobileCode.Mobile == mobile && mobileCode.VerfCode == verificationCode {
+            delete(associationMap, strAddr)
             return true
+        } else {
+            mobileCode.InputTimes++
+            associationMap[strAddr] = mobileCode
         }
     }
     return false
@@ -387,4 +400,19 @@ func getIdNumber(addr sdk.AccAddress) (string, error) {
         return "", errors.New("Failed to unmarshal IdCard")
     }
     return result.IdNumber, nil
+}
+
+func loopCheckVerfCode(){
+    tk := time.NewTicker(5 * time.Minute)
+    for {
+        select {
+        case <-tk.C:
+            nowTime := time.Now().Unix()
+            for addr, mobileCode := range associationMap {
+                if nowTime - mobileCode.StartTime >= 300 {
+                    delete(associationMap, addr)
+                }
+            }
+        }
+    }
 }
