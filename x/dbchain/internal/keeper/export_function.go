@@ -19,7 +19,11 @@ import (
 	"strings"
 )
 
-const tablePrefix = "tableName__"
+const (
+	tablePrefix = "tableName__"
+	foreignPrefix = "foreignKeyName__"
+)
+
 func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAddress) map[string]lua.LGFunction {
 	return map[string]lua.LGFunction{
 		"LCT": func(L *lua.LState) int {
@@ -35,6 +39,9 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 			ParamsNum := L.GetTop()
 			if ParamsNum >= 2 && ParamsNum%2 == 0 { //Normal inserttab,fields
 				tableName := L.ToString(1)
+				if strings.HasPrefix(tableName, tablePrefix){
+					tableName = strings.TrimPrefix(tableName, tablePrefix)
+				}
 				sFieldAndValues := L.ToString(2)
 				fieldAndValues, err := getFieldValueMap(ctx, appId, keeper, tableName, sFieldAndValues)
 				if err != nil {
@@ -63,6 +70,57 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 				L.Push(lua.LNumber(-1))
 				L.Push(lua.LString("num of param wrong"))
 			}
+			return 2
+		},
+		//插入一条数据，取得ID，然后这个id作为关联值，往下一张表中插入多个值
+		"ForeignMultInsert" : func(L *lua.LState) int {
+			//至少4个参数，分别为 id,tab1，foreignKey1，val, tab2，foreignKey2,val2...
+			ParamsNum := L.GetTop()
+			if ParamsNum < 4 {
+				L.Push(lua.LNumber(-1))
+				L.Push(lua.LString("num of param wrong"))
+				return 2
+			}
+			foreignKeyId := L.ToString(1)
+			tableName := L.ToString(2)
+			if strings.HasPrefix(tableName, tablePrefix) {
+				tableName = strings.TrimPrefix(tableName, tablePrefix)
+			}
+			foreignKeyName := L.ToString(3)
+			if strings.HasPrefix(foreignKeyName, foreignPrefix) {
+				foreignKeyName = strings.TrimPrefix(foreignKeyName, foreignPrefix)
+			}
+			count := 0
+			for i := 4; i <= ParamsNum; i++ {
+				sFieldAndValues := L.ToString(i)
+				//change table
+				if strings.HasPrefix(sFieldAndValues, tablePrefix) {
+					tableName = strings.TrimPrefix(sFieldAndValues, tablePrefix)
+					continue
+				} else if strings.HasPrefix(sFieldAndValues,foreignPrefix) {
+					//change foreign key
+					foreignKeyName = strings.TrimPrefix(sFieldAndValues, foreignPrefix)
+					continue
+				}
+				//insert value
+				fieldAndValues, err := getFieldValueMap(ctx, appId, keeper, tableName, sFieldAndValues)
+				if err != nil {
+					L.Push(lua.LNumber(-1))
+					L.Push(lua.LString(err.Error()))
+					return 2
+				}
+				foreignKeyName = strings.ToLower(foreignKeyName)
+				fieldAndValues[foreignKeyName] = foreignKeyId
+				_, err = keeper.Insert(ctx, appId, tableName, fieldAndValues, owner)
+				if err != nil {
+					L.Push(lua.LNumber(-1))
+					L.Push(lua.LString(err.Error()))
+					return 2
+				}
+				count++
+			}
+			L.Push(lua.LNumber(count))
+			L.Push(lua.LString(""))
 			return 2
 		},
 		"MultInsert": func(L *lua.LState) int{ //往同一张表插入多条数据
@@ -125,6 +183,44 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 					continue
 				}
 				keeper.Freeze(ctx, appId, tableName, uint(id), owner)
+			}
+			L.Push(lua.LString(""))
+			return 1
+		},
+		//删除主表数据，同时删除从表数据
+		"RelationDelete" : func(L *lua.LState) int {
+			param := L.ToString(1)
+			params := strings.Split(param, ",")
+			if len(params) < 2 || len(params) %2 != 0 {
+				L.Push(lua.LString("param err"))
+				return 1
+			}
+			//删除主表
+			tableName := params[0]
+			if strings.HasPrefix(tableName,tablePrefix) {
+				tableName = strings.TrimPrefix(tableName,tablePrefix)
+			}
+			id, err := strconv.Atoi(params[1])
+			if err != nil{
+				L.Push(lua.LString("id err"))
+				return 1
+			}
+			keeper.Freeze(ctx, appId, tableName, uint(id), owner)
+			//删除从表
+			for i :=2; i < len(params); i += 2 {
+				fTableName := params[i]
+				if strings.HasPrefix(fTableName,tablePrefix) {
+					fTableName = strings.TrimPrefix(fTableName,tablePrefix)
+				}
+				fTableKey  := params[i+1]
+				if strings.HasPrefix(fTableKey,foreignPrefix) {
+					fTableKey = strings.TrimPrefix(fTableKey,foreignPrefix)
+				}
+
+				ids := keeper.FindBy(ctx, appId, fTableName, fTableKey, []string{params[1]}, owner)
+				for _, dId := range ids {
+					keeper.Freeze(ctx, appId, fTableName, dId, owner)
+				}
 			}
 			L.Push(lua.LString(""))
 			return 1
