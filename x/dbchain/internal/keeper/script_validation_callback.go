@@ -64,7 +64,7 @@ func getInsertCallback(k Keeper, ctx sdk.Context, appId uint, owner sdk.AccAddre
 
         value["id"] = strconv.Itoa(int(id))
         value["created_by"] = owner.String()
-        value["created_at"] = fmt.Sprintf("%d", other.GetCurrentBlockTime().Unix())
+        value["created_at"] = fmt.Sprintf("%d", other.GetCurrentBlockTime().UnixNano()/(1000*1000))
 
         k.Write(ctx, appId, tableName, id, value, owner)
     }
