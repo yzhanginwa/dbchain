@@ -2,6 +2,7 @@ package rest
 
 import (
     "fmt"
+    "github.com/yzhanginwa/dbchain/x/dbchain/client/rest/oracle"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "net/http"
     "github.com/mr-tron/base58"
@@ -339,7 +340,19 @@ func appNewOneCoin(cliCtx context.CLIContext, storeName string) http.HandlerFunc
             rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
             return
         }
-        saveToAuthTable(addr, "app", newMobile("***********"))
+
+        var msgs []oracle.UniversalMsg
+        accNum, _, err := oracle.GetAccountInfo(addr.String())
+        if err == nil && accNum == 0 {
+            msg, err := oracle.GetSendTokenMsg(addr)
+            if err != nil {
+                rest.PostProcessResponse(w, cliCtx, "Failed")
+                return
+            }
+            msgs = append(msgs, msg)
+            oracle.BuildTxsAndBroadcast(msgs)
+        }
+
         rest.PostProcessResponse(w, cliCtx, "Success")
         return
     }
