@@ -63,53 +63,22 @@ func (k Keeper) AddFunction(ctx sdk.Context, appId uint, functionName, parameter
         }
 
     }
+    //TODO is it necessary to distinguish querier from func
+    defer voidLuaHandle(appId)
     return  store.Set([]byte(functionsStoreKey),k.cdc.MustMarshalBinaryBare(functions))
 }
 
-func (k Keeper) CallFunction(ctx sdk.Context, appId uint, owner sdk.AccAddress, FunctionName, Argument string)error{
-    functionInfo := k.GetFunctionInfo(ctx, appId, FunctionName, 0)
+func (k Keeper) CallFunction(ctx sdk.Context, appId uint, owner sdk.AccAddress, FunctionName, Argument string) error {
     var arguments = make([]string,0)
     if err := json.Unmarshal([]byte(Argument), &arguments); err != nil {
         return errors.New("argument should be json encoded array!")
     }
     //get lua script and params
-    body := functionInfo.Body
     params := make([]lua.LValue,0)
     for _,v := range arguments{
         params = append(params, lua.LString(v))
     }
-    //point : get go function
-    goExportFunc := getGoExportFunc(ctx, appId, k, owner)
-    L := lua.NewState(lua.Options{
-        SkipOpenLibs : true, //set SkipOpenLibs true to prevent lua open libs,because this libs can call os function and operate files
-    })
-    defer L.Close()
-    //register go function
-    for name, fn := range goExportFunc{
-        L.SetGlobal(name, L.NewFunction(fn))
-    }
-    //compile lua script
-    if err := L.DoString(body); err != nil{
-        return err
-    }
-    //call lua script
-    if err := L.CallByParam(lua.P{
-        Fn:      L.GetGlobal(FunctionName),
-        NRet:    1,       //脚本返回参数个数
-        Protect: true,    //这里设置为ture表示当执行脚本出现panic时，以error返回
-    }, params...); err != nil{
-        return err
-    }
-    //handle return
-    if k := L.GetTop(); k == 1{
-        strErr := L.Get(1).String()
-        if strErr != "" && strErr != "nil"{
-            return errors.New(strErr)
-        }
-        return nil
-    }
-
-    return errors.New("lua return err")
+    return callLuaScriptFunc(ctx, appId, owner, k, FunctionName, params)
 }
 
 // custom querier is also a function, but need a different store key,

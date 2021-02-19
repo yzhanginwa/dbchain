@@ -3,6 +3,7 @@ package types
 import (
     sdk "github.com/cosmos/cosmos-sdk/types"
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/tailor_lua"
 )
 
 ////////////////////
@@ -49,6 +50,11 @@ func (msg MsgAddFunction) ValidateBasic() error {
     }
     if len(msg.Body) ==0 {
         return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Body cannot be empty")
+    } else {
+        err := tailor_lua.CompileAndCheckLuaScript(msg.Body)
+        if err != nil{
+            return err
+        }
     }
     return nil
 }

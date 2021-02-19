@@ -12,6 +12,8 @@ func Double(L *lua.LState) int {
 package keeper
 
 import (
+	"encoding/json"
+	"errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	lua "github.com/yuin/gopher-lua"
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
@@ -337,7 +339,12 @@ func getFieldValueMap(ctx sdk.Context, appId uint, keep Keeper, tableName string
 		return nil, err
 	}
 
-	values := strings.Split(s, ",")
+	//use json format
+	values := make([]string,0)
+	err = json.Unmarshal([]byte(s),&values)
+	if err != nil {
+		return nil, errors.New("func getFieldValueMap err, unmarshal params err")
+	}
 	rowFields := make(types.RowFields)
 	/*
 	表的前三个字段固定 由系统创建 id create_by create_at,如果有外键，外键为第一个字段，否则会添加数据出错
