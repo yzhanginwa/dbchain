@@ -2,17 +2,12 @@ package cli
 
 import (
     "bufio"
-    "errors"
-    "github.com/spf13/cobra"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/tailor_lua"
-    "strings"
-
     "github.com/cosmos/cosmos-sdk/client/context"
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/cosmos/cosmos-sdk/x/auth"
     "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+    "github.com/spf13/cobra"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
@@ -31,19 +26,8 @@ func GetCmdAddFunction(cdc *codec.Codec) *cobra.Command {
             parameter := args[2]
             body      := args[3]
 
-            p := super_script.NewPreprocessor(strings.NewReader(body))
-            p.Process()
-            if !p.Success {
-                return errors.New("Script syntax error")
-            }
-            newScript := p.Reconstruct()
-            err := tailor_lua.CompileAndCheckLuaScript(newScript)
-            if err != nil{
-                return err
-            }
-
             msg := types.NewMsgAddFunction(cliCtx.GetFromAddress(), appCode, funcName, parameter, body)
-            err = msg.ValidateBasic()
+            err := msg.ValidateBasic()
             if err != nil {
                 return err
             }
@@ -92,19 +76,9 @@ func GetCmdAddCustomQuerier(cdc *codec.Codec) *cobra.Command {
             parameter    := args[2]
             body         := args[3]
 
-            p := super_script.NewPreprocessor(strings.NewReader(body))
-            p.Process()
-            if !p.Success {
-                return errors.New("Script syntax error")
-            }
-            newScript := p.Reconstruct()
-            err := tailor_lua.CompileAndCheckLuaScript(newScript)
-            if err != nil{
-                return err
-            }
 
             msg := types.NewMsgAddCustomQuerier(cliCtx.GetFromAddress(), appCode, querierName, parameter, body)
-            err = msg.ValidateBasic()
+            err := msg.ValidateBasic()
             if err != nil {
                 return err
             }

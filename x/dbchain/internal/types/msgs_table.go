@@ -4,6 +4,8 @@ import (
     "fmt"
     sdk "github.com/cosmos/cosmos-sdk/types"
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
+    "strings"
 )
 
 ////////////////////
@@ -234,6 +236,12 @@ func (msg MsgAddInsertFilter) ValidateBasic() error {
     if len(msg.Filter) ==0 {
         return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Filter cannot be empty")
     }
+    //preProcess filter
+    p := super_script.NewPreprocessor(strings.NewReader(msg.Filter))
+    p.Process()
+    if !p.Success {
+        sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "syntax error")
+    }
     return nil
 }
 
@@ -289,6 +297,12 @@ func (msg MsgAddTrigger) ValidateBasic() error {
     }
     if len(msg.Trigger) ==0 {
         return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Trigger cannot be empty")
+    }
+    //preProcess filter
+    p := super_script.NewPreprocessor(strings.NewReader(msg.Trigger))
+    p.Process()
+    if !p.Success {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "syntax error")
     }
     return nil
 }
