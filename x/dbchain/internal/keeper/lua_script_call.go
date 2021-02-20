@@ -2,13 +2,24 @@ package keeper
 
 import (
 	"errors"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	lua "github.com/yuin/gopher-lua"
+	"github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
+	"strings"
 )
 //Different databases correspond to different handles
-var luaHandles = make(map[uint]*lua.LState)
+var luaFuncHandles = make(map[uint]*lua.LState)
+var luaQuerierHandles = make(map[uint]*lua.LState)
 
-func getAppLuaHandle(appId uint)  *lua.LState {
+const (
+	FuncHandleType = iota
+	QueryHandleType
+)
+
+func getAppLuaHandle(appId uint, handleType int)  *lua.LState {
+	var luaHandles = getLuaHandles(handleType)
+
 	l , ok := luaHandles[appId]
 	if !ok {
 		var luaHandle = lua.NewState(lua.Options{
@@ -20,12 +31,14 @@ func getAppLuaHandle(appId uint)  *lua.LState {
 	}
 	return l
 }
-func getRegisterLuaFunc(ctx sdk.Context, keeper Keeper, appId uint, funcName string) lua.LValue{
+func getRegisterLuaFunc(ctx sdk.Context, keeper Keeper, appId uint, funcName string, handleType int) lua.LValue{
+	var luaHandles = getLuaHandles(handleType)
+
 	l := luaHandles[appId]
 
 	Fn := l.GetGlobal(funcName)
 	if Fn.String() == "nil" || Fn == nil {
-		err := registerLuaFunc(ctx, appId, funcName, keeper, l)
+		err := registerLuaFunc(ctx, appId, funcName, keeper, l, handleType)
 		if err != nil {
 			return nil
 		}
@@ -34,8 +47,8 @@ func getRegisterLuaFunc(ctx sdk.Context, keeper Keeper, appId uint, funcName str
 	return Fn
 }
 
-func registerLuaFunc(ctx sdk.Context, appId uint, luaFunc string, keeper Keeper, l *lua.LState) error {
-	functionInfo := keeper.GetFunctionInfo(ctx, appId, luaFunc, 0)
+func registerLuaFunc(ctx sdk.Context, appId uint, luaFunc string, keeper Keeper, l *lua.LState, handleType int) error {
+	functionInfo := keeper.GetFunctionInfo(ctx, appId, luaFunc, handleType)
 	if functionInfo.Body == "" {
 		return errors.New("this func is unRegister")
 	}
@@ -48,12 +61,16 @@ func registerLuaFunc(ctx sdk.Context, appId uint, luaFunc string, keeper Keeper,
 }
 
 func restructureLuaScript(funcBody string) string {
-	//TODO new format script needs to be restructure
-	return funcBody
+	p := super_script.NewPreprocessor(strings.NewReader(funcBody))
+	p.Process()
+	newScript := p.Reconstruct()
+	return newScript
 }
 
 //when add new func or modify func, luaHandle needs to be delete
-func voidLuaHandle(appId uint) {
+func voidLuaHandle(appId uint, handleType int) {
+	var luaHandles = getLuaHandles(handleType)
+
 	l, ok := luaHandles[appId]
 	if ok {
 		l.Close()
@@ -61,8 +78,8 @@ func voidLuaHandle(appId uint) {
 	delete(luaHandles, appId)
 }
 
-func callLuaScriptFunc(ctx sdk.Context, appId uint, owner sdk.AccAddress, keeper Keeper, funcName string, params []lua.LValue) error{
-	l := getAppLuaHandle(appId)
+func callLuaScriptFunc(ctx sdk.Context, appId uint, owner sdk.AccAddress, keeper Keeper, funcName string, params []lua.LValue, handleType int) error{
+	l := getAppLuaHandle(appId, handleType)
 	//point : get go function
 	goExportFunc := getGoExportFunc(ctx, appId, keeper, owner)
 	//register go function
@@ -70,7 +87,7 @@ func callLuaScriptFunc(ctx sdk.Context, appId uint, owner sdk.AccAddress, keeper
 		l.SetGlobal(name, l.NewFunction(fn))
 	}
 	//call lua script
-	fn := getRegisterLuaFunc(ctx, keeper, appId, funcName)
+	fn := getRegisterLuaFunc(ctx, keeper, appId, funcName, handleType)
 	if fn == nil || fn.String() == "nil" {
 		return errors.New("this func has not been registered")
 	}
@@ -94,4 +111,50 @@ func callLuaScriptFunc(ctx sdk.Context, appId uint, owner sdk.AccAddress, keeper
 	return errors.New("lua return err")
 }
 
+
+func callLuaScriptQuerierFunc(ctx sdk.Context, appId uint, owner sdk.AccAddress, keeper Keeper, querierName string, params []lua.LValue, handleType int) ([]byte, error){
+	l := getAppLuaHandle(appId, handleType)
+	//point : get go function
+	goExportFunc := getGoExportQueryFunc(ctx, appId, keeper, owner)
+	//register go function
+	for name, fn := range goExportFunc{
+		l.SetGlobal(name, l.NewFunction(fn))
+	}
+	//call lua script
+	fn := getRegisterLuaFunc(ctx, keeper, appId, querierName, handleType)
+	if fn == nil || fn.String() == "nil" {
+		return nil, errors.New("this func has not been registered")
+	}
+	if err := l.CallByParam(lua.P{
+		Fn:      fn,
+		NRet:    1,       //脚本返回参数个数
+		Protect: true,    //这里设置为ture表示当执行脚本出现panic时，以error返回
+	}, params...); err != nil{
+		return nil, err
+	}
+	//handle return
+	defer l.Pop(l.GetTop())
+	lRes := l.Get(1)
+	if tableRes ,ok := lRes.(*lua.LTable); ok {
+		res := convertLuaTableToGo(tableRes)
+		bz, err := codec.MarshalJSONIndent(keeper.cdc, res)
+		if err != nil {
+			return nil, errors.New("could not marshal result to JSON")
+		}
+		return bz, nil
+	}
+
+	return nil, errors.New("lua return err")
+}
+
+
+func getLuaHandles(handleType int)  map[uint]*lua.LState {
+	var luaHandles  map[uint]*lua.LState
+	if handleType == FuncHandleType {
+		luaHandles = luaFuncHandles
+	} else if handleType == QueryHandleType {
+		luaHandles = luaQuerierHandles
+	}
+	return luaHandles
+}
 

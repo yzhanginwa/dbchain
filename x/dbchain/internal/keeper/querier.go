@@ -777,7 +777,7 @@ func queryFunctions(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    functions := keeper.GetFunctions(ctx, appId, 0)
+    functions := keeper.GetFunctions(ctx, appId, FuncHandleType)
     res, err := codec.MarshalJSONIndent(keeper.cdc, functions)
     if err != nil {
         panic("could not marshal result to JSON")
@@ -827,7 +827,7 @@ func queryCustomQueriers(ctx sdk.Context, path []string, req abci.RequestQuery, 
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    functions := keeper.GetFunctions(ctx, appId, 1)
+    functions := keeper.GetFunctions(ctx, appId, QueryHandleType)
     res, err := codec.MarshalJSONIndent(keeper.cdc, functions)
     if err != nil {
         panic("could not marshal result to JSON")

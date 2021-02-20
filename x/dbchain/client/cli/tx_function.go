@@ -2,8 +2,11 @@ package cli
 
 import (
     "bufio"
+    "errors"
     "github.com/spf13/cobra"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/tailor_lua"
+    "strings"
 
     "github.com/cosmos/cosmos-sdk/client/context"
     "github.com/cosmos/cosmos-sdk/codec"
@@ -28,7 +31,13 @@ func GetCmdAddFunction(cdc *codec.Codec) *cobra.Command {
             parameter := args[2]
             body      := args[3]
 
-            err := tailor_lua.CompileAndCheckLuaScript(body)
+            p := super_script.NewPreprocessor(strings.NewReader(body))
+            p.Process()
+            if !p.Success {
+                return errors.New("Script syntax error")
+            }
+            newScript := p.Reconstruct()
+            err := tailor_lua.CompileAndCheckLuaScript(newScript)
             if err != nil{
                 return err
             }
@@ -83,7 +92,13 @@ func GetCmdAddCustomQuerier(cdc *codec.Codec) *cobra.Command {
             parameter    := args[2]
             body         := args[3]
 
-            err := tailor_lua.CompileAndCheckLuaScript(body)
+            p := super_script.NewPreprocessor(strings.NewReader(body))
+            p.Process()
+            if !p.Success {
+                return errors.New("Script syntax error")
+            }
+            newScript := p.Reconstruct()
+            err := tailor_lua.CompileAndCheckLuaScript(newScript)
             if err != nil{
                 return err
             }
