@@ -19,7 +19,10 @@ import (
 func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) (uint, error){
     L := lua.NewState(lua.Options{
         SkipOpenLibs : true,
+        RegistrySize: 32,
     })
+    L.SetGlobal("IsRegisterData",lua.LBool(false))
+
     defer L.Close()
     id, err := k.PreInsertCheck(ctx, appId, tableName, fields, owner, L)
     if err != nil {
@@ -355,16 +358,23 @@ func (k Keeper) validateInsertionWithInsertFilter(ctx sdk.Context, appId uint, t
 }
 
 func (k Keeper) runLuaFilter(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress, script string, L *lua.LState) bool {
-    if !k.registerThisData(ctx, appId, tableName, fields, owner, L) { return false }
-
-    //point : get go function
-    goExportFunc := getGoExportFunc(ctx, appId, k, owner)
-    //register go function
-    for name, fn := range goExportFunc{
-        L.SetGlobal(name, L.NewFunction(fn))
+    if L.GetGlobal("IsRegisterData") == lua.LFalse {
+        if !k.registerThisData(ctx, appId, tableName, fields, owner, L) {
+            return false
+        }
+        L.SetGlobal("IsRegisterData",lua.LBool(true))
+        //point : get go function
+        goExportFunc := getGoExportFilterFunc(ctx, appId, k, owner)
+        //register go function
+        for name, fn := range goExportFunc{
+            L.SetGlobal(name, L.NewFunction(fn))
+        }
     }
-    //compile lua script
-    if err := L.DoString(script); err != nil{
+    //change script to lua script
+    p := ss.NewPreprocessor(strings.NewReader(script))
+    p.Process()
+    newScript := p.Reconstruct()
+    if err := L.DoString(newScript); err != nil{
         return false
     }
 

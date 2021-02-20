@@ -265,7 +265,8 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 					continue
 				}
 				qo := map[string]string{
-					"method": "equal",
+					"method": "where",
+					"operator": "==",
 					"field": field,
 					"value": value,
 				}
@@ -285,6 +286,98 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 	}
 }
 
+func getGoExportFilterFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAddress) map[string]lua.LGFunction {
+	return map[string]lua.LGFunction{
+		"Insert": func(L *lua.LState) int {
+			ParamsNum := L.GetTop()
+			if ParamsNum >= 2 && ParamsNum%2 == 0 { //Normal inserttab,fields
+				tableName := L.ToString(1)
+				if strings.HasPrefix(tableName, tablePrefix){
+					tableName = strings.TrimPrefix(tableName, tablePrefix)
+				}
+				sFieldAndValues := L.ToString(2)
+				fieldAndValues, err := getFieldValueMap(ctx, appId, keeper, tableName, sFieldAndValues)
+				if err != nil {
+					L.Push(lua.LNumber(-1))
+					L.Push(lua.LString(err.Error()))
+					return 2
+				}
+				if ParamsNum > 2 { //此时表示有外键插入，可以有多个外键插入，格式为foreigntab，foreignid 循环
+					for i := 3; i < ParamsNum; i+=2{
+						fTableName := L.ToString(i)
+						fId := L.ToString(i+1)
+						fKey := strings.ToLower(fTableName)
+						fieldAndValues[fKey] = fId
+					}
+
+				}
+				Write := getInsertCallback(keeper, ctx, appId, owner)
+				Write(tableName, fieldAndValues)//keeper.Insert(ctx, appId, tableName, fieldAndValues, owner)
+				L.Push(lua.LNumber(1))
+				L.Push(lua.LString(""))
+			} else {
+				L.Push(lua.LNumber(-1))
+				L.Push(lua.LString("num of param wrong"))
+			}
+			return 2
+		},
+		"fieldIn" : func(L *lua.LState) int {
+			ParamsNum := L.GetTop()
+			if ParamsNum < 2 {
+				L.Push(lua.LBool(false))
+				return 1
+			}
+
+			src := L.ToString(1)
+			for i := 2; i <= ParamsNum; i++ {
+				dst := L.ToString(i)
+				if src == dst{
+					L.Push(lua.LBool(true))
+					return 1
+				}
+			}
+			L.Push(lua.LBool(false))
+			return 1
+		},
+		"exist" : func(L *lua.LState) int {
+			ParamsNum := L.GetTop()
+			if ParamsNum < 4 || (ParamsNum - 1)%3 != 0{
+				L.Push(lua.LBool(false))
+				return 1
+			}
+			tableName := L.ToString(1)
+			qo := map[string]string{
+				"method": "table",
+				"table": tableName,
+			}
+			querierObjs := []map[string]string{qo}
+			for i := 2; i < ParamsNum; i += 3 {
+				field := L.ToString(i)
+				op  := L.ToString(i+1)
+				value := L.ToString(i+2)
+				if op != "==" {
+					continue
+				}
+				qo := map[string]string{
+					"method": "where",
+					"operator": "==",
+					"field": field,
+					"value": value,
+				}
+				querierObjs = append(querierObjs, qo)
+			}
+
+			tableValueCallback := getGetTableValueCallback(keeper, ctx, appId, owner)
+			result := tableValueCallback(querierObjs)
+			if len(result) > 0 {
+				L.Push(lua.LBool(true))
+			} else {
+				L.Push(lua.LBool(false))
+			}
+			return 1
+		},
+	}
+}
 func getGoExportQueryFunc(ctx sdk.Context, appId uint, keeper Keeper, addr sdk.AccAddress) map[string]lua.LGFunction {
 	return map[string]lua.LGFunction {
 		"findRow" : func(L *lua.LState) int {

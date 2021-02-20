@@ -5,6 +5,7 @@ import (
     "errors"
     "github.com/yuin/gopher-lua/parse"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
     "strings"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
@@ -636,7 +637,10 @@ func isColumnOptionIncluded(options []string, option string) bool {
 }
 
 func validateScriptSyntax(k Keeper, ctx sdk.Context, appId uint, tableName string, filter string) bool {
-    _,err := parse.Parse(strings.NewReader(filter),"<string>")
+    p := super_script.NewPreprocessor(strings.NewReader(filter))
+    p.Process()
+    newFilter := p.Reconstruct()
+    _,err := parse.Parse(strings.NewReader(newFilter),"<string>")
     if err != nil {
         return false
     }
