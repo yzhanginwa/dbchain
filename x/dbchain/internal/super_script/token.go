@@ -28,6 +28,7 @@ const (
     TABLE
     EQUAL   // =
     DEQUAL  // ==
+    UNEQUAL // !=
     IN      // in
     WHERE   // where
     IF      // if
@@ -38,6 +39,8 @@ const (
     TRUE    // true
     FALSE   // false
     EXIST   // exist
+    NUMBER  // number 123456
+    FUNCTION //function
 )
 
 var tokenDisplay = []string{
@@ -45,7 +48,7 @@ var tokenDisplay = []string{
     "identity", "comma", "dot",
     "left parenthesis", "right parenthesis", "left brace", "right brace", "quoted string",
     "this", "parent", "table",
-    "=" , "==", "in",
+    "=" , "==", "!=", "in",
     "where",
-    "if", "elseif", "else", "insert", "return", "true", "false", "exist",
+    "if", "elseif", "else", "insert", "return", "true", "false", "exist", "number", "function",
 }

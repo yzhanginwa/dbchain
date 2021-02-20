@@ -39,6 +39,18 @@ func (s *Scanner) Scan() (tok Token, lit string) {
     } else if isValidLetter(ch) {
         s.unread()
         return s.scanIdent()
+    } else if isDigit(ch) {
+        s.unread()
+        return s.scanDigit()
+    } else if ch == '!' {
+        secondEqual := s.read()
+        if secondEqual == '=' {
+            return UNEQUAL, " ~= "
+        } else {
+            s.unread()
+            return ILLEGAL, "!"
+        }
+        return
     }
 
     switch ch {
@@ -153,10 +165,33 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
         return EXIST, buf.String()
     case "ELSEIF":
         return ELSEIF, buf.String()
+    case "!=":
+        return UNEQUAL, buf.String()
+    case "FUNCTION":
+        return FUNCTION, buf.String()
+
+
     }
 
     // Otherwise return as a regular identifier.
     return IDENT, buf.String()
+}
+
+func (s *Scanner) scanDigit() (tok Token, lit string){
+    var buf bytes.Buffer
+    buf.WriteRune(s.read())
+
+    for {
+        if ch := s.read(); ch == eof {
+            break
+        } else if !isDigit(ch){
+            s.unread()
+            break
+        } else {
+            _, _ = buf.WriteRune(ch)
+        }
+    }
+    return NUMBER, buf.String()
 }
 
 func (s *Scanner) read() rune {

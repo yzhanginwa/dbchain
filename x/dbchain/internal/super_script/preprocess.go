@@ -16,6 +16,7 @@ const (
 	strThen    = ` then `
 	strEnd     = " end "
 	strRCB     = "}"
+	strWS      = " "
 )
 
 type tokenStack struct {
@@ -93,10 +94,21 @@ func (pc *Preprocessor) Process() {
 		if tok == EOF {
 			break
 		}
+		if tok == RCB {
+			pc.ts.Push(strEnd)
+			break
+		}
 		pc.ts.Push(lit)
 		if tok == IF || tok == ELSEIF{
 			pc.tok, pc.lit = tok, lit
 			if !pc.IfCondition() {
+				pc.ts.Clear()
+				pc.Success = false
+				return
+			}
+		} else if tok == FUNCTION {
+			pc.tok, pc.lit = tok, lit
+			if !pc.FuncStart() {
 				pc.ts.Clear()
 				pc.Success = false
 				return
@@ -119,6 +131,22 @@ func (pc *Preprocessor) Reconstruct() string {
 	return s
 }
 
+func (pc *Preprocessor) FuncStart() bool {
+	for {
+		tok, lit := pc.s.Scan()
+		if tok == EOF {
+			return false
+		}
+		if tok == LCB {
+			pc.ts.Push(strWS)
+			break
+		} else if tok == IF || tok == ELSE || tok == ELSEIF {
+			return false
+		}
+		pc.ts.Push(lit)
+	}
+	return true
+}
 func (pc *Preprocessor) IfCondition() bool {
 	if !pc.expect(IF) && !pc.expect(ELSEIF){ return false }
 	if !pc.expect(LPAREN) { return false }
@@ -252,7 +280,7 @@ func (pc *Preprocessor) Comparison() bool {
 	if !pc.SingleValue("left") {
 		return false
 	}
-	if pc.accept(DEQUAL) {
+	if pc.accept(DEQUAL) || pc.accept(UNEQUAL) {
 		if !pc.SingleValue("right") {
 			return false
 		}
@@ -312,6 +340,11 @@ func (pc *Preprocessor) SingleValue(l_or_r string) bool {
 		if !pc.ThisExpr() {
 			return false
 		}
+	case IDENT: //General if expression
+		//pc.temp.Push(pc.lit)
+		pc.accept(IDENT)
+	case NUMBER:
+		pc.accept(NUMBER)
 	default:
 		pc.Err = fmt.Errorf("found %q, expected double quote or \"this\"", pc.lit)
 		return false
@@ -471,7 +504,7 @@ func (pc *Preprocessor) scanIgnoreWhitespace() (Token, string) {
 	ws := ""
 	tok, lit := pc.s.Scan()
 	if tok == WS {
-		ws = lit
+		ws += lit
 		tok, lit = pc.s.Scan()
 	}
 	pc.tok, pc.lit = tok, lit
