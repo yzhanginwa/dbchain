@@ -202,7 +202,8 @@ func sendVerificationCode(mobile string, verificationCode string) bool {
     request := dysmsapi.CreateSendSmsRequest()
     request.Scheme = "https"
 
-    request.SignName = "大中华区块链公章"
+    //request.SignName = "大中华区块链公章"
+    request.SignName = "DBChain"
     request.TemplateCode = "SMS_192960014"
     request.PhoneNumbers = mobile
     request.TemplateParam = fmt.Sprintf("{\"code\": \"%s\"}", verificationCode)
