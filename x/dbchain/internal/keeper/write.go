@@ -359,7 +359,7 @@ func (k Keeper) validateInsertionWithInsertFilter(ctx sdk.Context, appId uint, t
 
 func (k Keeper) runLuaFilter(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress, script string, L *lua.LState) bool {
     if L.GetGlobal("IsRegisterData") == lua.LFalse {
-        if !k.registerThisData(ctx, appId, tableName, fields, owner, L) {
+        if !k.registerThisData(ctx, appId, tableName, fields, owner, L, script) {
             return false
         }
         L.SetGlobal("IsRegisterData",lua.LBool(true))
@@ -386,14 +386,21 @@ func (k Keeper) runLuaFilter(ctx sdk.Context, appId uint, tableName string, fiel
     return false
 }
 
-func (k Keeper) registerThisData(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress, L *lua.LState) bool{
+func (k Keeper) registerThisData(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress, L *lua.LState, script string) bool{
     this := L.NewTable()
     tbFields, err := k.getTableFields(ctx, appId, tableName)
     if err != nil { return false }
     for _, field := range tbFields {
+        isForeignKey := false
         v , ok := fields[field]
         if ok {
-            if !strings.HasSuffix(field, "_id"){
+            if strings.Contains(field,"_") {
+                temp := "." + field + ".parent"
+                if strings.Contains(script,temp) {
+                    isForeignKey = true
+                }
+            }
+            if !isForeignKey {
                 this.RawSetString(field, lua.LString(v))
             }
         } else if field == "created_by"{
@@ -402,15 +409,26 @@ func (k Keeper) registerThisData(ctx sdk.Context, appId uint, tableName string, 
             this.RawSetString(field, lua.LString("nil"))
         }
 
-        if strings.HasSuffix(field, "_id") && ok {// has parent table and the value is not null
+        if isForeignKey {
             foreignKey := L.NewTable()
             parent := L.NewTable()
-            parentTableName := field[:len(field)-3]
+            tableAndKey := strings.Split(field,"_")
+            if len(tableAndKey) != 2 {
+                return false
+            }
 
-            id , err := strconv.ParseUint(v, 10, 64)
-            if err != nil { return false }
-            RowFields, err := k.DoFind(ctx, appId, parentTableName, uint(id))
-            if err != nil { return false }
+            parentTableName := tableAndKey[0]
+            parentTableField := tableAndKey[1]
+
+            ids := k.FindBy(ctx, appId, parentTableName, parentTableField, []string{v}, owner)
+            if len(ids) != 1 {
+                return false
+            }
+            RowFields, err := k.DoFind(ctx, appId, parentTableName, ids[0])
+            if err != nil {
+                return false
+            }
+
             for key , value  := range RowFields {
                 parent.RawSetString(key, lua.LString(value))
             }
