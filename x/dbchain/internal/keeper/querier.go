@@ -1,18 +1,19 @@
 package keeper
 
 import (
-    "fmt"
-    lua "github.com/yuin/gopher-lua"
-    "strconv"
-    "strings"
     "encoding/json"
-
+    "fmt"
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
     abci "github.com/tendermint/tendermint/abci/types"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    lua "github.com/yuin/gopher-lua"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    "strconv"
+    "strings"
+    "time"
 )
 
 // query endpoints supported by the dbchain service Querier
@@ -44,6 +45,7 @@ const (
     QueryCustomQueriers  = "customQueriers"
     QueryCustomQuerierInfo = "customQuerierInfo"
     QueryCallCustomQuerier = "callCustomQuerier"
+    QueryTxSimpleResult    = "txSimpleResult"
 )
 
 
@@ -113,6 +115,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryCustomQuerierInfo(ctx, path[1:], req, keeper)
         case QueryCallCustomQuerier:
             return queryCallCustomQuerier(ctx, path[1:], req, keeper)
+        case QueryTxSimpleResult:
+           return queryTxSimpleResult(ctx, path[1:], req, keeper)
         default:
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown dbchain query endpoint")
         }
@@ -808,6 +812,36 @@ func queryFunctionsInfo(ctx sdk.Context, path []string, req abci.RequestQuery, k
     return res, nil
 }
 
+func queryTxSimpleResult(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+   accessCode:= path[0]
+   _, err := utils.VerifyAccessCode(accessCode)
+   if err != nil {
+       return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+   }
+
+   var txState *types.TxStatus
+   nowTime := time.Now().Unix()
+   txHash := path[1]
+   txHash = strings.ToLower(txHash)
+   txStateIt,ok := cache.TxStatusCache.Load(txHash)
+   if !ok {
+       errStr := "can not find this tx : " + path[1] + ". Please check again later !"
+       txState = types.NewTxStatus("fail", 0, errStr, nowTime)
+   } else {
+       txState = txStateIt.(*types.TxStatus)
+       //The information has expired and needs to be deleted
+       if nowTime - txState.GetTimeStamp() > cache.TxStateInvalidTime {
+           cache.TxStatusCache.Delete(txHash)
+       }
+   }
+
+   res, err := codec.MarshalJSONIndent(keeper.cdc, txState)
+   if err != nil {
+       panic("could not marshal result to JSON")
+   }
+
+   return res, nil
+}
 
 /////////////////////
 //                 //

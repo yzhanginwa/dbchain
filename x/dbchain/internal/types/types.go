@@ -101,6 +101,30 @@ func (t Table) String() string {
 
 //////////////////////////
 //                      //
+// tx status            //
+//                      //
+//////////////////////////
+type  TxStatus struct {
+    State string  `json:"state"`//success,fail,processing
+    Index int    `json:"index"`//count of message
+    Err  string    `json:"err"`
+    timeStamp int64
+}
+
+func NewTxStatus(state string, index int, err string, ts int64) *TxStatus {
+    return &TxStatus {
+        State: state,
+        Index: index,
+        Err: err,
+        timeStamp: ts,
+    }
+}
+func (t *TxStatus)GetTimeStamp() int64 {
+    return t.timeStamp
+}
+
+//////////////////////////
+//                      //
 // reserved field names //
 //                      //
 //////////////////////////

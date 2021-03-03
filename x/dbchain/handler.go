@@ -23,77 +23,82 @@ var (
 // NewHandler returns a handler for "nameservice" type messages.
 func NewHandler(keeper Keeper) sdk.Handler {
     return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+        var result *sdk.Result
+        var err error
+        defer setTxStatus(ctx, keeper, &err)
+
         switch msg := msg.(type) {
         case MsgCreateApplication:
-            return handleMsgCreateApplication(ctx, keeper, msg)
+            result, err = handleMsgCreateApplication(ctx, keeper, msg)
         case MsgCreateSysDatabase:
-            return handleMsgCreateSysDatabase(ctx, keeper, msg)
+            result, err = handleMsgCreateSysDatabase(ctx, keeper, msg)
         case MsgModifyDatabaseUser:
-            return handleMsgModifyDatabaseUser(ctx, keeper, msg)
+            result, err = handleMsgModifyDatabaseUser(ctx, keeper, msg)
         case MsgAddFunction:
-            return handleMsgAddFunction(ctx, keeper, msg)
+            result, err = handleMsgAddFunction(ctx, keeper, msg)
         case MsgCallFunction:
-            return handleMsgCallFunction(ctx, keeper, msg)
+            result, err = handleMsgCallFunction(ctx, keeper, msg)
         case MsgAddCustomQuerier:
-            return handleMsgAddCustomQuerier(ctx, keeper, msg)
+            result, err = handleMsgAddCustomQuerier(ctx, keeper, msg)
         case MsgCreateTable:
-            return handleMsgCreateTable(ctx, keeper, msg)
+            result, err = handleMsgCreateTable(ctx, keeper, msg)
         case MsgDropTable:
-            return handleMsgDropTable(ctx, keeper, msg)
+            result, err = handleMsgDropTable(ctx, keeper, msg)
         case MsgAddColumn:
-            return handleMsgAddColumn(ctx, keeper, msg)
+            result, err = handleMsgAddColumn(ctx, keeper, msg)
         case MsgDropColumn:
-            return handleMsgDropColumn(ctx, keeper, msg)
+            result, err = handleMsgDropColumn(ctx, keeper, msg)
         case MsgRenameColumn:
-            return handleMsgRenameColumn(ctx, keeper, msg)
+            result, err = handleMsgRenameColumn(ctx, keeper, msg)
         case MsgCreateIndex:
-            return handleMsgCreateIndex(ctx, keeper, msg)
+            result, err = handleMsgCreateIndex(ctx, keeper, msg)
         case MsgDropIndex:
-            return handleMsgDropIndex(ctx, keeper, msg)
+            result, err = handleMsgDropIndex(ctx, keeper, msg)
         case MsgModifyOption:
-            return handleMsgModifyOption(ctx, keeper, msg)
+            result, err = handleMsgModifyOption(ctx, keeper, msg)
         case MsgAddInsertFilter:
-            return handleMsgAddInsertFilter(ctx, keeper, msg)
+            result, err = handleMsgAddInsertFilter(ctx, keeper, msg)
         case MsgDropInsertFilter:
-            return handleMsgDropInsertFilter(ctx, keeper, msg)
+            result, err = handleMsgDropInsertFilter(ctx, keeper, msg)
         case MsgAddTrigger:
-            return handleMsgAddTrigger(ctx, keeper, msg)
+            result, err = handleMsgAddTrigger(ctx, keeper, msg)
         case MsgDropTrigger:
-            return handleMsgDropTrigger(ctx, keeper, msg)
+            result, err = handleMsgDropTrigger(ctx, keeper, msg)
         case MsgSetTableMemo:
-            return handleMsgSetTableMemo(ctx, keeper, msg)
+            result, err = handleMsgSetTableMemo(ctx, keeper, msg)
         case MsgModifyColumnOption:
-            return handleMsgModifyColumnOption(ctx, keeper, msg)
+            result, err = handleMsgModifyColumnOption(ctx, keeper, msg)
         case MsgSetColumnMemo:
-            return handleMsgSetColumnMemo(ctx, keeper, msg)
+            result, err = handleMsgSetColumnMemo(ctx, keeper, msg)
         case MsgInsertRow:
-            return handleMsgInsertRow(ctx, keeper, msg)
+            result, err = handleMsgInsertRow(ctx, keeper, msg)
         case MsgUpdateRow:
-            return handleMsgUpdateRow(ctx, keeper, msg)
+            result, err = handleMsgUpdateRow(ctx, keeper, msg)
         case MsgDeleteRow:
-            return handleMsgDeleteRow(ctx, keeper, msg)
+            result, err = handleMsgDeleteRow(ctx, keeper, msg)
         case MsgFreezeRow:
-            return handleMsgFreezeRow(ctx, keeper, msg)
+            result, err = handleMsgFreezeRow(ctx, keeper, msg)
         case MsgModifyGroup:
-            return handleMsgModifyGroup(ctx, keeper, msg)
+            result, err = handleMsgModifyGroup(ctx, keeper, msg)
         case MsgSetGroupMemo:
-            return handleMsgSetGroupMemo(ctx, keeper, msg)
+            result, err = handleMsgSetGroupMemo(ctx, keeper, msg)
         case MsgModifyGroupMember:
-            return handleMsgModifyGroupMember(ctx, keeper, msg)
+            result, err = handleMsgModifyGroupMember(ctx, keeper, msg)
         case MsgAddFriend:
-            return handleMsgAddFriend(ctx, keeper, msg)
+            result, err = handleMsgAddFriend(ctx, keeper, msg)
         case MsgDropFriend:
-            return handleMsgDropFriend(ctx, keeper, msg)
+            result, err = handleMsgDropFriend(ctx, keeper, msg)
         case MsgRespondFriend:
-            return handleMsgRespondFriend(ctx, keeper, msg)
+            result, err = handleMsgRespondFriend(ctx, keeper, msg)
         case MsgSetSchemaStatus:
-            return handleMsgSetSchemaStatus(ctx, keeper, msg)
+            result, err = handleMsgSetSchemaStatus(ctx, keeper, msg)
         case MsgSetDatabasePermission:
-            return handleMsgSetDatabasePermission(ctx, keeper, msg)
+            result, err = handleMsgSetDatabasePermission(ctx, keeper, msg)
         default:
             errMsg := fmt.Sprintf("Unrecognized dbchain Msg type: %v", msg.Type())
-            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
+            result, err = nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
         }
+        return result, err
     }
 }
 

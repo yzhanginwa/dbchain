@@ -600,10 +600,10 @@ func GetCmdInsertRow(cdc *codec.Codec) *cobra.Command {
             msg := types.NewMsgInsertRow(cliCtx.GetFromAddress(), appCode, name, rowFieldsJson)
             err = msg.ValidateBasic()
             if err != nil {
-                return errors.New(fmt.Sprintf("Error %s", err)) 
+                return errors.New(fmt.Sprintf("Error %s", err))
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg,msg,msg})
         },
     }
 }

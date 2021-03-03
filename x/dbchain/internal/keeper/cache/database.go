@@ -4,6 +4,8 @@ import (
     "errors"
     dbk "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/db_key"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+    "sync"
+    "time"
 )
 
 ////////////////////
@@ -15,8 +17,14 @@ import (
 var (
     database = make(map[string]types.Database)
     appIdToCode = make(map[uint]string)
-    //add table cache.
     appTables = make(map[string]types.Table)
+    TxStatusCache sync.Map
+)
+
+
+const (
+    TxStateInvalidTime     = 600
+    TxInvalidCheckRunTime  = 20 * time.Millisecond
 )
 
 func GetDatabase(appCode string) (types.Database, bool) {

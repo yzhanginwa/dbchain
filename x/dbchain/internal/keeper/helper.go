@@ -1,6 +1,7 @@
 package keeper
 
 import (
+    "github.com/cosmos/cosmos-sdk/codec"
     "strconv"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     sdk "github.com/cosmos/cosmos-sdk/types"
@@ -147,4 +148,8 @@ func (k Keeper) hasForeignRecordOfOwn(ctx sdk.Context, appId uint, tableName, id
     }
 
     return true
+}
+
+func (k Keeper)GetCdc() *codec.Codec{
+    return k.cdc
 }

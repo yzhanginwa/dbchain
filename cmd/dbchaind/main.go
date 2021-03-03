@@ -25,6 +25,7 @@ import (
 
 func main() {
     go statusReport()
+    go dbcmodule.TxCacheInvalid()
     cobra.EnableCommandSorting = false
 
     cdc := app.MakeCodec()

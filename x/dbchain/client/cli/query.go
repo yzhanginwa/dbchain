@@ -50,6 +50,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdCustomQuerier(storeKey,cdc),
         GetCmdCustomQuerierInfo(storeKey,cdc),
         GetCmdCallCustomQuerier(storeKey,cdc),
+        GetCmdTxSimpleResult(storeKey,cdc),
     )...)
     return dbchainQueryCmd
 }
@@ -546,6 +547,30 @@ func GetCmdCustomQuerierInfo (queryRoute string, cdc *codec.Codec) *cobra.Comman
             }
 
             var out types.Function
+            cdc.MustUnmarshalJSON(res, &out)
+            return cliCtx.PrintOutput(out)
+        },
+    }
+}
+
+func GetCmdTxSimpleResult (queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "tx-simple-result [accessCode] [txHash]",
+        Short: "query whether the tx is successful",
+        Args: cobra.ExactArgs(2),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            accessCode   := args[0]
+            txHash      := args[1]
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/txSimpleResult/%s/%s", queryRoute, accessCode, txHash), nil)
+
+            if err != nil {
+                fmt.Printf("could not get querierInfo")
+                return nil
+            }
+
+            var out *types.TxStatus
             cdc.MustUnmarshalJSON(res, &out)
             return cliCtx.PrintOutput(out)
         },
