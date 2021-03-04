@@ -47,7 +47,7 @@ func getGetTableValueCallback(k Keeper, ctx sdk.Context, appId uint, owner sdk.A
             "fields": "id",
         }
         newQuerierObjs := append(querierObjs, qo)
-        result, err := querierSuperHandler(ctx, k, appId, newQuerierObjs, owner)
+        result, _, err := querierSuperHandler(ctx, k, appId, newQuerierObjs, owner)
         if err != nil {
             return [](map[string]string){}
         }

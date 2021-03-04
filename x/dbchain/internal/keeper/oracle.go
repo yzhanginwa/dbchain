@@ -87,7 +87,7 @@ func getOracleAuthRecords(keeper Keeper, ctx sdk.Context, owner sdk.AccAddress, 
     querierObjs = append(querierObjs, ent)
 
     //TODO: to let the super querier support filtering out records on multiple criteria
-    rows, err := querierSuperHandler(ctx, keeper, appId, querierObjs, owner)
+    rows, _, err := querierSuperHandler(ctx, keeper, appId, querierObjs, owner)
     if err != nil {
         return nil, err
     }

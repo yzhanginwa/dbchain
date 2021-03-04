@@ -189,6 +189,41 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 			L.Push(lua.LString(""))
 			return 1
 		},
+		"MultFreezeBy" : func(L *lua.LState) int {
+			ParamsNum := L.GetTop()
+			if ParamsNum < 3 {
+				L.Push(lua.LString("num of param wrong"))
+				return 1
+			}
+			tableName := L.ToString(1)
+			//By default, the first parameter is the table name
+			if strings.HasPrefix(tableName,tablePrefix) {
+				tableName = strings.TrimPrefix(tableName,tablePrefix)
+			}
+			for i := 2; i <= ParamsNum; i++ {
+				strField := L.ToString(i)
+				if strings.HasPrefix(strField,tablePrefix) {
+					tableName = strings.TrimPrefix(strField,tablePrefix)
+					continue
+				}
+				fields := strings.Split(strField,",")
+				i++
+				var values []string
+				strValue := L.ToString(i)
+				err := json.Unmarshal([]byte(strValue), &values)
+				if err != nil {
+					L.Push(lua.LString("val of field err"))
+					return 1
+				}
+				ids := findIdsByFields(keeper, ctx, appId, owner, tableName, fields, values)
+				for _, id := range ids {
+					keeper.Freeze(ctx, appId, tableName, id, owner)
+				}
+			}
+
+			L.Push(lua.LString(""))
+			return 1
+		},
 		//删除主表数据，同时删除从表数据
 		"RelationDelete" : func(L *lua.LState) int {
 			param := L.ToString(1)
@@ -286,6 +321,36 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 	}
 }
 
+func findIdsByFields( keeper Keeper, ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fields, values []string,) []uint {
+
+	qo := map[string]string{
+		"method": "table",
+		"table": tableName,
+	}
+	querierObjs := []map[string]string{qo}
+	for index, field := range fields {
+		field := field
+		value := values[index]
+		qo := map[string]string{
+			"method": "where",
+			"operator": "==",
+			"field": field,
+			"value": value,
+		}
+		querierObjs = append(querierObjs, qo)
+	}
+
+	qq := map[string]string{
+		"method": "select",
+		"fields": "id",
+	}
+	newQuerierObjs := append(querierObjs, qq)
+	_, ids, err := querierSuperHandler(ctx, keeper, appId, newQuerierObjs, owner)
+	if err != nil {
+		return nil
+	}
+	return ids
+}
 func getGoExportFilterFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAddress) map[string]lua.LGFunction {
 	return map[string]lua.LGFunction{
 		"Insert": func(L *lua.LState) int {
