@@ -19,17 +19,17 @@ type MsgAddFunction struct {
     Owner sdk.AccAddress `json:"owner"`
     AppCode string       `json:"app_code"`
     FunctionName string  `json:"function_name"`
-    Parameter string     `json:"parameter"`
+    Description string   `json:"description"`
     Body string          `json:"body"`
 }
 
 // NewMsgCreatePoll is a constructor function for MsgCreatPoll
-func NewMsgAddFunction(owner sdk.AccAddress, appCode, functionName, parameter, body string) MsgAddFunction {
+func NewMsgAddFunction(owner sdk.AccAddress, appCode, functionName, description, body string) MsgAddFunction {
     return MsgAddFunction {
         Owner: owner,
         AppCode: appCode,
         FunctionName: functionName,
-        Parameter: parameter,
+        Description: description,
         Body: body,
     }
 }
@@ -47,9 +47,6 @@ func (msg MsgAddFunction) ValidateBasic() error {
     }
     if len(msg.AppCode) == 0 {
         return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
-    }
-    if len(msg.FunctionName) == 0 {
-        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Function name cannot be empty")
     }
     if len(msg.Body) ==0 {
         return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Body cannot be empty")

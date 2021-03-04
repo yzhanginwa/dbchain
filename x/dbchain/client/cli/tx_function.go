@@ -13,7 +13,7 @@ import (
 
 func GetCmdAddFunction(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "add-function [appCode] [name] [parameters] [code]",
+        Use:   "add-function [appCode] [name] [description] [code]",
         Short: "add a function",
         Args:  cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
@@ -23,10 +23,10 @@ func GetCmdAddFunction(cdc *codec.Codec) *cobra.Command {
 
             appCode   := args[0]
             funcName  := args[1]
-            parameter := args[2]
+            description := args[2]
             body      := args[3]
 
-            msg := types.NewMsgAddFunction(cliCtx.GetFromAddress(), appCode, funcName, parameter, body)
+            msg := types.NewMsgAddFunction(cliCtx.GetFromAddress(), appCode, funcName, description, body)
             err := msg.ValidateBasic()
             if err != nil {
                 return err

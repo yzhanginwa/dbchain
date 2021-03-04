@@ -46,7 +46,7 @@ func (d Database) String() string {
 type Function struct {
     Owner sdk.AccAddress   `json:"owner"`
     Name string            `json:"name"`
-    Parameter []string     `json:"parameter"`
+    Description string     `json:"description"`
     Body string            `json:"body"`
 }
 

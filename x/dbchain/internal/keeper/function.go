@@ -5,22 +5,20 @@ import (
     "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
     lua "github.com/yuin/gopher-lua"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+    "strings"
 )
 
 // parameter is a json encoded array of string
 // custom querier is also a function, but need a different store key,
 // parameter t is used to distinguish type,when t == 0 ,it means function. when t == 1 ,it means querier
-func (k Keeper) AddFunction(ctx sdk.Context, appId uint, functionName, parameter, body string, owner sdk.AccAddress, t int) error {
-    var params = []string{}
-    if err := json.Unmarshal([]byte(parameter), &params); err != nil {
-        return errors.New("Parameter should be json encoded array!")
-    }
+func (k Keeper) AddFunction(ctx sdk.Context, appId uint, functionName, description, body string, owner sdk.AccAddress, t int) error {
 
     store := DbChainStore(ctx, k.storeKey)
     function := types.NewFunction()
-    function.Name = functionName
-    function.Parameter = params
+    function.Name = getFuncNameFromBody(ctx, k, appId, owner, body)
+    function.Description = description
     function.Body = body
     function.Owner = owner
 
@@ -67,6 +65,17 @@ func (k Keeper) AddFunction(ctx sdk.Context, appId uint, functionName, parameter
     return  store.Set([]byte(functionsStoreKey),k.cdc.MustMarshalBinaryBare(functions))
 }
 
+func getFuncNameFromBody(ctx sdk.Context, keeper Keeper, appId uint, owner sdk.AccAddress, body string)string {
+    L := lua.NewState()
+    defer L.Close()
+    p := super_script.NewPreprocessor(strings.NewReader(body))
+    p.Process()
+    newScript := p.Reconstruct()
+
+    fn,_ := L.LoadString(newScript)
+    funcName := fn.Proto.Constants[0].String()
+    return funcName
+}
 func (k Keeper) CallFunction(ctx sdk.Context, appId uint, owner sdk.AccAddress, FunctionName, Argument string) error {
     var arguments = make([]string,0)
     if err := json.Unmarshal([]byte(Argument), &arguments); err != nil {

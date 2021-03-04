@@ -154,7 +154,7 @@ func handleMsgAddFunction(ctx sdk.Context, keeper Keeper, msg MsgAddFunction) (*
         }
     }
     //TODO Does it need to be checked that if the function has been added
-    err = keeper.AddFunction(ctx, appId, msg.FunctionName, msg.Parameter, msg.Body, msg.Owner, 0)
+    err = keeper.AddFunction(ctx, appId, msg.FunctionName, msg.Description, msg.Body, msg.Owner, 0)
     if err != nil{
         return nil, err
     }
