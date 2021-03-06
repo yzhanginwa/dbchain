@@ -25,6 +25,10 @@ var (
 const (
     TxStateInvalidTime     = 600
     TxInvalidCheckRunTime  = 20 * time.Millisecond
+    TxStateFail            = "fail"
+    TxStateSuccess         = "success"
+    TxStatePending         = "pending"
+    TxStateProcessing      = "processing"
 )
 
 func GetDatabase(appCode string) (types.Database, bool) {

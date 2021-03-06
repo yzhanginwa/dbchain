@@ -191,7 +191,7 @@ func handleMsgAddCustomQuerier(ctx sdk.Context, keeper Keeper, msg MsgAddCustomQ
         }
     }
     //TODO Does it need to be checked that if the function has been added
-    err = keeper.AddFunction(ctx, appId, msg.QuerierName, msg.Parameter, msg.Body, msg.Owner, 1)
+    err = keeper.AddFunction(ctx, appId, msg.QuerierName, msg.Description, msg.Body, msg.Owner, 1)
     if err != nil{
         return nil, err
     }

@@ -3,9 +3,6 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
-	"github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/tailor_lua"
-	"strings"
 )
 
 ////////////////////
@@ -17,18 +14,18 @@ import (
 type MsgAddCustomQuerier struct {
 	Owner sdk.AccAddress `json:"owner"`
 	AppCode string       `json:"app_code"`
-	QuerierName string  `json:"function_name"`
-	Parameter string     `json:"parameter"`
+	QuerierName string  `json:"querier_name"`
+	Description string     `json:"description"`
 	Body string          `json:"body"`
 }
 
 // NewMsgCreatePoll is a constructor function for MsgCreatPoll
-func NewMsgAddCustomQuerier(owner sdk.AccAddress, appCode, querierName, parameter, body string) MsgAddCustomQuerier {
+func NewMsgAddCustomQuerier(owner sdk.AccAddress, appCode, querierName, description, body string) MsgAddCustomQuerier {
 	return MsgAddCustomQuerier {
 		Owner: owner,
 		AppCode: appCode,
 		QuerierName: querierName,
-		Parameter: parameter,
+		Description: description,
 		Body: body,
 	}
 }
@@ -47,22 +44,10 @@ func (msg MsgAddCustomQuerier) ValidateBasic() error {
 	if len(msg.AppCode) == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
 	}
-	if len(msg.QuerierName) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Function name cannot be empty")
-	}
 	if len(msg.Body) ==0 {
 		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Body cannot be empty")
 	}
-	p := super_script.NewPreprocessor(strings.NewReader(msg.Body))
-	p.Process()
-	if !p.Success {
-		return  sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Script syntax error")
-	}
-	newScript := p.Reconstruct()
-	err := tailor_lua.CompileAndCheckLuaScript(newScript)
-	if err != nil{
-		return err
-	}
+
 	return nil
 }
 

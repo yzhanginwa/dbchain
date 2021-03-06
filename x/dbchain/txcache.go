@@ -32,12 +32,12 @@ func setTxStatus(ctx sdk.Context, keeper Keeper, err *error)  {
 		currentStatus := currentStatesIm.(*types.TxStatus)
 		currentStatus.Index++
 		if *err != nil{
-			currentStatus.State = "fail"
+			currentStatus.State = cache.TxStateFail
 			currentStatus.Err = (*err).Error()
 		} else if currentStatus.Index == len(msgs) {
-			currentStatus.State = "success"
+			currentStatus.State = cache.TxStateSuccess
 		} else {
-			currentStatus.State = "processing"
+			currentStatus.State = cache.TxStateProcessing
 		}
 	} else {
 		timeStamp := time.Now().Unix()
@@ -46,9 +46,9 @@ func setTxStatus(ctx sdk.Context, keeper Keeper, err *error)  {
 			tempStatus.State = "fail"
 			tempStatus.Err = (*err).Error()
 		} else if len(msgs) == 1 {
-			tempStatus.State = "success"
+			tempStatus.State = cache.TxStateSuccess
 		} else {
-			tempStatus.State = "processing"
+			tempStatus.State = cache.TxStateProcessing
 		}
 		cache.TxStatusCache.Store(txHash, tempStatus)
 	}

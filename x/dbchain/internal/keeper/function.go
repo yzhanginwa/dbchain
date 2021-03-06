@@ -4,8 +4,10 @@ import (
     "encoding/json"
     "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
+    "github.com/mr-tron/base58"
     lua "github.com/yuin/gopher-lua"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/tailor_lua"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "strings"
 )
@@ -15,6 +17,9 @@ import (
 // parameter t is used to distinguish type,when t == 0 ,it means function. when t == 1 ,it means querier
 func (k Keeper) AddFunction(ctx sdk.Context, appId uint, functionName, description, body string, owner sdk.AccAddress, t int) error {
 
+    if err := checkLuaSyntax(body); err != nil {
+        return err
+    }
     store := DbChainStore(ctx, k.storeKey)
     function := types.NewFunction()
     function.Name = getFuncNameFromBody(ctx, k, appId, owner, body)
@@ -129,15 +134,33 @@ func (k Keeper) GetFunctionInfo(ctx sdk.Context, appId uint, name string, t int)
 
 func (k Keeper) DoCustomQuerier(ctx sdk.Context, appId uint, querierInfo types.Function, argument string, addr sdk.AccAddress) ([]byte, error){
     //get lua script and params
-    var arguments = make([]string,0)
-    if err := json.Unmarshal([]byte(argument), &arguments); err != nil {
-        return nil,errors.New("argument should be json encoded array!")
+    bArgument, err := base58.Decode(argument)
+    if err != nil {
+        return nil,errors.New("call DoCustomQuerier err :" + err.Error())
     }
-
+    arguments := strings.Split( string(bArgument), "/")
     params := make([]lua.LValue,0)
     for _,v := range arguments{
-        params = append(params, lua.LString(v))
+        param, err := base58.Decode(v)
+        if err != nil {
+            return nil,errors.New("call DoCustomQuerier err :" + err.Error())
+        }
+        params = append(params, lua.LString(string(param)))
     }
 
     return callLuaScriptQuerierFunc(ctx, appId, addr, k, querierInfo.Name, params, QueryHandleType)
+}
+
+func checkLuaSyntax(script string) error {
+    p := super_script.NewPreprocessor(strings.NewReader(script))
+    p.Process()
+    if !p.Success {
+    	return  errors.New("Script syntax error")
+    }
+    newScript := p.Reconstruct()
+    err := tailor_lua.CompileAndCheckLuaScript(newScript)
+    if err != nil{
+    	return err
+    }
+    return nil
 }

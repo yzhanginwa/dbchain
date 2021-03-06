@@ -73,11 +73,11 @@ func GetCmdAddCustomQuerier(cdc *codec.Codec) *cobra.Command {
 
             appCode      := args[0]
             querierName  := args[1]
-            parameter    := args[2]
+            description    := args[2]
             body         := args[3]
 
 
-            msg := types.NewMsgAddCustomQuerier(cliCtx.GetFromAddress(), appCode, querierName, parameter, body)
+            msg := types.NewMsgAddCustomQuerier(cliCtx.GetFromAddress(), appCode, querierName, description, body)
             err := msg.ValidateBasic()
             if err != nil {
                 return err

@@ -489,6 +489,29 @@ func getGoExportQueryFunc(ctx sdk.Context, appId uint, keeper Keeper, addr sdk.A
 			setLuaFuncRes(L, idsTable,lua.LString(""))
 			return 2
 		},
+		"specFindRowsBy" : func(L *lua.LState) int {
+			res := make([]types.RowFields, 0)
+			querierObjJson := L.ToString(1)
+			var querierObjs [](map[string]string)
+			if err := json.Unmarshal([]byte(querierObjJson), &querierObjs); err != nil {
+				sliceFieldTab := createLuaTable(res)
+				setLuaFuncRes(L, sliceFieldTab, lua.LString(err.Error()))
+				return 2
+			}
+			result, _, err := specQuerierSuperHandler(ctx, keeper, appId, querierObjs, addr)
+			if err != nil {
+				sliceFieldTab := createLuaTable(res)
+				setLuaFuncRes(L, sliceFieldTab, lua.LString(err.Error()))
+				return 2
+			}
+			result = checkResult(ctx, addr, keeper, appId, querierObjs,result)
+			for _,val := range result {
+				res = append(res, val)
+			}
+			sliceFieldTab := createLuaTable(res)
+			setLuaFuncRes(L, sliceFieldTab, lua.LString(""))
+			return 2
+		},
 	}
 }
 func getFieldValueMap(ctx sdk.Context, appId uint, keep Keeper, tableName string, s string) (types.RowFields, error) {

@@ -825,8 +825,8 @@ func queryTxSimpleResult(ctx sdk.Context, path []string, req abci.RequestQuery, 
    txHash = strings.ToLower(txHash)
    txStateIt,ok := cache.TxStatusCache.Load(txHash)
    if !ok {
-       errStr := "can not find this tx : " + path[1] + ". Please check again later !"
-       txState = types.NewTxStatus("fail", 0, errStr, nowTime)
+       errStr := "Tx : " + path[1] + " is unhandled" + ". Please check again later !"
+       txState = types.NewTxStatus(cache.TxStatePending, 0, errStr, nowTime)
    } else {
        txState = txStateIt.(*types.TxStatus)
        //The information has expired and needs to be deleted
