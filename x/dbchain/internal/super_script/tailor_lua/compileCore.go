@@ -546,8 +546,10 @@ func compileStmt(context *funcContext, stmt ast.Stmt) bool { // {{{
 		compileChunk(context, st.Stmts)
 		context.LeaveBlock()
 	case *ast.WhileStmt:
+		HASLOOP = true
 		return true
 	case *ast.RepeatStmt:
+		HASLOOP = true
 		return true
 	case *ast.FuncDefStmt:
 		compileFuncDefStmt(context, st)
@@ -558,8 +560,10 @@ func compileStmt(context *funcContext, stmt ast.Stmt) bool { // {{{
 	case *ast.BreakStmt:
 		compileBreakStmt(context, st)
 	case *ast.NumberForStmt:
+		HASLOOP = true
 		return true
 	case *ast.GenericForStmt:
+		HASLOOP = true
 		return true
 	}
 	return false

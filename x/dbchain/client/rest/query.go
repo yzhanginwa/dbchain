@@ -2,7 +2,7 @@ package rest
 
 import (
     "fmt"
-    "github.com/yzhanginwa/dbchain/x/dbchain/client/rest/oracle"
+    "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "net/http"
     "github.com/mr-tron/base58"

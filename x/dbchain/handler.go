@@ -498,7 +498,7 @@ func handleMsgInsertRow(ctx sdk.Context, keeper Keeper, msg types.MsgInsertRow) 
     }
 
     if !keeper.HasTable(ctx, appId, msg.TableName) {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Table % does not exist!", msg.TableName))
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Table %s does not exist!", msg.TableName))
     }
     
     var rowFields types.RowFields
@@ -527,12 +527,12 @@ func handleMsgUpdateRow(ctx sdk.Context, keeper Keeper, msg types.MsgUpdateRow) 
     }
 
     if !keeper.HasTable(ctx, appId, msg.TableName) {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("Table % does not exist!", msg.TableName))
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("Table %s does not exist!", msg.TableName))
     }
 
     options, _ := keeper.GetOption(ctx, appId, msg.TableName)
     if ! utils.ItemExists(options, string(types.TBLOPT_UPDATABLE)) {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("Table % is not updatable!", msg.TableName))
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("Table %s is not updatable!", msg.TableName))
     }
 
     var rowFields types.RowFields
@@ -551,12 +551,12 @@ func handleMsgDeleteRow(ctx sdk.Context, keeper Keeper, msg types.MsgDeleteRow) 
     }
 
     if !keeper.HasTable(ctx, appId, msg.TableName) {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("Table % does not exist!", msg.TableName))
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("Table %s does not exist!", msg.TableName))
     }
 
     options, _ := keeper.GetOption(ctx, appId, msg.TableName)
     if ! utils.ItemExists(options, string(types.TBLOPT_DELETABLE)) {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("Table % is not updatable!", msg.TableName))
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("Table %s is not updatable!", msg.TableName))
     }
 
     keeper.Delete(ctx, appId, msg.TableName, msg.Id, msg.Owner)
@@ -570,7 +570,7 @@ func handleMsgFreezeRow(ctx sdk.Context, keeper Keeper, msg types.MsgFreezeRow) 
     }
 
     if !keeper.HasTable(ctx, appId, msg.TableName) {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("Table % does not exist!", msg.TableName))
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("Table %s does not exist!", msg.TableName))
     }
 
     keeper.Freeze(ctx, appId, msg.TableName, msg.Id, msg.Owner)

@@ -10,8 +10,10 @@ import (
 	"strings"
 )
 
+var HASLOOP = false
 //
 func CompileAndCheckLuaScript(luaScript string) error {
+	HASLOOP = false
 	chunk, err := parse.Parse(strings.NewReader(luaScript), "<string>")
 	if err != nil {
 		return err
@@ -22,11 +24,11 @@ func CompileAndCheckLuaScript(luaScript string) error {
 	if _, ok := chunk[0].(*ast.FuncDefStmt); !ok {
 		return errors.New("Only starting with defined function is supported ")
 	} else {
-		hasLoop, err := CheckLuaLoop(chunk)
+		_, err := CheckLuaLoop(chunk)
 		if err != nil {
 			return err
 		}
-		if hasLoop {
+		if HASLOOP {
 			return errors.New("can not use loop in a function")
 		}
 	}
@@ -44,6 +46,6 @@ func CheckLuaLoop(chunk []ast.Stmt) (hasLoop bool, err error) {
 	}()
 	err = nil
 	context := newFuncContext("<string>", nil)
-	hasLoop = compileChunk(context, chunk)
+	compileChunk(context, chunk)
 	return
 }
