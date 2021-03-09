@@ -37,7 +37,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/groups/{%s}/{%s}", storeName, "accessToken", "appCode"), showGroups(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/group/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "groupName"), showGroupMembers(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/group_memo/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "groupName"), showGroupMemo(cliCtx, storeName)).Methods("GET")
-    r.HandleFunc(fmt.Sprintf("/%s/new_app_user/{%s}", storeName, "accessToken"), appNewOneCoin(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/new_app_user/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "tableName"), appNewOneCoin(cliCtx, storeName)).Methods("GET")
 
     r.HandleFunc(fmt.Sprintf("/%s/querier/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "querierBase58"), execQuerier(cliCtx, storeName)).Methods("GET")
 
