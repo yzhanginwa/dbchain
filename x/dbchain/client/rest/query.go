@@ -1,14 +1,10 @@
 package rest
 
 import (
-    "encoding/json"
     "fmt"
-    "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
-    "net/http"
-    "github.com/mr-tron/base58"
     "github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/mr-tron/base58"
+    "net/http"
 
     "github.com/cosmos/cosmos-sdk/types/rest"
 
@@ -329,49 +325,6 @@ func showGroupMemo(cliCtx context.CLIContext, storeName string) http.HandlerFunc
             return
         }
         rest.PostProcessResponse(w, cliCtx, res)
-    }
-}
-
-func appNewOneCoin(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
-    return func(w http.ResponseWriter, r *http.Request) {
-        vars := mux.Vars(r)
-        accessCode      := vars["accessToken"]
-        appCode         := vars["appCode"]
-        tableName       := vars["tableName"]
-
-        addr, err := utils.VerifyAccessCode(accessCode)
-        if err != nil {
-            rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
-            return
-        }
-        res := make(map[string]string)
-        var msgs []oracle.UniversalMsg
-        res["result"] = "success"
-
-        accNum, _, err := oracle.GetAccountInfo(addr.String())
-        if err == nil && accNum == 0 {
-            msg, err := oracle.GetSendTokenMsg(addr)
-            if err != nil {
-                res["result"] = "failed"
-                bs , _ := json.Marshal(res)
-                rest.PostProcessResponse(w, cliCtx, bs)
-                return
-            }
-            msgs = append(msgs, msg)
-            //generate invitation code
-            rowFields := make(types.RowFields)
-            rowFields["user"] = addr.String()
-            rowFields["code"] = utils.GenInvitationCod(cliCtx, appCode, tableName, addr.String())
-            insertMsgs := oracle.GetInsertRowMsgs(appCode, tableName, []types.RowFields{rowFields})
-            msgs = append(msgs, insertMsgs...)
-
-            oracle.BuildTxsAndBroadcast(msgs)
-            res["code"]   = rowFields["code"]
-        }
-
-        bs , _ := json.Marshal(res)
-        rest.PostProcessResponse(w, cliCtx, bs)
-        return
     }
 }
 

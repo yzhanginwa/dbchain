@@ -168,6 +168,35 @@ func oracleVerifyCorpInfo(cliCtx context.CLIContext, storeName string) http.Hand
     }
 }
 
+
+func appNewOneCoin(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        vars := mux.Vars(r)
+        accessCode      := vars["accessToken"]
+
+        addr, err := utils.VerifyAccessCode(accessCode)
+        if err != nil {
+            rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+            return
+        }
+        var msgs []oracle.UniversalMsg
+
+        accNum, _, err := oracle.GetAccountInfo(addr.String())
+        if err == nil && accNum == 0 {
+            msg, err := oracle.GetSendTokenMsg(addr)
+            if err != nil {
+                rest.PostProcessResponse(w, cliCtx, "failed")
+                return
+            }
+            msgs = append(msgs, msg)
+            oracle.BuildTxsAndBroadcast(msgs)
+        }
+
+        rest.PostProcessResponse(w, cliCtx, "success")
+        return
+    }
+}
+
 //////////////////////
 //                  //
 // helper functions //

@@ -441,6 +441,23 @@ func getGoExportFilterFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk
 			}
 			return 1
 		},
+		"valitatecode" : func(L *lua.LState) int {
+			code := L.ToString(1)
+			if len(code) != 6 {
+				L.Push(lua.LBool(false))
+				return 1
+			}
+			base := "wzAG2dsfbkrEinDKPamBpQ6WtUuHLNceyRVXZ78h3TCJSY5qxjvM14F"
+			for _,v := range code {
+				index := strings.IndexByte(base,byte(v))
+				if index == -1 {
+					L.Push(lua.LBool(false))
+					return 1
+				}
+			}
+			L.Push(lua.LBool(true))
+			return 1
+		},
 	}
 }
 func getGoExportQueryFunc(ctx sdk.Context, appId uint, keeper Keeper, addr sdk.AccAddress) map[string]lua.LGFunction {
