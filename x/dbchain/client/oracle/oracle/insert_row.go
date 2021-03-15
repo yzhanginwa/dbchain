@@ -48,3 +48,13 @@ func InsertRow(appCode string, tableName string, rowFields types.RowFields) {
     rowFieldss := []types.RowFields{rowFields}
     InsertRows(appCode, tableName, rowFieldss)
 }
+
+func GetOracleAccAddr() sdk.AccAddress{
+    privKey, err := LoadPrivKey()
+    if err != nil {
+        return nil
+    }
+
+    oracleAccAddr := sdk.AccAddress(privKey.PubKey().Address())
+    return oracleAccAddr
+}

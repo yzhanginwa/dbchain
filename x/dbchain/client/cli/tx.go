@@ -603,7 +603,7 @@ func GetCmdInsertRow(cdc *codec.Codec) *cobra.Command {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg,msg,msg})
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
         },
     }
 }

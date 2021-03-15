@@ -17,4 +17,10 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 
     r.HandleFunc(fmt.Sprintf("/%s/oracle/new_app_user/{%s}", storeName, "accessToken"), appNewOneCoin(cliCtx, storeName)).Methods("GET")
 
+    //dbpay
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/dbpay/{%s}/{%s}", storeName, "accessToken", "payType"), oracleCallAliPagePay(cliCtx, storeName)).Methods("POST")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/submit_order_status/{%s}", storeName, "accessToken"), oracleQuerySubmitOrderStatus(cliCtx, storeName)).Methods("POST")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/dbpay_query/{%s}", storeName, "accessToken"), oracleQueryPayStatus(cliCtx, storeName)).Methods("POST")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/dbpay_notify", storeName), oracleSavePayStatus(cliCtx, storeName)).Methods("POST")
+
 }
