@@ -111,17 +111,39 @@ func GetCmdCreateSysDatabase(cdc *codec.Codec) *cobra.Command {
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            msg := types.NewMsgCreateSysDatabase(cliCtx.GetFromAddress())
-            err := msg.ValidateBasic()
+            msgs, err := createSysDatabaseMsg(cliCtx.GetFromAddress())
             if err != nil {
                 return err
             }
-
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, msgs)
         },
     }
 }
 
+func createSysDatabaseMsg(oracleAddr sdk.AccAddress)([]sdk.Msg, error) {
+    msgs := make([]sdk.Msg, 0)
+    msg := types.NewMsgCreateSysDatabase(oracleAddr)
+    err := msg.ValidateBasic()
+    if err != nil {
+       return nil, err
+    }
+    msgs = append(msgs, msg)
+
+    tables := map[string][]string{
+        "authentication" : []string{"address", "type", "value"},
+        "buyerorder" : []string{"buyer", "out_trade_no"},
+        "orderinfo"  : []string{"out_trade_no", "trade_no", "total_amount", "trade_status"},
+    }
+    for tableName, fileds := range tables {
+        msg := types.NewMsgCreateTable(oracleAddr,"0000000001",tableName, fileds)
+        if err := msg.ValidateBasic(); err != nil {
+            return nil, err
+        }
+        msgs = append(msgs, msg)
+    }
+    return msgs, nil
+
+}
 func GetCmdSetAppPermission(cdc * codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use:   "set-app-permission [database] [permission_required]",
