@@ -866,15 +866,23 @@ func querySubmitOrderStatus(ctx sdk.Context, path []string, req abci.RequestQuer
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
+    result := ""
     status := checkSubmitOrderStatus(keeper, ctx, add, oracleAddr, OutTradeNo)
     if status == NotFind {
-        return []byte("Not found"), nil
+        result = "Not found"
     } else if status == Unknown {
-        return []byte("Unknown error"), nil
+        result = "Unknown error"
     } else if status == Processing {
-        return []byte("Order generating"), nil
+        result = "Generating"
+    } else if status == Success {
+        result = "Success"
     }
-    return []byte("Success"), nil
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, result)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+    return res, nil
 }
 
 func queryTxSimpleResult(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {

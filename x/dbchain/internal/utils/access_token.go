@@ -72,3 +72,14 @@ func VerifyAccessCode(accessCode string) (sdk.AccAddress, error) {
     }
 }
 
+func GetAddrFromAccessCode(accessCode string) (sdk.AccAddress, error) {
+    parts := strings.Split(accessCode, ":")
+    if len(parts) != 3 {
+        return nil, errors.New("Wrong access code format")
+    }
+    pubKeyBytes, _ := base58.Decode(parts[0])
+    var pubKey secp256k1.PubKeySecp256k1
+    copy(pubKey[:], pubKeyBytes)
+    address := sdk.AccAddress(pubKey.Address())
+    return address, nil
+}

@@ -39,27 +39,27 @@ const (
 	BuyerOrder = "buyerorder"
 	OrderInfo  = "orderinfo"
 	OrderSub   = "YTBox"
-	NotifyURL         = "https://controlpanel.dbchain.cloud/relay/dbchain/oracle/dbpay_notify"
+	NotifyURL  = "https://controlpanel.dbchain.cloud/relay/dbchain/oracle/dbcpay_notify"
+	//it should be true when switch to production environment
+ 	IsProduction = false
 )
 
 func init(){
-	filePath := os.ExpandEnv(types.OracleHome)
-	privateKy := loadAliPrivateKey(filePath + "/config/cms.dbchain.cloud_私钥.txt")
 	var err error
-	if aliClient, err = alipay.New(kAppId, privateKy, false); err != nil {
+	if aliClient, err = alipay.New(kAppId, cmsDbchainCloudPriKey, IsProduction); err != nil {
 		fmt.Println("init aliclient err : ", err)
 		os.Exit(-1)
 	}
 	// 使用支付宝证书
-	if err = aliClient.LoadAppPublicCertFromFile(filePath + "/config/appCertPublicKey_2021000117616474.crt"); err != nil {
+	if err = aliClient.LoadAppPublicCert(appCertPublicKey); err != nil {
 		fmt.Println("load app public cert from file fail : ", err)
 		os.Exit(-1)
 	}
-	if err = aliClient.LoadAliPayRootCertFromFile(filePath + "/config/alipayRootCert_own.crt"); err != nil {
+	if err = aliClient.LoadAliPayRootCert(alipayRootCert); err != nil {
 		log.Println("load alipay root cert from file fail : ", err)
 		os.Exit(-1)
 	}
-	if err = aliClient.LoadAliPayPublicCertFromFile(filePath + "/config/alipayCertPublicKey_RSA2_own.crt"); err != nil {
+	if err = aliClient.LoadAliPayPublicCert(alipayCertPublicKeyRSA2); err != nil {
 		log.Println("load aliPay public cert from file fail : ", err)
 		os.Exit(-1)
 	}
@@ -82,26 +82,27 @@ func oracleCallAliPagePay(cliCtx context.CLIContext, storeName string) http.Hand
 		Money := r.Form.Get("money")
 		OutTradeNo := fmt.Sprintf("%d", xid.Next())
 
-		result := ""
+
+		url := ""
 		if payType == "page" {
-			result , err = oraclePagePay(ReturnURL, Money, OutTradeNo)
+			url , err = oraclePagePay(ReturnURL, Money, OutTradeNo)
 		} else if payType == "app" {
-			result , err = oracleAppPay(Money, OutTradeNo)
+			url , err = oracleAppPay(Money, OutTradeNo)
 		} else {
-			rest.PostProcessResponse(w, cliCtx, "pay type wrong")
+			rest.WriteErrorResponse(w, http.StatusNotFound, "pay type wrong")
 			return
 		}
 		if err != nil {
-			rest.PostProcessResponse(w, cliCtx, "Failed to submit order : " + err.Error())
+			rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to submit order : " + err.Error())
 			return
 		}
 		//write to buyerorder table
 		rowFields := make(types.RowFields)
 		rowFields["buyer"] = addr.String()
 		rowFields["out_trade_no"] = OutTradeNo
-		js,err := json.Marshal(rowFields)
+		js, err := json.Marshal(rowFields)
 		if err != nil {
-			rest.PostProcessResponse(w, cliCtx, "marshal rowFields failed")
+			rest.WriteErrorResponse(w, http.StatusNotFound, "marshal rowFields failed")
 			return
 		}
 		oracleAccAddr := oracle.GetOracleAccAddr()
@@ -114,7 +115,17 @@ func oracleCallAliPagePay(cliCtx context.CLIContext, storeName string) http.Hand
 		oracle.BuildTxsAndBroadcast([]oracle.UniversalMsg{msg})
 		//set to cache
 		SetBuyerOrder(addr.String(), OutTradeNo)
-		rest.PostProcessResponse(w, cliCtx, result)
+
+
+		result := make(map[string]string)
+		result["url"] = url
+		result["out_trade_no"] = OutTradeNo
+		bz , err := json.Marshal(result)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusNotFound, "marshal rowFields failed")
+			return
+		}
+		rest.PostProcessResponse(w, cliCtx, bz)
 		return
 	}
 }
@@ -152,16 +163,31 @@ func oracleAppPay(Money , OutTradeNo string) (string, error) {
 func oracleQuerySubmitOrderStatus(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		accessToken := vars["accessToken"]
 		r.ParseForm()
 		outTradeNo := r.Form.Get("out_trade_no")
 
+		addr, err := utils.GetAddrFromAccessCode(accessToken)
+		if err != nil {
+			rest.WriteErrorResponse(w,  http.StatusNotFound, err.Error())
+			return
+		}
+		order := GetOrder(addr.String())
+		if order == "" {
+			rest.WriteErrorResponse(w,  http.StatusNotFound, "Not found")
+			return
+		}
 		oracleAdd := oracle.GetOracleAccAddr()
 		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/submit_order_status/%s/%s/%s", storeName, vars["accessToken"], outTradeNo, oracleAdd), nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return
 		}
+		if string(res) == `"Success"`{
+			DelOrder(addr.String())
+		}
 		rest.PostProcessResponse(w, cliCtx, res)
+		return
 	}
 }
 
@@ -251,7 +277,6 @@ func SaveToOrderInfoTable(oracleAddr sdk.AccAddress,  row map[string]string, tab
 	if err != nil {
 		return err
 	}
-	//oracleAccAddr := oracle.GetOracleAccAddr()
 	msg := types.NewMsgInsertRow(oracleAddr, "0000000001", tableName, js)
 	err = msg.ValidateBasic()
 	if err != nil {

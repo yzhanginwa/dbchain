@@ -165,10 +165,6 @@ func checkBuyer(keeper Keeper, ctx sdk.Context, owner, oracleAddr sdk.AccAddress
 }
 
 func checkSubmitOrderStatus(keeper Keeper, ctx sdk.Context, owner, oracleAddr sdk.AccAddress, tradeNo string) CheckBuyerStatus {
-    cacheData := top.GetOrder(owner.String())
-    if cacheData == "" {
-        return NotFind
-    }
 
     querierObjs := []map[string]string{}
     var ent map[string]string
@@ -194,7 +190,6 @@ func checkSubmitOrderStatus(keeper Keeper, ctx sdk.Context, owner, oracleAddr sd
     } else if len(res) == 0 {
         return Processing
     }
-    top.DelOrder(owner.String())
     return Success
 }
 
@@ -228,7 +223,6 @@ func getOracleOrderStatus(keeper Keeper, ctx sdk.Context, oracleAddr sdk.AccAddr
         }
         result = res
         result["SaveToTable"] = "true"
-        //top.SaveToOrderInfoTable(oracleAddr, res, top.OrderInfo)//saveToOrderInfoTable(res)
     } else {
         result = rows[0]
         delete(result,"created_by")

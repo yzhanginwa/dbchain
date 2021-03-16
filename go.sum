@@ -498,6 +498,8 @@ github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPx
 github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6MwdIuYE2rE=
 github.com/smartwalle/alipay/v3 v3.1.4 h1:KN4bivq2o/FhiRmZZBSwO/Vif27Z8CsboP6KaLYDDxQ=
 github.com/smartwalle/alipay/v3 v3.1.4/go.mod h1:cZUMCCnsux9YAxA0/f3PWUR+7wckWtE1BqxbVRtGij0=
+github.com/smartwalle/alipay/v3 v3.1.5 h1:oBJFxoaAhBL3XLtQ1HPw258drEL6ljHTFtCTQZoYq3M=
+github.com/smartwalle/alipay/v3 v3.1.5/go.mod h1:cZUMCCnsux9YAxA0/f3PWUR+7wckWtE1BqxbVRtGij0=
 github.com/smartwalle/crypto4go v1.0.2 h1:9DUEOOsPhmp00438L4oBdcL8EZG1zumecft5bWj5phI=
 github.com/smartwalle/crypto4go v1.0.2/go.mod h1:LQ7vCZIb7BE5+MuMtJBuO8ORkkQ01m4DXDBWPzLbkMY=
 github.com/smartwalle/xid v1.0.6 h1:aZ52pzrFSpzg+AIbSsiBxadjAZRctvDSkp5AokOHuFw=

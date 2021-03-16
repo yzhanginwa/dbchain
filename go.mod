@@ -20,6 +20,6 @@ require (
 	github.com/tendermint/tendermint v0.33.7
 	github.com/tendermint/tm-db v0.5.1
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da
-	github.com/smartwalle/alipay/v3 v3.1.4
+	github.com/smartwalle/alipay/v3 v3.1.5
 	github.com/smartwalle/xid v1.0.6
 )
