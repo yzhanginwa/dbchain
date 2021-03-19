@@ -108,6 +108,7 @@ func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
             }
         }
     }
+    cache.VoidTable(appId,tableName)
 }
 
 func (k Keeper)GetTable(ctx sdk.Context, appId uint, tableName string) (types.Table, error){

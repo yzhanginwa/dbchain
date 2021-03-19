@@ -131,8 +131,7 @@ func createSysDatabaseMsg(oracleAddr sdk.AccAddress)([]sdk.Msg, error) {
 
     tables := map[string][]string{
         "authentication" : []string{"address", "type", "value"},
-        "buyerorder" : []string{"buyer", "out_trade_no"},
-        "orderinfo"  : []string{"out_trade_no", "trade_no", "total_amount", "trade_status"},
+        "order_receipt"  : []string{"appcode", "owner", "orderid", "amount", "expiration_date", "vendor", "vendor_payment_no"},
     }
     for tableName, fileds := range tables {
         msg := types.NewMsgCreateTable(oracleAddr,"0000000001",tableName, fileds)
@@ -141,6 +140,13 @@ func createSysDatabaseMsg(oracleAddr sdk.AccAddress)([]sdk.Msg, error) {
         }
         msgs = append(msgs, msg)
     }
+    //ModifyColumnOption
+    msgModifyColumnOption := types.NewMsgModifyColumnOption(oracleAddr, "0000000001", "order_receipt", "orderid", "add", string(types.FLDOPT_UNIQUE))
+    err = msgModifyColumnOption.ValidateBasic()
+    if err != nil {
+        return nil, err
+    }
+    msgs = append(msgs, msg)
     return msgs, nil
 
 }

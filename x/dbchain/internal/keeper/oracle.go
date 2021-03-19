@@ -3,7 +3,6 @@ package keeper
 import (
     "encoding/json"
     sdk "github.com/cosmos/cosmos-sdk/types"
-    top "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle"
     "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "sort"
@@ -130,107 +129,6 @@ func conditionalQuery(keeper Keeper, ctx sdk.Context, oracleAddr sdk.AccAddress,
         return nil, err
     }
     return rows, nil
-}
-
-//Make sure that buyer and querier are the same person
-func checkBuyer(keeper Keeper, ctx sdk.Context, owner, oracleAddr sdk.AccAddress, tradeNo string) CheckBuyerStatus {
-
-    querierObjs := []map[string]string{}
-    var ent map[string]string
-    ent = map[string]string {
-        "method": "table",
-        "table": top.BuyerOrder,
-    }
-    querierObjs = append(querierObjs, ent)
-    ent = map[string]string {
-        "method": "where",
-        "field": "out_trade_no",
-        "value": tradeNo,
-        "operator": "==",
-    }
-    querierObjs = append(querierObjs, ent)
-
-    res , err := conditionalQuery(keeper, ctx, oracleAddr, querierObjs)
-    if err != nil {
-        return Unknown
-    }
-    if len(res) > 1 {
-        return Unknown
-    } else if len(res) == 0 {
-        return NotFind
-    } else if res[0]["buyer"] != owner.String() {
-        return Different
-    }
-    return Same
-}
-
-func checkSubmitOrderStatus(keeper Keeper, ctx sdk.Context, owner, oracleAddr sdk.AccAddress, tradeNo string) CheckBuyerStatus {
-
-    querierObjs := []map[string]string{}
-    var ent map[string]string
-    ent = map[string]string {
-        "method": "table",
-        "table": top.BuyerOrder,
-    }
-    querierObjs = append(querierObjs, ent)
-    ent = map[string]string {
-        "method": "where",
-        "field": "out_trade_no",
-        "value": tradeNo,
-        "operator": "==",
-    }
-    querierObjs = append(querierObjs, ent)
-
-    res , err := conditionalQuery(keeper, ctx, oracleAddr,querierObjs)
-    if err != nil {
-        return Unknown
-    }
-    if len(res) > 1 {
-        return Unknown
-    } else if len(res) == 0 {
-        return Processing
-    }
-    return Success
-}
-
-func getOracleOrderStatus(keeper Keeper, ctx sdk.Context, oracleAddr sdk.AccAddress, OutTradeNo string) (map[string]string, error) {
-    querierObjs := []map[string]string{}
-    var ent map[string]string
-
-    ent = map[string]string {
-        "method": "table",
-        "table": "orderinfo",
-    }
-    querierObjs = append(querierObjs, ent)
-
-    ent = map[string]string {
-        "method": "where",
-        "field": "out_trade_no",
-        "value": OutTradeNo,
-        "operator": "==",
-    }
-    querierObjs = append(querierObjs, ent)
-
-    result := make(map[string]string)
-    rows, err := conditionalQuery(keeper, ctx, oracleAddr, querierObjs)
-    if err != nil {
-        return nil, err
-    }
-    if len(rows) == 0 {
-        res, err := top.OracleQueryAliOrder(OutTradeNo)
-        if err != nil {
-            return nil, err
-        }
-        result = res
-        result["SaveToTable"] = "true"
-    } else {
-        result = rows[0]
-        delete(result,"created_by")
-        delete(result,"created_at")
-        delete(result,"id")
-    }
-
-    return result, nil
 }
 
 func importAuthValueIntoAuthFields(rows []map[string]string) []OracleAuthFields {

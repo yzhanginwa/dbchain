@@ -71,7 +71,7 @@ func (k Keeper) specWhere(ctx sdk.Context, appId uint, tableName string, field s
 }
 
 
-func specQuerierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs [](map[string]string), owner sdk.AccAddress) ([](map[string]string), []uint, error) {
+func specQuerierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs [](map[string]string), owner sdk.AccAddress, isOracle bool) ([](map[string]string), []uint, error) {
 	builders := []QuerierBuilder{}
 	j := -1
 
@@ -80,8 +80,10 @@ func specQuerierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querier
 		switch qo["method"] {
 		case "table":
 			//only support
-			if qo["table"] != INHERIT && qo["table"] != INHERITABLE {
-				return nil, nil , errors.New("only support inherit or inheritable")
+			if !isOracle {
+				if qo["table"] != INHERIT && qo["table"] != INHERITABLE {
+					return nil, nil , errors.New("only support inherit or inheritable")
+				}
 			}
 			builders = append(builders, QuerierBuilder{})
 			j += 1

@@ -2,7 +2,6 @@ package keeper
 
 import (
     "encoding/json"
-    "errors"
     "fmt"
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
@@ -47,8 +46,6 @@ const (
     QueryCustomQuerierInfo = "customQuerierInfo"
     QueryCallCustomQuerier = "callCustomQuerier"
     QueryTxSimpleResult    = "txSimpleResult"
-    QueryOrderStatus       = "order_status"
-    QuerySubmitOrderStatus = "submit_order_status"
 )
 
 
@@ -120,10 +117,6 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryCallCustomQuerier(ctx, path[1:], req, keeper)
         case QueryTxSimpleResult:
            return queryTxSimpleResult(ctx, path[1:], req, keeper)
-        case QueryOrderStatus:
-            return queryOrderStatus(ctx, path[1:], req, keeper)
-        case QuerySubmitOrderStatus:
-            return querySubmitOrderStatus(ctx, path[1:], req, keeper)
         default:
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown dbchain query endpoint")
         }
@@ -816,72 +809,6 @@ func queryFunctionsInfo(ctx sdk.Context, path []string, req abci.RequestQuery, k
         panic("could not marshal result to JSON")
     }
 
-    return res, nil
-}
-
-func queryOrderStatus(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
-   accessCode := path[0]
-   OutTradeNo := path[1]
-   oracleAddrStr := path[2]
-   oracleAddr, err :=  sdk.AccAddressFromBech32(oracleAddrStr)
-   if err != nil {
-       return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "oracleAddr err!")
-   }
-   add, err := utils.VerifyAccessCode(accessCode)
-   if err != nil {
-       return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
-   }
-
-   status := checkBuyer(keeper, ctx, add, oracleAddr, OutTradeNo)
-   if status == NotFind {
-       return nil, errors.New("this order does not exit")
-   } else if status == Different {
-       return nil, errors.New("permission forbidden")
-   } else if status == Unknown {
-       return nil, errors.New("unknown error")
-   }
-
-   result, err := getOracleOrderStatus(keeper, ctx, oracleAddr, OutTradeNo)
-   if err != nil {
-       return nil, err
-   }
-   delete(result, "total_amount")
-   res, err := codec.MarshalJSONIndent(keeper.cdc, result)
-   if err != nil {
-       panic("could not marshal result to JSON")
-   }
-   return res, nil
-}
-
-func querySubmitOrderStatus(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
-    accessCode := path[0]
-    OutTradeNo := path[1]
-    oracleAddrStr := path[2]
-    oracleAddr, err :=  sdk.AccAddressFromBech32(oracleAddrStr)
-    if err != nil {
-        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "oracleAddr err!")
-    }
-    add, err := utils.VerifyAccessCode(accessCode)
-    if err != nil {
-        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
-    }
-
-    result := ""
-    status := checkSubmitOrderStatus(keeper, ctx, add, oracleAddr, OutTradeNo)
-    if status == NotFind {
-        result = "Not found"
-    } else if status == Unknown {
-        result = "Unknown error"
-    } else if status == Processing {
-        result = "Generating"
-    } else if status == Success {
-        result = "Success"
-    }
-
-    res, err := codec.MarshalJSONIndent(keeper.cdc, result)
-    if err != nil {
-        panic("could not marshal result to JSON")
-    }
     return res, nil
 }
 
