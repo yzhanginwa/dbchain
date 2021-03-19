@@ -28,15 +28,6 @@ const (
 
 func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAddress) map[string]lua.LGFunction {
 	return map[string]lua.LGFunction{
-		"LCT": func(L *lua.LState) int {
-			tableName := L.ToString(1)
-			sFieldName := L.ToString(2)
-			fieldNames := strings.Split(sFieldName, ",")
-			keeper.CreateTable(ctx, appId, owner, tableName, fieldNames)
-			L.Push(lua.LString(""))
-			return 1
-		},
-
 		"Insert": func(L *lua.LState) int {
 			ParamsNum := L.GetTop()
 			if ParamsNum >= 2 && ParamsNum%2 == 0 { //Normal inserttab,fields

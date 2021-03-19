@@ -104,6 +104,11 @@ func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
                     store.Set([]byte(getTablesKey(appId)), k.cdc.MustMarshalBinaryBare(tables))
                 }
                 store.Delete([]byte(getTableKey(appId, tableName)))
+                //TODO need delete rows of table
+                ids := k.FindAll(ctx, appId, tableName, owner)
+                for _, id := range ids {
+                    k.Delete(ctx, appId, tableName, id, owner)
+                }
                 break
             }
         }
