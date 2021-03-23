@@ -215,7 +215,7 @@ func checkResult(ctx sdk.Context, owner sdk.AccAddress, keeper Keeper, appId uin
 
 	if tableName == INHERIT {
 		for _, val := range src {
-			if owner.String() == val["created_by"] {	//query by creator
+			if owner.String() == val["from_address"] {	//query by creator
 				result = append(result, val)
 			} else if owner.String() == val["receive_address"] {	//query by receiver
 				receive_time, err := strconv.ParseInt(val["receive_time"],10,64)
@@ -237,7 +237,12 @@ func checkResult(ctx sdk.Context, owner sdk.AccAddress, keeper Keeper, appId uin
 				inheritableid := val["inheritableid"]
 				id , _ := strconv.Atoi(inheritableid)
 				row, err := keeper.DoFind(ctx, appId, INHERIT, uint(id))
-				if err != nil || row["receive_address"] != owner.String(){
+				if err != nil {
+					continue
+				} else if row["from_address"] == owner.String(){	//Inheritor query
+					result = append(result, val)
+					continue
+				} else if row["receive_address"] != owner.String() {  //recipient query
 					continue
 				}
 				receive_time, err := strconv.ParseInt(row["receive_time"],10,64)
