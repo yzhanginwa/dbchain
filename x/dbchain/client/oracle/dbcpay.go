@@ -39,11 +39,12 @@ fields:
 
 var aliClient *alipay.Client
 const (
-	kAppId = "2021000117616474"
+	kAppId = "2021002129602543"
 	OrderSub   = "YTBox"
 	NotifyURL  = "https://controlpanel.dbchain.cloud/relay/dbchain/oracle/dbcpay_notify"
- 	IsProduction = false
+ 	IsProduction = true
  	OrderReceipt = "order_receipt"
+ 	IsTest = true
 )
 
 func init(){
@@ -92,6 +93,22 @@ func oracleCallAliPagePay(cliCtx context.CLIContext, storeName string) http.Hand
 		}
 
 		Money := res["price"]
+		//test
+		if IsTest {
+			switch sellableid {
+			case "1":
+				Money = "0.01"
+			case "2":
+				Money = "0.02"
+			case "3":
+				Money = "0.03"
+			case "4":
+				Money = "0.04"
+			case "5":
+				Money = "0.05"
+			}
+		}
+		//end
 		url := ""
 		if payType == "page" {
 			url , err = oraclePagePay(ReturnURL, Money, OutTradeNo)

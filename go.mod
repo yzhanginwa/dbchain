@@ -21,7 +21,3 @@ require (
 	github.com/tendermint/tm-db v0.5.1
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da
 )
-
-//replace (
-//	github.com/cosmos/cosmos-sdk   => /home/docker/go/src/github.com/cosmos-sdk@v0.39.1
-//)

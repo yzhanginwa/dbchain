@@ -21,6 +21,7 @@ const (
     QueryCheckChainId  = "check_chain_id"
     QueryIsSysAdmin    = "is_sys_admin"
     QueryApplication   = "application"
+    QueryApplicationBrowser   = "application_browser"
     QueryAppUsers      = "app_users"
     QueryIsAppUser     = "is_app_user"
     QueryAdminApps     = "admin_apps"
@@ -46,6 +47,7 @@ const (
     QueryCustomQuerierInfo = "customQuerierInfo"
     QueryCallCustomQuerier = "callCustomQuerier"
     QueryTxSimpleResult    = "txSimpleResult"
+    QueryAllAccounts       = "allAccounts"
 )
 
 
@@ -63,6 +65,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             } else {
                 return queryApplications(ctx, path[1:], req, keeper)
             }
+        case QueryApplicationBrowser:
+            return queryApplicationsBrowser(ctx, path[1:], req, keeper)
         case QueryAppUsers:
             return queryAppUsers(ctx, path[1:], req, keeper)
         case QueryIsAppUser:
@@ -116,7 +120,9 @@ func NewQuerier(keeper Keeper) sdk.Querier {
         case QueryCallCustomQuerier:
             return queryCallCustomQuerier(ctx, path[1:], req, keeper)
         case QueryTxSimpleResult:
-           return queryTxSimpleResult(ctx, path[1:], req, keeper)
+            return queryTxSimpleResult(ctx, path[1:], req, keeper)
+        case QueryAllAccounts:
+            return queryAllAccount(ctx, path[1:], req, keeper)
         default:
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown dbchain query endpoint")
         }
@@ -214,6 +220,17 @@ func queryApplication(ctx sdk.Context, path []string, req abci.RequestQuery, kee
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, database)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryApplicationsBrowser(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+
+    applications := keeper.GetAllAppCode(ctx)
+    res, err := codec.MarshalJSONIndent(keeper.cdc, len(applications))
     if err != nil {
         panic("could not marshal result to JSON")
     }
@@ -912,6 +929,16 @@ func queryCallCustomQuerier(ctx sdk.Context, path []string, req abci.RequestQuer
     }
 
     return res, nil
+}
+
+func queryAllAccount(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper)([]byte, error){
+   accounts := keeper.GetAllAccounts(ctx)
+   accountNum := len(accounts)
+   res, err := json.Marshal(accountNum)
+   if err != nil {
+       panic("could not marshal result to JSON")
+   }
+   return res, nil
 }
 
 //////////////////

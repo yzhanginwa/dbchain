@@ -193,6 +193,7 @@ func NewDbChainApp(
     // It handles interactions with the namestore
     app.dbChainKeeper = dbchain.NewKeeper(
         app.bankKeeper,
+        app.accountKeeper,
         keys[dbchain.StoreKey],
         app.cdc,
     )

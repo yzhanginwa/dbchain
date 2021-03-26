@@ -40,4 +40,12 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 
     r.HandleFunc(fmt.Sprintf("/%s/querier/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "querierBase58"), execQuerier(cliCtx, storeName)).Methods("GET")
 
+    //block browser. do not need access token
+    r.HandleFunc("/block/txs/current_day", showCurrentDayTxsNum(cliCtx)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/block/txs/recent_day/{%s}", "daysAgo"), showRecentDaysTxsNum(cliCtx)).Methods("GET")
+    r.HandleFunc("/block/txs/total", showTotalTxsNum(cliCtx)).Methods("GET")
+    r.HandleFunc("/block/all_accounts", showAllAccounts(cliCtx)).Methods("GET")
+    r.HandleFunc("/block/all_applications", showAllApplications(cliCtx)).Methods("GET")
+
+
 }
