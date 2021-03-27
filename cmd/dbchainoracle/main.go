@@ -1,6 +1,7 @@
 package main
 
 import (
+    "github.com/tendermint/go-amino"
     "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle"
     "os"
     "path"
@@ -13,6 +14,7 @@ import (
     "github.com/spf13/cobra"
     "github.com/spf13/viper"
     "github.com/tendermint/tendermint/libs/cli"
+    dbchain "github.com/yzhanginwa/dbchain/x/dbchain/client/cli"
     app "github.com/yzhanginwa/dbchain"
 )
 
@@ -43,6 +45,7 @@ func main() {
     rootCmd.AddCommand(
         client.ConfigCmd(app.DefaultOracleHome),
         oracle.ServeCommand(cdc, registerRoutes),//use oracle server. its no limit to req.body
+        queryCmd(cdc),
         version.Cmd,
         flags.NewCompletionCmd(rootCmd, true),
     )
@@ -81,4 +84,18 @@ func initConfig(cmd *cobra.Command) error {
         return err
     }
     return viper.BindPFlag(cli.OutputFlag, cmd.PersistentFlags().Lookup(cli.OutputFlag))
+}
+
+func queryCmd(cdc *amino.Codec) *cobra.Command {
+    queryCmd := &cobra.Command{
+        Use:     "query",
+        Aliases: []string{"q"},
+        Short:   "Querying subcommands",
+    }
+
+    queryCmd.AddCommand(
+        dbchain.GetCmdGetOracleInfo("",cdc),
+    )
+
+    return queryCmd
 }
