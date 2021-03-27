@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -109,6 +110,36 @@ func showTotalTxsNum(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		bz , _ := json.Marshal(totalTxs.getTotalTxs())
+		rest.PostProcessResponse(w, cliCtx, bz)
+	}
+}
+
+func showBlockTxsHash(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		vars := mux.Vars(r)
+		height, err  := strconv.ParseInt(vars["height"],10,64)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "block height err ")
+			return
+		}
+		node, err := cliCtx.GetNode()
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "GetNode err : " + err.Error())
+			return
+		}
+		block, err := node.Block(&height)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "get block err : " + err.Error())
+			return
+		}
+		result := make([]string,0)
+		Txs := block.Block.Txs
+		for _,tx := range Txs {
+			txha := hex.EncodeToString(tx.Hash())
+			result = append(result, txha)
+		}
+		bz , _ := json.Marshal(result)
 		rest.PostProcessResponse(w, cliCtx, bz)
 	}
 }
