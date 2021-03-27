@@ -45,7 +45,7 @@ var (
 const (
 	kAppId = "2021002129602543"
 	OrderSub   = "YTBox"
-	NotifyURL  = "notify-url"
+	AlipayNotifyURL  = "alipay-notify-url"
  	IsProduction = true
  	OrderReceipt = "order_receipt"
  	IsTest = true
@@ -272,7 +272,7 @@ func oraclePagePay(ReturnURL, Money , OutTradeNo string) (string, error) {
 	p.TotalAmount = Money
 	p.ProductCode = "FAST_INSTANT_TRADE_PAY"
 	p.Subject = OrderSub
-	p.NotifyURL = loadNotifyUrl()
+	p.NotifyURL = loadAlipayNotifyUrl()
 	url, err := aliClient.TradePagePay(p)
 	if err != nil {
 		return "", err
@@ -282,7 +282,7 @@ func oraclePagePay(ReturnURL, Money , OutTradeNo string) (string, error) {
 
 func oracleAppPay(Money , OutTradeNo string) (string, error) {
 	var p = alipay.TradeAppPay{}
-	p.NotifyURL = loadNotifyUrl()
+	p.NotifyURL = loadAlipayNotifyUrl()
 	p.OutTradeNo = OutTradeNo
 	p.TotalAmount = Money
 	p.ProductCode = "FAST_INSTANT_TRADE_PAY"
@@ -463,11 +463,11 @@ func loadAliPrivateKey(path string) string {
 	return string(b)
 }
 
-func loadNotifyUrl() string{
+func loadAlipayNotifyUrl() string{
 	if notifyUrl != ""{
 		return notifyUrl
 	}
-	notifyUrl = viper.GetString(NotifyURL)
+	notifyUrl = viper.GetString(AlipayNotifyURL)
 	notifyUrl += "dbchain/oracle/dbcpay_notify"
 	return notifyUrl
 }
