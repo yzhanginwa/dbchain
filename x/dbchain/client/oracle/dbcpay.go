@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/mr-tron/base58"
 	"github.com/smartwalle/alipay/v3"
+	"github.com/spf13/viper"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
@@ -37,11 +38,14 @@ fields:
 ***************************************************************/
 
 
-var aliClient *alipay.Client
+var (
+	aliClient *alipay.Client
+	notifyUrl string
+)
 const (
 	kAppId = "2021002129602543"
 	OrderSub   = "YTBox"
-	NotifyURL  = "https://chain-ytbox.dbchain.cloud/relay/dbchain/oracle/dbcpay_notify"
+	NotifyURL  = "notify-url"
  	IsProduction = true
  	OrderReceipt = "order_receipt"
  	IsTest = true
@@ -268,7 +272,7 @@ func oraclePagePay(ReturnURL, Money , OutTradeNo string) (string, error) {
 	p.TotalAmount = Money
 	p.ProductCode = "FAST_INSTANT_TRADE_PAY"
 	p.Subject = OrderSub
-	p.NotifyURL = NotifyURL
+	p.NotifyURL = loadNotifyUrl()
 	url, err := aliClient.TradePagePay(p)
 	if err != nil {
 		return "", err
@@ -278,7 +282,7 @@ func oraclePagePay(ReturnURL, Money , OutTradeNo string) (string, error) {
 
 func oracleAppPay(Money , OutTradeNo string) (string, error) {
 	var p = alipay.TradeAppPay{}
-	p.NotifyURL = NotifyURL
+	p.NotifyURL = loadNotifyUrl()
 	p.OutTradeNo = OutTradeNo
 	p.TotalAmount = Money
 	p.ProductCode = "FAST_INSTANT_TRADE_PAY"
@@ -459,3 +463,11 @@ func loadAliPrivateKey(path string) string {
 	return string(b)
 }
 
+func loadNotifyUrl() string{
+	if notifyUrl != ""{
+		return notifyUrl
+	}
+	notifyUrl = viper.GetString(NotifyURL)
+	notifyUrl += "dbchain/oracle/dbcpay_notify"
+	return notifyUrl
+}
