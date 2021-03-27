@@ -14,7 +14,7 @@ func uploadFileHandler(cliCtx context.CLIContext) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
 
-        _, err := utils.VerifyAccessCode(vars["accessToken"])
+        _,_, err := utils.VerifyAccessCodeWithoutTimeChecking(vars["accessToken"])
         if err != nil {
             rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to verify access token")
             return

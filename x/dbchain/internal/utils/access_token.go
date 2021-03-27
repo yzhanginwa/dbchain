@@ -41,9 +41,25 @@ func MakeAccessCode(privKey secp256k1.PrivKeySecp256k1) string {
 }
 
 func VerifyAccessCode(accessCode string) (sdk.AccAddress, error) {
+    address, timeStampInt, err := VerifyAccessCodeWithoutTimeChecking(accessCode)
+    if err != nil {
+        return nil, errors.New("Failed to verify access token")
+    }
+    now := time.Now().UnixNano() / 1000000
+    diff := now - int64(timeStampInt)
+    if diff < 0 { diff -= 0 }
+
+    if diff < MaxAllowedTimeDiff {
+        return address, nil
+    } else {
+        return nil, errors.New("Failed to verify access token")
+    }
+}
+
+func VerifyAccessCodeWithoutTimeChecking(accessCode string) (sdk.AccAddress, int64, error) {
     parts := strings.Split(accessCode, ":")
     if len(parts) != 3 {
-        return nil, errors.New("Wrong access code format")
+        return nil, 0, errors.New("Wrong access code format")
     }
     pubKeyBytes, _ := base58.Decode(parts[0])
     timeStamp      := parts[1]
@@ -53,25 +69,16 @@ func VerifyAccessCode(accessCode string) (sdk.AccAddress, error) {
     copy(pubKey[:], pubKeyBytes)
 
     if ! pubKey.VerifyBytes([]byte(timeStamp), []byte(signature)) {
-        return nil, errors.New("Failed to verify signature")
+        return nil, 0,errors.New("Failed to verify signature")
     }
 
-    timeStampInt, err := strconv.Atoi(timeStamp)
+    timeStampInt, err := strconv.ParseInt(timeStamp,10,64)
     if err != nil {
-        return nil, errors.New("Failed to verify access token")
+        return nil, 0,errors.New("Failed to verify access token")
     }
-    now := time.Now().UnixNano() / 1000000
-    diff := now - int64(timeStampInt)
-    if diff < 0 { diff -= 0 }
-
-    if diff < MaxAllowedTimeDiff {
-        address := sdk.AccAddress(pubKey.Address())
-        return address, nil
-    } else {
-        return nil, errors.New("Failed to verify access token")
-    }
+    address := sdk.AccAddress(pubKey.Address())
+    return address, timeStampInt, nil
 }
-
 func GetAddrFromAccessCode(accessCode string) (sdk.AccAddress, error) {
     parts := strings.Split(accessCode, ":")
     if len(parts) != 3 {
