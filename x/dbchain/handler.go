@@ -30,6 +30,10 @@ func NewHandler(keeper Keeper) sdk.Handler {
         switch msg := msg.(type) {
         case MsgCreateApplication:
             result, err = handleMsgCreateApplication(ctx, keeper, msg)
+        case MsgDropApplication:
+            result, err = handleMsgDropApplication(ctx, keeper, msg)
+        case MsgRecoverApplication:
+            result, err = handleMsgRecoverApplication(ctx, keeper, msg)
         case MsgCreateSysDatabase:
             result, err = handleMsgCreateSysDatabase(ctx, keeper, msg)
         case MsgModifyDatabaseUser:
@@ -118,6 +122,34 @@ func handleMsgCreateApplication(ctx sdk.Context, keeper Keeper, msg MsgCreateApp
     }
     // We use the term database for internal use. To outside we use application to make users understand easily
     keeper.CreateDatabase(ctx, msg.Owner, msg.Name, msg.Description, msg.PermissionRequired, false)
+    return &sdk.Result{}, nil
+}
+
+func handleMsgDropApplication(ctx sdk.Context, keeper Keeper, msg MsgDropApplication) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+       return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
+    }
+
+    keeper.DropApplication(ctx, msg.AppCode)
+    return &sdk.Result{}, nil
+}
+
+func handleMsgRecoverApplication(ctx sdk.Context, keeper Keeper, msg MsgRecoverApplication) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
+    }
+
+    keeper.RecoverApplication(ctx, msg.AppCode)
     return &sdk.Result{}, nil
 }
 

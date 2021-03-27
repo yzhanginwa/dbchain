@@ -11,6 +11,7 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/other"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
+    "time"
 )
 
 func (k Keeper) GetDatabaseAdmins(ctx sdk.Context, appId uint) []sdk.AccAddress {
@@ -30,6 +31,15 @@ func (k Keeper) GetAllAppCode(ctx sdk.Context) ([]string) {
         key := iter.Key()
         keyString := string(key)
         appCode := getAppCodeFromDatabaseKey(keyString)
+        //
+        database, err := k.getDatabase(ctx, appCode)
+        if err != nil {
+            continue
+        }
+        if database.Discard == true && database.Expiration >= time.Now().Unix(){
+            k.DropApplication(ctx, appCode)
+            continue
+        }
         result = append(result, appCode)
     }
 
@@ -123,6 +133,8 @@ func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name strin
     db.Name = name
     db.Description = description
     db.PermissionRequired = permissionRequired
+    db.Discard = false
+    db.Expiration = 0
     db.AppCode = newAppCode
     db.AppId = appId
     err = store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(db))
@@ -144,6 +156,67 @@ func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name strin
         }
     }
     return nil 
+}
+
+func (k Keeper) DropApplication(ctx sdk.Context, appcode string) {
+    store := DbChainStore(ctx, k.storeKey)
+    appKey := getDatabaseKey(appcode)
+    appId, err := k.GetDatabaseId(ctx, appcode)
+    if err != nil {
+        return
+    }
+    tables := k.GetTables(ctx, appId)
+    bz, err :=store.Get([]byte(appKey))
+    if err != nil || bz == nil {
+        return
+    }
+    var db types.Database
+    k.cdc.MustUnmarshalBinaryBare(bz, &db)
+
+    if db.Discard == false {
+        db.Discard = true
+        //Due 30 days later
+        t := time.Now().Add(time.Second * 86400 * 30)
+        db.Expiration = t.Unix()
+        store.Set([]byte(appKey), k.cdc.MustMarshalBinaryBare(db))
+        for _, table := range tables {
+            cache.VoidTable(appId, table)
+        }
+        return
+    }
+
+    store.Delete([]byte(appKey))
+    for _, table := range tables {
+        k.DropTable(ctx,appId,db.Owner,table)
+    }
+}
+
+func (k Keeper) RecoverApplication(ctx sdk.Context, appcode string) {
+    store := DbChainStore(ctx, k.storeKey)
+    appKey := getDatabaseKey(appcode)
+
+    bz, err :=store.Get([]byte(appKey))
+    if err != nil || bz == nil {
+        return
+    }
+    var db types.Database
+    k.cdc.MustUnmarshalBinaryBare(bz, &db)
+    db.Discard = false
+    db.Expiration = 0
+    store.Set([]byte(appKey), k.cdc.MustMarshalBinaryBare(db))
+}
+
+func (k Keeper)IsDiscard(ctx sdk.Context, appcode string) bool {
+    store := DbChainStore(ctx, k.storeKey)
+    appKey := getDatabaseKey(appcode)
+
+    bz, err :=store.Get([]byte(appKey))
+    if err != nil || bz == nil {
+        return true
+    }
+    var db types.Database
+    k.cdc.MustUnmarshalBinaryBare(bz, &db)
+    return db.Discard
 }
 
 func (k Keeper) ModifyDatabaseUser(ctx sdk.Context, owner sdk.AccAddress, appCode, action string, user sdk.AccAddress) error {

@@ -24,6 +24,8 @@ var (
 type (
     Keeper          = keeper.Keeper
     MsgCreateApplication = types.MsgCreateApplication
+    MsgDropApplication = types.MsgDropApplication
+    MsgRecoverApplication = types.MsgRecoverApplication
     MsgCreateSysDatabase = types.MsgCreateSysDatabase
     MsgSetSchemaStatus   = types.MsgSetSchemaStatus
     MsgSetDatabasePermission = types.MsgSetDatabasePermission

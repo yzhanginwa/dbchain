@@ -59,6 +59,96 @@ func (msg MsgCreateApplication) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 
+//////////////////////////
+//                      //
+//  MsgDropApplication  //
+//                      //
+//////////////////////////
+
+type MsgDropApplication struct {
+    Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
+}
+
+func NewMsgDropApplication(owner sdk.AccAddress, appcode string) MsgModifyDatabaseUser {
+    return MsgModifyDatabaseUser {
+        Owner: owner,
+        AppCode: appcode,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgDropApplication) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgDropApplication) Type() string { return "drop_database_user" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgDropApplication) ValidateBasic() error {
+    if msg.Owner.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Application Code cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgDropApplication) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgDropApplication) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
+
+//////////////////////////
+//                      //
+//  MsgDropApplication  //
+//                      //
+//////////////////////////
+
+type MsgRecoverApplication struct {
+    Owner sdk.AccAddress `json:"owner"`
+    AppCode string       `json:"app_code"`
+}
+
+func NewMsgRecoverApplication(owner sdk.AccAddress, appcode string) MsgModifyDatabaseUser {
+    return MsgModifyDatabaseUser {
+        Owner: owner,
+        AppCode: appcode,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgRecoverApplication) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgRecoverApplication) Type() string { return "drop_database_user" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgRecoverApplication) ValidateBasic() error {
+    if msg.Owner.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Application Code cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgRecoverApplication) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgRecoverApplication) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
+
 ///////////////////////////
 //                       //
 // MsgModifyDatabaseUser //

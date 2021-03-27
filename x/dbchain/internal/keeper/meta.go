@@ -85,6 +85,7 @@ func (k Keeper) CreateTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, t
     store.Set([]byte(getTablesKey(appId)), k.cdc.MustMarshalBinaryBare(tables))
 }
 
+
 // Remove a table
 func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string) {
     store := DbChainStore(ctx, k.storeKey)

@@ -41,7 +41,7 @@ var aliClient *alipay.Client
 const (
 	kAppId = "2021002129602543"
 	OrderSub   = "YTBox"
-	NotifyURL  = "https://controlpanel.dbchain.cloud/relay/dbchain/oracle/dbcpay_notify"
+	NotifyURL  = "https://chain-ytbox.dbchain.cloud/relay/dbchain/oracle/dbcpay_notify"
  	IsProduction = true
  	OrderReceipt = "order_receipt"
  	IsTest = true

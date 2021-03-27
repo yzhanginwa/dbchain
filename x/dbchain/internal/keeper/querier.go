@@ -218,6 +218,11 @@ func queryApplication(ctx sdk.Context, path []string, req abci.RequestQuery, kee
     if err != nil {
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("AppCode %s does not exist", appCode))
     }
+    //if database expiration delete and return null
+    if database.Discard == true && database.Expiration >= time.Now().Unix(){
+        keeper.DropApplication(ctx, appCode)
+        database = types.Database{}
+    }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, database)
     if err != nil {
@@ -319,6 +324,9 @@ func queryTables(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
+    if keeper.IsDiscard(ctx, path[1]) {
+        return []byte{}, nil
+    }
     appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
@@ -340,6 +348,9 @@ func queryTable(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
+    if keeper.IsDiscard(ctx, path[1]) {
+        return []byte{}, nil
+    }
     appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")

@@ -22,6 +22,8 @@ type Database struct {
     Name string             `json:"name"`
     Description string      `json:"description"`
     PermissionRequired bool `json:"permission_required"`
+    Discard bool            `json:"discard"`
+    Expiration int64        `json:"expiration"`
     SchemaFrozen bool       `json:"schema_frozen"`
     DataFrozen bool         `json:"data_frozen"`
 }
