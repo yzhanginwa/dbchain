@@ -146,7 +146,7 @@ func createSysDatabaseMsg(oracleAddr sdk.AccAddress)([]sdk.Msg, error) {
     if err != nil {
         return nil, err
     }
-    msgs = append(msgs, msg)
+    msgs = append(msgs, msgModifyColumnOption)
     return msgs, nil
 
 }
