@@ -219,7 +219,7 @@ func queryApplication(ctx sdk.Context, path []string, req abci.RequestQuery, kee
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("AppCode %s does not exist", appCode))
     }
     //if database expiration delete and return null
-    if database.Discard == true && database.Expiration >= time.Now().Unix(){
+    if database.Discard == true && database.Expiration <= time.Now().Unix(){
         keeper.DropApplication(ctx, appCode)
         database = types.Database{}
     }

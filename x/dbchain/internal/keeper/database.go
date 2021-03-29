@@ -36,7 +36,7 @@ func (k Keeper) GetAllAppCode(ctx sdk.Context) ([]string) {
         if err != nil {
             continue
         }
-        if database.Discard == true && database.Expiration >= time.Now().Unix(){
+        if database.Discard == true && database.Expiration <= time.Now().Unix(){
             k.DropApplication(ctx, appCode)
             continue
         }
@@ -172,6 +172,7 @@ func (k Keeper) DropApplication(ctx sdk.Context, appcode string) {
     }
     var db types.Database
     k.cdc.MustUnmarshalBinaryBare(bz, &db)
+    cache.VoidDatabase(appcode)
 
     if db.Discard == false {
         db.Discard = true
@@ -195,7 +196,7 @@ func (k Keeper) RecoverApplication(ctx sdk.Context, appcode string) {
     store := DbChainStore(ctx, k.storeKey)
     appKey := getDatabaseKey(appcode)
 
-    bz, err :=store.Get([]byte(appKey))
+    bz, err := store.Get([]byte(appKey))
     if err != nil || bz == nil {
         return
     }
@@ -204,6 +205,7 @@ func (k Keeper) RecoverApplication(ctx sdk.Context, appcode string) {
     db.Discard = false
     db.Expiration = 0
     store.Set([]byte(appKey), k.cdc.MustMarshalBinaryBare(db))
+    cache.VoidDatabase(appcode)
 }
 
 func (k Keeper)IsDiscard(ctx sdk.Context, appcode string) bool {

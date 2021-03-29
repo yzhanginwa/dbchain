@@ -24,17 +24,19 @@ import (
 )
 
 /**************************************************************
-table name : buyerorder
-fields:
-	buyer          //address of buyer
-	out_trade_no   //商家订单号
+table name : order:
+	sellable_id          //商品id
 
-table name : orderinfo
+table name : sellable
 fields:
-	out_trade_no	//商家订单号
-	trade_no		//支付宝交易号
-	total_amount	//交易的订单金额
-	trade_status	//交易状态
+	orginid	    //
+	name		//
+	type	    //
+	term_days	//
+	price       //
+	memo		//
+	volume_limit    //
+	records_limit   //
 ***************************************************************/
 
 
@@ -403,7 +405,7 @@ func calcExpirationDate(cliCtx context.CLIContext, storeName string, appcode ,ow
 	termDays := sellableInfo["term_days"]
 	addDays, _ := strconv.Atoi(termDays)
 	//升级套餐
-	if lastOrderInfo["sellable_id"] == "1" && lastOrderInfo["sellable_id"] != sellableid {
+	if lastOrderInfo["sellable_id"] == sellableInfo["orginid"] && lastOrderInfo["sellable_id"] != sellableid {
 		t := time.Now()
 		t = t.Add(time.Hour * 24 * time.Duration(addDays))
 		return  fmt.Sprintf("%d", t.UnixNano()/1000000)
