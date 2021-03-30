@@ -5,6 +5,7 @@ import (
     "regexp"
     "strings"
     "strconv"
+    "sort"
     "github.com/mr-tron/base58"
     "encoding/json"
     "github.com/cosmos/cosmos-sdk/codec"
@@ -12,6 +13,7 @@ import (
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
     abci "github.com/tendermint/tendermint/abci/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
 type Condition struct {
@@ -21,12 +23,17 @@ type Condition struct {
     Reg   *regexp.Regexp
 }
 
+type OrderBy struct {
+    Field string
+    Direction string
+}
+
 type QuerierBuilder struct {
     Table string
     Ids []uint
     Select []string
     Where []Condition
-    Order []string
+    Order OrderBy
     Offset int
     Limit int
     Last bool
@@ -37,6 +44,30 @@ type WhereRes struct {
     Count string             `json:"count"`
 }
 
+//////////////////////////////////
+//                              //
+// implement the ByValue sorter //
+//                              //
+//////////////////////////////////
+
+type idAndValues struct {
+    Id uint
+    IsInt bool
+    StringValue string
+    IntValue int
+}
+
+type ByValue []idAndValues
+
+func (a ByValue) Len() int           { return len(a) }
+func (a ByValue) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByValue) Less(i, j int) bool {
+    if a[i].IsInt {
+        return a[i].IntValue < a[j].IntValue
+    } else {
+        return a[i].StringValue < a[j].StringValue
+    }
+}
 
 /////////////////////
 //                 //
@@ -139,6 +170,11 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
                 cond.Reg = reg
             }
             builders[j].Where = append(builders[j].Where, cond)
+        case "order":
+            builders[j].Order = OrderBy{
+                Field: qo["field"],
+                Direction: qo["direction"],
+           }
         }
     }
 
@@ -194,6 +230,11 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
         }
 
         count += len(ids)   // this might need more consideration
+
+        if builders[j].Order.Field != "" {
+            ids = sortIdsOnOrder(ctx, keeper, appId, ids, builders[j].Table, builders[j].Order.Field, builders[j].Order.Direction)
+        }
+
         if builders[j].Last {
             length := len(ids)
             if length > 0 {
@@ -289,13 +330,64 @@ func getIdsFromRightToLeft(ctx sdk.Context, keeper Keeper, appId uint, ids []uin
     return keeper.FindBy(ctx, appId, curTable, field,  values, owner)
 }
 
-
 func isCountQuery (querierObjs []map[string]string) bool {
-
     for _, m := range querierObjs {
         if m["method"] == "count" {
             return true
         }
     }
     return false
+}
+
+func isColumnTypeOfInteger(ctx sdk.Context, keeper Keeper, appId uint, tableName, fieldName string) bool {
+    options, _ := keeper.GetColumnDataType(ctx, appId, tableName, fieldName)
+    isInt := false
+    for _, opt := range options {
+        if opt == string(types.FLDTYP_INT) {
+            isInt = true
+            break
+        }
+    }
+    return isInt
+}
+
+func sortIdsOnOrder(ctx sdk.Context, keeper Keeper, appId uint, ids []uint, tableName, fieldName, direction string) []uint {
+    store := DbChainStore(ctx, keeper.storeKey)
+    records := []idAndValues{}
+    isInt := isColumnTypeOfInteger(ctx, keeper, appId, tableName, fieldName)
+
+    for _, id := range ids {
+        key := getDataKeyBytes(appId, tableName, fieldName, id)
+        bz, err := store.Get(key)
+        if err != nil {
+            return []uint{}
+        }
+        var value string
+        if bz != nil {
+            record := idAndValues{Id: id, IsInt: false}
+            keeper.cdc.MustUnmarshalBinaryBare(bz, &value)
+            if isInt {
+                intValue, err := strconv.Atoi(value)
+                if err != nil { continue }
+                record.IntValue = intValue
+                record.IsInt = true
+            } else {
+                record.StringValue = value
+            }
+            records = append(records, record)
+        }
+    }
+
+    sort.Sort(ByValue(records))
+    result := []uint{}
+    for _, record := range records {
+        result = append(result, record.Id)
+    }
+
+    if direction == "desc" {
+        for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
+            result[i], result[j] = result[j], result[i]
+        }
+    }
+    return result
 }
