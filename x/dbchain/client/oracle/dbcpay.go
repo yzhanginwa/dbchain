@@ -51,6 +51,9 @@ const (
  	IsProduction = true
  	OrderReceipt = "order_receipt"
  	IsTest = true
+ 	AliPay = "alipay"
+ 	WechatPay = "wechatpay"
+ 	DbcToken = "dbctoken"
 )
 
 func init(){
@@ -75,7 +78,29 @@ func init(){
 	//need create table buyerorder and orderinfo
 }
 
-func oracleCallAliPagePay(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func oracleRecipientAddress(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		accessCode      		:= vars["accessToken"]
+		_, err := utils.VerifyAccessCode(accessCode)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+			return
+		}
+		privKey, err := oracle.LoadPrivKey()
+		oracleAddress := sdk.AccAddress(privKey.PubKey().Address())
+		res := map[string]string{
+			"recipient" : oracleAddress.String(),
+		}
+		bz , err := json.Marshal(res)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusNotFound, "marshal recipient address failed")
+			return
+		}
+		rest.PostProcessResponse(w, cliCtx, bz)
+	}
+}
+func oracleCallDbcPay(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		accessCode      := vars["accessToken"]
@@ -91,6 +116,22 @@ func oracleCallAliPagePay(cliCtx context.CLIContext, storeName string) http.Hand
 		OutTradeNo := r.Form.Get("out_trade_no")
 		appcode := r.Form.Get("appcode")
 		sellableid := r.Form.Get("sellableid")
+		paymentId  := r.Form.Get("paymentid")
+		vendor     := r.Form.Get("vendor")
+		tableName  := r.Form.Get("tablename")
+		if payType == "app" && vendor == DbcToken{
+			if tableName == ""{
+				tableName = "payment"
+			}
+
+			bz , err := callDbcTokenPay(cliCtx, storeName, appcode, tableName, paymentId)
+			if err != nil {
+				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				return
+			}
+			rest.PostProcessResponse(w, cliCtx, bz)
+			return
+		}
 		//query from user sellable to get money
 		res, err := getOrderMoney(cliCtx, storeName, appcode, sellableid, buyer.String())
 		if err != nil {
@@ -141,18 +182,83 @@ func oracleCallAliPagePay(cliCtx context.CLIContext, storeName string) http.Hand
 	}
 }
 
+func callDbcTokenPay(cliCtx context.CLIContext, storeName, appcode, tableName ,paymentId string) ([]byte, error){
+	//check
+	//comfirm table has payment option
+	hasPaymentOption := checkTableOption(cliCtx, storeName, appcode, tableName, types.TBLOPT_PAYMENT)
+	if !hasPaymentOption {
+		return nil, errors.New("your table does not has payment option")
+	}
+
+	ac := getOracleAc()
+	queryString := fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, ac, appcode, tableName, paymentId)
+	paymentInfo ,err := oracleQueryUserTable(cliCtx, queryString)
+	if err != nil {
+		return nil, err
+	}
+	//TODO need a special address
+	privKey, err := oracle.LoadPrivKey()
+	recipientAddress := sdk.AccAddress(privKey.PubKey().Address())
+	if paymentInfo["recipient"]  != recipientAddress.String() {
+		return  nil, errors.New("invalid recipient address")
+	}
+	orderId := paymentInfo["orderid"]
+	orderInfo, err  := getOrderInfo(cliCtx, storeName, appcode, orderId)
+	if err != nil {
+		return nil, err
+	}
+	sellableId := orderInfo["sellable_id"]
+	sellableInfo, err := getSellableInfo(cliCtx, storeName, appcode, sellableId)
+	if err != nil {
+		return  nil, err
+	}
+	//TODO need tokenNum field
+	if sellableInfo["token_price"] != paymentInfo["amount"] {
+		return nil, errors.New("amount err")
+	}
+	//save to order_receipt
+	amount := paymentInfo["amount"]
+	owner := orderInfo["created_by"]
+	expiration_date := calcExpirationDate(cliCtx, storeName, appcode, owner ,orderInfo["sellable_id"])
+
+	res := newOrderReceiptDataCore(appcode, orderId, owner, amount, expiration_date, DbcToken, paymentId)
+	oracleAccAddr := oracle.GetOracleAccAddr()
+	SaveToOrderInfoTable(oracleAccAddr, res, OrderReceipt)
+	bz , _ := json.Marshal(res)
+	return bz, nil
+}
+
+func checkTableOption(cliCtx context.CLIContext, storeName, appcode, tableName string, TableOption types.TableOption ) bool {
+	ac := getOracleAc()
+	//comfirm table has payment option
+	options, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/option/%s/%s/%s", storeName, ac, appcode, tableName), nil)
+	if err != nil {
+		return  false
+	}
+	var out types.QueryTables // QueryTables is a []string. It could be reused here
+	json.Unmarshal(options, &out)
+
+	hasPaymentOption := false
+	for _, option := range out {
+		if option == string(TableOption) {
+			hasPaymentOption = true
+			break
+		}
+	}
+	return hasPaymentOption
+}
 func getOrderMoney(cliCtx context.CLIContext, storeName, appcode, sellableid, buyer string) (map[string]string,error) {
 
 	sellableResult, err := getSellableInfo(cliCtx, storeName, appcode, sellableid)
 	if err != nil {
 		return nil, err
 	}
-	originId := sellableResult["originid"]
-	if originId == "" {
+	originCode := sellableResult["origin_code"]
+	if originCode == "" {
 		return sellableResult, nil
 	}
 	//check order validity
-	//query 0000000001 order_receipt to conform originId exist
+	//query 0000000001 order_receipt to conform origin_code exist
 	fieldValue := map[string]string{
 		"appcode": appcode,
 		"owner":   buyer,
@@ -170,10 +276,10 @@ func getOrderMoney(cliCtx context.CLIContext, storeName, appcode, sellableid, bu
 	if err != nil {
 		return nil, err
 	}
-	if len(preOrder) != 1 {
+	if len(preOrder) == 0 {
 		return nil, errors.New("submit order fialded")
 	}
-	if preOrder["sellable_id"] != sellableResult["originid"] {
+	if preOrder["sellable_id"] != sellableResult["origin_code"] {
 		return nil, errors.New("submit order fialded")
 	}
 	return sellableResult, nil
@@ -181,22 +287,23 @@ func getOrderMoney(cliCtx context.CLIContext, storeName, appcode, sellableid, bu
 
 func getSellableInfo(cliCtx context.CLIContext, storeName, appcode, sellableid string ) (map[string]string, error){
 	tableName := "sellable"
-	privKey, err := oracle.LoadPrivKey()
+	fieldName := "code"
+	value := sellableid
+	ac := getOracleAc()
+	res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find_by/%s/%s/%s/%s/%s", storeName, ac, appcode, tableName, fieldName, value), nil)
 	if err != nil {
-		return nil, err
-	}
-	ac := utils.MakeAccessCode(privKey)
-	res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, ac, appcode, tableName, sellableid), nil)
-	if err != nil {
+		fmt.Printf("could not find ids")
 		return nil, err
 	}
 
-	sellableResult := make(map[string]string)
-	err = json.Unmarshal(res, &sellableResult)
-	if err != nil {
-		return nil, err
+	var out types.QuerySliceOfString
+	json.Unmarshal(res, &out)
+	if len(out) < 1 {
+		return nil, errors.New("could not find sellable id")
 	}
-	return sellableResult, nil
+	id := out[0]
+	queryString := fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, ac, appcode, tableName, id)
+	return oracleQueryUserTable(cliCtx, queryString)
 }
 
 func getOrderReceiptInfo(cliCtx context.CLIContext, storeName string, fieldValue map[string]string) ([]map[string]string, error){
@@ -249,12 +356,22 @@ func querierQuery(cliCtx context.CLIContext, storeName , appCode string, querier
 }
 
 func getOrderInfo(cliCtx context.CLIContext, storeName, appcode, id string) (map[string]string, error) {
+	ac := getOracleAc()
+	queryString := fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, ac, appcode, "order", id)
+	return oracleQueryUserTable(cliCtx, queryString)
+}
+
+func getOracleAc() string {
 	privKey, err := oracle.LoadPrivKey()
 	if err != nil {
-		return nil, err
+		return ""
 	}
 	ac := utils.MakeAccessCode(privKey)
-	res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, ac, appcode, "order", id), nil)
+	return ac
+}
+
+func oracleQueryUserTable(cliCtx context.CLIContext, query string) (map[string]string, error) {
+	res, _, err := cliCtx.QueryWithData(query, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -301,9 +418,18 @@ func oracleQueryPayStatus(cliCtx context.CLIContext, storeName string) http.Hand
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		outTradeNo := r.Form.Get("out_trade_no")
+		//out_trade_no format appcode-id
+		info := strings.Split(outTradeNo,"-")
+		if len(info)  != 2 {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, errors.New("out_trade_no format err").Error())
+			return
+		}
+		appcode := info[0]
+		orderid := info[1]
 
 		fieldValue := map[string]string{
-			"orderid": outTradeNo,
+			"orderid": orderid,
+			"appcode": appcode,
 		}
 		orderReceipt, err := getOrderReceiptInfo(cliCtx, storeName, fieldValue)
 		if err != nil {
@@ -354,23 +480,30 @@ func oracleSavePayStatus(cliCtx context.CLIContext, storeName string) http.Handl
 func newOrderReceiptData(cliCtx context.CLIContext, storeName , out_trade_no, total_amount, trade_no string)map[string]string{
 	outTradeNo := out_trade_no
 	info := strings.Split(outTradeNo,"-")
-
-	res := make(map[string]string)
-	res["appcode"] = info[0]
-	res["orderid"] = info[1]
 	//TODO GetOwner
 	orderInfo , err := getOrderInfo(cliCtx, storeName, info[0], info[1])
+	owner := ""
 	if err != nil {
-		res["owner"] = ""
+		owner = ""
 	} else {
-		res["owner"] = orderInfo["created_by"]
+		owner = orderInfo["created_by"]
 	}
-
-	res["amount"]  = total_amount
-	res["expiration_date"] = calcExpirationDate(cliCtx, storeName, info[0], res["owner"],orderInfo["sellable_id"])
-	res["vendor"]  = "alipay"
-	res["vendor_payment_no"] = trade_no
+	expiration_date := calcExpirationDate(cliCtx, storeName, info[0], owner ,orderInfo["sellable_id"])
+	res := newOrderReceiptDataCore(info[0],info[1], owner, total_amount,expiration_date, AliPay, trade_no)
 	return res
+}
+
+func newOrderReceiptDataCore(appcode, orderid, owner, amount, expiration_date, vendor,  vendor_payment_no string) map[string]string{
+	res := make(map[string]string)
+	res["appcode"] = appcode
+	res["orderid"] = orderid
+	res["owner"] = owner
+	res["amount"]  = amount
+	res["expiration_date"] = expiration_date
+	res["vendor"]  = vendor
+	res["vendor_payment_no"] = vendor_payment_no
+	return res
+
 }
 
 func calcExpirationDate(cliCtx context.CLIContext, storeName string, appcode ,owner ,sellableid string) string{
@@ -405,7 +538,7 @@ func calcExpirationDate(cliCtx context.CLIContext, storeName string, appcode ,ow
 	termDays := sellableInfo["term_days"]
 	addDays, _ := strconv.Atoi(termDays)
 	//升级套餐
-	if lastOrderInfo["sellable_id"] == sellableInfo["orginid"] && lastOrderInfo["sellable_id"] != sellableid {
+	if lastOrderInfo["sellable_id"] == sellableInfo["origin_code"] && lastOrderInfo["sellable_id"] != sellableid {
 		t := time.Now()
 		t = t.Add(time.Hour * 24 * time.Duration(addDays))
 		return  fmt.Sprintf("%d", t.UnixNano()/1000000)

@@ -189,7 +189,7 @@ func (k Keeper) preprocessPayment(ctx sdk.Context, appId uint, tableName string,
         return false
     }
 
-    var senderRecipient map[string]sdk.AccAddress
+    var senderRecipient = make(map[string]sdk.AccAddress,0)
     var amount int
 
     rounds := 0   // used to count the collecting of sender, recipient, and amount
