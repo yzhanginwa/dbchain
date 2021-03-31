@@ -504,6 +504,7 @@ func queryCanAddColumnOption(ctx sdk.Context, path []string, req abci.RequestQue
          SkipOpenLibs : true,
      })
      defer L.Close()
+     L.SetGlobal("IsRegisterData",lua.LBool(false))
     _, err = keeper.PreInsertCheck(ctx, appId, tableName, rowFields, addr, L)
     if err != nil {
         result = false
