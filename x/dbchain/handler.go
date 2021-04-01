@@ -72,6 +72,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             result, err = handleMsgSetTableMemo(ctx, keeper, msg)
         case MsgModifyColumnOption:
             result, err = handleMsgModifyColumnOption(ctx, keeper, msg)
+        case MsgModifyColumnType:
+            result, err = handleMsgModifyColumnType(ctx, keeper, msg)
         case MsgSetColumnMemo:
             result, err = handleMsgSetColumnMemo(ctx, keeper, msg)
         case MsgInsertRow:
@@ -499,6 +501,25 @@ func handleMsgModifyColumnOption(ctx sdk.Context, keeper Keeper, msg MsgModifyCo
     }
 
     if !keeper.ModifyColumnOption(ctx, appId, msg.Owner, msg.TableName, msg.FieldName, msg.Action, msg.Option) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid column option!")
+    }
+    return &sdk.Result{}, nil
+}
+
+func handleMsgModifyColumnType(ctx sdk.Context, keeper Keeper, msg MsgModifyColumnType) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
+    }
+    if !keeper.HasTable(ctx, appId, msg.TableName) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name does not exist!")
+    }
+
+    if !keeper.ModifyColumnType(ctx, appId, msg.Owner, msg.TableName, msg.FieldName, msg.Action, msg.DataType) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid column option!")
     }
     return &sdk.Result{}, nil

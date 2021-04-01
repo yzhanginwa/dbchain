@@ -233,8 +233,8 @@ func (k Keeper) filterOwnIds(ctx sdk.Context, appId uint,  tableName string, ids
 }
 
 func (k Keeper) isTypeOfInteger(ctx sdk.Context, appId uint, tableName, fieldName string) bool {
-    fieldOptions, _ := k.GetColumnOption(ctx, appId, tableName, fieldName)
-    return utils.StringIncluded(fieldOptions, string(types.FLDOPT_INT))
+    fieldDataType, _ := k.GetColumnDataType(ctx, appId, tableName, fieldName)
+    return utils.StringIncluded(fieldDataType, string(types.FLDTYP_INT))
 }
 
 func fieldValueCompare(isInteger bool, operator, left, right string) bool {

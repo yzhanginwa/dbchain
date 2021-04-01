@@ -478,14 +478,6 @@ func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAdd
                 if !k.validateOwnField(ctx, appId, tableName, fieldName) {
                     return false
                 }
-            case types.FLDOPT_INT:
-                if !k.validateIntField(ctx, appId, tableName, fieldName) {
-                    return false
-                }
-            case types.FLDOPT_FILE:
-                if !k.validateFileField(ctx, appId, tableName, fieldName) {
-                    return false
-                }
             }
             result = append(options, option)
         }
@@ -493,6 +485,70 @@ func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAdd
         if optionExisted {
             for _, opt := range options {
                 if opt == option {
+                    continue
+                }
+                result = append(result, opt)
+            }
+        } else {
+            return false
+        }
+    }
+
+    if len(result) > 0 {
+        err = store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(result))
+    } else {
+        err = store.Delete([]byte(key))
+    }
+    if err != nil{
+        return false
+    }
+    return true
+}
+
+func (k Keeper) ModifyColumnType(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldName string, action string, dataType string) bool {
+    if !validateColumnDataType(dataType) {
+        return false
+    }
+
+    store := DbChainStore(ctx, k.storeKey)
+    key := getColumnDataTypesKey(appId, tableName, fieldName)
+    var dataTypes []string
+    var result []string
+
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return false
+    }
+    if bz != nil {
+        k.cdc.MustUnmarshalBinaryBare(bz, &dataTypes)
+    }
+
+    typeExisted := isColumnOptionIncluded(dataTypes, dataType)
+
+    if action == "add" {
+        if typeExisted {
+            return false
+        } else {
+            switch types.FieldDataType(dataType) {
+            case types.FLDTYP_INT:
+                if !k.validateIntField(ctx, appId, tableName, fieldName) {
+                    return false
+                }
+            case types.FLDTYP_FILE:
+                if !k.validateFileField(ctx, appId, tableName, fieldName) {
+                    return false
+                }
+            case types.FLDTYP_DECIMAL:
+                if !k.validateDecimalField(ctx, appId, tableName, fieldName) {
+                    return false
+                }
+            }
+            result = append(result, dataType)
+        }
+    } else {
+        if typeExisted {
+            for _, opt := range dataTypes {
+                if opt == dataType {
                     continue
                 }
                 result = append(result, opt)
@@ -553,6 +609,21 @@ func (k Keeper) GetColumnOption(ctx sdk.Context, appId uint, tableName string, f
     return options, nil
 }
 
+func (k Keeper) GetColumnDataType(ctx sdk.Context, appId uint, tableName string, fieldName string) ([]string, error) {
+    store := DbChainStore(ctx, k.storeKey)
+    key := getColumnDataTypesKey(appId, tableName, fieldName)
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return nil, err
+    }
+    if bz == nil {
+        return []string{}, nil
+    }
+    var options []string
+    k.cdc.MustUnmarshalBinaryBare(bz, &options)
+    return options, nil
+}
+
 func (k Keeper) GetCanAddColumnOption(ctx sdk.Context, appId uint, tableName, fieldName, option string) bool {
     switch types.FieldOption(option) {
     case types.FLDOPT_NOTNULL:
@@ -567,14 +638,26 @@ func (k Keeper) GetCanAddColumnOption(ctx sdk.Context, appId uint, tableName, fi
         if !k.validateOwnField(ctx, appId, tableName, fieldName) {
             return false
         }
-    case types.FLDOPT_INT:
-        if !k.validateIntField(ctx, appId, tableName, fieldName) {
+    }
+    return true
+}
+
+func (k Keeper) GetCanAddColumnDataType(ctx sdk.Context, appId uint, tableName, fieldName, dataType string) bool {
+    switch types.FieldDataType(dataType) {
+        case types.FLDTYP_INT:
+           if !k.validateIntField(ctx, appId, tableName, fieldName) {
+               return false
+           }
+        case types.FLDTYP_FILE:
+           if !k.validateFileField(ctx, appId, tableName, fieldName) {
+               return false
+           }
+        case types.FLDTYP_DECIMAL:
+            if !k.validateDecimalField(ctx, appId, tableName, fieldName) {
+                return false
+            }
+        default:
             return false
-        }
-    case types.FLDOPT_FILE:
-        if !k.validateFileField(ctx, appId, tableName, fieldName) {
-            return false
-        }
     }
     return true
 }
@@ -610,15 +693,28 @@ func preProcessFields(fieldNames []string) []string {
 
 func validateColumnOption(option string) bool {
     switch types.FieldOption(option) {
-    case types.FLDOPT_INT:
-        return true
     case types.FLDOPT_NOTNULL:
         return true
     case types.FLDOPT_UNIQUE:
         return true
     case types.FLDOPT_OWN:
         return true
-    case types.FLDOPT_FILE:
+    }
+
+    if types.ValidateEnumColumnOption(option) {
+        return true
+    }
+
+    return false
+}
+
+func validateColumnDataType(option string) bool {
+    switch types.FieldDataType(option) {
+    case types.FLDTYP_INT:
+        return true
+    case types.FLDTYP_FILE:
+        return true
+    case types.FLDTYP_DECIMAL:
         return true
     }
 

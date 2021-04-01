@@ -29,7 +29,9 @@ const (
     QueryIndex    = "index"
     QueryOption   = "option"
     QueryColumnOption   = "column_option"
+    QueryColumnDataType = "column_data_type"
     QueryCanAddColumnOption = "can_add_column_option"
+    QueryCanAddColumnDataType = "can_add_column_data_type"
     QueryCanInsertRow = "can_insert_row"
     QueryRow      = "find"
     QueryIdsBy    = "find_by"
@@ -85,8 +87,12 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryOption(ctx, path[1:], req, keeper)
         case QueryColumnOption:
             return queryColumnOption(ctx, path[1:], req, keeper)
+        case QueryColumnDataType:
+            return queryColumnDataType(ctx, path[1:], req, keeper)
         case QueryCanAddColumnOption:
             return queryCanAddColumnOption(ctx, path[1:], req, keeper)
+        case QueryCanAddColumnDataType:
+            return queryCanAddColumnDataType(ctx, path[1:], req, keeper)
         case QueryCanInsertRow:
             return queryCanInsertRow(ctx, path[1:], req, keeper)
         case QueryRow:
@@ -453,6 +459,35 @@ func queryColumnOption(ctx sdk.Context, path []string, req abci.RequestQuery, ke
     return res, nil
 }
 
+func queryColumnDataType(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    _, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    tableName := path[2]
+    fieldName := path[3]
+
+    options, err := keeper.GetColumnDataType(ctx, appId, tableName, fieldName)
+
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s.%s does not exist",  tableName, fieldName))
+    }
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, options)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
 func queryCanAddColumnOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
     _, err := utils.VerifyAccessCode(accessCode)
@@ -470,6 +505,33 @@ func queryCanAddColumnOption(ctx sdk.Context, path []string, req abci.RequestQue
     option    := path[4]
 
     result := keeper.GetCanAddColumnOption(ctx, appId, tableName, fieldName, option)
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, result)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryCanAddColumnDataType(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    _, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    tableName := path[2]
+    fieldName := path[3]
+    dataType    := path[4]
+
+    var result bool
+    result = keeper.GetCanAddColumnDataType(ctx, appId, tableName, fieldName, dataType)
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, result)
     if err != nil {

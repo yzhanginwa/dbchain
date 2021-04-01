@@ -42,6 +42,7 @@ var (
     getTableOptionsKey = dbk.GetTableOptionsKey
     
     getColumnOptionsKey = dbk.GetColumnOptionsKey
+    getColumnDataTypesKey = dbk.GetColumnDataTypesKey
     
     //////////////////////
     //                  //

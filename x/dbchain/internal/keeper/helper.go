@@ -72,6 +72,26 @@ func (k Keeper) validateIntField(ctx sdk.Context, appId uint, tableName, fieldNa
     return true
 }
 
+func (k Keeper) validateDecimalField(ctx sdk.Context, appId uint, tableName, fieldName string) bool {
+    store := DbChainStore(ctx, k.storeKey)
+
+    start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
+    iter := store.Iterator([]byte(start), []byte(end))
+    var mold string
+
+    for ; iter.Valid(); iter.Next() {
+        if iter.Error() != nil{
+            return false
+        }
+        val := iter.Value()
+        k.cdc.MustUnmarshalBinaryBare(val, &mold)
+        if _, err := strconv.ParseFloat(mold,64); err != nil {
+            return false
+        }
+    }
+    return true
+}
+
 func (k Keeper) validateFileField(ctx sdk.Context, appId uint, tableName, fieldName string) bool {
     store := DbChainStore(ctx, k.storeKey)
 

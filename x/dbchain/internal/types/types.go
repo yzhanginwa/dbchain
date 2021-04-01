@@ -159,9 +159,13 @@ type FieldOption string
 const (
     FLDOPT_NOTNULL    FieldOption = "not-null"
     FLDOPT_UNIQUE     FieldOption = "unique"
-    FLDOPT_FILE       FieldOption = "file"
     FLDOPT_OWN        FieldOption = "own"
-    FLDOPT_INT        FieldOption = "int"
 )
 
+type FieldDataType string
 
+const (
+    FLDTYP_FILE       FieldDataType = "file"
+    FLDTYP_INT        FieldDataType = "int"
+    FLDTYP_DECIMAL    FieldDataType = "decimal"
+)

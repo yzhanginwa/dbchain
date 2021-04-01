@@ -235,6 +235,9 @@ func (k Keeper) validateInsertion(ctx sdk.Context, appId uint, tableName string,
     if ok := k.validateInsertionWithFieldOptions(ctx, appId, tableName, fields, owner); !ok {
         return false
     }
+    if ok := k.validateInsertionWithFieldDataType(ctx, appId, tableName, fields, owner); !ok {
+        return false
+    }
     if ok := k.validateInsertionWithInsertFilter(ctx, appId, tableName, fields, owner, L); !ok {
         return false
     }
@@ -265,13 +268,6 @@ func (k Keeper) validateInsertionWithFieldOptions(ctx sdk.Context, appId uint, t
         fieldOptions, _ := k.GetColumnOption(ctx, appId, tableName, fieldName)
 
         for _, opt := range fieldOptions {
-            if opt == string(types.FLDOPT_INT) {
-                if value, ok := fields[fieldName]; ok {
-                    if _, err := strconv.Atoi(value); err != nil {
-                       return false
-                    }
-                }
-            }
 
             if opt == string(types.FLDOPT_NOTNULL) {
                 if value, ok := fields[fieldName]; ok {
@@ -321,6 +317,37 @@ func (k Keeper) validateInsertionWithFieldOptions(ctx sdk.Context, appId uint, t
                         return true
                     }
                     return false
+                }
+            }
+        }
+    }
+    return true
+}
+
+func (k Keeper) validateInsertionWithFieldDataType(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {
+    fieldNames, err := k.getTableFields(ctx, appId, tableName)
+    if err != nil {
+        return(false)
+    }
+
+    for _, fieldName := range fieldNames {
+        if(isSystemField(fieldName)) {
+            continue
+        }
+        fieldDataType, _ := k.GetColumnDataType(ctx, appId, tableName, fieldName)
+
+        for _, opt := range fieldDataType {
+            if opt == string(types.FLDTYP_INT) {
+                if value, ok := fields[fieldName]; ok {
+                    if _, err := strconv.Atoi(value); err != nil {
+                        return false
+                    }
+                }
+            } else if opt == string(types.FLDTYP_DECIMAL) {
+                if value, ok := fields[fieldName]; ok {
+                    if _, err := strconv.ParseFloat(value,64); err != nil {
+                        return false
+                    }
                 }
             }
         }
@@ -479,8 +506,8 @@ func (k Keeper) tryToPinFile(ctx sdk.Context, appId uint, tableName string, fiel
         if(isSystemField(fieldName)) {
             continue
         }
-        fieldOptions, _ := k.GetColumnOption(ctx, appId, tableName, fieldName)
-        if(utils.ItemExists(fieldOptions, string(types.FLDOPT_FILE))) {
+        fieldDataType, _ := k.GetColumnDataType(ctx, appId, tableName, fieldName)
+        if(utils.ItemExists(fieldDataType, string(types.FLDTYP_FILE))) {
             if value, ok := fields[fieldName]; ok {
                 sh := shell.NewShell("localhost:5001")
                 err =sh.Pin(value)

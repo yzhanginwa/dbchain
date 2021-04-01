@@ -19,6 +19,7 @@ import (
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -206,12 +207,45 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 					L.Push(lua.LString("val of field err"))
 					return 1
 				}
-				ids := findIdsByFields(keeper, ctx, appId, owner, tableName, fields, values)
+				_, ids := findByFields(keeper, ctx, appId, owner, tableName, fields, values)
 				for _, id := range ids {
 					keeper.Freeze(ctx, appId, tableName, id, owner)
 				}
 			}
 
+			L.Push(lua.LString(""))
+			return 1
+		},
+		"MultFreezeExpiration" : func(L *lua.LState) int {
+			ParamsNum := L.GetTop()
+			if ParamsNum < 2 {
+				L.Push(lua.LString("num of param wrong"))
+				return 1
+			}
+			tableName := L.ToString(1)
+			//By default, the first parameter is the table name
+			if strings.HasPrefix(tableName,tablePrefix) {
+				tableName = strings.TrimPrefix(tableName,tablePrefix)
+			}
+			days := L.ToInt(2)
+			if days <= 0 {
+				days = 0
+			}
+			t := time.Now()
+			ids := keeper.FindAll(ctx, appId, tableName, owner)
+			for index, id := range ids {
+				res , err := keeper.Find(ctx, appId, tableName, id, owner)
+				if err != nil  || res["created_by"] != owner.String(){
+					continue
+				}
+				timeStamp := res["created_at"]
+				dt, _ := time.ParseDuration(timeStamp + "ms")
+				nt := time.Unix(dt.Milliseconds()/1000, 0)
+				nt.Add(time.Hour * 24 * time.Duration(days))
+				if t.Unix() > nt.Unix() {
+					keeper.Freeze(ctx, appId, tableName, ids[index], owner)
+				}
+			}
 			L.Push(lua.LString(""))
 			return 1
 		},
@@ -312,7 +346,7 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 	}
 }
 
-func findIdsByFields( keeper Keeper, ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fields, values []string,) []uint {
+func findByFields( keeper Keeper, ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fields, values []string,) ([]map[string]string, []uint) {
 
 	qo := map[string]string{
 		"method": "table",
@@ -336,11 +370,11 @@ func findIdsByFields( keeper Keeper, ctx sdk.Context, appId uint, owner sdk.AccA
 		"fields": "id",
 	}
 	newQuerierObjs := append(querierObjs, qq)
-	_, ids, err := querierSuperHandler(ctx, keeper, appId, newQuerierObjs, owner)
+	res, ids, err := querierSuperHandler(ctx, keeper, appId, newQuerierObjs, owner)
 	if err != nil {
-		return nil
+		return nil, nil
 	}
-	return ids
+	return res, ids
 }
 func getGoExportFilterFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAddress) map[string]lua.LGFunction {
 	return map[string]lua.LGFunction{
