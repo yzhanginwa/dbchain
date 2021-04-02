@@ -123,7 +123,8 @@ func GetCmdCreateSysDatabase(cdc *codec.Codec) *cobra.Command {
 
 func createSysDatabaseMsg(oracleAddr sdk.AccAddress)([]sdk.Msg, error) {
     msgs := make([]sdk.Msg, 0)
-    msg := types.NewMsgCreateSysDatabase(oracleAddr)
+    var msg sdk.Msg
+    msg = types.NewMsgCreateSysDatabase(oracleAddr)
     err := msg.ValidateBasic()
     if err != nil {
        return nil, err
@@ -141,13 +142,14 @@ func createSysDatabaseMsg(oracleAddr sdk.AccAddress)([]sdk.Msg, error) {
         }
         msgs = append(msgs, msg)
     }
-    //ModifyColumnOption
-    msgModifyColumnOption := types.NewMsgModifyColumnOption(oracleAddr, "0000000001", "order_receipt", "orderid", "add", string(types.FLDOPT_UNIQUE))
-    err = msgModifyColumnOption.ValidateBasic()
-    if err != nil {
-        return nil, err
-    }
-    msgs = append(msgs, msgModifyColumnOption)
+    msgs = append(msgs, types.NewMsgModifyColumnOption(oracleAddr, "0000000001", "order_receipt", "orderid", "add", string(types.FLDOPT_UNIQUE)))
+    msgs = append(msgs, types.NewMsgModifyGroup("0000000001", "add", "oracle", oracleAddr))
+    msgs = append(msgs, types.NewMsgSetGroupMemo("0000000001","oracle","oracleOfThisChain",oracleAddr))
+    //add table option
+    msgs = append(msgs, types.NewMsgModifyOption(oracleAddr, "0000000001", "authentication", "add", "writable-by(oracle)" ))
+    msgs = append(msgs, types.NewMsgModifyOption(oracleAddr, "0000000001", "authentication", "drop", "readable-by(oracle)" ))
+    msgs = append(msgs, types.NewMsgModifyOption(oracleAddr, "0000000001", "order_receipt", "add", "writable-by(oracle)" ))
+    msgs = append(msgs, types.NewMsgModifyOption(oracleAddr, "0000000001", "order_receipt", "drop", "readable-by(oracle)" ))
     return msgs, nil
 
 }
