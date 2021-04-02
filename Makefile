@@ -37,7 +37,7 @@ BUILD_FLAGS_ORACLE2 := -ldflags '$(ldflagsoracle2)'
 all: install
 
 install: go.sum
-	make -j 2 daemon cli oracle
+	make -j 3 daemon cli oracle
 
 installc: go.sum
 	make -j 2 daemonc clic oraclec
