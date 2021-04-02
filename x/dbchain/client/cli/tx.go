@@ -147,9 +147,7 @@ func createSysDatabaseMsg(oracleAddr sdk.AccAddress)([]sdk.Msg, error) {
     msgs = append(msgs, types.NewMsgSetGroupMemo("0000000001","oracle","oracleOfThisChain",oracleAddr))
     //add table option
     msgs = append(msgs, types.NewMsgModifyOption(oracleAddr, "0000000001", "authentication", "add", "writable-by(oracle)" ))
-    msgs = append(msgs, types.NewMsgModifyOption(oracleAddr, "0000000001", "authentication", "drop", "readable-by(oracle)" ))
     msgs = append(msgs, types.NewMsgModifyOption(oracleAddr, "0000000001", "order_receipt", "add", "writable-by(oracle)" ))
-    msgs = append(msgs, types.NewMsgModifyOption(oracleAddr, "0000000001", "order_receipt", "drop", "readable-by(oracle)" ))
     return msgs, nil
 
 }
