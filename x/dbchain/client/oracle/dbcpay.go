@@ -301,7 +301,7 @@ func getSellableInfo(cliCtx context.CLIContext, storeName, appcode, sellableid s
 	if len(out) < 1 {
 		return nil, errors.New("could not find sellable id")
 	}
-	id := out[0]
+	id := out[len(out) -1]
 	queryString := fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, ac, appcode, tableName, id)
 	return oracleQueryUserTable(cliCtx, queryString)
 }

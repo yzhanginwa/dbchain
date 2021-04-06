@@ -4,8 +4,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/gorilla/mux"
+	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
+	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 	"net/http"
 	"regexp"
 	"sort"
@@ -18,6 +21,7 @@ var (
 	exp *regexp.Regexp
 	txsStatistic *txStatistic
 	totalTxs  *totalStatistic
+	startWriteToDB = false
 )
 
 const (
@@ -42,6 +46,8 @@ func showCurrentDayTxsNum(cliCtx context.CLIContext) http.HandlerFunc{
 
 func showRecentDaysTxsNum(cliCtx context.CLIContext) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
+		loadTxStatistic(cliCtx)
+		defer endProcessing()
 		vars := mux.Vars(r)
 		strDaysAgo := vars["daysAgo"]
 		daysAgo, err  := strconv.Atoi(strDaysAgo)
@@ -88,6 +94,8 @@ func showRecentDaysTxsNum(cliCtx context.CLIContext) http.HandlerFunc{
 
 func showTotalTxsNum(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		loadTotalStatistic(cliCtx)
+		defer endProcessing()
 		//excluding data of the day
 		txs := 0
 		daysAgo := 1
@@ -282,13 +290,13 @@ const (
 type txStatistic struct {
 	rwMutex sync.RWMutex
 	data map[int64]int
-	length         int
+	//length         int
 }
 
 func NewTxStatistic() *txStatistic {
 	var TxStatistic txStatistic
 	TxStatistic.data = make(map[int64]int)
-	TxStatistic.length = cacheDays
+	//TxStatistic.length = cacheDays
 	return &TxStatistic
 }
 
@@ -306,12 +314,12 @@ func (T *txStatistic)Update(date int64, txs int) {
 	T.rwMutex.Lock()
 	defer T.rwMutex.Unlock()
 	T.data[date] = txs
-	if len(T.data)  <= T.length {
+	if len(T.data)  <= cacheDays {
 		return
 	}
-	days := T.sortDateBigToSmall()
-	expirationData := days[0]
-	delete(T.data, expirationData)
+
+	expirationDate := T.getOldestDay()
+	delete(T.data, expirationDate)
 	return
 }
 
@@ -327,7 +335,15 @@ func (T *txStatistic) sortDateBigToSmall() []int64{
 	return stores
 }
 
-
+func (T *txStatistic) getOldestDay() int64 {
+	var day int64
+	for dayTime , _ := range T.data {
+		if day == 0 || day > dayTime {
+			day = dayTime
+		}
+	}
+	return day
+}
 
 //////////////////////////////////////
 //                                  //
@@ -366,4 +382,71 @@ func (total *totalStatistic)isZreo()bool {
 
 func (total *totalStatistic)getTotalTxs()int{
 	return total.txNum
+}
+
+func loadTotalStatistic(cliCtx context.CLIContext){
+	res, _, err := cliCtx.QueryWithData("custom/dbchain/dbchain_tx_num", nil)
+	if err != nil {
+		totalTxs = NewTotalStatistic()
+		return
+	}
+	var out map[string]int64
+	err = json.Unmarshal(res, &out)
+	if err != nil {
+		totalTxs = NewTotalStatistic()
+		return
+	}
+	totalTxs.txNum = int(out["txNum"])
+	totalTxs.date  = out["date"]
+	//start a goruntine write to db in time
+	//if !startWriteToDB {
+	//	go updateToDb()
+	//	startWriteToDB = true
+	//}
+
+}
+
+func loadTxStatistic(cliCtx context.CLIContext){
+	res, _, err := cliCtx.QueryWithData("custom/dbchain/dbchain_recent_tx_num", nil)
+	if err != nil {
+		totalTxs = NewTotalStatistic()
+		return
+	}
+	var out map[int64]int
+	err = json.Unmarshal(res, &out)
+	if err != nil {
+		txsStatistic = NewTxStatistic()
+		return
+	}
+	txsStatistic.data = out
+}
+
+func endProcessing() {
+	//start a goruntine write to db in time
+	if !startWriteToDB {
+		go updateToDb()
+		startWriteToDB = true
+	}
+}
+
+func updateToDb(){
+	//save first
+	saveToDB()
+	tk := time.NewTicker(time.Second * oneDaySeconds)
+	for {
+		select {
+		case <-tk.C:
+			saveToDB()
+		}
+	}
+}
+
+func saveToDB(){
+	priv, _  := oracle.LoadPrivKey()
+	var oracleAddr = sdk.AccAddress(priv.PubKey().Address())
+	msgs := make([]oracle.UniversalMsg, 0)
+	msgs = append(msgs, types.NewMsgUpdateTotalTx(oracleAddr, totalTxs.txNum, totalTxs.date))
+	msgs = append(msgs, types.NewMsgUpdateTxStatistic(oracleAddr, txsStatistic.data))
+	oracle.BuildTxsAndBroadcast(msgs)
+
 }
