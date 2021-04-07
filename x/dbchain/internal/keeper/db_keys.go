@@ -115,4 +115,14 @@ var (
     getSysGroupKey = dbk.GetSysGroupKey
     
     getSysAdminGroupKey = dbk.GetSysAdminGroupKey
+
+    ////////////////////////////
+    //                        //
+    //   blockchain browser   //
+    //                        //
+    ////////////////////////////
+
+    getTotalTx = dbk.GetTotalTx
+
+    getTxStatistic = dbk.GetTxStatistic
 )

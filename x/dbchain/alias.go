@@ -60,6 +60,8 @@ type (
     MsgModifyGroup     = types.MsgModifyGroup
     MsgSetGroupMemo    = types.MsgSetGroupMemo
     MsgModifyGroupMember  = types.MsgModifyGroupMember
+    MsgUpdateTotalTx = types.MsgUpdateTotalTx
+    MsgUpdateTxStatistic = types.MsgUpdateTxStatistic
 
     Table           = types.Table
 

@@ -48,6 +48,15 @@ func (k Keeper) IsSysAdmin(ctx sdk.Context, addr sdk.AccAddress) bool {
     return false
 }
 
+func (k Keeper) IsGroupMember(ctx sdk.Context, appId uint, groupName string, addr sdk.AccAddress) bool {
+    groupMember := k.getGroupMembers(ctx, appId, groupName)
+    for _, member := range groupMember {
+        if member.String() == addr.String() {
+            return true
+        }
+    }
+    return false
+}
 ////////////////////
 //                //
 // Database level //

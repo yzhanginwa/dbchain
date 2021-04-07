@@ -42,13 +42,5 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 
     r.HandleFunc(fmt.Sprintf("/%s/querier/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "querierBase58"), execQuerier(cliCtx, storeName)).Methods("GET")
 
-    //block browser. do not need access token
-    r.HandleFunc("/blockchain/txs_num/current_day", showCurrentDayTxsNum(cliCtx)).Methods("GET")
-    r.HandleFunc("/blockchain/txs_num/recent_day/{daysAgo}", showRecentDaysTxsNum(cliCtx)).Methods("GET")
-    r.HandleFunc("/blockchain/txs_num/total", showTotalTxsNum(cliCtx)).Methods("GET")
-    r.HandleFunc("/blockchain/all_accounts", showAllAccounts(cliCtx)).Methods("GET")
-    r.HandleFunc("/blockchain/all_applications", showAllApplications(cliCtx)).Methods("GET")
-    r.HandleFunc(fmt.Sprintf("/block/txs_hash/{%s}", "height"), showBlockTxsHash(cliCtx)).Methods("GET")
-
 
 }

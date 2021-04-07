@@ -23,4 +23,13 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/oracle/dbcpay_query/{%s}", storeName, "accessToken"), oracleQueryPayStatus(cliCtx, storeName)).Methods("POST")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/dbcpay_notify", storeName), oracleSavePayStatus(cliCtx, storeName)).Methods("POST")
 
+
+    //block browser. do not need access token
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/blockchain/txs_num/current_day", storeName), showCurrentDayTxsNum(cliCtx)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/blockchain/txs_num/recent_day/{daysAgo}", storeName), showRecentDaysTxsNum(cliCtx)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/blockchain/txs_num/total", storeName), showTotalTxsNum(cliCtx)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/blockchain/all_accounts", storeName), showAllAccounts(cliCtx)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/blockchain/all_applications", storeName), showAllApplications(cliCtx)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/block/txs_hash/{%s}", storeName, "height"), showBlockTxsHash(cliCtx)).Methods("GET")
+
 }

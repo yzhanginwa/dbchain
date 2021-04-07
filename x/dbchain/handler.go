@@ -100,6 +100,10 @@ func NewHandler(keeper Keeper) sdk.Handler {
             result, err = handleMsgSetSchemaStatus(ctx, keeper, msg)
         case MsgSetDatabasePermission:
             result, err = handleMsgSetDatabasePermission(ctx, keeper, msg)
+        case MsgUpdateTotalTx:
+            result, err = handleMsgUpdateTotalTx(ctx, keeper, msg)
+        case MsgUpdateTxStatistic:
+            result, err = handleMsgUpdateTxStatistic(ctx, keeper, msg)
         default:
             errMsg := fmt.Sprintf("Unrecognized dbchain Msg type: %v", msg.Type())
             result, err = nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
@@ -752,6 +756,46 @@ func handleMsgSetDatabasePermission(ctx sdk.Context, keeper Keeper, msg MsgSetDa
     return &sdk.Result{}, nil
 }
 
+////////////////////////
+//                    //
+// blockchain browser //
+//                    //
+////////////////////////
+
+func handleMsgUpdateTotalTx(ctx sdk.Context, keeper Keeper, msg MsgUpdateTotalTx) (*sdk.Result, error) {
+
+    appId, err := keeper.GetDatabaseId(ctx, "0000000001")
+    if err != nil {
+       return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Invalid app code")
+    }
+
+    if !keeper.IsGroupMember(ctx, appId, "oracle", msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Permission forbidden")
+    }
+    err = keeper.UpdateTotalTx(ctx, msg.Data)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
+    return &sdk.Result{}, nil
+}
+
+func handleMsgUpdateTxStatistic(ctx sdk.Context, keeper Keeper, msg MsgUpdateTxStatistic) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, "0000000001")
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Invalid app code")
+    }
+
+    if !keeper.IsGroupMember(ctx, appId, "oracle", msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Permission forbidden")
+    }
+
+    err = keeper.UpdateTxStatistic(ctx, msg.Data)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
+    return &sdk.Result{}, nil
+}
+
 ////////////////////
 //                //
 // helper methods //
@@ -781,4 +825,3 @@ func isAdmin(ctx sdk.Context, keeper Keeper, appId uint, address sdk.AccAddress)
     }
     return is_admin
 }
-

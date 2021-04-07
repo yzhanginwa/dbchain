@@ -1,11 +1,14 @@
-package rest
+package oracle
 
 import (
 	"encoding/hex"
 	"encoding/json"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/gorilla/mux"
+	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
+	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 	"net/http"
 	"regexp"
 	"sort"
@@ -16,8 +19,6 @@ import (
 
 var (
 	exp *regexp.Regexp
-	txsStatistic *txStatistic
-	totalTxs  *totalStatistic
 )
 
 const (
@@ -27,14 +28,13 @@ const (
 
 func init(){
 	regExpression := `[0-9]{4}-[0-9]{2}-[0-9]{2}`
-	exp , _ = regexp.Compile(regExpression)
-	txsStatistic = NewTxStatistic()
-	totalTxs = NewTotalStatistic()
+	exp, _ = regexp.Compile(regExpression)
 }
 
 func showCurrentDayTxsNum(cliCtx context.CLIContext) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
-		txs, _ := getOneDayTxs(cliCtx, 0, false)
+		TxsStatistic := loadTxStatistic(cliCtx)
+		txs, _ := getOneDayTxs(cliCtx, 0, false, TxsStatistic)
 		bz , _ := json.Marshal(txs)
 		rest.PostProcessResponse(w, cliCtx, bz)
 	}
@@ -42,6 +42,13 @@ func showCurrentDayTxsNum(cliCtx context.CLIContext) http.HandlerFunc{
 
 func showRecentDaysTxsNum(cliCtx context.CLIContext) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
+		TxsStatistic := loadTxStatistic(cliCtx)
+
+		TxsStatisticCopy := make(map[int64]int)
+		for k,v := range TxsStatistic.data {
+			TxsStatisticCopy[k] = v
+		}
+
 		vars := mux.Vars(r)
 		strDaysAgo := vars["daysAgo"]
 		daysAgo, err  := strconv.Atoi(strDaysAgo)
@@ -62,7 +69,7 @@ func showRecentDaysTxsNum(cliCtx context.CLIContext) http.HandlerFunc{
 		go func() {
 			for i := 1; i <= daysAgo; i++ {
 				go func(i int) {
-					tx, date := getOneDayTxs(cliCtx,i, true)
+					tx, date := getOneDayTxs(cliCtx,i, true, TxsStatistic)
 					dates <- date
 					txs <- tx
 				}(i)
@@ -83,34 +90,57 @@ func showRecentDaysTxsNum(cliCtx context.CLIContext) http.HandlerFunc{
 		close(txs)
 		bz , _ := json.Marshal(result)
 		rest.PostProcessResponse(w, cliCtx, bz)
+		//Check whether it needs to be stored in the database
+		for k, v := range TxsStatistic.data {
+			if TxsStatisticCopy[k] != v {
+				endProcessing(TxsStatistic)
+				break
+			}
+		}
 	}
 }
 
 func showTotalTxsNum(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//excluding data of the day
+
+		TotalTxs := loadTotalStatistic(cliCtx)
+		TxsStatistic  := loadTxStatistic(cliCtx)
+
+		var TotalTxsCopy = NewTotalStatistic()
+		TotalTxsCopy.date = TotalTxs.date
+		TotalTxsCopy.txNum = TotalTxs.txNum
+
 		txs := 0
 		daysAgo := 1
 		updateTimeStamp := getCurrentDayStartTimeStamp()
-		//TODO concurrent query
-		//if we want to concurrent query, we need now how many days need to query
+
+		if !TotalTxs.compare(updateTimeStamp) {
+			bz , _ := json.Marshal(TotalTxs.getTotalTxs())
+			rest.PostProcessResponse(w, cliCtx, bz)
+			return
+		}
 		for {
-			tx, timeStamp := getOneDayTxs(cliCtx, daysAgo, false)
+			tx, timeStamp := getOneDayTxs(cliCtx, daysAgo, false, TxsStatistic)
 			daysAgo++
-			if totalTxs.compare(timeStamp) {
+			if TotalTxs.compare(timeStamp) {
 				txs += tx
-			} else if timeStamp == 0 && totalTxs.isZreo(){
+			} else if timeStamp == 0 && TotalTxs.isZreo(){
 				txs += tx
-				totalTxs.update(updateTimeStamp,txs)
+				TotalTxs.update(updateTimeStamp,txs)
 				break
 			} else {
-				totalTxs.update(updateTimeStamp,txs)
+				TotalTxs.update(updateTimeStamp,txs)
 				break
 			}
 		}
 
-		bz , _ := json.Marshal(totalTxs.getTotalTxs())
+		bz , _ := json.Marshal(TotalTxs.getTotalTxs())
 		rest.PostProcessResponse(w, cliCtx, bz)
+		//Check whether it needs to be stored in the database
+		if TotalTxsCopy.date != TotalTxs.date {
+			endProcessing(TotalTxs)
+		}
 	}
 }
 
@@ -167,7 +197,7 @@ func showAllApplications(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 //From the current time to a certain day
-func getOneDayTxs(cliCtx context.CLIContext, daysAgo int, upDateCache bool) (int,int64) {
+func getOneDayTxs(cliCtx context.CLIContext, daysAgo int, upDateCache bool, txsStatistic *txStatistic) (int,int64) {
 	txs := 0
 	//get from cache first
 	startTimeStamp := getStartTimeStamp(daysAgo)
@@ -282,13 +312,11 @@ const (
 type txStatistic struct {
 	rwMutex sync.RWMutex
 	data map[int64]int
-	length         int
 }
 
 func NewTxStatistic() *txStatistic {
 	var TxStatistic txStatistic
 	TxStatistic.data = make(map[int64]int)
-	TxStatistic.length = cacheDays
 	return &TxStatistic
 }
 
@@ -306,11 +334,11 @@ func (T *txStatistic)Update(date int64, txs int) {
 	T.rwMutex.Lock()
 	defer T.rwMutex.Unlock()
 	T.data[date] = txs
-	if len(T.data)  <= T.length {
+	if len(T.data)  <= cacheDays {
 		return
 	}
-	days := T.sortDateBigToSmall()
-	expirationData := days[0]
+
+	expirationData := T.getOldestDay()
 	delete(T.data, expirationData)
 	return
 }
@@ -327,7 +355,15 @@ func (T *txStatistic) sortDateBigToSmall() []int64{
 	return stores
 }
 
-
+func (T *txStatistic) getOldestDay() int64 {
+	var day int64
+	for dayTime , _ := range T.data {
+			if day == 0 || day > dayTime {
+					day = dayTime
+				}
+		}
+	return day
+}
 
 //////////////////////////////////////
 //                                  //
@@ -366,4 +402,90 @@ func (total *totalStatistic)isZreo()bool {
 
 func (total *totalStatistic)getTotalTxs()int{
 	return total.txNum
+}
+
+
+func loadTotalStatistic(cliCtx context.CLIContext) *totalStatistic{
+	TotalTxs := NewTotalStatistic()
+	out := queryTotalTxs(cliCtx)
+	if out == nil {
+		return TotalTxs
+	}
+	TotalTxs.txNum = int(out["txNum"])
+	TotalTxs.date  = out["date"]
+	return TotalTxs
+}
+
+func loadTxStatistic(cliCtx context.CLIContext) *txStatistic{
+	var TxStatistic = NewTxStatistic()
+
+	out := queryTxStatistic(cliCtx)
+	if out == nil {
+		return TxStatistic
+	}
+	TxStatistic.data = out
+	return TxStatistic
+}
+
+
+
+func endProcessing(data interface{}) {
+	priv, _  := oracle.LoadPrivKey()
+	var oracleAddr = sdk.AccAddress(priv.PubKey().Address())
+	msgs := make([]oracle.UniversalMsg, 0)
+
+	switch data := data.(type) {
+	case *totalStatistic:
+		msgs = append(msgs, types.NewMsgUpdateTotalTx(oracleAddr, marshalTotalTxs(data)))
+	case *txStatistic:
+		msgs = append(msgs, types.NewMsgUpdateTxStatistic(oracleAddr, marshalTxsStatistic(data)))
+	default:
+		return
+	}
+	oracle.BuildTxsAndBroadcast(msgs)
+}
+
+///////////////////////////////
+//                           //
+//        help func          //
+//                           //
+///////////////////////////////
+
+func marshalTotalTxs(totalTxs *totalStatistic) string {
+	temp := make(map[string]int64)
+	temp["txNum"] = int64(totalTxs.txNum)
+	temp["date"] = totalTxs.date
+	bz , _ := json.Marshal(temp)
+	return string(bz)
+}
+
+func marshalTxsStatistic(txsStatistic *txStatistic) string {
+	bz, _ := json.Marshal(txsStatistic.data)
+	return string(bz)
+}
+
+func queryTxStatistic(cliCtx context.CLIContext)  map[int64]int {
+	res, _, err := cliCtx.QueryWithData("custom/dbchain/dbchainRecentTxNum", nil)
+	if err != nil {
+		return nil
+	}
+	var out map[int64]int
+	err = json.Unmarshal(res, &out)
+	if err != nil || out == nil {
+		return nil
+	}
+	return out
+}
+
+func queryTotalTxs(cliCtx context.CLIContext)  map[string]int64 {
+	res, _, err := cliCtx.QueryWithData("custom/dbchain/dbchainTxNum", nil)
+	if err != nil {
+		return nil
+	}
+	var out map[string]int64
+	err = json.Unmarshal(res, &out)
+	if err != nil || out == nil {
+		return nil
+	}
+	return out
 }

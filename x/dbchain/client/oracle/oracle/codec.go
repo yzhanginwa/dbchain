@@ -16,6 +16,8 @@ func init () {
     aminoCdc.RegisterInterface((*sdk.Tx)(nil), nil)
     aminoCdc.RegisterInterface((*UniversalMsg)(nil), nil)
     aminoCdc.RegisterConcrete(types.MsgInsertRow{}, "dbchain/InsertRow", nil)
+    aminoCdc.RegisterConcrete(types.MsgUpdateTotalTx{}, "dbchain/UpdateTotalTx", nil)
+    aminoCdc.RegisterConcrete(types.MsgUpdateTxStatistic{}, "dbchain/UpdateTxStatistic", nil)
     cryptoamino.RegisterAmino(aminoCdc)
 
     //authtypes.RegisterCodec(aminoCdc)

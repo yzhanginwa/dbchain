@@ -49,5 +49,7 @@ func RegisterCodec(cdc *codec.Codec) {
     cdc.RegisterConcrete(MsgAddFriend{}, "dbchain/AddFriend", nil)
     cdc.RegisterConcrete(MsgDropFriend{}, "dbchain/DropFriend", nil)
     cdc.RegisterConcrete(MsgRespondFriend{}, "dbchain/RespondFriend", nil)
+    cdc.RegisterConcrete(MsgUpdateTotalTx{}, "dbchain/UpdateTotalTx", nil)
+    cdc.RegisterConcrete(MsgUpdateTxStatistic{}, "dbchain/UpdateTxStatistic", nil)
 }
 

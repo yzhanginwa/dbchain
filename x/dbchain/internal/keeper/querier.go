@@ -50,6 +50,8 @@ const (
     QueryCallCustomQuerier = "callCustomQuerier"
     QueryTxSimpleResult    = "txSimpleResult"
     QueryAllAccounts       = "allAccounts"
+    QueryDbchainTxNum      = "dbchainTxNum"
+    QueryDbchainRecentTxNum  = "dbchainRecentTxNum"
 )
 
 
@@ -129,6 +131,10 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryTxSimpleResult(ctx, path[1:], req, keeper)
         case QueryAllAccounts:
             return queryAllAccount(ctx, path[1:], req, keeper)
+        case QueryDbchainTxNum:
+            return queryDbchainTxNum(ctx, path[1:], req, keeper)
+        case QueryDbchainRecentTxNum:
+            return queryDbchainRecentTxNum(ctx, path[1:], req, keeper)
         default:
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown dbchain query endpoint")
         }
@@ -1013,6 +1019,22 @@ func queryAllAccount(ctx sdk.Context, path []string, req abci.RequestQuery, keep
        panic("could not marshal result to JSON")
    }
    return res, nil
+}
+
+func queryDbchainTxNum(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper)([]byte, error){
+    res, err := keeper.GetDbchainTxNum(ctx)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+    return res, nil
+}
+
+func queryDbchainRecentTxNum(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper)([]byte, error){
+    res, err := keeper.GetDbchainRecentTxNum(ctx)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+    return res, nil
 }
 
 //////////////////

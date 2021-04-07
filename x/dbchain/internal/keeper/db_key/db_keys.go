@@ -239,3 +239,18 @@ func GetSysGroupKey(groupName string) string {
 func GetSysAdminGroupKey() string {
     return GetSysGroupKey("admin")
 }
+
+
+////////////////////////////
+//                        //
+//   blockchain browser   //
+//                        //
+////////////////////////////
+
+func GetTotalTx() string {
+    return "blockchain:total_tx"
+}
+
+func GetTxStatistic() string {
+    return "blockchain:statistical_tx"
+}
