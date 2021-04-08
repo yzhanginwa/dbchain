@@ -13,7 +13,6 @@ import (
     "github.com/cosmos/cosmos-sdk/version"
     authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
     authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
-    bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
     app "github.com/yzhanginwa/dbchain"
     "github.com/spf13/cobra"
     "github.com/spf13/viper"
@@ -102,7 +101,6 @@ func txCmd(cdc *amino.Codec) *cobra.Command {
     }
 
     txCmd.AddCommand(
-        bankcmd.SendTxCmd(cdc),
         flags.LineBreak,
         authcmd.GetSignCommand(cdc),
         authcmd.GetMultiSignCommand(cdc),

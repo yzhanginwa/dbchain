@@ -15,6 +15,7 @@ import (
     "github.com/cosmos/cosmos-sdk/x/auth"
     genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
     app "github.com/yzhanginwa/dbchain"
+    bankmodule "github.com/yzhanginwa/dbchain/x/bank"
     dbcmodule "github.com/yzhanginwa/dbchain/x/dbchain"
     dbchaincli "github.com/yzhanginwa/dbchain/x/dbchain/client/cli"
 
@@ -48,6 +49,11 @@ func main() {
                                       "allow-create-application",
                                       false,
                                       "allow non-admin users to create application")
+
+    rootCmd.PersistentFlags().Int64Var(&bankmodule.ExistentialDeposit,
+                                        "existential-deposit",
+                                        0,
+                                        "deposits with the least per address")
 
     // CLI commands to initialize the chain
     rootCmd.AddCommand(

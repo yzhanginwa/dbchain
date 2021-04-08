@@ -6,7 +6,7 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/cosmos/cosmos-sdk/x/auth"
     "github.com/cosmos/cosmos-sdk/x/auth/exported"
-    "github.com/cosmos/cosmos-sdk/x/bank"
+    "github.com/yzhanginwa/dbchain/x/bank"
     "github.com/tendermint/tendermint/libs/log"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
