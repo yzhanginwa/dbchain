@@ -103,10 +103,16 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
             if err != nil{
                 return nil
             }
-            var result []uint
+            var result []string
             if bz != nil {
                 k.cdc.MustUnmarshalBinaryBare(bz, &result)
-                results = append(results, result...)
+                for _, sId := range result {
+                   id , err := strconv.ParseUint(sId, 10, 32)
+                   if err != nil {
+                       continue
+                   }
+                   results = append(results, uint(id))
+                }
             }
         }
     } else {
