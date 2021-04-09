@@ -166,7 +166,8 @@ func createIndexData(k Keeper, ctx sdk.Context, appId uint, tableName, fieldName
 
 func dropIndexData(k Keeper, ctx sdk.Context, appId uint, tableName, fieldName string) error {
     store := DbChainStore(ctx, k.storeKey)
-    start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
+    start, end := getIndexDataIteratorStartAndEndKey(appId, tableName, fieldName)
+
     iter := store.Iterator([]byte(start), []byte(end))
     for ; iter.Valid(); iter.Next() {
         if iter.Error() != nil{
