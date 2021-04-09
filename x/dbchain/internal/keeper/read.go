@@ -145,6 +145,27 @@ func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field strin
     isInteger := k.isTypeOfInteger(ctx, appId, tableName, field)
     results := []uint{}
 
+
+    if k.isIndexField(ctx, appId, tableName, field) {
+        var mold []string
+        key := getIndexKey(appId, tableName, field, value)
+        bz, err := store.Get([]byte(key))
+        if err != nil{
+            return results
+        }
+        if bz != nil {
+            k.cdc.MustUnmarshalBinaryBare(bz, &mold)
+        }
+        for _, sId := range mold {
+           id , err := strconv.ParseUint(sId, 10, 32)
+           if err != nil {
+               continue
+           }
+           results = append(results, uint(id))
+        }
+        return results
+    }
+
     start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, field)
     iter := store.Iterator([]byte(start), []byte(end))
     var mold string
@@ -204,6 +225,18 @@ func (k Keeper) FindAll(ctx sdk.Context, appId uint, tableName string, user sdk.
 // helper funcs //
 //              //
 //////////////////
+func (k Keeper) isIndexField(ctx sdk.Context, appId uint, tableName, field string) bool {
+    indexFields, err := k.GetIndexFields(ctx, appId, tableName)
+    if err != nil {
+        return false
+    }
+    for _,indexField := range indexFields {
+        if field == indexField {
+            return true
+        }
+    }
+    return false
+}
 
 func (k Keeper) isTablePublic(ctx sdk.Context, appId uint, tableName string) bool {
     tableOptions, _ := k.GetOption(ctx, appId, tableName)

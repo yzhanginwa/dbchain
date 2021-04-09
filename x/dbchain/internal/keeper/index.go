@@ -97,8 +97,9 @@ func (k Keeper) appendIndexForRow(ctx sdk.Context, appId uint, tableName string,
         return 0, errors.New(fmt.Sprintf("Id for table %s is invalid", tableName))
     }
 
-    var mold []string
+
     for _, indexField := range indexFields {
+        var mold []string
         value, err := k.FindField(ctx, appId, tableName, id, indexField)
         if err != nil {
             return id, nil    // the value for this field is empty. we don't need to do anything. Because people would not search on an empty value.
