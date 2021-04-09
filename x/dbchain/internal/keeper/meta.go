@@ -673,8 +673,11 @@ func (k Keeper) GetCanAddColumnDataType(ctx sdk.Context, appId uint, tableName, 
 // to make sure field id be in place
 func preProcessFields(fieldNames []string) []string {
     var result = []string{"id", "created_by", "created_at"}
-    m := make(map[string]bool)
-    m["id"] = true
+    m := map[string]bool{
+        "id" : true,
+        "created_by" : true,
+        "created_at" : true,
+    }
 
     for _, field := range fieldNames {
         newName := strings.ToLower(field)
