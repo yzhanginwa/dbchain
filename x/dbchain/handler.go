@@ -258,6 +258,10 @@ func handleMsgCreateTable(ctx sdk.Context, keeper Keeper, msg MsgCreateTable) (*
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name existed already!")
     }
     keeper.CreateTable(ctx, appId, msg.Owner, msg.TableName, msg.Fields)
+    err = keeper.CreateIndex(ctx, appId, msg.Owner, msg.TableName, "created_by")
+    if err != nil {
+        return nil, err
+    }
     return &sdk.Result{}, nil
 }
 
