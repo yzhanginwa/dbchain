@@ -50,7 +50,7 @@ func (k Keeper) DropIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
         return errors.New(fmt.Sprintf("Table %s does not have index on %s yet!", tableName, fieldName))
     }
 
-    utils.RemoveStringFromSet(indexFields, fieldName)
+    indexFields = utils.RemoveStringFromSet(indexFields, fieldName)
     key := getMetaTableIndexKey(appId, tableName)
     if len(indexFields) < 1 {
         err := store.Delete([]byte(key))
