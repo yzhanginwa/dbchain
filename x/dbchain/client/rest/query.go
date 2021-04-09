@@ -3,7 +3,6 @@ package rest
 import (
     "fmt"
     "github.com/cosmos/cosmos-sdk/client/context"
-    "github.com/mr-tron/base58"
     "net/http"
 
     "github.com/cosmos/cosmos-sdk/types/rest"
@@ -242,11 +241,7 @@ func showCanAddColumnDataTypeHandler(cliCtx context.CLIContext, storeName string
 func showCanInsertRowHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
-        rowFieldsJson, err := base58.Decode(vars["rowFieldsJsonBase58"])
-        if err != nil {
-            rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
-            return
-        }
+        rowFieldsJson := vars["rowFieldsJsonBase58"]
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/can_insert_row/%s/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["tableName"], rowFieldsJson), nil)
         if err != nil {
             rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())

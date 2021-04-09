@@ -6,6 +6,7 @@ import (
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+    "github.com/mr-tron/base58"
     abci "github.com/tendermint/tendermint/abci/types"
     lua "github.com/yuin/gopher-lua"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
@@ -560,7 +561,12 @@ func queryCanAddColumnDataType(ctx sdk.Context, path []string, req abci.RequestQ
     }
 
     tableName     := path[2]
-    rowFieldsJson := path[3]
+    encodeFields  := path[3]
+
+     rowFieldsJson, err := base58.Decode(encodeFields)
+     if err != nil {
+         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Failed to parse row fields!")
+     }
 
     var rowFields types.RowFields
     if err := json.Unmarshal([]byte(rowFieldsJson), &rowFields); err != nil {
