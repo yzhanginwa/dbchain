@@ -111,7 +111,10 @@ func (k Keeper) Delete(ctx sdk.Context, appId uint, tableName string, id uint, o
         }
     }
 
-    // TODO: to remove the related indexes
+    _, err = k.dropIndexForRow(ctx, appId, tableName, id)
+    if err != nil {
+        return 0, err
+    }
     return id, nil
 }
 
@@ -135,7 +138,10 @@ func (k Keeper) Freeze(ctx sdk.Context, appId uint, tableName string, id uint, o
     keyBy := getDataKeyBytes(appId, tableName, types.FLD_FROZEN_BY, id)
     store.Set(keyBy, k.cdc.MustMarshalBinaryBare(owner.String()))
 
-    // TODO: to remove the related indexes
+    _, err = k.dropIndexForRow(ctx, appId, tableName, id)
+    if err != nil {
+        return 0, err
+    }
     return id, nil
 }
 

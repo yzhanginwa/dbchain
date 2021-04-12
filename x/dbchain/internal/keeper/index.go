@@ -119,6 +119,45 @@ func (k Keeper) appendIndexForRow(ctx sdk.Context, appId uint, tableName string,
     return id, nil
 }
 
+
+func (k Keeper) dropIndexForRow(ctx sdk.Context, appId uint, tableName string, id uint) (uint, error) {
+    store := DbChainStore(ctx, k.storeKey)
+    indexFields, err := k.GetIndexFields(ctx, appId, tableName)
+    if err != nil {
+        return 0, errors.New(fmt.Sprintf("Failed to get index for table %s", tableName))
+    }
+    if id == 0 {
+        return 0, errors.New(fmt.Sprintf("Id for table %s is invalid", tableName))
+    }
+
+
+    for _, indexField := range indexFields {
+        var mold []string
+        value, err := k.FindField(ctx, appId, tableName, id, indexField)
+        if err != nil {
+            continue          // the value for this field is empty. we can just ignore it and not to do indexing on it
+        }
+        key := getIndexKey(appId, tableName, indexField, value)
+        bz, err := store.Get([]byte(key))
+        if err != nil{
+            return id, err
+        }
+        if bz != nil {
+            k.cdc.MustUnmarshalBinaryBare(bz, &mold)
+        }
+
+        sId := fmt.Sprint(id)
+        for index, id := range mold {
+            if id == sId {
+                mold = append(mold[:index], mold[index+1:]...)
+                break
+            }
+        }
+        store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(mold))
+    }
+
+    return id, nil
+}
 //////////////////////
 //                  //
 // helper functions //
