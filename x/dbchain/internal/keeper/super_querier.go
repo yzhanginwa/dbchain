@@ -25,6 +25,7 @@ type QuerierBuilder struct {
     Select []string
     Where []Condition
     Order []string
+    Offset int
     Limit int
     Last bool
 }
@@ -94,6 +95,17 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
            builders[j].Ids = []uint{uint(id)}
         case "first":
            builders[j].Limit = 1
+        case "limit", "offset":
+            val, err := strconv.Atoi(qo["value"])
+            if err != nil || val < 0 {
+                return nil, nil, err
+            }
+            if qo["method"] == "limit" {
+                builders[j].Limit = val
+            } else {
+                builders[j].Offset = val
+            }
+
         case "last":
            builders[j].Last = true
         case "where":
@@ -157,11 +169,19 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
             if length > 0 {
                 ids = builders[j].Ids[length-1:]
             }
-        } else {
+        } else if builders[j].Offset == 0 {
             if builders[j].Limit == 0 || builders[j].Limit >= len(builders[j].Ids) {
                 ids = builders[j].Ids
             } else {
                 ids = builders[j].Ids[:(builders[j].Limit)]
+            }
+        } else {
+            if builders[j].Offset >= len(builders[j].Ids) {
+                ids = []uint{}
+            } else if builders[j].Limit == 0 || builders[j].Limit + builders[j].Offset >= len(builders[j].Ids) {
+                ids = builders[j].Ids[builders[j].Offset :]
+            } else {
+                ids = builders[j].Ids[builders[j].Offset : builders[j].Offset + (builders[j].Limit)]
             }
         }
     }
