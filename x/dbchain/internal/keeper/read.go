@@ -7,6 +7,7 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    "strings"
 )
 
 
@@ -150,26 +151,60 @@ func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field strin
     store := DbChainStore(ctx, k.storeKey)
     isInteger := k.isTypeOfInteger(ctx, appId, tableName, field)
     results := []uint{}
+    if field == "id" && (operator ==  "==" || operator ==  "=") {
+        id , err := strconv.ParseUint(value, 10, 32)
+        if err != nil {
+            return results
+        }
+        results = append(results, uint(id))
+        return results
+    }
 
 
     if k.isIndexField(ctx, appId, tableName, field) {
-        var mold []string
-        key := getIndexKey(appId, tableName, field, value)
-        bz, err := store.Get([]byte(key))
-        if err != nil{
+        if operator ==  "==" || operator ==  "="  {
+            var mold []string
+            key := getIndexKey(appId, tableName, field, value)
+            bz, err := store.Get([]byte(key))
+            if err != nil{
+                return results
+            }
+            if bz != nil {
+                k.cdc.MustUnmarshalBinaryBare(bz, &mold)
+            }
+            for _, sId := range mold {
+                id , err := strconv.ParseUint(sId, 10, 32)
+                if err != nil {
+                    continue
+                }
+                results = append(results, uint(id))
+            }
+            return results
+        } else {
+            start, end := getIndexDataIteratorStartAndEndKey(appId, tableName, field)
+            iter := store.Iterator([]byte(start), []byte(end))
+            for ; iter.Valid(); iter.Next() {
+                if iter.Error() != nil {
+                    continue
+                }
+                key := iter.Key()
+                val := iter.Value()
+                sliceKey := strings.Split(string(key),":")
+                matching := fieldValueCompare(isInteger, operator, sliceKey[len(sliceKey)-1], value)
+                if matching {
+                    var mold []string
+                    k.cdc.MustUnmarshalBinaryBare(val, &mold)
+                    for _, sId := range mold {
+                        id , err := strconv.ParseUint(sId, 10, 32)
+                        if err != nil {
+                            continue
+                        }
+                        results = append(results, uint(id))
+                    }
+                }
+            }
             return results
         }
-        if bz != nil {
-            k.cdc.MustUnmarshalBinaryBare(bz, &mold)
-        }
-        for _, sId := range mold {
-           id , err := strconv.ParseUint(sId, 10, 32)
-           if err != nil {
-               continue
-           }
-           results = append(results, uint(id))
-        }
-        return results
     }
 
     start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, field)
