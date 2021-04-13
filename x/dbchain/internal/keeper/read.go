@@ -67,15 +67,8 @@ func (k Keeper) FindField(ctx sdk.Context, appId uint, tableName string, id uint
 }
 
 func (k Keeper) Find(ctx sdk.Context, appId uint, tableName string, id uint, user sdk.AccAddress) (types.RowFields, error){
-    var ids []uint
-    ids = append(ids, id)
-
-    // if public table, return all ids
-    if !k.isTablePublic(ctx, appId, tableName) && !k.isAuditor(ctx, appId, user) {
-        ids = k.filterOwnIds(ctx, appId, tableName, ids, user)
-        if len(ids) < 1 {
-            return nil, errors.New(fmt.Sprintf("Failed to get fields for id %d", id))
-        }
+    if !k.isOwnId(ctx,appId, tableName, id, user) {
+        return nil, errors.New(fmt.Sprintf("Failed to get fields for id %d", id))
     }
 
     return k.DoFind(ctx, appId, tableName, id)
@@ -154,7 +147,7 @@ func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field strin
     results := []uint{}
     if field == "id" && (operator ==  "==" || operator ==  "=") {
         id , err := strconv.ParseUint(value, 10, 32)
-        if err != nil {
+        if err != nil || !k.isOwnId(ctx, appId, tableName, uint(id), user) {
             return results
         }
         results = append(results, uint(id))
@@ -283,6 +276,20 @@ func (k Keeper) isIndexField(ctx sdk.Context, appId uint, tableName, field strin
 func (k Keeper) isTablePublic(ctx sdk.Context, appId uint, tableName string) bool {
     tableOptions, _ := k.GetOption(ctx, appId, tableName)
     return utils.ItemExists(tableOptions, string(types.TBLOPT_PUBLIC))
+}
+
+func (k Keeper) isOwnId(ctx sdk.Context, appId uint, tableName string, id uint, user sdk.AccAddress) bool{
+    var ids []uint
+    ids = append(ids, id)
+
+    // if public table, return all ids
+    if !k.isTablePublic(ctx, appId, tableName) && !k.isAuditor(ctx, appId, user) {
+        ids = k.filterOwnIds(ctx, appId, tableName, ids, user)
+        if len(ids) < 1 {
+            return false
+        }
+    }
+    return true
 }
 
 func (k Keeper) filterOwnIds(ctx sdk.Context, appId uint,  tableName string, ids []uint, user sdk.AccAddress) []uint {
