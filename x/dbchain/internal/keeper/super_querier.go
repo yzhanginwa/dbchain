@@ -2,6 +2,7 @@ package keeper
 
 import (
     "fmt"
+    "regexp"
     "strings"
     "strconv"
     "github.com/mr-tron/base58"
@@ -17,6 +18,7 @@ type Condition struct {
     Field string
     Operator string
     Value string
+    Reg   *regexp.Regexp
 }
 
 type QuerierBuilder struct {
@@ -114,6 +116,13 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
                Operator: qo["operator"],
                Value: qo["value"],
            }
+           if qo["operator"] == "like" {
+               reg, err := utils.DealFuzzyQueryString(qo["value"])
+               if err != nil {
+                   return nil, nil, err
+               }
+               cond.Reg = reg
+           }
            builders[j].Where = append(builders[j].Where, cond)
         }
     }
@@ -146,7 +155,7 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
             // to get the intersect of the result ids of all the where clauses
             intersect := []uint{}
             for index, cond := range builders[j].Where {
-                ids := keeper.Where(ctx, appId, builders[j].Table, cond.Field, cond.Operator, cond.Value, owner)
+                ids := keeper.Where(ctx, appId, builders[j].Table, cond.Field, cond.Operator, cond.Value, cond.Reg, owner)
                 if index == 0 {
                     intersect = ids
                 } else {

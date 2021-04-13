@@ -58,7 +58,7 @@ func (k Keeper) specWhere(ctx sdk.Context, appId uint, tableName string, field s
 		val := iter.Value()
 		k.cdc.MustUnmarshalBinaryBare(val, &mold)
 
-		matching := fieldValueCompare(isInteger, operator, mold, value)
+		matching := fieldValueCompare(isInteger, operator, mold, value, nil)
 		if matching {
 			id := getIdFromDataKey(key)
 			if isRowFrozen(store, appId, tableName, id) {

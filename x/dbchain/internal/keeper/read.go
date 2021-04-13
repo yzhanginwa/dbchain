@@ -2,6 +2,7 @@ package keeper
 
 import (
     "fmt"
+    "regexp"
     "strconv"
     "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
@@ -146,7 +147,7 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
     }
 }
 
-func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field string, operator string, value string, user sdk.AccAddress) []uint {
+func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field string, operator string, value string, reg *regexp.Regexp, user sdk.AccAddress) []uint {
     //TODO: consider if the field has index and how to make use of it
     store := DbChainStore(ctx, k.storeKey)
     isInteger := k.isTypeOfInteger(ctx, appId, tableName, field)
@@ -190,7 +191,7 @@ func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field strin
                 key := iter.Key()
                 val := iter.Value()
                 sliceKey := strings.Split(string(key),":")
-                matching := fieldValueCompare(isInteger, operator, sliceKey[len(sliceKey)-1], value)
+                matching := fieldValueCompare(isInteger, operator, sliceKey[len(sliceKey)-1], value, reg)
                 if matching {
                     var mold []string
                     k.cdc.MustUnmarshalBinaryBare(val, &mold)
@@ -218,7 +219,7 @@ func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field strin
         val := iter.Value()
         k.cdc.MustUnmarshalBinaryBare(val, &mold)
 
-        matching := fieldValueCompare(isInteger, operator, mold, value)
+        matching := fieldValueCompare(isInteger, operator, mold, value, reg)
         if matching {
             id := getIdFromDataKey(key)
             if isRowFrozen(store, appId, tableName, id) {
@@ -311,7 +312,7 @@ func (k Keeper) isTypeOfInteger(ctx sdk.Context, appId uint, tableName, fieldNam
     return utils.StringIncluded(fieldDataType, string(types.FLDTYP_INT))
 }
 
-func fieldValueCompare(isInteger bool, operator, left, right string) bool {
+func fieldValueCompare(isInteger bool, operator, left, right string, reg *regexp.Regexp) bool {
     matching := false
 
     if isInteger {
@@ -377,6 +378,11 @@ func fieldValueCompare(isInteger bool, operator, left, right string) bool {
             if left != right {
                 matching = true
             }
+        case "like":
+            if reg.MatchString(left) {
+                matching = true
+            }
+
         }
     }
     return matching
