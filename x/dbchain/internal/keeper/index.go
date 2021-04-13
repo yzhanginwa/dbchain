@@ -153,7 +153,11 @@ func (k Keeper) dropIndexForRow(ctx sdk.Context, appId uint, tableName string, i
                 break
             }
         }
-        store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(mold))
+        if len(mold) == 0 {
+            store.Delete([]byte(key))
+        } else {
+            store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(mold))
+        }
     }
 
     return id, nil
