@@ -32,6 +32,10 @@ type QuerierBuilder struct {
     Last bool
 }
 
+type WhereRes struct {
+    Data []map[string]string `json:"data"`
+    Count string             `json:"count"`
+}
 
 
 /////////////////////
@@ -68,14 +72,25 @@ func queryQuerier(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
         return nil, err
     }
 
-    res, err := codec.MarshalJSONIndent(keeper.cdc, result)
+    var res []byte
+    if isCountQuery(querierObjs) {
+        temp := map[string]string {
+            "count" : result.Count,
+        }
+        res, err = codec.MarshalJSONIndent(keeper.cdc, temp)
+    } else {
+        res, err = codec.MarshalJSONIndent(keeper.cdc, result.Data)
+    }
+
     if err != nil {
         panic("could not marshal result to JSON")
     }
     return res, nil
 }
 
-func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs [](map[string]string), owner sdk.AccAddress) ([](map[string]string), []uint, error) {
+func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs [](map[string]string), owner sdk.AccAddress) (*WhereRes, []uint, error) {
+    whereRes := &WhereRes{}
+
     builders := []QuerierBuilder{}
     j := -1
 
@@ -128,6 +143,7 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
     }
 
     ids := []uint{}
+    count := 0
     for j = 0; j < len(builders); j++ {
         if len(ids) == 0 && j > 0 {
             break
@@ -173,6 +189,7 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
             builders[j].Ids = intersect
         }
 
+        count += len(builders[j].Ids)
         if builders[j].Last {
             length := len(builders[j].Ids)
             if length > 0 {
@@ -193,6 +210,11 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
                 ids = builders[j].Ids[builders[j].Offset : builders[j].Offset + (builders[j].Limit)]
             }
         }
+    }
+
+    if isCountQuery(querierObjs) {
+        whereRes.Count = strconv.Itoa(count)
+        return whereRes, nil, nil
     }
 
     j -= 1
@@ -222,7 +244,8 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
         }
         result = append(result, record)
     }
-    return result, ids, nil
+    whereRes.Data = result
+    return whereRes, ids, nil
 }
 
 //////////////////
@@ -258,4 +281,15 @@ func getIdsFromRightToLeft(ctx sdk.Context, keeper Keeper, appId uint, ids []uin
         values = append(values, fmt.Sprintf("%d", ids[i]))
     }
     return keeper.FindBy(ctx, appId, curTable, field,  values, owner)
+}
+
+
+func isCountQuery (querierObjs []map[string]string) bool {
+
+    for _, m := range querierObjs {
+        if m["method"] == "count" {
+            return true
+        }
+    }
+    return false
 }

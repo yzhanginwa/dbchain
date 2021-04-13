@@ -51,7 +51,7 @@ func getGetTableValueCallback(k Keeper, ctx sdk.Context, appId uint, owner sdk.A
         if err != nil {
             return [](map[string]string){}
         }
-        return result
+        return result.Data
     }
 }
 

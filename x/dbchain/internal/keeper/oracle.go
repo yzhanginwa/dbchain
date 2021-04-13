@@ -105,7 +105,7 @@ func getOracleAuthRecords(keeper Keeper, ctx sdk.Context, owner sdk.AccAddress, 
 
     result := []map[string]string{}
 
-    for _, row := range rows {
+    for _, row := range rows.Data {
         if t, ok := row["type"]; ok {
             if t == authType {
                 result = append(result, row)
@@ -128,7 +128,7 @@ func conditionalQuery(keeper Keeper, ctx sdk.Context, oracleAddr sdk.AccAddress,
     if err != nil {
         return nil, err
     }
-    return rows, nil
+    return rows.Data, nil
 }
 
 func importAuthValueIntoAuthFields(rows []map[string]string) []OracleAuthFields {

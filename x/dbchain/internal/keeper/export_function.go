@@ -374,7 +374,7 @@ func findByFields( keeper Keeper, ctx sdk.Context, appId uint, owner sdk.AccAddr
 	if err != nil {
 		return nil, nil
 	}
-	return res, ids
+	return res.Data, ids
 }
 func getGoExportFilterFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAddress) map[string]lua.LGFunction {
 	return map[string]lua.LGFunction{
