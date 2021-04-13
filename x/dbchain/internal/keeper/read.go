@@ -67,7 +67,7 @@ func (k Keeper) FindField(ctx sdk.Context, appId uint, tableName string, id uint
 }
 
 func (k Keeper) Find(ctx sdk.Context, appId uint, tableName string, id uint, user sdk.AccAddress) (types.RowFields, error){
-    if !k.isOwnId(ctx,appId, tableName, id, user) {
+    if !k.isReadableId(ctx, appId, tableName, id, user) {
         return nil, errors.New(fmt.Sprintf("Failed to get fields for id %d", id))
     }
 
@@ -147,7 +147,7 @@ func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field strin
     results := []uint{}
     if field == "id" && (operator ==  "==" || operator ==  "=") {
         id , err := strconv.ParseUint(value, 10, 32)
-        if err != nil || !k.isOwnId(ctx, appId, tableName, uint(id), user) {
+        if err != nil || !k.isReadableId(ctx, appId, tableName, uint(id), user) {
             return results
         }
         results = append(results, uint(id))
@@ -278,7 +278,7 @@ func (k Keeper) isTablePublic(ctx sdk.Context, appId uint, tableName string) boo
     return utils.ItemExists(tableOptions, string(types.TBLOPT_PUBLIC))
 }
 
-func (k Keeper) isOwnId(ctx sdk.Context, appId uint, tableName string, id uint, user sdk.AccAddress) bool{
+func (k Keeper) isReadableId(ctx sdk.Context, appId uint, tableName string, id uint, user sdk.AccAddress) bool{
     var ids []uint
     ids = append(ids, id)
 
