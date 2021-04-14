@@ -253,7 +253,7 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 		"RelationDelete" : func(L *lua.LState) int {
 			param := L.ToString(1)
 			params := strings.Split(param, ",")
-			if len(params) < 2 || (len(params) - 2) % 3 != 0 {
+			if len(params) < 2  {
 				L.Push(lua.LString("param err"))
 				return 1
 			}
@@ -268,44 +268,46 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 				return 1
 			}
 			keeper.Freeze(ctx, appId, tableName, uint(id), owner)
-			//删除从表
-			for i :=2; i < len(params); i += 3 {
-				fTableName := params[i]
-				if strings.HasPrefix(fTableName,tablePrefix) {
-					fTableName = strings.TrimPrefix(fTableName,tablePrefix)
-				}
-				fTableKey  := params[i+1]
-				if strings.HasPrefix(fTableKey,foreignPrefix) {
-					fTableKey = strings.TrimPrefix(fTableKey,foreignPrefix)
-				}
+			tParams := splitParams(params[2:])
+			for _, tParam := range tParams {
+				var querierObjs []map[string]string
+				if len(tParam) == 2 {
+					querierObjs = []map[string]string{
+						map[string]string{
+							"method": "table",
+							"table":  tParam[0],
+						},
+						map[string]string{
+							"method":   "where",
+							"field":    tParam[1],
+							"value":    params[1],
+							"operator": "==",
+						},
+					}
+				} else if len(tParam) == 3 {
+					querierObjs = []map[string]string{
+						map[string]string{
+							"method": "table",
+							"table":  tParam[0],
+						},
+						map[string]string{
+							"method":   "where",
+							"field":    tParam[1],
+							"value":    tableName,
+							"operator": "==",
+						},
+						map[string]string{
+							"method":   "where",
+							"field":    tParam[2],
+							"value":    params[1],
+							"operator": "==",
+						},
 
-				fTableKey2  := params[i+2]
-				if strings.HasPrefix(fTableKey2,foreignPrefix) {
-					fTableKey2 = strings.TrimPrefix(fTableKey2,foreignPrefix)
-				}
-				//
-				querierObjs := []map[string]string{
-					map[string]string{
-						"method": "table",
-						"table":  fTableName,
-					},
-					map[string]string{
-						"method":   "where",
-						"field":    fTableKey,
-						"value":    tableName,
-						"operator": "==",
-					},
-					map[string]string{
-						"method":   "where",
-						"field":    fTableKey2,
-						"value":    params[1],
-						"operator": "==",
-					},
-
+					}
 				}
 				_, ids, _ :=querierSuperHandler(ctx, keeper, appId, querierObjs, owner)
 				for _, dId := range ids {
-					keeper.Freeze(ctx, appId, fTableName, dId, owner)
+					keeper.Freeze(ctx, appId, tParam[0], dId, owner)
 				}
 			}
 			L.Push(lua.LString(""))
@@ -699,4 +701,30 @@ func convertLuaTableToGo(table *lua.LTable) interface{}{
 func setLuaFuncRes(L *lua.LState, value, err lua.LValue){
 	L.Push(value)
 	L.Push(err)
+}
+
+/////////////////////////////////
+//                             //
+//  helper func                //
+//                             //
+/////////////////////////////////
+
+func splitParams(src []string) [][]string {
+	var res [][]string
+	for i := 0; i < len(src); i++ {
+		if strings.HasPrefix(src[i],tablePrefix) {
+			temp := make([]string, 0)
+			temp = append(temp, strings.TrimPrefix(src[i],tablePrefix))
+			i++
+			for ; i < len(src); i++{
+				if strings.HasPrefix(src[i],tablePrefix) {
+					i--
+					break
+				}
+				temp = append(temp, strings.TrimPrefix(src[i],foreignPrefix))
+			}
+			res = append(res, temp)
+		}
+	}
+	return res
 }
