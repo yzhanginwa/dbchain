@@ -253,7 +253,7 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 		"RelationDelete" : func(L *lua.LState) int {
 			param := L.ToString(1)
 			params := strings.Split(param, ",")
-			if len(params) < 2 || len(params) %2 != 0 {
+			if len(params) < 2 || (len(params) - 2) % 3 != 0 {
 				L.Push(lua.LString("param err"))
 				return 1
 			}
@@ -269,7 +269,7 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 			}
 			keeper.Freeze(ctx, appId, tableName, uint(id), owner)
 			//删除从表
-			for i :=2; i < len(params); i += 2 {
+			for i :=2; i < len(params); i += 3 {
 				fTableName := params[i]
 				if strings.HasPrefix(fTableName,tablePrefix) {
 					fTableName = strings.TrimPrefix(fTableName,tablePrefix)
@@ -279,7 +279,31 @@ func getGoExportFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAd
 					fTableKey = strings.TrimPrefix(fTableKey,foreignPrefix)
 				}
 
-				ids := keeper.FindBy(ctx, appId, fTableName, fTableKey, []string{params[1]}, owner)
+				fTableKey2  := params[i+2]
+				if strings.HasPrefix(fTableKey2,foreignPrefix) {
+					fTableKey2 = strings.TrimPrefix(fTableKey2,foreignPrefix)
+				}
+				//
+				querierObjs := []map[string]string{
+					map[string]string{
+						"method": "table",
+						"table":  fTableName,
+					},
+					map[string]string{
+						"method":   "where",
+						"field":    fTableKey,
+						"value":    tableName,
+						"operator": "==",
+					},
+					map[string]string{
+						"method":   "where",
+						"field":    fTableKey2,
+						"value":    params[1],
+						"operator": "==",
+					},
+
+				}
+				_, ids, _ :=querierSuperHandler(ctx, keeper, appId, querierObjs, owner)
 				for _, dId := range ids {
 					keeper.Freeze(ctx, appId, fTableName, dId, owner)
 				}
