@@ -50,6 +50,16 @@ func getNextId(k Keeper, ctx sdk.Context, appId uint, tableName string) (uint, e
     return nextId, nil
 }
 
+func dropNextId(k Keeper, ctx sdk.Context, appId uint, tableName string) {
+    store := DbChainStore(ctx, k.storeKey)
+    mutex.Lock()
+    defer mutex.Unlock()
+
+    var nextIdKey = getNextIdKey(appId, tableName)
+    delete(NextIds, nextIdKey)
+    store.Delete([]byte(nextIdKey))
+}
+
 func registerDatabaseId(k Keeper, ctx sdk.Context, appCode string) (uint, error) {
     store := DbChainStore(ctx, k.storeKey)
     mutex.Lock()

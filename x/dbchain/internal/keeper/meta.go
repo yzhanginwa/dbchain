@@ -134,6 +134,10 @@ func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
                 for _, indexField := range indexFields {
                     k.DropIndex(ctx, appId, owner, tableName, indexField)
                 }
+
+                //Drop next_id key/value
+                dropNextId(k, ctx, appId, tableName)
+
                 break
             }
         }
