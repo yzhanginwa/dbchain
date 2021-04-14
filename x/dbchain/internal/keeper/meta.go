@@ -98,6 +98,16 @@ func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
         k.cdc.MustUnmarshalBinaryBare(bz, &tables)
         for i, tbl := range tables {
             if tableName == tbl {
+                //Drop column type and option first
+                tableFields , _ := k.getTableFields(ctx, appId, tableName)
+                for _, field := range tableFields {
+                    key := getColumnDataTypesKey(appId, tableName, field)
+                    store.Delete([]byte(key))
+                    key = getColumnOptionsKey(appId, tableName, field)
+                    store.Delete([]byte(key))
+                }
+
+                //drop table
                 tables = append(tables[:i], tables[i+1:]...)
                 if len(tables) < 1 {
                     store.Delete([]byte(getTablesKey(appId)))
@@ -105,10 +115,24 @@ func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
                     store.Set([]byte(getTablesKey(appId)), k.cdc.MustMarshalBinaryBare(tables))
                 }
                 store.Delete([]byte(getTableKey(appId, tableName)))
-                //TODO need delete rows of table
-                ids := k.FindAll(ctx, appId, tableName, owner)
-                for _, id := range ids {
+                //delete rows of table
+                start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, "id")
+                iter := store.Iterator([]byte(start), []byte(end))
+                for ; iter.Valid(); iter.Next() {
+                    if iter.Error() != nil{
+                        continue
+                    }
+                    key := iter.Key()
+                    id := getIdFromDataKey(key)
                     k.Delete(ctx, appId, tableName, id, owner)
+                }
+                //Drop index
+                indexFields , err := k.GetIndexFields(ctx, appId, tableName)
+                if err != nil {
+                    break
+                }
+                for _, indexField := range indexFields {
+                    k.DropIndex(ctx, appId, owner, tableName, indexField)
                 }
                 break
             }
