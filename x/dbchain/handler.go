@@ -127,7 +127,10 @@ func handleMsgCreateApplication(ctx sdk.Context, keeper Keeper, msg MsgCreateApp
         }
     }
     // We use the term database for internal use. To outside we use application to make users understand easily
-    keeper.CreateDatabase(ctx, msg.Owner, msg.Name, msg.Description, msg.PermissionRequired, false)
+    err := keeper.CreateDatabase(ctx, msg.Owner, msg.Name, msg.Description, msg.PermissionRequired, false)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
     return &sdk.Result{}, nil
 }
 
@@ -165,13 +168,19 @@ func handleMsgCreateSysDatabase(ctx sdk.Context, keeper Keeper, msg MsgCreateSys
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Not authorized")
     }
 
-    keeper.CreateDatabase(ctx, msg.Owner, "sysdb", "database for the use of system only", false, true)
+    err := keeper.CreateDatabase(ctx, msg.Owner, "sysdb", "database for the use of system only", false, true)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
     return &sdk.Result{}, nil
 }
 
 func handleMsgModifyDatabaseUser(ctx sdk.Context, keeper Keeper, msg MsgModifyDatabaseUser) (*sdk.Result, error) {
     // We use the term database for internal use. To outside we use application to make users understand easily
-    keeper.ModifyDatabaseUser(ctx, msg.Owner, msg.AppCode, msg.Action, msg.User)
+    err := keeper.ModifyDatabaseUser(ctx, msg.Owner, msg.AppCode, msg.Action, msg.User)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
     return &sdk.Result{}, nil
 }
 
@@ -296,7 +305,10 @@ func handleMsgAddColumn(ctx sdk.Context, keeper Keeper, msg MsgAddColumn) (*sdk.
     if keeper.HasField(ctx, appId, msg.TableName, field) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s of table %s exists already!", msg.Field, msg.TableName))
     }
-    keeper.AddColumn(ctx, appId, msg.TableName, field)
+    _, err = keeper.AddColumn(ctx, appId, msg.TableName, field)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
     return &sdk.Result{}, nil
 }
 
@@ -337,7 +349,10 @@ func handleMsgRenameColumn(ctx sdk.Context, keeper Keeper, msg MsgRenameColumn) 
     if keeper.HasField(ctx, appId, msg.TableName, newField) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s of table %s exists already!", msg.NewField, msg.TableName))
     }
-    keeper.RenameColumn(ctx, appId, msg.TableName, msg.OldField, newField)
+    _, err = keeper.RenameColumn(ctx, appId, msg.TableName, msg.OldField, newField)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
     return &sdk.Result{}, nil
 }
 
@@ -576,7 +591,7 @@ func handleMsgInsertRow(ctx sdk.Context, keeper Keeper, msg types.MsgInsertRow) 
 
     _, err = keeper.Insert(ctx, appId, msg.TableName, rowFields, msg.Owner)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Failed validation of inserting row")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Failed to insert row : " + err.Error())
     }
     return &sdk.Result{}, nil
 }
@@ -620,7 +635,10 @@ func handleMsgDeleteRow(ctx sdk.Context, keeper Keeper, msg types.MsgDeleteRow) 
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("Table %s is not updatable!", msg.TableName))
     }
 
-    keeper.Delete(ctx, appId, msg.TableName, msg.Id, msg.Owner)
+    _, err = keeper.Delete(ctx, appId, msg.TableName, msg.Id, msg.Owner)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
     return &sdk.Result{}, nil
 }
 
@@ -634,7 +652,10 @@ func handleMsgFreezeRow(ctx sdk.Context, keeper Keeper, msg types.MsgFreezeRow) 
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("Table %s does not exist!", msg.TableName))
     }
 
-    keeper.Freeze(ctx, appId, msg.TableName, msg.Id, msg.Owner)
+    _, err = keeper.Freeze(ctx, appId, msg.TableName, msg.Id, msg.Owner)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
     return &sdk.Result{}, nil
 }
 
