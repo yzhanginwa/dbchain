@@ -468,7 +468,13 @@ func oracleQueryPayStatus(cliCtx context.CLIContext, storeName string) http.Hand
 func oracleSavePayStatus(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
+
 		r.ParseForm()
+		if _, err := aliClient.VerifySign(r.Form); err != nil {
+			fmt.Println("aliClient.VerifySign  err : ", err.Error())
+			w.Write([]byte("failed"))
+			return
+		}
 		outTradeNo := strings.TrimSpace(r.Form.Get("out_trade_no"))
 		total_amount  := strings.TrimSpace(r.Form.Get("total_amount"))
 		trade_no := strings.TrimSpace(r.Form.Get("trade_no"))
