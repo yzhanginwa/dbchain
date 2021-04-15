@@ -113,7 +113,7 @@ func oracleCallDbcPay(cliCtx context.CLIContext, storeName string) http.HandlerF
 			return
 		}
 		ReturnURL := r.Form.Get("returnURL")
-		OutTradeNo := r.Form.Get("out_trade_no")
+		OutTradeNo := strings.TrimSpace(r.Form.Get("out_trade_no"))
 		appcode := r.Form.Get("appcode")
 		sellableid := r.Form.Get("sellableid")
 		paymentId  := r.Form.Get("paymentid")
@@ -418,6 +418,7 @@ func oracleQueryPayStatus(cliCtx context.CLIContext, storeName string) http.Hand
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		outTradeNo := r.Form.Get("out_trade_no")
+		outTradeNo = strings.TrimSpace(outTradeNo)
 		//out_trade_no format appcode-id
 		info := strings.Split(outTradeNo,"-")
 		if len(info)  != 2 {
@@ -468,12 +469,13 @@ func oracleSavePayStatus(cliCtx context.CLIContext, storeName string) http.Handl
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		r.ParseForm()
-		outTradeNo := r.Form.Get("out_trade_no")
-		total_amount  := r.Form.Get("total_amount")
-		trade_no := r.Form.Get("trade_no")
+		outTradeNo := strings.TrimSpace(r.Form.Get("out_trade_no"))
+		total_amount  := strings.TrimSpace(r.Form.Get("total_amount"))
+		trade_no := strings.TrimSpace(r.Form.Get("trade_no"))
 		res := newOrderReceiptData(cliCtx, storeName, outTradeNo, total_amount, trade_no)
 		oracleAccAddr := oracle.GetOracleAccAddr()
 		SaveToOrderInfoTable(oracleAccAddr, res, OrderReceipt)
+		w.Write([]byte("success"))
 	}
 }
 
