@@ -478,6 +478,7 @@ func oracleSavePayStatus(cliCtx context.CLIContext, storeName string) http.Handl
 		outTradeNo := strings.TrimSpace(r.Form.Get("out_trade_no"))
 		total_amount  := strings.TrimSpace(r.Form.Get("total_amount"))
 		trade_no := strings.TrimSpace(r.Form.Get("trade_no"))
+		fmt.Println("===> outTradeNo: ", outTradeNo, "===> trade_no: ", trade_no, "===>")
 		res := newOrderReceiptData(cliCtx, storeName, outTradeNo, total_amount, trade_no)
 		oracleAccAddr := oracle.GetOracleAccAddr()
 		SaveToOrderInfoTable(oracleAccAddr, res, OrderReceipt)
