@@ -1,11 +1,10 @@
-package bank_test
+package bank
 
 import (
 	"testing"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
@@ -25,10 +24,10 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 
 	// Construct genesis state
 	genAccs := []authexported.GenesisAccount{&acc}
-	benchmarkApp := simapp.SetupWithGenesisAccounts(genAccs)
+	benchmarkApp := SetupWithGenesisAccounts(genAccs)
 
 	// Precompute all txs
-	txs := simapp.GenSequenceOfTxs([]sdk.Msg{sendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
+	txs := GenSequenceOfTxs([]sdk.Msg{sendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
 	b.ResetTimer()
 	// Run this with a profiler, so its easy to distinguish what time comes from
 	// Committing, and what time comes from Check/Deliver Tx.
@@ -55,10 +54,10 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 
 	// Construct genesis state
 	genAccs := []authexported.GenesisAccount{&acc}
-	benchmarkApp := simapp.SetupWithGenesisAccounts(genAccs)
+	benchmarkApp := SetupWithGenesisAccounts(genAccs)
 
 	// Precompute all txs
-	txs := simapp.GenSequenceOfTxs([]sdk.Msg{multiSendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
+	txs := GenSequenceOfTxs([]sdk.Msg{multiSendMsg1}, []uint64{0}, []uint64{uint64(0)}, b.N, priv1)
 	b.ResetTimer()
 	// Run this with a profiler, so its easy to distinguish what time comes from
 	// Committing, and what time comes from Check/Deliver Tx.
