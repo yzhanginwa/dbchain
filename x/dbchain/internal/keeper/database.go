@@ -188,7 +188,17 @@ func (k Keeper) DropApplication(ctx sdk.Context, appcode string) {
 
     store.Delete([]byte(appKey))
     for _, table := range tables {
-        k.DropTable(ctx,appId,db.Owner,table)
+        k.DropTable(ctx, appId, db.Owner, table)
+    }
+    //delete functions
+    functions := k.GetFunctions(ctx, appId, 0)
+    for _, name := range functions {
+        k.DropFunction(ctx, appId, db.Owner, name, 0)
+    }
+    //delete querier
+    queriers := k.GetFunctions(ctx, appId, 1)
+    for _, name := range queriers {
+        k.DropFunction(ctx, appId, db.Owner, name, 1)
     }
 }
 

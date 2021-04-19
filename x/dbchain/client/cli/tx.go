@@ -30,6 +30,8 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 
     dbchainTxCmd.AddCommand(flags.PostCommands(
         GetCmdCreateApplication(cdc),
+        GetCmdDropApplication(cdc),
+        GetCmdRecoverApplication(cdc),
         GetCmdCreateSysDatabase(cdc),
         GetCmdModifyAppUser(cdc),
         GetCmdSetAppPermission(cdc),
@@ -94,6 +96,50 @@ func GetCmdCreateApplication(cdc *codec.Codec) *cobra.Command {
                 permissionRequired = false
             }
             msg := types.NewMsgCreateApplication(cliCtx.GetFromAddress(), name, description, permissionRequired)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return err
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+func GetCmdDropApplication(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "drop-application",
+        Short: "drop a application",
+        Args:  cobra.ExactArgs(1),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode := args[0]
+            msg := types.NewMsgDropApplication(cliCtx.GetFromAddress(), appCode)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return err
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+func GetCmdRecoverApplication(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "recover-application",
+        Short: "recover a application",
+        Args:  cobra.ExactArgs(1),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode := args[0]
+            msg := types.NewMsgRecoverApplication(cliCtx.GetFromAddress(), appCode)
             err := msg.ValidateBasic()
             if err != nil {
                 return err
