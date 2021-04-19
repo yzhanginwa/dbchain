@@ -153,7 +153,7 @@ func handleMsgDropApplication(ctx sdk.Context, keeper Keeper, msg MsgDropApplica
 }
 
 func handleMsgRecoverApplication(ctx sdk.Context, keeper Keeper, msg MsgRecoverApplication) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdWithoutCheck(ctx, msg.AppCode)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }

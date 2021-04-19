@@ -51,7 +51,7 @@ func (k Keeper) getAdminAppCode(ctx sdk.Context, address sdk.AccAddress) ([]stri
     var result []string
 
     for _, appCode := range all {
-        appId, err := k.GetDatabaseId(ctx, appCode)
+        appId, err := k.GetDatabaseIdWithoutCheck(ctx, appCode)
         if err != nil {
             return []string{}
         }
@@ -71,7 +71,18 @@ func (k Keeper) GetDatabaseId(ctx sdk.Context, appCode string) (uint, error) {
     db, err := k.getDatabase(ctx, appCode)
     if err != nil {
         return 0, err
+    } else if db.Discard == true {
+        return 0, errors.New("database has been discard")
     } else {
+        return db.AppId, nil
+    }
+}
+
+func (k Keeper) GetDatabaseIdWithoutCheck(ctx sdk.Context, appCode string) (uint, error){
+    db, err := k.getDatabase(ctx, appCode)
+    if err != nil {
+        return 0, err
+    }  else {
         return db.AppId, nil
     }
 }
@@ -161,7 +172,7 @@ func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name strin
 func (k Keeper) DropApplication(ctx sdk.Context, appcode string) {
     store := DbChainStore(ctx, k.storeKey)
     appKey := getDatabaseKey(appcode)
-    appId, err := k.GetDatabaseId(ctx, appcode)
+    appId, err := k.GetDatabaseIdWithoutCheck(ctx, appcode)
     if err != nil {
         return
     }
