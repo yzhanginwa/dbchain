@@ -231,6 +231,10 @@ func handleMsgDropFunction(ctx sdk.Context, keeper Keeper, msg MsgDropFunction) 
         return nil, err
     }
 
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
+    }
+
     err = keeper.DropFunction(ctx, appId, msg.Owner, msg.FunctionName, 0)
     if err != nil{
         return nil, err
@@ -267,6 +271,10 @@ func handleMsgDropCustomQuerier(ctx sdk.Context, keeper Keeper, msg MsgDropCusto
     appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
     if err != nil {
         return nil, err
+    }
+
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
 
     err = keeper.DropFunction(ctx, appId, msg.Owner, msg.QuerierName, 1)
