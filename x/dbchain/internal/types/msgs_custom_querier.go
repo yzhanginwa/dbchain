@@ -60,3 +60,52 @@ func (msg MsgAddCustomQuerier) GetSignBytes() []byte {
 func (msg MsgAddCustomQuerier) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Owner}
 }
+
+
+//////////////////////////
+//                      //
+// MsgDropCustomQuerier //
+//                      //
+//////////////////////////
+
+type MsgDropCustomQuerier struct {
+	Owner sdk.AccAddress `json:"owner"`
+	AppCode string       `json:"app_code"`
+	QuerierName string  `json:"querier_name"`
+}
+
+// NewMsgCreatePoll is a constructor function for MsgCreatPoll
+func NewMsgDropCustomQuerier(owner sdk.AccAddress, appCode, querierName string) MsgDropCustomQuerier {
+	return MsgDropCustomQuerier {
+		Owner: owner,
+		AppCode: appCode,
+		QuerierName: querierName,
+	}
+}
+
+// Route should return the name of the module
+func (msg MsgDropCustomQuerier) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgDropCustomQuerier) Type() string { return "add_function" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgDropCustomQuerier) ValidateBasic() error {
+	if msg.Owner.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+	}
+	if len(msg.AppCode) == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
+	}
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgDropCustomQuerier) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgDropCustomQuerier) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.Owner}
+}

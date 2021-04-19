@@ -110,3 +110,28 @@ func GetCmdAddCustomQuerier(cdc *codec.Codec) *cobra.Command {
         },
     }
 }
+
+func GetCmdDropCustomQuerier(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "drop-custom-querier [appCode] [name]",
+        Short: "add a function",
+        Args:  cobra.ExactArgs(2),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode      := args[0]
+            querierName  := args[1]
+
+
+            msg := types.NewMsgDropCustomQuerier(cliCtx.GetFromAddress(), appCode, querierName)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return err
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}

@@ -46,6 +46,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             result, err = handleMsgDropFunction(ctx, keeper, msg)
         case MsgAddCustomQuerier:
             result, err = handleMsgAddCustomQuerier(ctx, keeper, msg)
+        case MsgDropCustomQuerier:
+            result, err = handleMsgDropCustomQuerier(ctx, keeper, msg)
         case MsgCreateTable:
             result, err = handleMsgCreateTable(ctx, keeper, msg)
         case MsgDropTable:
@@ -254,6 +256,20 @@ func handleMsgAddCustomQuerier(ctx sdk.Context, keeper Keeper, msg MsgAddCustomQ
     }
     //TODO Does it need to be checked that if the function has been added
     err = keeper.AddFunction(ctx, appId, msg.QuerierName, msg.Description, msg.Body, msg.Owner, 1)
+    if err != nil{
+        return nil, err
+    }
+    return &sdk.Result{}, nil
+}
+
+
+func handleMsgDropCustomQuerier(ctx sdk.Context, keeper Keeper, msg MsgDropCustomQuerier) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return nil, err
+    }
+
+    err = keeper.DropFunction(ctx, appId, msg.Owner, msg.QuerierName, 1)
     if err != nil{
         return nil, err
     }
