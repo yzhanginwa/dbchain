@@ -42,6 +42,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             result, err = handleMsgAddFunction(ctx, keeper, msg)
         case MsgCallFunction:
             result, err = handleMsgCallFunction(ctx, keeper, msg)
+        case MsgDropFunction:
+            result, err = handleMsgDropFunction(ctx, keeper, msg)
         case MsgAddCustomQuerier:
             result, err = handleMsgAddCustomQuerier(ctx, keeper, msg)
         case MsgCreateTable:
@@ -215,6 +217,19 @@ func handleMsgCallFunction(ctx sdk.Context, keeper Keeper, msg MsgCallFunction) 
     }
 
     err = keeper.CallFunction(ctx, appId, msg.Owner, msg.FunctionName, msg.Argument)
+    if err != nil{
+        return nil, err
+    }
+    return &sdk.Result{}, nil
+}
+
+func handleMsgDropFunction(ctx sdk.Context, keeper Keeper, msg MsgDropFunction) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return nil, err
+    }
+
+    err = keeper.DropFunction(ctx, appId, msg.Owner, msg.FunctionName, 0)
     if err != nil{
         return nil, err
     }

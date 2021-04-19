@@ -94,6 +94,50 @@ func (k Keeper) CallFunction(ctx sdk.Context, appId uint, owner sdk.AccAddress, 
     return callLuaScriptFunc(ctx, appId, owner, k, FunctionName, params, FuncHandleType)
 }
 
+
+func (k Keeper) DropFunction(ctx sdk.Context, appId uint, owner sdk.AccAddress, FunctionName string, t int) error {
+    store := DbChainStore(ctx, k.storeKey)
+    functionStoreKey := ""
+    if t == FuncHandleType {
+        functionStoreKey = getFunctionKey(appId, FunctionName)
+    } else {
+        functionStoreKey = getQuerierKey(appId, FunctionName)
+    }
+    err := store.Delete([]byte(functionStoreKey))
+    if err != nil {
+        return err
+    }
+    //update Functions set
+    FunctionsKey := ""
+    if t == FuncHandleType {
+        FunctionsKey = getFunctionsKey(appId)
+    } else {
+        FunctionsKey = getQueriersKey(appId)
+    }
+
+    bz, err := store.Get([]byte(FunctionsKey))
+    if err != nil{
+        return err
+    }
+    if bz == nil {
+        return nil
+    }
+    var names []string
+    k.cdc.MustUnmarshalBinaryBare(bz, &names)
+    for index , val := range names {
+        if FunctionName == val {
+            names = append(names[:index],names[index+1: ]... )
+            break
+        }
+    }
+    bz = k.cdc.MustMarshalBinaryBare(names)
+    err = store.Set([]byte(FunctionsKey), bz)
+    if err != nil {
+        return err
+    }
+    return nil
+}
+
 // custom querier is also a function, but need a different store key,
 // parameter t is used to distinguish type,when t == 0 ,it means function. when t == 1 ,it means querier
 func (k Keeper) GetFunctions(ctx sdk.Context, appId uint, t int) []string {

@@ -61,6 +61,29 @@ func GetCmdCallFunction(cdc *codec.Codec) *cobra.Command {
     }
 }
 
+func GetCmdDropFunction(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "drop-function [appCode] [name]",
+        Short: "drop a function",
+        Args:  cobra.ExactArgs(2),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode  := args[0]
+            funcName := args[1]
+            msg := types.NewMsgDropFunction(cliCtx.GetFromAddress(), appCode, funcName)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return err
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
 func GetCmdAddCustomQuerier(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use:   "add-custom-querier [appCode] [name] [parameters] [code]",
