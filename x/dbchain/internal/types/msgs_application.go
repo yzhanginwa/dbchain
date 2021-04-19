@@ -70,8 +70,8 @@ type MsgDropApplication struct {
     AppCode string       `json:"app_code"`
 }
 
-func NewMsgDropApplication(owner sdk.AccAddress, appcode string) MsgModifyDatabaseUser {
-    return MsgModifyDatabaseUser {
+func NewMsgDropApplication(owner sdk.AccAddress, appcode string) MsgDropApplication {
+    return MsgDropApplication {
         Owner: owner,
         AppCode: appcode,
     }
@@ -115,8 +115,8 @@ type MsgRecoverApplication struct {
     AppCode string       `json:"app_code"`
 }
 
-func NewMsgRecoverApplication(owner sdk.AccAddress, appcode string) MsgModifyDatabaseUser {
-    return MsgModifyDatabaseUser {
+func NewMsgRecoverApplication(owner sdk.AccAddress, appcode string) MsgRecoverApplication {
+    return MsgRecoverApplication {
         Owner: owner,
         AppCode: appcode,
     }
