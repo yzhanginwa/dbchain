@@ -50,7 +50,7 @@ const (
 	AlipayNotifyURL  = "alipay-notify-url"
  	IsProduction = true
  	OrderReceipt = "order_receipt"
- 	IsTest = true
+ 	IsTest = false
  	AliPay = "alipay"
  	WechatPay = "wechatpay"
  	DbcToken = "dbctoken"
