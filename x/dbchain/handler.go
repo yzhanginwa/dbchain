@@ -192,7 +192,7 @@ func handleMsgModifyDatabaseUser(ctx sdk.Context, keeper Keeper, msg MsgModifyDa
 }
 
 func handleMsgAddFunction(ctx sdk.Context, keeper Keeper, msg MsgAddFunction) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
         return nil, err
     }
@@ -229,7 +229,7 @@ func handleMsgCallFunction(ctx sdk.Context, keeper Keeper, msg MsgCallFunction) 
 }
 
 func handleMsgDropFunction(ctx sdk.Context, keeper Keeper, msg MsgDropFunction) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
         return nil, err
     }
@@ -246,7 +246,7 @@ func handleMsgDropFunction(ctx sdk.Context, keeper Keeper, msg MsgDropFunction) 
 }
 
 func handleMsgAddCustomQuerier(ctx sdk.Context, keeper Keeper, msg MsgAddCustomQuerier) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
         return nil, err
     }
@@ -271,7 +271,7 @@ func handleMsgAddCustomQuerier(ctx sdk.Context, keeper Keeper, msg MsgAddCustomQ
 
 
 func handleMsgDropCustomQuerier(ctx sdk.Context, keeper Keeper, msg MsgDropCustomQuerier) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
         return nil, err
     }
@@ -289,7 +289,7 @@ func handleMsgDropCustomQuerier(ctx sdk.Context, keeper Keeper, msg MsgDropCusto
 
 // Handle a message to create table 
 func handleMsgCreateTable(ctx sdk.Context, keeper Keeper, msg MsgCreateTable) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
         return nil, err
     }
@@ -317,9 +317,9 @@ func handleMsgCreateTable(ctx sdk.Context, keeper Keeper, msg MsgCreateTable) (*
 }
 
 func handleMsgDropTable(ctx sdk.Context, keeper Keeper, msg MsgDropTable) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
 
     if !isAdmin(ctx, keeper, appId, msg.Owner) {
@@ -334,9 +334,9 @@ func handleMsgDropTable(ctx sdk.Context, keeper Keeper, msg MsgDropTable) (*sdk.
 }
 
 func handleMsgAddColumn(ctx sdk.Context, keeper Keeper, msg MsgAddColumn) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
 
     if !isAdmin(ctx, keeper, appId, msg.Owner) {
@@ -355,9 +355,9 @@ func handleMsgAddColumn(ctx sdk.Context, keeper Keeper, msg MsgAddColumn) (*sdk.
 }
 
 func handleMsgDropColumn(ctx sdk.Context, keeper Keeper, msg MsgDropColumn) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
 
     if !isAdmin(ctx, keeper, appId, msg.Owner) {
@@ -375,9 +375,9 @@ func handleMsgDropColumn(ctx sdk.Context, keeper Keeper, msg MsgDropColumn) (*sd
 }
 
 func handleMsgRenameColumn(ctx sdk.Context, keeper Keeper, msg MsgRenameColumn) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
 
     if !isAdmin(ctx, keeper, appId, msg.Owner) {
@@ -399,9 +399,9 @@ func handleMsgRenameColumn(ctx sdk.Context, keeper Keeper, msg MsgRenameColumn) 
 }
 
 func handleMsgCreateIndex(ctx sdk.Context, keeper Keeper, msg MsgCreateIndex) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
 
     if !isAdmin(ctx, keeper, appId, msg.Owner) {
@@ -417,9 +417,9 @@ func handleMsgCreateIndex(ctx sdk.Context, keeper Keeper, msg MsgCreateIndex) (*
 }
 
 func handleMsgDropIndex(ctx sdk.Context, keeper Keeper, msg MsgDropIndex) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
 
     if !isAdmin(ctx, keeper, appId, msg.Owner) {
@@ -436,9 +436,9 @@ func handleMsgDropIndex(ctx sdk.Context, keeper Keeper, msg MsgDropIndex) (*sdk.
 }
 
 func handleMsgModifyOption(ctx sdk.Context, keeper Keeper, msg MsgModifyOption) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
 
     if !isAdmin(ctx, keeper, appId, msg.Owner) {
@@ -453,9 +453,9 @@ func handleMsgModifyOption(ctx sdk.Context, keeper Keeper, msg MsgModifyOption) 
 }
 
 func handleMsgAddInsertFilter(ctx sdk.Context, keeper Keeper, msg MsgAddInsertFilter) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
 
     if !isAdmin(ctx, keeper, appId, msg.Owner) {
@@ -473,9 +473,9 @@ func handleMsgAddInsertFilter(ctx sdk.Context, keeper Keeper, msg MsgAddInsertFi
 }
 
 func handleMsgDropInsertFilter(ctx sdk.Context, keeper Keeper, msg MsgDropInsertFilter) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
 
     if !isAdmin(ctx, keeper, appId, msg.Owner) {
@@ -493,9 +493,9 @@ func handleMsgDropInsertFilter(ctx sdk.Context, keeper Keeper, msg MsgDropInsert
 }
 
 func handleMsgAddTrigger(ctx sdk.Context, keeper Keeper, msg MsgAddTrigger) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
 
     if !isAdmin(ctx, keeper, appId, msg.Owner) {
@@ -513,9 +513,9 @@ func handleMsgAddTrigger(ctx sdk.Context, keeper Keeper, msg MsgAddTrigger) (*sd
 }
 
 func handleMsgDropTrigger(ctx sdk.Context, keeper Keeper, msg MsgDropTrigger) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
 
     if !isAdmin(ctx, keeper, appId, msg.Owner) {
@@ -533,9 +533,9 @@ func handleMsgDropTrigger(ctx sdk.Context, keeper Keeper, msg MsgDropTrigger) (*
 }
 
 func handleMsgSetTableMemo(ctx sdk.Context, keeper Keeper, msg MsgSetTableMemo) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
 
     if !isAdmin(ctx, keeper, appId, msg.Owner) {
@@ -553,9 +553,9 @@ func handleMsgSetTableMemo(ctx sdk.Context, keeper Keeper, msg MsgSetTableMemo) 
 }
 
 func handleMsgModifyColumnOption(ctx sdk.Context, keeper Keeper, msg MsgModifyColumnOption) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
 
     if !isAdmin(ctx, keeper, appId, msg.Owner) {
@@ -572,9 +572,9 @@ func handleMsgModifyColumnOption(ctx sdk.Context, keeper Keeper, msg MsgModifyCo
 }
 
 func handleMsgModifyColumnType(ctx sdk.Context, keeper Keeper, msg MsgModifyColumnType) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
 
     if !isAdmin(ctx, keeper, appId, msg.Owner) {
@@ -591,9 +591,9 @@ func handleMsgModifyColumnType(ctx sdk.Context, keeper Keeper, msg MsgModifyColu
 }
 
 func handleMsgSetColumnMemo(ctx sdk.Context, keeper Keeper, msg MsgSetColumnMemo) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
 
     if !isAdmin(ctx, keeper, appId, msg.Owner) {
@@ -807,9 +807,9 @@ func handleMsgSetSchemaStatus(ctx sdk.Context, keeper Keeper, msg MsgSetSchemaSt
 }
 
 func handleMsgSetDatabasePermission(ctx sdk.Context, keeper Keeper, msg MsgSetDatabasePermission) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,err.Error())
     }
 
     if !isSysAdmin(ctx, keeper, msg.Owner) && !isAdmin(ctx, keeper, appId, msg.Owner) {

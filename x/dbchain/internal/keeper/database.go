@@ -78,6 +78,17 @@ func (k Keeper) GetDatabaseId(ctx sdk.Context, appCode string) (uint, error) {
     }
 }
 
+func (k Keeper) GetDatabaseIdNotFrozen(ctx sdk.Context, appCode string) (uint, error){
+    db, err := k.getDatabase(ctx, appCode)
+    if err != nil {
+        return 0, err
+    }  else if db.Deleted == true || db.SchemaFrozen == true {
+        return 0, errors.New("database has been deleted or frozen")
+    } else {
+        return db.AppId, nil
+    }
+}
+
 func (k Keeper) GetDatabaseIdWithoutCheck(ctx sdk.Context, appCode string) (uint, error){
     db, err := k.getDatabase(ctx, appCode)
     if err != nil {
