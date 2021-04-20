@@ -148,7 +148,10 @@ func handleMsgDropApplication(ctx sdk.Context, keeper Keeper, msg MsgDropApplica
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
     }
 
-    keeper.DropApplication(ctx, msg.AppCode)
+    err = keeper.DeleteApplication(ctx, msg.AppCode)
+    if err != nil {
+        return nil, err
+    }
     return &sdk.Result{}, nil
 }
 

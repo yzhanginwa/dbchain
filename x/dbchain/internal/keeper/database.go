@@ -36,8 +36,8 @@ func (k Keeper) GetAllAppCode(ctx sdk.Context) ([]string) {
         if err != nil {
             continue
         }
-        if database.Discard == true && database.Expiration <= time.Now().Unix(){
-            k.DropApplication(ctx, appCode)
+        if database.Deleted == true && database.Expiration <= time.Now().Unix(){
+            k.PurgeApplication(ctx, appCode)
             continue
         }
         result = append(result, appCode)
@@ -71,8 +71,8 @@ func (k Keeper) GetDatabaseId(ctx sdk.Context, appCode string) (uint, error) {
     db, err := k.getDatabase(ctx, appCode)
     if err != nil {
         return 0, err
-    } else if db.Discard == true {
-        return 0, errors.New("database has been discard")
+    } else if db.Deleted == true {
+        return 0, errors.New("database has been deleted")
     } else {
         return db.AppId, nil
     }
@@ -144,7 +144,7 @@ func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name strin
     db.Name = name
     db.Description = description
     db.PermissionRequired = permissionRequired
-    db.Discard = false
+    db.Deleted = false
     db.Expiration = 0
     db.AppCode = newAppCode
     db.AppId = appId
@@ -169,7 +169,37 @@ func (k Keeper) CreateDatabase(ctx sdk.Context, owner sdk.AccAddress, name strin
     return nil 
 }
 
-func (k Keeper) DropApplication(ctx sdk.Context, appcode string) {
+func (k Keeper) DeleteApplication(ctx sdk.Context, appcode string) error{
+    store := DbChainStore(ctx, k.storeKey)
+    appKey := getDatabaseKey(appcode)
+    appId, err := k.GetDatabaseId(ctx, appcode)
+    if err != nil {
+        return err
+    }
+    tables := k.GetTables(ctx, appId)
+    bz, err :=store.Get([]byte(appKey))
+    if err != nil || bz == nil {
+        return err
+    }
+    var db types.Database
+    k.cdc.MustUnmarshalBinaryBare(bz, &db)
+    cache.VoidDatabase(appcode)
+
+    if db.Deleted != false {
+        return errors.New(fmt.Sprintf("database %s has been deleted", appcode))
+    }
+    db.Deleted = true
+    //Due 30 days later
+    t := time.Now().Add(time.Second * 86400 * 30)
+    db.Expiration = t.Unix()
+    store.Set([]byte(appKey), k.cdc.MustMarshalBinaryBare(db))
+    for _, table := range tables {
+        cache.VoidTable(appId, table)
+    }
+    return nil
+}
+
+func (k Keeper) PurgeApplication(ctx sdk.Context, appcode string) {
     store := DbChainStore(ctx, k.storeKey)
     appKey := getDatabaseKey(appcode)
     appId, err := k.GetDatabaseIdWithoutCheck(ctx, appcode)
@@ -183,30 +213,17 @@ func (k Keeper) DropApplication(ctx sdk.Context, appcode string) {
     }
     var db types.Database
     k.cdc.MustUnmarshalBinaryBare(bz, &db)
-    cache.VoidDatabase(appcode)
-
-    if db.Discard == false {
-        db.Discard = true
-        //Due 30 days later
-        t := time.Now().Add(time.Second * 86400 * 30)
-        db.Expiration = t.Unix()
-        store.Set([]byte(appKey), k.cdc.MustMarshalBinaryBare(db))
-        for _, table := range tables {
-            cache.VoidTable(appId, table)
-        }
-        return
-    }
 
     store.Delete([]byte(appKey))
     for _, table := range tables {
         k.DropTable(ctx, appId, db.Owner, table)
     }
-    //delete functions
+    //drop functions
     functions := k.GetFunctions(ctx, appId, 0)
     for _, name := range functions {
         k.DropFunction(ctx, appId, db.Owner, name, 0)
     }
-    //delete querier
+    //drop querier
     queriers := k.GetFunctions(ctx, appId, 1)
     for _, name := range queriers {
         k.DropFunction(ctx, appId, db.Owner, name, 1)
@@ -223,23 +240,10 @@ func (k Keeper) RecoverApplication(ctx sdk.Context, appcode string) {
     }
     var db types.Database
     k.cdc.MustUnmarshalBinaryBare(bz, &db)
-    db.Discard = false
+    db.Deleted = false
     db.Expiration = 0
     store.Set([]byte(appKey), k.cdc.MustMarshalBinaryBare(db))
     cache.VoidDatabase(appcode)
-}
-
-func (k Keeper)IsDiscard(ctx sdk.Context, appcode string) bool {
-    store := DbChainStore(ctx, k.storeKey)
-    appKey := getDatabaseKey(appcode)
-
-    bz, err :=store.Get([]byte(appKey))
-    if err != nil || bz == nil {
-        return true
-    }
-    var db types.Database
-    k.cdc.MustUnmarshalBinaryBare(bz, &db)
-    return db.Discard
 }
 
 func (k Keeper) ModifyDatabaseUser(ctx sdk.Context, owner sdk.AccAddress, appCode, action string, user sdk.AccAddress) error {
