@@ -2,8 +2,11 @@ package oracle
 
 import (
     "fmt"
+    "time"
+    "encoding/json"
     "net/http"
     "io/ioutil"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
 
@@ -31,4 +34,33 @@ func GetAccountInfo(address string) (uint64, uint64, error) {
     accountNumber := account.Result.GetAccountNumber()
 
     return accountNumber, seq, nil
+}
+
+func waitUntilTxFinish(accessCode, txHash string) {
+    for count := 10; count > 0; count-- {
+        status, err := CheckTxStatus(accessCode, txHash)
+        if err != nil || status != "processing" {
+            break
+        }
+        time.Sleep(1 * time.Second)
+    }
+}
+
+func CheckTxStatus(accessCode, txHash string) (string, error) {
+    var txState types.TxStatus
+    resp, err := http.Get(fmt.Sprintf("http://localhost:1317/dbchain/tx-simple-result/%s/%s", accessCode, txHash))
+    if err != nil {
+        return "", err
+    } else {
+        defer resp.Body.Close()
+        body, err := ioutil.ReadAll(resp.Body)
+        if err != nil {
+            return "", err
+        }
+        if err = json.Unmarshal(body, &txState); err != nil {
+            return "", err
+        } else {
+            return txState.State, nil
+        }
+    }
 }

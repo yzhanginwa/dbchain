@@ -2,10 +2,13 @@ package oracle
 
 import (
     "fmt"
+    "time"
+    "encoding/hex"
     "github.com/spf13/viper"
     rpchttp "github.com/tendermint/tendermint/rpc/client/http"
     "github.com/tendermint/tendermint/crypto/secp256k1"
     sdk "github.com/cosmos/cosmos-sdk/types"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
 )
 
 const (
@@ -14,28 +17,70 @@ const (
 
 type UniversalMsg interface{}
 
+var (
+    messageChannel = make(chan []UniversalMsg, 1000)
+    runnerIsRunning = false
+)
+
 func BuildTxsAndBroadcast(msgs []UniversalMsg) {
+    if !runnerIsRunning {
+        runnerIsRunning = true
+        go txRunner()
+    }
+    messageChannel <- msgs
+}
+
+func txRunner() {
     privKey, err := LoadPrivKey()
     if err != nil {
         fmt.Println("Failed to load oracle's private key!!!")
+        runnerIsRunning = false
         return
     }
     oracleAccAddr := sdk.AccAddress(privKey.PubKey().Address())
+    queue := []UniversalMsg{}
+
+    for {
+        select {
+        case msgs := <- messageChannel:
+            queue = append(queue, msgs...)
+            if len(queue) >= BatchSize {
+                err := executeTxs(queue, privKey, oracleAccAddr)
+                if err != nil {
+                    runnerIsRunning = false
+                    return
+                }
+                queue = []UniversalMsg{}
+            }
+        default:
+            if len(queue) > 0 {
+                err := executeTxs(queue, privKey, oracleAccAddr)
+                if err != nil {
+                    runnerIsRunning = false
+                    return
+                }
+                queue = []UniversalMsg{}
+            } else {
+                time.Sleep(2 * time.Second)
+            }
+        }
+    }
+}
+
+func executeTxs(batch []UniversalMsg, privKey secp256k1.PrivKeySecp256k1, oracleAccAddr sdk.AccAddress) error {
     accNum, seq, err := GetAccountInfo(oracleAccAddr.String())
     if err != nil {
         fmt.Println("Failed to load oracle's account info!!!")
-        return
+        return err
     }
 
-    batchMsgs := makeBatches(msgs, BatchSize)
-    for _, batch := range batchMsgs {
-        txBytes, err := buildAndSignAndBuildTxBytes(batch, accNum, seq, privKey)
-        if err != nil {
-            return
-        }
-        broadcastTxBytes(txBytes)
-        seq += 1
+    txBytes, err := buildAndSignAndBuildTxBytes(batch, accNum, seq, privKey)
+    if err != nil {
+        return err
     }
+    txHash := broadcastTxBytes(txBytes)
+    waitUntilTxFinish(utils.MakeAccessCode(privKey), txHash)
+    return nil
 }
 
 func buildTxAndBroadcast(msg UniversalMsg) {
@@ -71,17 +116,19 @@ func buildAndSignAndBuildTxBytes(msgs []UniversalMsg, accNum uint64, seq uint64,
     return txBytes, nil
 }
 
-func broadcastTxBytes(txBytes []byte) {
+func broadcastTxBytes(txBytes []byte) string {
     rpc, err := rpchttp.New("http://localhost:26657", "/websocket")
     if err != nil {
         fmt.Printf("failted to get client: %v\n", err)
-        return
+        return ""
     }
 
-    _, err = rpc.BroadcastTxAsync(txBytes)
+    resp, err := rpc.BroadcastTxAsync(txBytes)
     if err != nil {
         fmt.Printf("failted to broadcast transaction: %v\n", err)
-        return
+        return ""
+    } else {
+        return hex.EncodeToString(resp.Hash)
     }
 }
 
