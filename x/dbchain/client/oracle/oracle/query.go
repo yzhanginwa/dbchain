@@ -1,13 +1,12 @@
 package oracle
 
 import (
-    "fmt"
-    "time"
     "encoding/json"
-    "net/http"
-    "io/ioutil"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+    "fmt"
     "github.com/cosmos/cosmos-sdk/x/auth/exported"
+    "io/ioutil"
+    "net/http"
+    "time"
 )
 
 func GetAccountInfo(address string) (uint64, uint64, error) {
@@ -39,7 +38,7 @@ func GetAccountInfo(address string) (uint64, uint64, error) {
 func waitUntilTxFinish(accessCode, txHash string) {
     for count := 10; count > 0; count-- {
         status, err := CheckTxStatus(accessCode, txHash)
-        if err != nil || status != "processing" {
+        if err != nil || (status == "success" || status == "fail") {
             break
         }
         time.Sleep(1 * time.Second)
@@ -47,7 +46,17 @@ func waitUntilTxFinish(accessCode, txHash string) {
 }
 
 func CheckTxStatus(accessCode, txHash string) (string, error) {
-    var txState types.TxStatus
+    type  TxStatus struct {
+        State string    `json:"state"`
+        Index string    `json:"index"`
+        Err  string     `json:"err"`
+    }
+    type response struct {
+        Height string
+        Result TxStatus
+    }
+
+    var txState response
     resp, err := http.Get(fmt.Sprintf("http://localhost:1317/dbchain/tx-simple-result/%s/%s", accessCode, txHash))
     if err != nil {
         return "", err
@@ -60,7 +69,7 @@ func CheckTxStatus(accessCode, txHash string) (string, error) {
         if err = json.Unmarshal(body, &txState); err != nil {
             return "", err
         } else {
-            return txState.State, nil
+            return txState.Result.State, nil
         }
     }
 }
