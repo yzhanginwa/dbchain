@@ -227,6 +227,7 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
     }
 
     store := DbChainStore(ctx, keeper.storeKey)
+    var validId = make([]uint,0)
     var result = [](map[string]string){}
     for _, id := range ids {
         record := map[string]string{}
@@ -242,10 +243,13 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
                 record[f] = value
             }
         }
-        result = append(result, record)
+        if len(record) > 0 {
+            validId = append(validId, id)
+            result = append(result, record)
+        }
     }
     whereRes.Data = result
-    return whereRes, ids, nil
+    return whereRes, validId, nil
 }
 
 //////////////////
