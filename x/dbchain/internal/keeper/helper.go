@@ -22,7 +22,7 @@ func (k Keeper) isAdmin(ctx sdk.Context, appId uint, addr sdk.AccAddress) bool {
 }
 
 func (k Keeper) isAuditor(ctx sdk.Context, appId uint, addr sdk.AccAddress) bool {
-    auditors := k.getGroupMembers(ctx, appId, "audit")
+    auditors := k.getGroupMembers(ctx, appId, "auditor")
     if utils.AddressIncluded(auditors, addr) {
         return true
     }
