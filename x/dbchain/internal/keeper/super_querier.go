@@ -163,21 +163,25 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
             }
         }
 
+        if len(builders[j].Ids) > 0 {
+            ids = builders[j].Ids
+        }
+
         if len(builders[j].Where) == 0 {
-            if 0 == j && 0 == len(builders[j].Ids) {
-                builders[j].Ids = keeper.FindAll(ctx, appId, builders[j].Table, owner)
+            if 0 == j && 0 == len(ids) {
+                ids = keeper.FindAll(ctx, appId, builders[j].Table, owner)
             }
         } else {
-            // to get the intersect of the result ids of all the where clauses
-            intersect := []uint{}
+            // to get the intersect of the result ids of all the where clauses and ids (if there are any)
+            intersect := ids
             for index, cond := range builders[j].Where {
-                ids := keeper.Where(ctx, appId, builders[j].Table, cond.Field, cond.Operator, cond.Value, cond.Reg, owner)
-                if index == 0 {
-                    intersect = ids
+                tmp_ids := keeper.Where(ctx, appId, builders[j].Table, cond.Field, cond.Operator, cond.Value, cond.Reg, owner)
+                if index == 0 && len(intersect) == 0 {
+                    intersect = tmp_ids
                 } else {
                     new_intersect := []uint{}
                     for _, a := range intersect {
-                        for _, b := range ids {
+                        for _, b := range tmp_ids {
                             if a == b {
                                 new_intersect = append(new_intersect, a)
                             }
@@ -186,28 +190,26 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
                     intersect = new_intersect
                 }
             }
-            builders[j].Ids = intersect
+            ids = intersect
         }
 
-        count += len(builders[j].Ids)
+        count += len(ids)   // this might need more consideration
         if builders[j].Last {
-            length := len(builders[j].Ids)
+            length := len(ids)
             if length > 0 {
-                ids = builders[j].Ids[length-1:]
+                ids = ids[length-1:]
             }
         } else if builders[j].Offset == 0 {
-            if builders[j].Limit == 0 || builders[j].Limit >= len(builders[j].Ids) {
-                ids = builders[j].Ids
-            } else {
-                ids = builders[j].Ids[:(builders[j].Limit)]
+            if builders[j].Limit > 0 && builders[j].Limit < len(ids) {
+                ids = ids[:(builders[j].Limit)]
             }
         } else {
-            if builders[j].Offset >= len(builders[j].Ids) {
+            if builders[j].Offset >= len(ids) {
                 ids = []uint{}
             } else if builders[j].Limit == 0 || builders[j].Limit + builders[j].Offset >= len(builders[j].Ids) {
-                ids = builders[j].Ids[builders[j].Offset :]
+                ids = ids[builders[j].Offset :]
             } else {
-                ids = builders[j].Ids[builders[j].Offset : builders[j].Offset + (builders[j].Limit)]
+                ids = ids[builders[j].Offset : builders[j].Offset + (builders[j].Limit)]
             }
         }
     }
