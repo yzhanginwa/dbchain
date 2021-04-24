@@ -103,6 +103,9 @@ func (k Keeper) Delete(ctx sdk.Context, appId uint, tableName string, id uint, o
         return 0, errors.New("Id cannot be empty")
     }
 
+    if !k.isOwnId(ctx, appId, tableName, id, owner) {
+        return 0, errors.New("no permission")
+    }
     for _, fieldName := range fieldNames {
         key := getDataKeyBytes(appId, tableName, fieldName, id)
         err := store.Delete(key)
@@ -125,6 +128,9 @@ func (k Keeper) Freeze(ctx sdk.Context, appId uint, tableName string, id uint, o
         return 0, errors.New("Id cannot be empty")
     }
 
+    if !k.isOwnId(ctx, appId, tableName, id, owner) {
+        return 0, errors.New("no permission")
+    }
     keyAt := getDataKeyBytes(appId, tableName, types.FLD_FROZEN_AT, id)
     bz, err := store.Get(keyAt)
     if err != nil{
@@ -529,6 +535,18 @@ func (k Keeper) tryToPinFile(ctx sdk.Context, appId uint, tableName string, fiel
 func (k Keeper) isTablePayment(ctx sdk.Context, appId uint, tableName string) bool {
     tableOptions, _ := k.GetOption(ctx, appId, tableName)
     return utils.ItemExists(tableOptions, string(types.TBLOPT_PAYMENT))
+}
+
+func (k Keeper) isOwnId(ctx sdk.Context, appId uint, tableName string, id uint, user sdk.AccAddress) bool {
+    res , err := k.Find(ctx, appId, tableName, id, user)
+    if err != nil {
+        return false
+    }
+
+    if res["created_by"] == user.String() {
+        return true
+    }
+    return  false
 }
 
 func validateAmount(amount string) (int, bool) {
