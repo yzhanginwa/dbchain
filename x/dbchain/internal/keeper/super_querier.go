@@ -105,13 +105,13 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
             fields := strings.Split(qo["fields"], ",")
             builders[j].Select = fields
         case "find":
-           id, err := strconv.Atoi(qo["id"])
-           if err != nil {
-               return nil, nil, err
-           }
-           builders[j].Ids = []uint{uint(id)}
+            id, err := strconv.Atoi(qo["id"])
+            if err != nil {
+                return nil, nil, err
+            }
+            builders[j].Ids = []uint{uint(id)}
         case "first":
-           builders[j].Limit = 1
+            builders[j].Limit = 1
         case "limit", "offset":
             val, err := strconv.Atoi(qo["value"])
             if err != nil || val < 0 {
@@ -124,21 +124,21 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
             }
 
         case "last":
-           builders[j].Last = true
+            builders[j].Last = true
         case "where":
-           cond := Condition{
-               Field: qo["field"],
-               Operator: qo["operator"],
-               Value: qo["value"],
-           }
-           if qo["operator"] == "like" {
-               reg, err := utils.DealFuzzyQueryString(qo["value"])
-               if err != nil {
-                   return nil, nil, err
-               }
-               cond.Reg = reg
-           }
-           builders[j].Where = append(builders[j].Where, cond)
+            cond := Condition{
+                Field: qo["field"],
+                Operator: qo["operator"],
+                Value: qo["value"],
+            }
+            if qo["operator"] == "like" {
+                reg, err := utils.DealFuzzyQueryString(qo["value"])
+                if err != nil {
+                    return nil, nil, err
+                }
+                cond.Reg = reg
+            }
+            builders[j].Where = append(builders[j].Where, cond)
         }
     }
 
