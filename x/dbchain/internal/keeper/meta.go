@@ -720,17 +720,9 @@ func validateColumnOption(option string) bool {
     return false
 }
 
-func validateColumnDataType(option string) bool {
-    switch types.FieldDataType(option) {
-    case types.FLDTYP_INT:
-        return true
-    case types.FLDTYP_FILE:
-        return true
-    case types.FLDTYP_DECIMAL:
-        return true
-    }
-
-    if types.ValidateEnumColumnOption(option) {
+func validateColumnDataType(dataType string) bool {
+    switch types.FieldDataType(dataType) {
+    case types.FLDTYP_STRING, types.FLDTYP_INT, types.FLDTYP_FILE, types.FLDTYP_DECIMAL:
         return true
     }
 

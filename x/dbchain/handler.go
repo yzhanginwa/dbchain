@@ -585,7 +585,7 @@ func handleMsgSetColumnDataType(ctx sdk.Context, keeper Keeper, msg MsgSetColumn
     }
 
     if !keeper.SetColumnDataType(ctx, appId, msg.Owner, msg.TableName, msg.FieldName, msg.DataType) {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid column option!")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid column type!")
     }
     return &sdk.Result{}, nil
 }
