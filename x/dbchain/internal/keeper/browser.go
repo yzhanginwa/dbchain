@@ -28,6 +28,9 @@ func (k Keeper) GetDbchainTxNum(ctx sdk.Context) ([]byte, error){
 	if err != nil {
 		return nil, err
 	}
+	if bz == nil {
+		return []byte{}, nil
+	}
 	var data  string
 	k.cdc.MustUnmarshalBinaryBare(bz, &data)
 	return []byte(data),nil
@@ -39,6 +42,9 @@ func (k Keeper) GetDbchainRecentTxNum(ctx sdk.Context) ([]byte, error){
 	bz, err := store.Get([]byte(keyAt))
 	if err != nil {
 		return nil, err
+	}
+	if bz == nil {
+		return []byte{}, nil
 	}
 	var data  string
 	k.cdc.MustUnmarshalBinaryBare(bz, &data)
