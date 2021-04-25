@@ -288,7 +288,7 @@ func GetCmdColumnDataType(queryRoute string, cdc *codec.Codec) *cobra.Command {
                 return nil
             }
 
-            var out types.QueryTables // QueryTables is a []string. It could be reused here
+            var out string
             cdc.MustUnmarshalJSON(res, &out)
             return cliCtx.PrintOutput(out)
         },

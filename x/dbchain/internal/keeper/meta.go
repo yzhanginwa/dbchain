@@ -624,7 +624,7 @@ func (k Keeper) GetColumnDataType(ctx sdk.Context, appId uint, tableName string,
         return "", err
     }
     if bz == nil {
-        return "", nil
+        return "string", nil
     }
     var dataType string
     k.cdc.MustUnmarshalBinaryBare(bz, &dataType)
