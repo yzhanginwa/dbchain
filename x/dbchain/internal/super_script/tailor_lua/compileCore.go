@@ -560,10 +560,10 @@ func compileStmt(context *funcContext, stmt ast.Stmt) bool { // {{{
 	case *ast.BreakStmt:
 		compileBreakStmt(context, st)
 	case *ast.NumberForStmt:
-		HASLOOP = true
+		//HASLOOP = true
 		return true
 	case *ast.GenericForStmt:
-		HASLOOP = true
+		//HASLOOP = true
 		return true
 	}
 	return false

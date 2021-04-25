@@ -17,6 +17,8 @@ const (
 	strEnd     = " end "
 	strRCB     = "}"
 	strWS      = " "
+	strDo      = " do "
+	strIN      = " in "
 )
 
 type tokenStack struct {
@@ -113,6 +115,15 @@ func (pc *Preprocessor) Process() {
 				pc.Success = false
 				return
 			}
+		} else if tok == FOR {
+			pc.tok, pc.lit = tok, lit
+			if !pc.ForCondition() {
+				pc.ts.Clear()
+				pc.Success = false
+				return
+			}
+		} else if tok == LCB {	//start of array or table
+			pc.scanBrace()
 		}
 	}
 	pc.Success = true
@@ -256,6 +267,109 @@ func (pc *Preprocessor) Condition() bool {
 		}
 	}
 
+	return true
+}
+
+//handle FOR express
+func (pc *Preprocessor) ForCondition() bool {
+	if !pc.expect(FOR) { return false }
+	//delete ( , add " "
+	pc.temp.Pop()
+	pc.temp.Push(" ")
+
+	if !pc.expect(LPAREN) { return false }
+	if !pc.forCondition() { return false }
+	//delete ) , add " "
+	pc.temp.Pop()
+	pc.temp.Push(" ")
+
+	if !pc.expect(RPAREN) { return false }
+	//get new condition
+	pc.ts.PushN(pc.temp.buf)
+	pc.temp.Clear()
+
+	//deal "{"  "}"
+	if pc.tok != LCB { return false }
+	//replace "{" with "then"
+	pc.ts.Pop()
+	pc.ts.Push(strDo)
+	pc.temp.Clear()
+
+	if !pc.ScanIfBody() { return false }	//it is same with ifBody when dealing forBody
+	tok, lit := pc.scanIgnoreWhitespace()
+	pc.ts.Push(strEnd)
+	pc.ts.Push(lit)
+	if tok == IF {
+		pc.tok, pc.lit = tok, lit
+		if !pc.IfCondition() {
+			return false
+		}
+	} else if tok == RCB { //end of elseif  or end of else
+		pc.ts.Pop()
+		lit := lit[ : len(lit)-1]
+		//keep the format and add strEnd
+		pc.ts.Push(lit)
+		pc.ts.Push(strEnd)
+	}
+
+	return true
+}
+
+func (pc *Preprocessor) forCondition() bool {
+	//format likes : "for k, v in pairs(t)"
+	if !pc.expect(IDENT) { return false }
+	for {				//scan k,v in
+		if pc.expect(COMMA) {
+			if !pc.expect(IDENT) {
+				return false
+			}
+		} else if pc.expect(IN) {
+			//replace iterator to pairs
+			pc.temp.Pop()
+			pc.temp.Push("pairs")
+			if pc.lit != "iterator" || !pc.expect(IDENT) {
+				return false
+			}
+			break
+		} else {
+			return false
+		}
+	}
+	if !pc.scanParentheses() { return false }
+	return true
+}
+
+//deal (((array)))
+func (pc *Preprocessor) scanParentheses() bool {
+	if !pc.expect(LPAREN) {
+		return false
+	}
+	for {
+		if pc.tok == LPAREN {
+			if !pc.scanParentheses() {
+				return false
+			}
+		} else if pc.expect(RPAREN) {
+			return true
+		} else if !pc.expect(IDENT) {
+			return false
+		}
+
+	}
+
+	return true
+}
+
+func (pc *Preprocessor) scanBrace() bool {
+	for {
+		tok, lit := pc.s.Scan()
+		pc.ts.Push(lit)
+		if tok == RCB {
+			break
+		} else if tok == LCB {
+			pc.scanBrace()
+		}
+	}
 	return true
 }
 

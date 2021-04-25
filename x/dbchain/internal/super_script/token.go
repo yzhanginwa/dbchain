@@ -41,6 +41,10 @@ const (
     EXIST   // exist
     NUMBER  // number 123456
     FUNCTION //function
+    FOR      //for
+    //forbidden key words
+    WHILE    //while
+    REPEAT   //repeat
 )
 
 var tokenDisplay = []string{

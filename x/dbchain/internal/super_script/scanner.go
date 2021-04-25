@@ -146,7 +146,7 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
     case "==":
         return DEQUAL, buf.String()
     case "IN":
-        return IN, buf.String()
+        return IN, strIN
     case "IF":
         return IF, buf.String()
     case "ELSE":
@@ -169,8 +169,12 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
         return UNEQUAL, buf.String()
     case "FUNCTION":
         return FUNCTION, buf.String()
-
-
+    case "FOR":
+        return FOR, buf.String()
+    case "WHILE":
+        return WHILE, buf.String()
+    case "REPEAT":
+        return REPEAT, buf.String()
     }
 
     // Otherwise return as a regular identifier.
