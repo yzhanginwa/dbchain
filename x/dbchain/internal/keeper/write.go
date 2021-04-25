@@ -511,7 +511,7 @@ func (k Keeper) tryToPinFile(ctx sdk.Context, appId uint, tableName string, fiel
             continue
         }
         fieldDataType, _ := k.GetColumnDataType(ctx, appId, tableName, fieldName)
-        if(utils.ItemExists(fieldDataType, string(types.FLDTYP_FILE))) {
+        if fieldDataType == string(types.FLDTYP_FILE) {
             if value, ok := fields[fieldName]; ok {
                 sh := shell.NewShell("localhost:5001")
                 err =sh.Pin(value)
