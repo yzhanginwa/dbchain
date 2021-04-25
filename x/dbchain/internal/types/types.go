@@ -165,6 +165,7 @@ const (
 type FieldDataType string
 
 const (
+    FLDTYP_STRING     FieldDataType = "string"
     FLDTYP_FILE       FieldDataType = "file"
     FLDTYP_INT        FieldDataType = "int"
     FLDTYP_DECIMAL    FieldDataType = "decimal"

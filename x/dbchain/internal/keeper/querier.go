@@ -32,7 +32,7 @@ const (
     QueryColumnOption   = "column_option"
     QueryColumnDataType = "column_data_type"
     QueryCanAddColumnOption = "can_add_column_option"
-    QueryCanAddColumnDataType = "can_add_column_data_type"
+    QueryCanSetColumnDataType = "can_set_column_data_type"
     QueryCanInsertRow = "can_insert_row"
     QueryRow      = "find"
     QueryIdsBy    = "find_by"
@@ -94,7 +94,7 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryColumnDataType(ctx, path[1:], req, keeper)
         case QueryCanAddColumnOption:
             return queryCanAddColumnOption(ctx, path[1:], req, keeper)
-        case QueryCanAddColumnDataType:
+        case QueryCanSetColumnDataType:
             return queryCanAddColumnDataType(ctx, path[1:], req, keeper)
         case QueryCanInsertRow:
             return queryCanInsertRow(ctx, path[1:], req, keeper)
@@ -532,7 +532,7 @@ func queryCanAddColumnDataType(ctx sdk.Context, path []string, req abci.RequestQ
     dataType  := path[4]
 
     var result bool
-    result = keeper.GetCanAddColumnDataType(ctx, appId, tableName, fieldName, dataType)
+    result = keeper.GetCanSetColumnDataType(ctx, appId, tableName, fieldName, dataType)
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, result)
     if err != nil {

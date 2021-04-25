@@ -35,7 +35,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdColumnOption(storeKey, cdc),
         GetCmdColumnDataType(storeKey, cdc),
         GetCmdCanAddColumnOption(storeKey, cdc),
-        GetCmdCanAddColumnDataType(storeKey, cdc),
+        GetCmdCanSetColumnDataType(storeKey, cdc),
         GetCmdCanInsertRow(storeKey, cdc),
         GetCmdFindRow(storeKey, cdc),
         GetCmdFindIdsBy(storeKey, cdc),
@@ -322,10 +322,10 @@ func GetCmdCanAddColumnOption (queryRoute string, cdc *codec.Codec) *cobra.Comma
     }
 }
 
-func GetCmdCanAddColumnDataType (queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdCanSetColumnDataType (queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "can-add-column-data-type",
-        Short: "test whether field option can be added",
+        Use: "can-set-column-data-type",
+        Short: "test whether field data type can be set",
         Args: cobra.ExactArgs(5),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
@@ -334,9 +334,9 @@ func GetCmdCanAddColumnDataType (queryRoute string, cdc *codec.Codec) *cobra.Com
             appCode    := args[1]
             tableName  := args[2]
             fieldName  := args[3]
-            dataType     := args[4]
+            dataType   := args[4]
 
-            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/can_add_column_data_type/%s/%s/%s/%s/%s", queryRoute, accessCode, appCode, tableName, fieldName, dataType), nil)
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/can_set_column_data_type/%s/%s/%s/%s/%s", queryRoute, accessCode, appCode, tableName, fieldName, dataType), nil)
             if err != nil {
                 fmt.Printf("Failed to check whether field option can be added")
                 return nil

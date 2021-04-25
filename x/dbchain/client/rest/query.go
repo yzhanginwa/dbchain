@@ -226,10 +226,10 @@ func showCanAddColumnOptionHandler(cliCtx context.CLIContext, storeName string) 
     }
 }
 
-func showCanAddColumnDataTypeHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showCanSetColumnDataTypeHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
-        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/can_add_column_data_type/%s/%s/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["tableName"], vars["fieldName"], vars["dataType"]), nil)
+        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/can_set_column_data_type/%s/%s/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["tableName"], vars["fieldName"], vars["dataType"]), nil)
         if err != nil {
             rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
             return

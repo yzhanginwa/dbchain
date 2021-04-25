@@ -649,8 +649,10 @@ func (k Keeper) GetCanAddColumnOption(ctx sdk.Context, appId uint, tableName, fi
     return true
 }
 
-func (k Keeper) GetCanAddColumnDataType(ctx sdk.Context, appId uint, tableName, fieldName, dataType string) bool {
+func (k Keeper) GetCanSetColumnDataType(ctx sdk.Context, appId uint, tableName, fieldName, dataType string) bool {
     switch types.FieldDataType(dataType) {
+        case types.FLDTYP_STRING:
+            return true
         case types.FLDTYP_INT:
            if !k.validateIntField(ctx, appId, tableName, fieldName) {
                return false
