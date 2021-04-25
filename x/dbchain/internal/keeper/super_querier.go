@@ -340,15 +340,8 @@ func isCountQuery (querierObjs []map[string]string) bool {
 }
 
 func isColumnTypeOfInteger(ctx sdk.Context, keeper Keeper, appId uint, tableName, fieldName string) bool {
-    options, _ := keeper.GetColumnDataType(ctx, appId, tableName, fieldName)
-    isInt := false
-    for _, opt := range options {
-        if opt == string(types.FLDTYP_INT) {
-            isInt = true
-            break
-        }
-    }
-    return isInt
+    fieldDataType, _ := keeper.GetColumnDataType(ctx, appId, tableName, fieldName)
+    return (fieldDataType == string(types.FLDTYP_INT))
 }
 
 func sortIdsOnOrder(ctx sdk.Context, keeper Keeper, appId uint, ids []uint, tableName, fieldName, direction string) []uint {

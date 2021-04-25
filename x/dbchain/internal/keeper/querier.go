@@ -475,13 +475,13 @@ func queryColumnDataType(ctx sdk.Context, path []string, req abci.RequestQuery, 
     tableName := path[2]
     fieldName := path[3]
 
-    options, err := keeper.GetColumnDataType(ctx, appId, tableName, fieldName)
+    dataType, err := keeper.GetColumnDataType(ctx, appId, tableName, fieldName)
 
     if err != nil {
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s.%s does not exist",  tableName, fieldName))
     }
 
-    res, err := codec.MarshalJSONIndent(keeper.cdc, options)
+    res, err := codec.MarshalJSONIndent(keeper.cdc, dataType)
     if err != nil {
         panic("could not marshal result to JSON")
     }
@@ -529,7 +529,7 @@ func queryCanAddColumnDataType(ctx sdk.Context, path []string, req abci.RequestQ
 
     tableName := path[2]
     fieldName := path[3]
-    dataType    := path[4]
+    dataType  := path[4]
 
     var result bool
     result = keeper.GetCanAddColumnDataType(ctx, appId, tableName, fieldName, dataType)

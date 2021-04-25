@@ -76,8 +76,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             result, err = handleMsgSetTableMemo(ctx, keeper, msg)
         case MsgModifyColumnOption:
             result, err = handleMsgModifyColumnOption(ctx, keeper, msg)
-        case MsgModifyColumnType:
-            result, err = handleMsgModifyColumnType(ctx, keeper, msg)
+        case MsgSetColumnDataType:
+            result, err = handleMsgSetColumnDataType(ctx, keeper, msg)
         case MsgSetColumnMemo:
             result, err = handleMsgSetColumnMemo(ctx, keeper, msg)
         case MsgInsertRow:
@@ -571,7 +571,7 @@ func handleMsgModifyColumnOption(ctx sdk.Context, keeper Keeper, msg MsgModifyCo
     return &sdk.Result{}, nil
 }
 
-func handleMsgModifyColumnType(ctx sdk.Context, keeper Keeper, msg MsgModifyColumnType) (*sdk.Result, error) {
+func handleMsgSetColumnDataType(ctx sdk.Context, keeper Keeper, msg MsgSetColumnDataType) (*sdk.Result, error) {
     appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
@@ -584,7 +584,7 @@ func handleMsgModifyColumnType(ctx sdk.Context, keeper Keeper, msg MsgModifyColu
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name does not exist!")
     }
 
-    if !keeper.ModifyColumnType(ctx, appId, msg.Owner, msg.TableName, msg.FieldName, msg.Action, msg.DataType) {
+    if !keeper.SetColumnDataType(ctx, appId, msg.Owner, msg.TableName, msg.FieldName, msg.DataType) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid column option!")
     }
     return &sdk.Result{}, nil

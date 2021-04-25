@@ -374,39 +374,36 @@ func (msg MsgModifyColumnOption) GetSigners() []sdk.AccAddress {
 
 ///////////////////////////
 //                       //
-// MsgModifyColumnType   //
+// MsgSetColumnDataType  //
 //                       //
 ///////////////////////////
 
-type MsgModifyColumnType struct {
+type MsgSetColumnDataType struct {
     Owner sdk.AccAddress `json:"owner"`
     AppCode string       `json:"app_code"`
     TableName string     `json:"table_name"`
     FieldName string     `json:"field_name"`
-    Action string        `json:"action"`
-    DataType string        `json:"data_type"`
+    DataType string      `json:"data_type"`
 }
 
-// NewMsgCreatePoll is a constructor function for MsgCreatPoll
-func NewMsgModifyColumnType(owner sdk.AccAddress, appCode string, tableName string, fieldName string, action string, dataType string) MsgModifyColumnType {
-    return MsgModifyColumnType {
+func NewMsgSetColumnDataType(owner sdk.AccAddress, appCode string, tableName string, fieldName string, dataType string) MsgSetColumnDataType {
+    return MsgSetColumnDataType {
         Owner: owner,
         AppCode: appCode,
         TableName: tableName,
         FieldName: fieldName,
-        Action: action,
         DataType: dataType,
     }
 }
 
 // Route should return the name of the module
-func (msg MsgModifyColumnType) Route() string { return RouterKey }
+func (msg MsgSetColumnDataType) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgModifyColumnType) Type() string { return "modify_column_data_type" }
+func (msg MsgSetColumnDataType) Type() string { return "set_column_data_type" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgModifyColumnType) ValidateBasic() error {
+func (msg MsgSetColumnDataType) ValidateBasic() error {
     if msg.Owner.Empty() {
         return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
     }
@@ -419,27 +416,19 @@ func (msg MsgModifyColumnType) ValidateBasic() error {
     if len(msg.FieldName) == 0 {
         return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Field name cannot be empty")
     }
-    if len(msg.Action) ==0 {
-        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Action cannot be empty")
-    }
-
-    if !(msg.Action == "add" || msg.Action == "drop") {
-        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Action has to be either add or drop")
-    }
-
     if len(msg.DataType) ==0 {
-        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Option cannot be empty")
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "DataType cannot be empty")
     }
     return nil
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgModifyColumnType) GetSignBytes() []byte {
+func (msg MsgSetColumnDataType) GetSignBytes() []byte {
     return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg MsgModifyColumnType) GetSigners() []sdk.AccAddress {
+func (msg MsgSetColumnDataType) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
 

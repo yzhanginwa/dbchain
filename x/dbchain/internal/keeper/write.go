@@ -342,18 +342,16 @@ func (k Keeper) validateInsertionWithFieldDataType(ctx sdk.Context, appId uint, 
         }
         fieldDataType, _ := k.GetColumnDataType(ctx, appId, tableName, fieldName)
 
-        for _, opt := range fieldDataType {
-            if opt == string(types.FLDTYP_INT) {
-                if value, ok := fields[fieldName]; ok {
-                    if _, err := strconv.Atoi(value); err != nil {
-                        return false
-                    }
+        if fieldDataType == string(types.FLDTYP_INT) {
+            if value, ok := fields[fieldName]; ok {
+                if _, err := strconv.Atoi(value); err != nil {
+                    return false
                 }
-            } else if opt == string(types.FLDTYP_DECIMAL) {
-                if value, ok := fields[fieldName]; ok {
-                    if _, err := strconv.ParseFloat(value,64); err != nil {
-                        return false
-                    }
+            }
+        } else if fieldDataType == string(types.FLDTYP_DECIMAL) {
+            if value, ok := fields[fieldName]; ok {
+                if _, err := strconv.ParseFloat(value,64); err != nil {
+                    return false
                 }
             }
         }

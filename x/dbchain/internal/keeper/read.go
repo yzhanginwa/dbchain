@@ -316,7 +316,11 @@ func (k Keeper) filterOwnIds(ctx sdk.Context, appId uint,  tableName string, ids
 
 func (k Keeper) isTypeOfInteger(ctx sdk.Context, appId uint, tableName, fieldName string) bool {
     fieldDataType, _ := k.GetColumnDataType(ctx, appId, tableName, fieldName)
-    return utils.StringIncluded(fieldDataType, string(types.FLDTYP_INT))
+    if fieldDataType == string(types.FLDTYP_INT) {
+        return true
+    } else {
+        return false
+    }
 }
 
 func fieldValueCompare(isInteger bool, operator, left, right string, reg *regexp.Regexp) bool {

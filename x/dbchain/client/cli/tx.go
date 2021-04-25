@@ -54,7 +54,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdDropTrigger(cdc),
         GetCmdSetTableMemo(cdc),
         GetCmdModifyColumnOption(cdc),
-        GetCmdModifyColumnDataType(cdc),
+        GetCmdSetColumnDataType(cdc),
         GetCmdSetColumnMemo(cdc),
         GetCmdInsertRow(cdc),
         GetCmdUpdateRow(cdc),
@@ -503,11 +503,11 @@ func GetCmdModifyColumnOption(cdc *codec.Codec) *cobra.Command {
     }
 }
 
-func GetCmdModifyColumnDataType(cdc *codec.Codec) *cobra.Command {
+func GetCmdSetColumnDataType(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "modify-column-data-type [appCode] [tableName] [fieldName] [action] [type]",
+        Use:   "modify-column-data-type [appCode] [tableName] [fieldName] [type]",
         Short: "modify column data type, support int , file ,decimal",
-        Args:  cobra.ExactArgs(5),
+        Args:  cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             inBuf := bufio.NewReader(cmd.InOrStdin())
@@ -516,10 +516,9 @@ func GetCmdModifyColumnDataType(cdc *codec.Codec) *cobra.Command {
             appCode   := args[0]
             tableName := args[1]
             fieldName := args[2]
-            action    := args[3]
-            dataType    := args[4]
+            dataType  := args[3]
 
-            msg := types.NewMsgModifyColumnType(cliCtx.GetFromAddress(), appCode, tableName, fieldName, action, dataType)
+            msg := types.NewMsgSetColumnDataType(cliCtx.GetFromAddress(), appCode, tableName, fieldName, dataType)
             err := msg.ValidateBasic()
             if err != nil {
                 return err
