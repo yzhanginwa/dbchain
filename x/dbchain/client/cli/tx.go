@@ -33,6 +33,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdDropApplication(cdc),
         GetCmdRecoverApplication(cdc),
         GetCmdCreateSysDatabase(cdc),
+        GetCmdSetAppUserFileVolumeLimit(cdc),
         GetCmdModifyAppUser(cdc),
         GetCmdSetAppPermission(cdc),
         GetCmdAddFunction(cdc),
@@ -165,6 +166,28 @@ func GetCmdCreateSysDatabase(cdc *codec.Codec) *cobra.Command {
                 return err
             }
             return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, msgs)
+        },
+    }
+}
+
+func GetCmdSetAppUserFileVolumeLimit(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "set-app-user-file-limit",
+        Short: "set application user file volume limit(bytes)",
+        Args:  cobra.ExactArgs(2),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode := args[0]
+            size    := args[1]
+            msg := types.NewMsgSetAppUserFileVolumeLimit(cliCtx.GetFromAddress(), appCode, size)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
         },
     }
 }

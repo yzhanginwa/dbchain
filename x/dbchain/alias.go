@@ -27,6 +27,7 @@ type (
     MsgDropApplication = types.MsgDropApplication
     MsgRecoverApplication = types.MsgRecoverApplication
     MsgCreateSysDatabase = types.MsgCreateSysDatabase
+    MsgSetAppUserFileVolumeLimit = types.MsgSetAppUserFileVolumeLimit
     MsgSetSchemaStatus   = types.MsgSetSchemaStatus
     MsgSetDatabasePermission = types.MsgSetDatabasePermission
     MsgModifyDatabaseUser    = types.MsgModifyDatabaseUser

@@ -1,16 +1,16 @@
 package keeper
 
 import (
-    "crypto/sha256"
-    "github.com/mr-tron/base58"
-    "fmt"
-    "strings"
-    "errors"
     "bytes"
+    "crypto/sha256"
+    "errors"
+    "fmt"
     sdk "github.com/cosmos/cosmos-sdk/types"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/other"
+    "github.com/mr-tron/base58"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/other"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+    "strings"
     "time"
 )
 
@@ -301,6 +301,24 @@ func (k Keeper) DatabaseUserExists(ctx sdk.Context, appId uint, user sdk.AccAddr
     return true
 }
 
+func (k Keeper) SetAppUserFileVolumeLimit(ctx sdk.Context, appId uint, size  string) error {
+    store := DbChainStore(ctx, k.storeKey)
+    key := getDatabaseUserFileVolumeLimitKey(appId)
+    err := store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(size))
+    return err
+}
+
+func (k Keeper) GetApplicationUserFileVolumeLimit(ctx sdk.Context, appId uint) string {
+    store := DbChainStore(ctx, k.storeKey)
+    key := getDatabaseUserFileVolumeLimitKey(appId)
+    bz, err := store.Get([]byte(key))
+    if err != nil || bz == nil {
+        return "no limit"
+    }
+    size := ""
+    k.cdc.MustUnmarshalBinaryBare(bz, &size)
+    return size
+}
 func (k Keeper) GetDatabaseUsers(ctx sdk.Context, appId uint, owner sdk.AccAddress) []string {
     store := DbChainStore(ctx, k.storeKey)
     start, end := getDatabaseUserIteratorStartAndEndKey(appId)

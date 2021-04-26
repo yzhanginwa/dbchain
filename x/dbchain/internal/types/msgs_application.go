@@ -355,3 +355,55 @@ func (msg MsgSetDatabasePermission) GetSignBytes() []byte {
 func (msg MsgSetDatabasePermission) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
+
+/////////////////////////////////
+//                             //
+//    MsgSetFileVolumeLimit    //
+//                             //
+/////////////////////////////////
+
+type MsgSetAppUserFileVolumeLimit struct {
+    Owner sdk.AccAddress       `json:"owner"`
+    AppCode string             `json:"app_code"`
+    Size    string             `json:"size"`
+}
+
+// NewMsgSetDatabasePermission is a constructor function for MsgCreatTable
+func NewMsgSetAppUserFileVolumeLimit(owner sdk.AccAddress, appCode, size string) MsgSetAppUserFileVolumeLimit {
+    return MsgSetAppUserFileVolumeLimit {
+        Owner: owner,
+        AppCode: appCode,
+        Size: size,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgSetAppUserFileVolumeLimit) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgSetAppUserFileVolumeLimit) Type() string { return "set_app_user_file_volume_limit" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgSetAppUserFileVolumeLimit) ValidateBasic() error {
+    if msg.Owner.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Application Code cannot be empty")
+    }
+    if len(msg.Size) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Size cannot be empty")
+    }
+
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgSetAppUserFileVolumeLimit) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgSetAppUserFileVolumeLimit) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}

@@ -36,6 +36,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             result, err = handleMsgRecoverApplication(ctx, keeper, msg)
         case MsgCreateSysDatabase:
             result, err = handleMsgCreateSysDatabase(ctx, keeper, msg)
+        case MsgSetAppUserFileVolumeLimit:
+            result, err = handleMsgSetAppUserFileVolumeLimit(ctx, keeper, msg)
         case MsgModifyDatabaseUser:
             result, err = handleMsgModifyDatabaseUser(ctx, keeper, msg)
         case MsgAddFunction:
@@ -176,6 +178,23 @@ func handleMsgCreateSysDatabase(ctx sdk.Context, keeper Keeper, msg MsgCreateSys
     }
 
     err := keeper.CreateDatabase(ctx, msg.Owner, "sysdb", "database for the use of system only", false, true)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
+    return &sdk.Result{}, nil
+}
+
+func handleMsgSetAppUserFileVolumeLimit(ctx sdk.Context, keeper Keeper, msg MsgSetAppUserFileVolumeLimit) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
+    if err != nil {
+        return nil, err
+    }
+    // only sys admin can set file volume limit
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Not authorized")
+    }
+
+    err = keeper.SetAppUserFileVolumeLimit(ctx, appId, msg.Size)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
     }
