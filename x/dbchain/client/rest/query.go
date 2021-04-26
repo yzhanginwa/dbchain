@@ -58,6 +58,18 @@ func showApplicationHandler(cliCtx context.CLIContext, storeName string) http.Ha
     }
 }
 
+func showApplicationUserFileVolumeLimit(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        vars := mux.Vars(r)
+        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/application_user_file_volume_limit/%s/%s", storeName, vars["accessToken"], vars["appCode"]), nil)
+        if err != nil {
+            rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+            return
+        }
+        rest.PostProcessResponse(w, cliCtx, res)
+    }
+}
+
 func showAdminAppsHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
