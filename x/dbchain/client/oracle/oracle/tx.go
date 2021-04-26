@@ -15,7 +15,9 @@ const (
     BatchSize int = 10
 )
 
-type UniversalMsg interface{}
+type UniversalMsg interface {
+    GetSignBytes() []byte
+}
 
 var (
     messageChannel = make(chan []UniversalMsg, 1000)
@@ -39,11 +41,24 @@ func txRunner() {
     }
     oracleAccAddr := sdk.AccAddress(privKey.PubKey().Address())
     queue := []UniversalMsg{}
+    hashFlag := make(map[string]bool)
 
     for {
         select {
         case msgs := <- messageChannel:
-            queue = append(queue, msgs...)
+            for _, msg := range msgs {
+                tmpHash := hex.EncodeToString(msg.GetSignBytes())
+
+                // when using alipay to pay for the package, the client app would ask if the payment is finished.
+                // Alipay would reply with outTradeNo and other payment info.
+                // meanwhile the alipay notification service would send a notice to oracle to notify the success of a payment.
+                // so oracle may generate 2 identical messages and put them into one transaction, which would cause transaction failure.
+
+                if _, ok := hashFlag[tmpHash]; !ok {
+                    queue = append(queue, msg)
+                    hashFlag[tmpHash] = true
+                }
+            }
             if len(queue) >= BatchSize {
                 err := executeTxs(queue, privKey, oracleAccAddr)
                 if err != nil {
@@ -51,6 +66,7 @@ func txRunner() {
                     return
                 }
                 queue = []UniversalMsg{}
+                hashFlag = make(map[string]bool)
             }
         default:
             if len(queue) > 0 {
@@ -60,6 +76,7 @@ func txRunner() {
                     return
                 }
                 queue = []UniversalMsg{}
+                hashFlag = make(map[string]bool)
             } else {
                 time.Sleep(2 * time.Second)
             }

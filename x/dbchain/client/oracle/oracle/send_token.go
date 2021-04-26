@@ -17,6 +17,10 @@ func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) MsgSend {
     return MsgSend{FromAddress: fromAddr, ToAddress: toAddr, Amount: amount}
 }
 
+func (msg MsgSend) GetSignBytes() []byte {
+    return sdk.MustSortJSON(aminoCdc.MustMarshalJSON(msg))
+}
+
 func GetSendTokenMsg(addr sdk.AccAddress) (UniversalMsg, error) {
     privKey, err := LoadPrivKey()
     if err != nil {
