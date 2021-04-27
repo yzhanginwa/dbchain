@@ -173,7 +173,7 @@ func GetCmdCreateSysDatabase(cdc *codec.Codec) *cobra.Command {
 func GetCmdSetAppUserFileVolumeLimit(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use:   "set-app-user-file-limit",
-        Short: "set application user file volume limit(bytes)",
+        Short: "set application user file volume limit. Uint of size is byte. when size was set 0 or negative, it means no limit",
         Args:  cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)

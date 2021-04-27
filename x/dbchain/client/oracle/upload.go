@@ -71,6 +71,9 @@ func checkAppUserFileVolumeLimit(cliCtx context.CLIContext, accessToken, appCode
     }
     //3、compare
     iLimitSize, _ := strconv.ParseInt(limitSize, 10, 64)
+    if iLimitSize <= 0 {
+        return true  //when size was set 0 or negative, it means no limit
+    }
     iUsedSize, _  := strconv.ParseInt(usedSize, 10, 64)
     if iUsedSize < iLimitSize {
         return true

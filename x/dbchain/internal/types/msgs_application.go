@@ -365,7 +365,7 @@ func (msg MsgSetDatabasePermission) GetSigners() []sdk.AccAddress {
 type MsgSetAppUserFileVolumeLimit struct {
     Owner sdk.AccAddress       `json:"owner"`
     AppCode string             `json:"app_code"`
-    Size    string             `json:"size"`
+    Size    string             `json:"size"`  //uint of size is byte. when size was set 0 or negative, it means no limit
 }
 
 // NewMsgSetDatabasePermission is a constructor function for MsgCreatTable
