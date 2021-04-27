@@ -1,19 +1,19 @@
 package cli
 
 import (
-    "fmt"
-    "strings"
     "encoding/json"
-    "github.com/mr-tron/base58"
-    "github.com/tendermint/tendermint/crypto/secp256k1"
-    sdk "github.com/cosmos/cosmos-sdk/types"
+    "fmt"
     "github.com/cosmos/cosmos-sdk/client"
     "github.com/cosmos/cosmos-sdk/client/context"
     "github.com/cosmos/cosmos-sdk/client/flags"
     "github.com/cosmos/cosmos-sdk/codec"
+    sdk "github.com/cosmos/cosmos-sdk/types"
+    "github.com/mr-tron/base58"
+    "github.com/spf13/cobra"
+    "github.com/tendermint/tendermint/crypto/secp256k1"
     "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
-    "github.com/spf13/cobra"
+    "strings"
 )
 
 func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
@@ -28,6 +28,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdIsSysAdmin(storeKey, cdc),
         GetCmdApplication(storeKey, cdc),
         GetCmdAppUserFileVolumeLimit(storeKey,cdc),
+        GetCmdAppUserUsedFileVolume(storeKey,cdc),
         GetCmdAppUsers(storeKey, cdc),
         GetCmdIsAppUser(storeKey, cdc),
         GetCmdTable(storeKey, cdc),
@@ -128,6 +129,29 @@ func GetCmdAppUserFileVolumeLimit(queryRoute string, cdc *codec.Codec) *cobra.Co
             res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/application_user_file_volume_limit/%s/%s", queryRoute, accessCode, appCode), nil)
             if err != nil {
                 fmt.Printf("could not get users of application %s", appCode)
+                return nil
+            }
+
+            var out string // QueryTables is a []string. It could be reused here
+            cdc.MustUnmarshalJSON(res, &out)
+            return cliCtx.PrintOutput(out)
+        },
+    }
+}
+
+func GetCmdAppUserUsedFileVolume(queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "app-user-used-file-volume",
+        Short: "show application user file volume limit",
+        Args: cobra.ExactArgs(2),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            accessCode := args[0]
+            appCode   := args[1]
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/application_user_used_file_volume/%s/%s", queryRoute, accessCode, appCode), nil)
+            if err != nil {
+                fmt.Println("could not get volume of user used")
                 return nil
             }
 

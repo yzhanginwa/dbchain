@@ -54,6 +54,7 @@ const (
     QueryDbchainTxNum      = "dbchainTxNum"
     QueryDbchainRecentTxNum  = "dbchainRecentTxNum"
     QueryApplicationUserFileVolumeLimit  = "application_user_file_volume_limit"
+    QueryApplicationUserUsedFileVolume  = "application_user_used_file_volume"
 )
 
 
@@ -73,6 +74,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             }
         case QueryApplicationUserFileVolumeLimit :
             return queryApplicationUserFileVolumeLimit(ctx, path[1:], req, keeper)
+        case QueryApplicationUserUsedFileVolume :
+            return queryApplicationUserUsedFileVolume(ctx, path[1:], req, keeper)
         case QueryApplicationBrowser:
             return queryApplicationsBrowser(ctx, path[1:], req, keeper)
         case QueryAppUsers:
@@ -251,7 +254,7 @@ func queryApplication(ctx sdk.Context, path []string, req abci.RequestQuery, kee
 func queryApplicationUserFileVolumeLimit(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
 
     accessCode:= path[0]
-    _, err := utils.VerifyAccessCode(accessCode)
+    _, _, err := utils.VerifyAccessCodeWithoutTimeChecking(accessCode)
     if err != nil {
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
@@ -263,6 +266,29 @@ func queryApplicationUserFileVolumeLimit(ctx sdk.Context, path []string, req abc
     }
 
     size := keeper.GetApplicationUserFileVolumeLimit(ctx, appId)
+    res, err := codec.MarshalJSONIndent(keeper.cdc, size)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryApplicationUserUsedFileVolume(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+
+    accessCode:= path[0]
+    addr, _, err := utils.VerifyAccessCodeWithoutTimeChecking(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    appCode := path[1]
+    appId, err := keeper.GetDatabaseId(ctx, appCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    size := keeper.GetApplicationUserUsedFileVolume(ctx, appId, addr)
     res, err := codec.MarshalJSONIndent(keeper.cdc, size)
     if err != nil {
         panic("could not marshal result to JSON")
