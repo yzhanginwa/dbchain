@@ -67,6 +67,10 @@ func GetDatabaseUserFileVolumeLimitKey(appId uint) string {
     return fmt.Sprintf("%s:%d:limit_per_user:file", KeyPrefixDb, appId)
 }
 
+func GetDatabaseUserUsedFileVolumeLimitKey(appId uint, addr string) string {
+    return fmt.Sprintf("%s:%d:stat:fpu:%s", KeyPrefixDb, appId, addr)
+}
+
 ///////////////////
 //               //
 // table related //

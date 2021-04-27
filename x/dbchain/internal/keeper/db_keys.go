@@ -18,7 +18,9 @@ var (
     getDatabaseUserKey = dbk.GetDatabaseUserKey
 
     getDatabaseUserFileVolumeLimitKey = dbk.GetDatabaseUserFileVolumeLimitKey
-    
+
+    GetDatabaseUserUsedFileVolumeLimitKey = dbk.GetDatabaseUserUsedFileVolumeLimitKey
+
     getDatabaseIteratorStartAndEndKey = dbk.GetDatabaseIteratorStartAndEndKey
     
     getAppCodeFromDatabaseKey = dbk.GetAppCodeFromDatabaseKey

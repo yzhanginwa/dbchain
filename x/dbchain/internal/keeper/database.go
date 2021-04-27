@@ -10,6 +10,7 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/other"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+    "strconv"
     "strings"
     "time"
 )
@@ -308,6 +309,27 @@ func (k Keeper) SetAppUserFileVolumeLimit(ctx sdk.Context, appId uint, size  str
     return err
 }
 
+func (k Keeper) UpdateAppUserUsedFileVolume(ctx sdk.Context, appId uint, user string, size  string) error {
+    store := DbChainStore(ctx, k.storeKey)
+    key := GetDatabaseUserUsedFileVolumeLimitKey(appId, user)
+    newSize := ""
+    bz, err := store.Get([]byte(key))
+    if err != nil ||  bz == nil{
+        newSize = size
+    } else {
+        originSize := ""
+        k.cdc.MustUnmarshalBinaryBare(bz, &originSize)
+        iOriginSize, _ :=  strconv.ParseInt(originSize, 10, 64)
+        iSize, err := strconv.ParseInt(size, 10, 64)
+        if err != nil {
+            return errors.New("file size err")
+        }
+        newSize = fmt.Sprintf("%d", iSize + iOriginSize)
+    }
+    err = store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(newSize))
+    return err
+}
+
 func (k Keeper) GetApplicationUserFileVolumeLimit(ctx sdk.Context, appId uint) string {
     store := DbChainStore(ctx, k.storeKey)
     key := getDatabaseUserFileVolumeLimitKey(appId)
@@ -319,6 +341,19 @@ func (k Keeper) GetApplicationUserFileVolumeLimit(ctx sdk.Context, appId uint) s
     k.cdc.MustUnmarshalBinaryBare(bz, &size)
     return size
 }
+
+func (k Keeper) GetApplicationUserUsedFileVolume(ctx sdk.Context, appId uint, user sdk.AccAddress) string {
+    store := DbChainStore(ctx, k.storeKey)
+    key := GetDatabaseUserUsedFileVolumeLimitKey(appId, user.String())
+    bz, err := store.Get([]byte(key))
+    if err != nil || bz == nil {
+        return "0"
+    }
+    size := ""
+    k.cdc.MustUnmarshalBinaryBare(bz, &size)
+    return size
+}
+
 func (k Keeper) GetDatabaseUsers(ctx sdk.Context, appId uint, owner sdk.AccAddress) []string {
     store := DbChainStore(ctx, k.storeKey)
     start, end := getDatabaseUserIteratorStartAndEndKey(appId)
