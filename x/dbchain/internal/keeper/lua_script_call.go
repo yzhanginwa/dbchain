@@ -26,6 +26,7 @@ func getAppLuaHandle(appId uint, handleType int)  *lua.LState {
 			SkipOpenLibs: true, //set SkipOpenLibs true to prevent lua open libs,because this libs can call os function and operate files
 			RegistrySize: 256, //Save function return value， default value is 256*20, it is too large
 		})
+		openBase(luaHandle)
 		luaHandles[appId] = luaHandle
 		return luaHandle
 	}
@@ -158,3 +159,29 @@ func getLuaHandles(handleType int)  map[uint]*lua.LState {
 	return luaHandles
 }
 
+func openBase(L *lua.LState) {
+	global := L.Get(lua.GlobalsIndex).(*lua.LTable)
+	global.RawSetString("pairs", L.NewClosure(basePairs, L.NewFunction(pairsaux)))
+}
+
+func basePairs(L *lua.LState) int {
+	tb := L.CheckTable(1)
+	L.Push(L.Get(lua.UpvalueIndex(1)))
+	L.Push(tb)
+	L.Push(lua.LNil)
+	return 3
+}
+
+func pairsaux(L *lua.LState) int {
+	tb := L.CheckTable(1)
+	key, value := tb.Next(L.Get(2))
+	if key == lua.LNil {
+		return 0
+	} else {
+		L.Pop(1)
+		L.Push(key)
+		L.Push(key)
+		L.Push(value)
+		return 2
+	}
+}
