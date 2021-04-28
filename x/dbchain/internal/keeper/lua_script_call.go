@@ -87,6 +87,11 @@ func callLuaScriptFunc(ctx sdk.Context, appId uint, owner sdk.AccAddress, keeper
 	for name, fn := range goExportFunc{
 		l.SetGlobal(name, l.NewFunction(fn))
 	}
+	//register new go function
+	goExportFunc = getGoExportFuncNew(ctx, appId, keeper, owner)
+	for name, fn := range goExportFunc{
+		l.SetGlobal(name, l.NewFunction(fn))
+	}
 	//call lua script
 	fn := getRegisterLuaFunc(ctx, keeper, appId, funcName, handleType)
 	if fn == nil || fn.String() == "nil" {
