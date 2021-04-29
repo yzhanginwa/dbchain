@@ -1,9 +1,13 @@
 package rest
 
 import (
+    "encoding/json"
     "fmt"
     "github.com/cosmos/cosmos-sdk/client/context"
+    shell "github.com/ipfs/go-ipfs-api"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "net/http"
+    "sync"
 
     "github.com/cosmos/cosmos-sdk/types/rest"
 
@@ -151,6 +155,7 @@ func showFunctionsHandler(cliCtx context.CLIContext, storeName string) http.Hand
             return
         }
         rest.PostProcessResponse(w, cliCtx, res)
+
     }
 }
 
@@ -404,5 +409,82 @@ func showTxSimpleResultHandler(cliCtx context.CLIContext, storeName string) http
             return
         }
         rest.PostProcessResponse(w, cliCtx, res)
+    }
+}
+
+func downloadFileHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        vars := mux.Vars(r)
+        accessToken := vars["accessToken"]
+        appCode := vars["appCode"]
+        tableName := vars["tableName"]
+        id := vars["id"]
+        fieldName := vars["fieldName"]
+        var cid string
+        //check type
+        ch := make(chan string, 2)
+        defer func() {
+            close(ch)
+        }()
+        var wait sync.WaitGroup
+        wait.Add(2)
+        go func() {
+            defer wait.Done()
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/column_data_type/%s/%s/%s/%s", storeName, accessToken, appCode, tableName, fieldName), nil)
+            if err != nil {
+                ch <- err.Error()
+                return
+            }
+            var dataType string
+            err = json.Unmarshal(res, &dataType)
+            if err != nil {
+                ch <- err.Error()
+                return
+            }
+            if dataType != string(types.FLDTYP_FILE) {
+                ch <- err.Error()
+                return
+            }
+        }()
+
+        //check value
+        go func() {
+            defer wait.Done()
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, accessToken, appCode, tableName, id), nil)
+            if err != nil {
+                ch <- err.Error()
+                return
+            }
+            var  RowFields map[string]string
+            err = json.Unmarshal(res, &RowFields)
+            if err != nil {
+                ch <- err.Error()
+                return
+            }
+            cid = RowFields[fieldName]
+        }()
+
+        wait.Wait()
+        if len(ch) > 0 {
+            rest.PostProcessResponse(w, cliCtx, <-ch)
+            return
+        }
+        //get file
+        sh := shell.NewShell("localhost:5001")
+        w.Header().Set("Content-Type", "application/octet-stream")
+        reader,_ := sh.Cat(cid)
+        buf := make([]byte, 4096)
+        for {
+            n , err := reader.Read(buf)
+            if n < 4096 {
+                buf = buf[:n]
+                w.Write(buf)
+                break
+            }
+            if err != nil {
+                break
+            }
+            w.Write(buf)
+        }
     }
 }

@@ -45,5 +45,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 
     r.HandleFunc(fmt.Sprintf("/%s/querier/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "querierBase58"), execQuerier(cliCtx, storeName)).Methods("GET")
 
+    r.HandleFunc(fmt.Sprintf("/%s/download_file/{%s}/{%s}/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "tableName", "id", "fieldName"), downloadFileHandler(cliCtx, storeName)).Methods("GET")
+
 
 }
