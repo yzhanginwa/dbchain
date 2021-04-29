@@ -51,16 +51,16 @@ func txRunner(cliCtx context.CLIContext) {
         select {
         case msgs := <- messageChannel:
             for _, msg := range msgs {
-                tmpHash := hex.EncodeToString(msg.GetSignBytes())
+                key := getMsgKey(msg)
 
                 // when using alipay to pay for the package, the client app would ask if the payment is finished.
                 // Alipay would reply with outTradeNo and other payment info.
                 // meanwhile the alipay notification service would send a notice to oracle to notify the success of a payment.
                 // so oracle may generate 2 identical messages and put them into one transaction, which would cause transaction failure.
 
-                if _, ok := hashFlag[tmpHash]; !ok {
+                if _, ok := hashFlag[key]; !ok {
                     queue = append(queue, msg)
-                    hashFlag[tmpHash] = true
+                    hashFlag[key] = true
                 }
             }
             if len(queue) >= BatchSize {
@@ -206,4 +206,24 @@ func checkCanInsertRow(cliCtx context.CLIContext, msg UniversalMsg) bool {
     fmt.Println("---------------------> can_insert_row result : ", string(res))
     ////////////////////////////////
     return true
+}
+
+func getMsgKey(msg UniversalMsg) string {
+    insertRow , ok := msg.(types.MsgInsertRow)
+    if !ok {
+        return hex.EncodeToString(msg.GetSignBytes())
+    }
+    if insertRow.TableName != "order_receipt" {
+        return hex.EncodeToString(msg.GetSignBytes())
+    }
+    fields := make(map[string]string)
+    err := json.Unmarshal(insertRow.Fields, &fields)
+    if err != nil {
+        return hex.EncodeToString(msg.GetSignBytes())
+    }
+    vendor_payment_no, ok := fields["vendor_payment_no"]
+    if !ok {
+        return hex.EncodeToString(msg.GetSignBytes())
+    }
+    return vendor_payment_no
 }
