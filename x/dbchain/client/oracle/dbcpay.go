@@ -223,7 +223,7 @@ func callDbcTokenPay(cliCtx context.CLIContext, storeName, appcode, tableName ,p
 
 	res := newOrderReceiptDataCore(appcode, orderId, owner, amount, expiration_date, DbcToken, paymentId)
 	oracleAccAddr := oracle.GetOracleAccAddr()
-	SaveToOrderInfoTable(oracleAccAddr, res, OrderReceipt)
+	SaveToOrderInfoTable(cliCtx, oracleAccAddr, res, OrderReceipt)
 	bz , _ := json.Marshal(res)
 	return bz, nil
 }
@@ -458,7 +458,7 @@ func oracleQueryPayStatus(cliCtx context.CLIContext, storeName string) http.Hand
 		res := newOrderReceiptData(cliCtx, storeName, outTradeNo, total_amount, trade_no)
 
 		oracleAccAddr := oracle.GetOracleAccAddr()
-		SaveToOrderInfoTable(oracleAccAddr, res, OrderReceipt)
+		SaveToOrderInfoTable(cliCtx, oracleAccAddr, res, OrderReceipt)
 		bz , _ := json.Marshal(res)
 		rest.PostProcessResponse(w, cliCtx, bz)
 	}
@@ -481,7 +481,7 @@ func oracleSavePayStatus(cliCtx context.CLIContext, storeName string) http.Handl
 		fmt.Println("===> outTradeNo: ", outTradeNo, "===> trade_no: ", trade_no, "===>")
 		res := newOrderReceiptData(cliCtx, storeName, outTradeNo, total_amount, trade_no)
 		oracleAccAddr := oracle.GetOracleAccAddr()
-		SaveToOrderInfoTable(oracleAccAddr, res, OrderReceipt)
+		SaveToOrderInfoTable(cliCtx, oracleAccAddr, res, OrderReceipt)
 		w.Write([]byte("success"))
 	}
 }
@@ -579,7 +579,7 @@ func OracleQueryAliOrder(outTradeNo string) (map[string]string, error){
 	return result, nil
 }
 
-func SaveToOrderInfoTable(oracleAddr sdk.AccAddress,  row map[string]string, tableName string) error{
+func SaveToOrderInfoTable(cliCtx context.CLIContext, oracleAddr sdk.AccAddress,  row map[string]string, tableName string) error{
 	//write to buyerorder table
 	rowFields := make(types.RowFields)
 	for k, v := range row {
@@ -595,7 +595,7 @@ func SaveToOrderInfoTable(oracleAddr sdk.AccAddress,  row map[string]string, tab
 	if err != nil {
 		return err
 	}
-	oracle.BuildTxsAndBroadcast([]oracle.UniversalMsg{msg})
+	oracle.BuildTxsAndBroadcast(cliCtx, []oracle.UniversalMsg{msg})
 	return nil
 }
 

@@ -93,7 +93,7 @@ func showRecentDaysTxsNum(cliCtx context.CLIContext) http.HandlerFunc{
 		//Check whether it needs to be stored in the database
 		for k, v := range TxsStatistic.data {
 			if TxsStatisticCopy[k] != v {
-				endProcessing(TxsStatistic)
+				endProcessing(cliCtx, TxsStatistic)
 				break
 			}
 		}
@@ -139,7 +139,7 @@ func showTotalTxsNum(cliCtx context.CLIContext) http.HandlerFunc {
 		rest.PostProcessResponse(w, cliCtx, bz)
 		//Check whether it needs to be stored in the database
 		if TotalTxsCopy.date != TotalTxs.date {
-			endProcessing(TotalTxs)
+			endProcessing(cliCtx ,TotalTxs)
 		}
 	}
 }
@@ -429,7 +429,7 @@ func loadTxStatistic(cliCtx context.CLIContext) *txStatistic{
 
 
 
-func endProcessing(data interface{}) {
+func endProcessing(cliCtx context.CLIContext, data interface{}) {
 	priv, _  := oracle.LoadPrivKey()
 	var oracleAddr = sdk.AccAddress(priv.PubKey().Address())
 	msgs := make([]oracle.UniversalMsg, 0)
@@ -442,7 +442,7 @@ func endProcessing(data interface{}) {
 	default:
 		return
 	}
-	oracle.BuildTxsAndBroadcast(msgs)
+	oracle.BuildTxsAndBroadcast(cliCtx, msgs)
 }
 
 ///////////////////////////////

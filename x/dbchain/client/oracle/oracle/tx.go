@@ -1,7 +1,11 @@
 package oracle
 
 import (
+    "encoding/json"
     "fmt"
+    "github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/mr-tron/base58"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "time"
     "encoding/hex"
     "github.com/spf13/viper"
@@ -24,15 +28,15 @@ var (
     runnerIsRunning = false
 )
 
-func BuildTxsAndBroadcast(msgs []UniversalMsg) {
+func BuildTxsAndBroadcast(cliCtx context.CLIContext, msgs []UniversalMsg) {
     if !runnerIsRunning {
         runnerIsRunning = true
-        go txRunner()
+        go txRunner(cliCtx)
     }
     messageChannel <- msgs
 }
 
-func txRunner() {
+func txRunner(cliCtx context.CLIContext) {
     privKey, err := LoadPrivKey()
     if err != nil {
         fmt.Println("Failed to load oracle's private key!!!")
@@ -60,7 +64,7 @@ func txRunner() {
                 }
             }
             if len(queue) >= BatchSize {
-                err := executeTxs(queue, privKey, oracleAccAddr)
+                err := executeTxs(cliCtx, queue, privKey, oracleAccAddr)
                 if err != nil {
                     runnerIsRunning = false
                     return
@@ -70,7 +74,7 @@ func txRunner() {
             }
         default:
             if len(queue) > 0 {
-                err := executeTxs(queue, privKey, oracleAccAddr)
+                err := executeTxs(cliCtx, queue, privKey, oracleAccAddr)
                 if err != nil {
                     runnerIsRunning = false
                     return
@@ -84,14 +88,20 @@ func txRunner() {
     }
 }
 
-func executeTxs(batch []UniversalMsg, privKey secp256k1.PrivKeySecp256k1, oracleAccAddr sdk.AccAddress) error {
+func executeTxs(cliCtx context.CLIContext, batch []UniversalMsg, privKey secp256k1.PrivKeySecp256k1, oracleAccAddr sdk.AccAddress) error {
     accNum, seq, err := GetAccountInfo(oracleAccAddr.String())
     if err != nil {
         fmt.Println("Failed to load oracle's account info!!!")
         return err
     }
+    newBatch := make([]UniversalMsg, 0)
+    for _, msg := range batch {
+        if checkCanInsertRow(cliCtx, msg) {
+            newBatch = append(newBatch, msg)
+        }
+    }
 
-    txBytes, err := buildAndSignAndBuildTxBytes(batch, accNum, seq, privKey)
+    txBytes, err := buildAndSignAndBuildTxBytes(newBatch, accNum, seq, privKey)
     if err != nil {
         return err
     }
@@ -100,9 +110,9 @@ func executeTxs(batch []UniversalMsg, privKey secp256k1.PrivKeySecp256k1, oracle
     return nil
 }
 
-func buildTxAndBroadcast(msg UniversalMsg) {
+func buildTxAndBroadcast(cliCtx context.CLIContext, msg UniversalMsg) {
     msgs := []UniversalMsg{msg}
-    BuildTxsAndBroadcast(msgs)
+    BuildTxsAndBroadcast(cliCtx, msgs)
 }
 
 func buildAndSignAndBuildTxBytes(msgs []UniversalMsg, accNum uint64, seq uint64, privKey secp256k1.PrivKeySecp256k1) ([]byte, error) {
@@ -165,4 +175,35 @@ func makeBatches(msgs []UniversalMsg, batchSize int) [][]UniversalMsg {
     }
 
     return result
+}
+
+func checkCanInsertRow(cliCtx context.CLIContext, msg UniversalMsg) bool {
+    insertRow , ok := msg.(types.MsgInsertRow)
+    if !ok {
+        return true
+    }
+    rowFieldsJson := base58.Encode(insertRow.Fields)
+
+    privKey, err := LoadPrivKey()
+    if err != nil {
+        fmt.Println("---------------------> failed msg is  : ", insertRow)
+        return false
+    }
+    ac := utils.MakeAccessCode(privKey)
+    res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/can_insert_row/%s/%s/%s/%s", "dbchain", ac, insertRow.AppCode, insertRow.TableName, rowFieldsJson), nil)
+    if err != nil {
+        fmt.Println("---------------------> msg is  : ", insertRow)
+        return false
+    }
+
+    result := false
+    err = json.Unmarshal(res, &result)
+    if err != nil || !result {
+        fmt.Println("---------------------> msg is  : ", insertRow)
+        return false
+    }
+    ////////////////////////////////
+    fmt.Println("---------------------> can_insert_row result : ", string(res))
+    ////////////////////////////////
+    return true
 }

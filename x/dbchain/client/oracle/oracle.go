@@ -109,7 +109,7 @@ func oracleVerifyVerfCode(cliCtx context.CLIContext, storeName string) http.Hand
         }
 
         if VerifyVerfCode(addr.String(), mobile, verificationCode) {
-            saveToAuthTable(addr, "mobile", newMobile(mobile))
+            saveToAuthTable(cliCtx, addr, "mobile", newMobile(mobile))
             rest.PostProcessResponse(w, cliCtx, "Success")
         } else {
             rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to verify")
@@ -131,7 +131,7 @@ func oracleVerifyNameAndIdNumber(cliCtx context.CLIContext, storeName string) ht
         }
 
         if verifyNameAndIdNumber(name, idNumber) {
-            saveToAuthTable(addr, "idcard", newIdCard(name, idNumber))
+            saveToAuthTable(cliCtx, addr, "idcard", newIdCard(name, idNumber))
             rest.PostProcessResponse(w, cliCtx, "Success")
         } else {
             rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to verify")
@@ -160,7 +160,7 @@ func oracleVerifyCorpInfo(cliCtx context.CLIContext, storeName string) http.Hand
         }
 
         if verifyCorpInfo(idNumber, corpName, regNumber, creditCode) {
-            saveToAuthTable(addr, "corp", newCorpInfo(corpName, regNumber, creditCode))
+            saveToAuthTable(cliCtx, addr, "corp", newCorpInfo(corpName, regNumber, creditCode))
             rest.PostProcessResponse(w, cliCtx, "Success")
         } else {
             rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to verify")
@@ -189,7 +189,7 @@ func appNewOneCoin(cliCtx context.CLIContext, storeName string) http.HandlerFunc
                 return
             }
             msgs = append(msgs, msg)
-            oracle.BuildTxsAndBroadcast(msgs)
+            oracle.BuildTxsAndBroadcast(cliCtx, msgs)
         }
 
         rest.PostProcessResponse(w, cliCtx, "success")
@@ -266,7 +266,7 @@ func VerifyVerfCode(strAddr string , mobile string, verificationCode string) boo
     return false
 }
 
-func saveToAuthTable(addr sdk.AccAddress, authType string, value interface{}) {
+func saveToAuthTable(cliCtx context.CLIContext, addr sdk.AccAddress, authType string, value interface{}) {
     rowFields := make(types.RowFields)
     rowFields["address"] = addr.String()
     rowFields["type"]    = authType
@@ -287,7 +287,7 @@ func saveToAuthTable(addr sdk.AccAddress, authType string, value interface{}) {
         }
     }
 
-    oracle.BuildTxsAndBroadcast(msgs)
+    oracle.BuildTxsAndBroadcast(cliCtx, msgs)
 }
 
 func verifyCorpInfo(idNumber, corpName, regNumber, creditCode string) bool {
