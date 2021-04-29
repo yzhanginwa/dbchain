@@ -476,12 +476,11 @@ func downloadFileHandler(cliCtx context.CLIContext, storeName string) http.Handl
         buf := make([]byte, 4096)
         for {
             n , err := reader.Read(buf)
-            if n < 4096 {
-                buf = buf[:n]
-                w.Write(buf)
-                break
-            }
             if err != nil {
+                if n < 4096 {
+                    buf = buf[:n]
+                }
+                w.Write(buf)
                 break
             }
             w.Write(buf)
