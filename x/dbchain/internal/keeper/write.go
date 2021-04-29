@@ -360,6 +360,12 @@ func (k Keeper) validateInsertionWithFieldDataType(ctx sdk.Context, appId uint, 
                     return false
                 }
             }
+        } else if fieldDataType == string(types.FLDTYP_ADDRESS) {
+            if value, ok := fields[fieldName]; ok {
+                if _, err := sdk.AccAddressFromBech32(value); err != nil {
+                    return false
+                }
+            }
         }
     }
     return true

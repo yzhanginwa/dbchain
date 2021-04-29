@@ -169,4 +169,5 @@ const (
     FLDTYP_FILE       FieldDataType = "file"
     FLDTYP_INT        FieldDataType = "int"
     FLDTYP_DECIMAL    FieldDataType = "decimal"
+    FLDTYP_ADDRESS    FieldDataType = "address"
 )
