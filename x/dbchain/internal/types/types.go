@@ -160,6 +160,7 @@ const (
     FLDOPT_NOTNULL    FieldOption = "not-null"
     FLDOPT_UNIQUE     FieldOption = "unique"
     FLDOPT_OWN        FieldOption = "own"
+    FLDOPT_READABLE   FieldOption = "readable"
 )
 
 type FieldDataType string

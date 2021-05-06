@@ -649,6 +649,8 @@ func (k Keeper) GetCanAddColumnOption(ctx sdk.Context, appId uint, tableName, fi
         if !k.validateOwnField(ctx, appId, tableName, fieldName) {
             return false
         }
+    case types.FLDOPT_READABLE:
+        return true
     }
     return true
 }
@@ -718,6 +720,8 @@ func validateColumnOption(option string) bool {
     case types.FLDOPT_UNIQUE:
         return true
     case types.FLDOPT_OWN:
+        return true
+    case types.FLDOPT_READABLE:
         return true
     }
 
