@@ -6,6 +6,7 @@ import (
     "errors"
     "fmt"
     sdk "github.com/cosmos/cosmos-sdk/types"
+    shell "github.com/ipfs/go-ipfs-api"
     "github.com/mr-tron/base58"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/other"
@@ -328,6 +329,47 @@ func (k Keeper) UpdateAppUserUsedFileVolume(ctx sdk.Context, appId uint, user st
     }
     err = store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(newSize))
     return err
+}
+
+func (k Keeper) RestoreVolume(ctx sdk.Context, appId uint, cids []string, user string) error {
+    store := DbChainStore(ctx, k.storeKey)
+    key := GetDatabaseUserUsedFileVolumeLimitKey(appId, user)
+    bz, err := store.Get([]byte(key))
+    if err != nil || bz == nil{
+        return errors.New("get user used size err")
+    }
+    usedSize := ""
+    k.cdc.MustUnmarshalBinaryBare(bz, &usedSize)
+    iUsedSize, _ :=  strconv.ParseUint(usedSize, 10, 64)
+
+    sh := shell.NewShell("localhost:5001")
+    for _, cid := range cids {
+        size := getUploadFileSize(sh, cid)
+        if iUsedSize > size {
+            iUsedSize -= size
+        }
+    }
+    newSize := fmt.Sprintf("%d", iUsedSize)
+    err = store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(newSize))
+    return err
+}
+
+func (k Keeper) findFileTypeField(ctx sdk.Context, appId uint, tableName string) []string {
+    fileFields := make([]string, 0)
+    fields, err := k.getTableFields(ctx, appId, tableName)
+    if err != nil {
+        return fileFields
+    }
+    for _, field := range fields {
+        dataType, err := k.GetColumnDataType(ctx, appId, tableName, field)
+        if err != nil {
+            continue
+        }
+        if dataType == string(types.FLDTYP_FILE) {
+            fileFields = append(fileFields, dataType)
+        }
+    }
+    return fileFields
 }
 
 func (k Keeper) GetApplicationUserFileVolumeLimit(ctx sdk.Context, appId uint) string {

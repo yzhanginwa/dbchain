@@ -106,6 +106,10 @@ func (k Keeper) Delete(ctx sdk.Context, appId uint, tableName string, id uint, o
     if !k.isOwnId(ctx, appId, tableName, id, owner) {
         return 0, errors.New("no permission")
     }
+    cids := make([]string, 0)
+    if !isRowFrozen(store, appId, tableName, id) {
+        cids = k.getCids(ctx, appId, tableName, id)
+    }
     for _, fieldName := range fieldNames {
         key := getDataKeyBytes(appId, tableName, fieldName, id)
         err := store.Delete(key)
@@ -113,6 +117,8 @@ func (k Keeper) Delete(ctx sdk.Context, appId uint, tableName string, id uint, o
             return 0, err
         }
     }
+
+    k.RestoreVolume(ctx, appId, cids, owner.String())
 
     _, err = k.dropIndexForRow(ctx, appId, tableName, id)
     if err != nil {
@@ -139,11 +145,14 @@ func (k Keeper) Freeze(ctx sdk.Context, appId uint, tableName string, id uint, o
     if bz != nil {
         return id, errors.New("Record is already frozen")
     }
+    cids := k.getCids(ctx, appId, tableName, id)
     store.Set(keyAt, k.cdc.MustMarshalBinaryBare(other.GetCurrentBlockTime().String()))
 
     keyBy := getDataKeyBytes(appId, tableName, types.FLD_FROZEN_BY, id)
     store.Set(keyBy, k.cdc.MustMarshalBinaryBare(owner.String()))
-
+    if len(cids) > 0 {
+        k.RestoreVolume(ctx, appId, cids, owner.String())
+    }
     _, err = k.dropIndexForRow(ctx, appId, tableName, id)
     if err != nil {
         return 0, err
@@ -558,6 +567,25 @@ func (k Keeper) isOwnId(ctx sdk.Context, appId uint, tableName string, id uint, 
     return  false
 }
 
+func (k Keeper) getCids(ctx sdk.Context, appId uint, tableName string, id uint) []string {
+    cids := make([]string, 0)
+    temp := make(map[string]bool, 0)
+    fields, err := k.DoFind(ctx, appId, tableName, id)
+    if err != nil {
+        return cids
+    }
+    for field, val := range fields {
+        fieldType, err := k.GetColumnDataType(ctx, appId, tableName, field)
+        if err != nil {
+            continue
+        }
+        if fieldType == string(types.FLDTYP_FILE) && !temp[fieldType]{
+            temp[fieldType] = true
+            cids = append(cids, val)
+        }
+    }
+    return  cids
+}
 func validateAmount(amount string) (int, bool) {
     i, err := strconv.Atoi(amount)
     if err != nil {
