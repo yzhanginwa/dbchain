@@ -136,7 +136,7 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
     if k.isTablePublic(ctx, appId, tableName) || k.isAuditor(ctx, appId, user) {
         return results
     } else {
-        return k.filterOwnIds(ctx, appId, tableName, results, user)
+        return k.filterReadableIds(ctx, appId, tableName, results, user)
     }
 }
 
@@ -225,7 +225,7 @@ func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field strin
     if k.isTablePublic(ctx, appId, tableName) || k.isAuditor(ctx, appId, user) {
         return results
     } else {
-        return k.filterOwnIds(ctx, appId, tableName, results, user)
+        return k.filterReadableIds(ctx, appId, tableName, results, user)
     }
 }
 
@@ -251,7 +251,7 @@ func (k Keeper) FindAll(ctx sdk.Context, appId uint, tableName string, user sdk.
     if k.isTablePublic(ctx, appId, tableName) || k.isAuditor(ctx, appId, user) {
         return result
     } else {
-        return k.filterOwnIds(ctx, appId, tableName, result, user)
+        return k.filterReadableIds(ctx, appId, tableName, result, user)
     }
 }
 
@@ -284,7 +284,7 @@ func (k Keeper) isReadableId(ctx sdk.Context, appId uint, tableName string, id u
 
     // if public table, return all ids
     if !k.isTablePublic(ctx, appId, tableName) && !k.isAuditor(ctx, appId, user) {
-        ids = k.filterOwnIds(ctx, appId, tableName, ids, user)
+        ids = k.filterReadableIds(ctx, appId, tableName, ids, user)
         if len(ids) < 1 {
             return false
         }
@@ -292,26 +292,55 @@ func (k Keeper) isReadableId(ctx sdk.Context, appId uint, tableName string, id u
     return true
 }
 
-func (k Keeper) filterOwnIds(ctx sdk.Context, appId uint,  tableName string, ids []uint, user sdk.AccAddress) []uint {
+func (k Keeper) filterReadableIds(ctx sdk.Context, appId uint,  tableName string, ids []uint, user sdk.AccAddress) []uint {
     store := DbChainStore(ctx, k.storeKey)
     var userString string = user.String()
 
+    needCheckField := k.findReadableAddressField(ctx, appId, tableName)
+    needCheckField = append(needCheckField, "created_by")
     var result = []uint{}
     var mold string
     for _, id := range ids {
-        key := getDataKeyBytes(appId, tableName, "created_by", uint(id))
-        bz, err := store.Get(key)
-        if err != nil{
-            return nil
-        }
-        if bz != nil {
-            k.cdc.MustUnmarshalBinaryBare(bz, &mold)
-            if mold == userString {
-                result = append(result, uint(id))
+        for _, field := range needCheckField {
+            key := getDataKeyBytes(appId, tableName, field, uint(id))
+            bz, err := store.Get(key)
+            if err != nil{
+                return nil
+            }
+            if bz != nil {
+                k.cdc.MustUnmarshalBinaryBare(bz, &mold)
+                if mold == userString {
+                    result = append(result, uint(id))
+                    break
+                }
             }
         }
     }
     return result
+}
+
+func (k Keeper) findReadableAddressField(ctx sdk.Context, appId uint, tableName string) []string {
+    addFields := make([]string, 0)
+    fields, err := k.getTableFields(ctx, appId, tableName)
+    if err != nil {
+        return addFields
+    }
+    for _, field := range fields {
+        dataType, err := k.GetColumnDataType(ctx, appId, tableName, field)
+        if err != nil {
+            continue
+        }
+        if dataType != string(types.FLDTYP_ADDRESS) {
+            continue
+        }
+        option, err := k.GetColumnOption(ctx, appId, tableName, field)
+        if err != nil || !utils.ItemExists(option, string(types.FLDOPT_READABLE)){
+            continue
+        }
+        addFields = append(addFields, field)
+
+    }
+    return addFields
 }
 
 func (k Keeper) isTypeOfInteger(ctx sdk.Context, appId uint, tableName, fieldName string) bool {
