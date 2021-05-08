@@ -54,6 +54,7 @@ const (
  	AliPay = "alipay"
  	WechatPay = "wechatpay"
  	DbcToken = "dbctoken"
+ 	ApplePay = "applepay"
 )
 
 func init(){
@@ -119,17 +120,12 @@ func oracleCallDbcPay(cliCtx context.CLIContext, storeName string) http.HandlerF
 		paymentId  := r.Form.Get("paymentid")
 		vendor     := r.Form.Get("vendor")
 		tableName  := r.Form.Get("tablename")
-		if payType == "app" && vendor == DbcToken{
+		if payType == "app" && (vendor == DbcToken || vendor == ApplePay){
 			if tableName == ""{
 				tableName = "payment"
 			}
-
-			bz , err := callDbcTokenPay(cliCtx, storeName, appcode, tableName, paymentId)
-			if err != nil {
-				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-				return
-			}
-			rest.PostProcessResponse(w, cliCtx, bz)
+			receiptData := r.Form.Get("receipt_data")
+			internalPurchase(cliCtx, storeName, OutTradeNo, tableName, receiptData, paymentId, vendor, buyer, w)
 			return
 		}
 		//query from user sellable to get money
@@ -180,6 +176,36 @@ func oracleCallDbcPay(cliCtx context.CLIContext, storeName string) http.HandlerF
 		rest.PostProcessResponse(w, cliCtx, bz)
 		return
 	}
+}
+
+func internalPurchase(cliCtx context.CLIContext, storeName, OutTradeNo, tableName, receiptData, paymentId, vendor string , buyer sdk.AccAddress, w http.ResponseWriter) {
+	appcodeAndOrderId := strings.Split(OutTradeNo,"-")
+	if len(appcodeAndOrderId) != 2 {
+		rest.WriteErrorResponse(w, http.StatusNotFound, "outTradeNo error")
+		return
+	}
+	appcode := appcodeAndOrderId[0]
+	if vendor == DbcToken {
+		bz , err := callDbcTokenPay(cliCtx, storeName, appcode, tableName, paymentId)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		rest.PostProcessResponse(w, cliCtx, bz)
+	} else if vendor ==  ApplePay {
+		appleTransactionId, success := verifyApplePay(cliCtx, storeName, OutTradeNo, buyer.String(), receiptData)
+		if !success {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, errors.New("invalid receipt data").Error())
+			return
+		}
+		bz , err := callDbcApplePay(cliCtx, storeName, OutTradeNo, appleTransactionId)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		rest.PostProcessResponse(w, cliCtx, bz)
+	}
+	return
 }
 
 func callDbcTokenPay(cliCtx context.CLIContext, storeName, appcode, tableName ,paymentId string) ([]byte, error){
