@@ -483,7 +483,12 @@ func downloadFileHandler(cliCtx context.CLIContext, storeName string) http.Handl
                 w.Write(buf)
                 break
             }
-            w.Write(buf)
+            //n maybe less than 4096 but err is nil, so it needs be checked everytime
+            if n < 4096 {
+                w.Write(buf[:n])
+            } else {
+                w.Write(buf)
+            }
         }
     }
 }
