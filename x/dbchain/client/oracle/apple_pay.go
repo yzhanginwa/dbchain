@@ -101,8 +101,8 @@ const (
 
 	sandUrl = "https://sandbox.itunes.apple.com/verifyReceipt"
 	productUrl = "https://buy.itunes.apple.com/verifyReceipt"
-	applePaySand = "applePaySand"
-	applePayProduct = "applePayProduct"
+	applePaySand = "applePaySandBox"
+	applePayProduct = "applePayProduction"
 )
 
 func verifyApplePay(cliCtx context.CLIContext, storeName, outTradeNo, buyer string, receiptData string) (string,string,error) {

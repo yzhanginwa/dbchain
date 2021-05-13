@@ -179,6 +179,10 @@ func oracleCallDbcPay(cliCtx context.CLIContext, storeName string) http.HandlerF
 }
 
 func internalPurchase(cliCtx context.CLIContext, storeName, OutTradeNo, tableName, receiptData, paymentId, vendor string , buyer sdk.AccAddress, w http.ResponseWriter) {
+	if !checkAppleUnverifyReceipt {
+		go checkAppleReceiptRunner(cliCtx)
+		checkAppleUnverifyReceipt = true
+	}
 	appcodeAndOrderId := strings.Split(OutTradeNo,"-")
 	if len(appcodeAndOrderId) != 2 {
 		rest.WriteErrorResponse(w, http.StatusNotFound, "outTradeNo error")
@@ -196,6 +200,16 @@ func internalPurchase(cliCtx context.CLIContext, storeName, OutTradeNo, tableNam
 		appleTransactionId, applePayType, err := verifyApplePay(cliCtx, storeName, OutTradeNo, buyer.String(), receiptData)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			if err.Error() == "failed to access Apple server" {
+				recheck := unVerifyAppleReceiptData{
+					storeName,
+					OutTradeNo,
+					buyer.String(),
+					receiptData,
+				}
+				unVerifyAppleReceiptBuf<-recheck
+
+			}
 			return
 		}
 		bz , err := callDbcApplePay(cliCtx, storeName, OutTradeNo, appleTransactionId, applePayType)
