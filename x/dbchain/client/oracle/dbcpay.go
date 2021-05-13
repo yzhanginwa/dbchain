@@ -193,12 +193,12 @@ func internalPurchase(cliCtx context.CLIContext, storeName, OutTradeNo, tableNam
 		}
 		rest.PostProcessResponse(w, cliCtx, bz)
 	} else if vendor ==  ApplePay {
-		appleTransactionId, success := verifyApplePay(cliCtx, storeName, OutTradeNo, buyer.String(), receiptData)
-		if !success {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, errors.New("invalid receipt data").Error())
+		appleTransactionId, applePayType, err := verifyApplePay(cliCtx, storeName, OutTradeNo, buyer.String(), receiptData)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		bz , err := callDbcApplePay(cliCtx, storeName, OutTradeNo, appleTransactionId)
+		bz , err := callDbcApplePay(cliCtx, storeName, OutTradeNo, appleTransactionId, applePayType)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

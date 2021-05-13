@@ -16,6 +16,8 @@ package oracle
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
 	"net/http"
@@ -87,50 +89,44 @@ type AppleResponse2 struct {
 	Status      int            `json:"status"`
 }
 
+type AppleResponseStatus struct {
+	Status      int            `json:"status"`
+}
+
 const (
+	//error code
 	SUCCESS = 0
+	SendSandToProduct = 21007
+	SendProductToSand = 21008
+
+	sandUrl = "https://sandbox.itunes.apple.com/verifyReceipt"
+	productUrl = "https://buy.itunes.apple.com/verifyReceipt"
+	applePaySand = "applePaySand"
+	applePayProduct = "applePayProduct"
 )
 
-var sandUrl = "https://sandbox.itunes.apple.com/verifyReceipt"
-var productUrl = "https://buy.itunes.apple.com/verifyReceipt"
+func verifyApplePay(cliCtx context.CLIContext, storeName, outTradeNo, buyer string, receiptData string) (string,string,error) {
 
-func verifyApplePay(cliCtx context.CLIContext, storeName, outTradeNo, buyer string, receiptData string) (string,bool) {
-	//get transaction info from apple server
-	cli := http.Client{}
-	ReceiptData := map[string]string{"receipt-data": receiptData}
-	bz, _ := json.Marshal(ReceiptData)
-	contentType := "application/json; charset=utf-8"
-	reader := bytes.NewReader(bz)
-	postUrl := ""
-	if IsTest {
-		postUrl = sandUrl
-	} else {
-		postUrl = productUrl
-	}
-	resp, err := cli.Post(postUrl, contentType, reader)
-	if err != nil {
-		return err.Error(), false
-	}
-	buffer := make([]byte, 0)
-	buf := make([]byte, 4096)
-	for {
-		//n maybe less than 4096 when err is nil, so we should check it everytime
-		n, err := resp.Body.Read(buf)
+	postUrl := productUrl
+	applePayType := applePayProduct
+	var buffer []byte
+	for i := 0; i < 2; i++ {
+		buffer , err := checkReceiptData(postUrl, receiptData)
 		if err != nil {
-			if n < 4096 {
-				buffer = append(buffer, buf[:n]...)
-			} else {
-				buffer = append(buffer, buf...)
-			}
+			return "", "", err
+		}
+		var appleResponseStatus AppleResponseStatus
+		json.Unmarshal(buffer, &appleResponseStatus)
+		if appleResponseStatus.Status == SUCCESS {
 			break
-		}
-		if n < 4096 {
-			buffer = append(buffer, buf[:n]...)
+		} else if appleResponseStatus.Status == SendSandToProduct {
+			postUrl = sandUrl
+			applePayType = applePaySand
 		} else {
-			buffer = append(buffer, buf...)
+			return "", "", errors.New(fmt.Sprintf("unknown err : %d", appleResponseStatus.Status) )
 		}
+ 	}
 
-	}
 
 	//decode data witch received from apple server
 	var ResponseFormat1 AppleResponse1
@@ -141,7 +137,7 @@ func verifyApplePay(cliCtx context.CLIContext, storeName, outTradeNo, buyer stri
 	json.Unmarshal(buffer, &ResponseFormat2)
 	if len(ResponseFormat2.Receipt.InApp) > 0 {
 		if ResponseFormat2.Status != SUCCESS {
-			return "ResponseFormat2.Status != SUCCESS", false
+			return "", "", errors.New("ResponseFormat2.Status != SUCCESS")
 		}
 		lastInApp := getLastestPurchase(ResponseFormat2.Receipt.InApp)
 		productId = lastInApp.ProductId
@@ -149,7 +145,7 @@ func verifyApplePay(cliCtx context.CLIContext, storeName, outTradeNo, buyer stri
 	} else {
 		json.Unmarshal(buffer, &ResponseFormat1)
 		if ResponseFormat1.Status != SUCCESS {
-			return "ResponseFormat1.Status != SUCCESS", false
+			return "", "", errors.New("ResponseFormat1.Status != SUCCESS")
 		}
 		productId = ResponseFormat1.Receipt.ProductId
 		appleTransactionId = ResponseFormat1.Receipt.TransactionId
@@ -158,14 +154,14 @@ func verifyApplePay(cliCtx context.CLIContext, storeName, outTradeNo, buyer stri
 	//to make sure product of payed is same with order table
 	appCodeAndOrderId := strings.Split(outTradeNo,"-")
 	if len(appCodeAndOrderId) != 2 {
-		return "appCodeAndOrderId len err", false
+		return "", "", errors.New("appCodeAndOrderId len err")
 	}
 	orderInfo , err := getOrderInfo(cliCtx, storeName, appCodeAndOrderId[0], appCodeAndOrderId[1])
 	if err != nil {
-		return err.Error(), false
+		return "", "", err
 	}
 	if orderInfo["sellable_id"] != productId || orderInfo["created_by"] != buyer {
-		return "orderInfo[\"sellable_id\"] != productId || orderInfo[\"created_by\"] != buyer", false
+		return "", "", errors.New("orderInfo[\"sellable_id\"] != productId || orderInfo[\"created_by\"] != buyer")
 	}
 	//to make sure there is no this orderid in order_receipt
 	fieldValue := map[string]string{
@@ -174,12 +170,12 @@ func verifyApplePay(cliCtx context.CLIContext, storeName, outTradeNo, buyer stri
 	}
 	orderReceipt, err := getOrderReceiptInfo(cliCtx, storeName, fieldValue)
 	if len(orderReceipt) != 0 {
-		return "len(orderReceipt) != 0", false
+		return "", "", errors.New("len(orderReceipt) != 0")
 	}
-	return appleTransactionId, true
+	return appleTransactionId, applePayType, nil
 }
 
-func callDbcApplePay(cliCtx context.CLIContext, storeName, outTradeNo,  appleTransactionId string) ([]byte, error){
+func callDbcApplePay(cliCtx context.CLIContext, storeName, outTradeNo,  appleTransactionId, applePayType string) ([]byte, error){
 	appCodeAndOrderId := strings.Split(outTradeNo,"-")
 	appcode := appCodeAndOrderId[0]
 	orderId := appCodeAndOrderId[1]
@@ -197,7 +193,7 @@ func callDbcApplePay(cliCtx context.CLIContext, storeName, outTradeNo,  appleTra
 	owner := orderInfo["created_by"]
 	expiration_date := calcExpirationDate(cliCtx, storeName, appcode, owner ,orderInfo["sellable_id"])
 
-	res := newOrderReceiptDataCore(appcode, orderId, owner, amount, expiration_date, ApplePay, appleTransactionId)
+	res := newOrderReceiptDataCore(appcode, orderId, owner, amount, expiration_date, applePayType, appleTransactionId)
 	oracleAccAddr := oracle.GetOracleAccAddr()
 	SaveToOrderInfoTable(cliCtx, oracleAccAddr, res, OrderReceipt)
 	bz , _ := json.Marshal(res)
@@ -222,4 +218,37 @@ func getLastestPurchase(InAppDatas []InAppFormat) InAppFormat {
 		return InAppFormat{}
 	}
 	return InAppDatas[index]
+}
+
+func checkReceiptData(postUrl, receiptData string) ([]byte, error) {
+	cli := http.Client{}
+	ReceiptData := map[string]string{"receipt-data": receiptData}
+	bz, _ := json.Marshal(ReceiptData)
+	contentType := "application/json; charset=utf-8"
+	reader := bytes.NewReader(bz)
+	resp, err := cli.Post(postUrl, contentType, reader)
+	if err != nil {
+		return nil, errors.New("failed to access Apple server")
+	}
+
+	buffer := make([]byte, 0)
+	buf := make([]byte, 4096)
+	for {
+		//n maybe less than 4096 when err is nil, so we should check it everytime
+		n, err := resp.Body.Read(buf)
+		if err != nil {
+			if n < 4096 {
+				buffer = append(buffer, buf[:n]...)
+			} else {
+				buffer = append(buffer, buf...)
+			}
+			break
+		}
+		if n < 4096 {
+			buffer = append(buffer, buf[:n]...)
+		} else {
+			buffer = append(buffer, buf...)
+		}
+	}
+	return buffer, nil
 }
