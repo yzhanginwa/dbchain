@@ -90,6 +90,10 @@ func checkAppleReceiptRunner(cliCtx context.CLIContext) {
 				needRecheckReceipts :=  receiptPoolCache.ReadN(100)
 				if needRecheckReceipts == nil {
 					time.Sleep(time.Minute)
+				} else {
+					for _, receipt := range needRecheckReceipts {
+						recheckAppleReceiptBuf <- receipt
+					}
 				}
 			}
 		}
