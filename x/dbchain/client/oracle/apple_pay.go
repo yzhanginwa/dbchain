@@ -110,8 +110,9 @@ func verifyApplePay(cliCtx context.CLIContext, storeName, outTradeNo, buyer stri
 	postUrl := productUrl
 	applePayType := applePayProduct
 	var buffer []byte
+	var err error
 	for i := 0; i < 2; i++ {
-		buffer , err := checkReceiptData(postUrl, receiptData)
+		buffer , err = checkReceiptData(postUrl, receiptData)
 		if err != nil {
 			return "", "", err
 		}
