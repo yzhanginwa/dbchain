@@ -82,7 +82,7 @@ type Preprocessor struct {
 	Success bool
 }
 
-func NewPreprocessor(r io.Reader) *Preprocessor {
+func NewPreprocessorOld(r io.Reader) *Preprocessor {
 	return &Preprocessor{
 		s:    NewScanner(r),
 		ts:   newTokenStack(),

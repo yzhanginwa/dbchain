@@ -6,8 +6,8 @@ import (
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/mr-tron/base58"
     lua "github.com/yuin/gopher-lua"
+    "github.com/yuin/gopher-lua/parse"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/tailor_lua"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "strings"
 )
@@ -202,9 +202,19 @@ func checkLuaSyntax(script string) error {
     	return  errors.New("Script syntax error")
     }
     newScript := p.Reconstruct()
-    err := tailor_lua.CompileAndCheckLuaScript(newScript)
-    if err != nil{
-    	return err
+    err := compileAndCheckLuaScript(newScript)
+    return err
+}
+
+func compileAndCheckLuaScript(script string) error {
+    name := "<string>"
+    chunk, err := parse.Parse(strings.NewReader(script), name)
+    if err != nil {
+        return err
+    }
+    _, err = lua.Compile(chunk, name)
+    if err != nil {
+        return err
     }
     return nil
 }

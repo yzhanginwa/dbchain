@@ -423,7 +423,7 @@ func (k Keeper) runLuaFilter(ctx sdk.Context, appId uint, tableName string, fiel
         }
     }
     //change script to lua script
-    p := ss.NewPreprocessor(strings.NewReader(script))
+    p := ss.NewPreprocessorOld(strings.NewReader(script))
     p.Process()
     newScript := p.Reconstruct()
     if err := L.DoString(newScript); err != nil{

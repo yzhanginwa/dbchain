@@ -60,7 +60,7 @@ func TestPreprocessor(t *testing.T) {
         else return (true)  end `,
 	}
 	for i,v := range src{
-		p := NewPreprocessor(strings.NewReader(v))
+		p := NewPreprocessorOld(strings.NewReader(v))
 		p.Process()
 		s := p.Reconstruct()
 		if s != dst[i] {

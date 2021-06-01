@@ -756,7 +756,7 @@ func isColumnOptionIncluded(options []string, option string) bool {
 }
 
 func validateScriptSyntax(k Keeper, ctx sdk.Context, appId uint, tableName string, filter string) bool {
-    p := super_script.NewPreprocessor(strings.NewReader(filter))
+    p := super_script.NewPreprocessorOld(strings.NewReader(filter))
     p.Process()
     newFilter := p.Reconstruct()
     _,err := parse.Parse(strings.NewReader(newFilter),"<string>")

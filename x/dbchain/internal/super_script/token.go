@@ -45,6 +45,9 @@ const (
     //forbidden key words
     WHILE    //while
     REPEAT   //repeat
+    SCRIPT_LOOP_COUNT //__script_loop_count__
+    DO       //do
+    OTHER    //other
 )
 
 var tokenDisplay = []string{
@@ -55,4 +58,5 @@ var tokenDisplay = []string{
     "=" , "==", "!=", "in",
     "where",
     "if", "elseif", "else", "insert", "return", "true", "false", "exist", "number", "function",
+    "while", "repeat", "__script_loop_count__", "do", "other",
 }
