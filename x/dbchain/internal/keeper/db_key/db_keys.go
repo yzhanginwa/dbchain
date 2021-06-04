@@ -102,6 +102,10 @@ func GetTableOptionsKey(appId uint, tableName string) string {
     return fmt.Sprintf("%s:%d:%s:opt:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName)
 }
 
+func GetTableAssociationsKey(appId uint, tableName string) string {
+    return fmt.Sprintf("%s:%d:%s:association:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName)
+}
+
 func GetColumnOptionsKey(appId uint, tableName string, fieldName string) string {
     return fmt.Sprintf("%s:%d:%s:fldopt:%s:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName, fieldName)
 }

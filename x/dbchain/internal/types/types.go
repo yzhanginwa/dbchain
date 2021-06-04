@@ -101,6 +101,29 @@ func (t Table) String() string {
     return strings.TrimSpace(fmt.Sprintf(`Name: %s`, t.Name))
 }
 
+///////////////////////
+//                   //
+// table association //
+//                   //
+///////////////////////
+
+type Association struct {
+    AssociationMode string   `json:"association_mode"`
+    AssociationTable string  `json:"association_table"`
+    Method      string       `json:"method"`
+    ForeignKey  string       `json:"foreign_key"`
+}
+
+func (a Association)Equal(b Association) bool {
+    if a.AssociationTable == b.AssociationTable &&
+        a.AssociationMode == b.AssociationMode &&
+        a.Method == b.Method &&
+        a.ForeignKey == b.ForeignKey {
+        return true
+    }
+    return false
+}
+
 //////////////////////////
 //                      //
 // tx status            //

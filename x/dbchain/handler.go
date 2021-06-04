@@ -52,6 +52,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             result, err = handleMsgDropCustomQuerier(ctx, keeper, msg)
         case MsgCreateTable:
             result, err = handleMsgCreateTable(ctx, keeper, msg)
+        case MsgModifyTableAssociation:
+            result, err = handleMsgModifyTableAssociation(ctx, keeper, msg)
         case MsgDropTable:
             result, err = handleMsgDropTable(ctx, keeper, msg)
         case MsgAddColumn:
@@ -331,6 +333,27 @@ func handleMsgCreateTable(ctx sdk.Context, keeper Keeper, msg MsgCreateTable) (*
     err = keeper.CreateIndex(ctx, appId, msg.Owner, msg.TableName, "created_by")
     if err != nil {
         return nil, err
+    }
+    return &sdk.Result{}, nil
+}
+
+// Handle a message to create table
+func handleMsgModifyTableAssociation(ctx sdk.Context, keeper Keeper, msg MsgModifyTableAssociation) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
+    if err != nil {
+        return nil, err
+    }
+
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
+    }
+
+    if !keeper.HasTable(ctx, appId, msg.TableName) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table does not existed")
+    }
+    err = keeper.ModifyTableAssociation(ctx, appId, msg.TableName, msg.Option, msg.AssociationMode, msg.AssociationTable, msg.ForeignKey, msg.Method)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
     return &sdk.Result{}, nil
 }

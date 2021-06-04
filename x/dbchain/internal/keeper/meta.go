@@ -1,15 +1,15 @@
 package keeper
 
 import (
-    "fmt"
     "errors"
+    "fmt"
+    sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yuin/gopher-lua/parse"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
-    "strings"
-    sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    "strings"
 )
 
 /////////////////////////////
@@ -143,6 +143,70 @@ func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
         }
     }
     cache.VoidTable(appId,tableName)
+}
+
+// Modify Table Association
+func (k Keeper) ModifyTableAssociation(ctx sdk.Context, appId uint, tableName, option, associationMode, associationTable, foreignKey, method string) error {
+    store := DbChainStore(ctx, k.storeKey)
+    associations := make([]types.Association,0)
+    key := getTableAssociationsKey(appId, tableName)
+
+    bz , err := store.Get([]byte(key))
+    if err != nil {
+        return err
+    }
+    if bz != nil {
+        k.cdc.MustUnmarshalBinaryBare(bz, &associations)
+    }
+
+    newAssociation := types.Association{
+        AssociationMode: associationMode,
+        AssociationTable: associationTable,
+        ForeignKey: foreignKey,
+        Method: method,
+    }
+
+    if option == "add" {
+        for _, association := range associations {
+            if association.Equal(newAssociation) {
+                return errors.New("this association has been add")
+            }
+        }
+        associations = append(associations, newAssociation)
+
+    } else {
+        hasAssociation := false
+        for index, association := range associations {
+            if association.Equal(newAssociation) {
+                associations = append(associations[:index], associations[index+1:]...)
+                hasAssociation = true
+                break
+            }
+        }
+        if !hasAssociation {
+            return errors.New("this association does not exit")
+        }
+    }
+
+    if len(associations) == 0 {
+        store.Delete([]byte(key))
+        return nil
+    }
+
+    bz = k.cdc.MustMarshalBinaryBare(associations)
+    return store.Set([]byte(key), bz)
+}
+
+func (k Keeper)GetTableAssociations(ctx sdk.Context, appId uint, tableName string) []types.Association{
+    store := DbChainStore(ctx, k.storeKey)
+    associations := make([]types.Association,0)
+    key := getTableAssociationsKey(appId, tableName)
+    bz , err := store.Get([]byte(key))
+    if err != nil {
+        return nil
+    }
+    k.cdc.MustUnmarshalBinaryBare(bz, &associations)
+    return associations
 }
 
 func (k Keeper)GetTable(ctx sdk.Context, appId uint, tableName string) (types.Table, error){

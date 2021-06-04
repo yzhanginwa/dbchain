@@ -37,6 +37,7 @@ type (
     MsgAddCustomQuerier = types.MsgAddCustomQuerier
     MsgDropCustomQuerier = types.MsgDropCustomQuerier
     MsgCreateTable  = types.MsgCreateTable
+    MsgModifyTableAssociation = types.MsgModifyTableAssociation
     MsgDropTable    = types.MsgDropTable
     MsgAddColumn    = types.MsgAddColumn
     MsgDropColumn   = types.MsgDropColumn

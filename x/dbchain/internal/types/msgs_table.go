@@ -470,3 +470,76 @@ func (msg MsgSetTableMemo) GetSignBytes() []byte {
 func (msg MsgSetTableMemo) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
+
+///////////////////////////////
+//                           //
+// MsgModifyTableAssociation //
+//                           //
+///////////////////////////////
+
+type MsgModifyTableAssociation struct {
+    AppCode string           `json:"app_code"`
+    TableName string         `json:"table_name"`
+    AssociationMode string   `json:"association_mode"`
+    AssociationTable string  `json:"association_table"`
+    Method      string       `json:"method"`
+    ForeignKey  string       `json:"foreign_key"`
+    Option string            `json:"option"`
+
+    Owner sdk.AccAddress     `json:"owner"`
+}
+
+func NewMsgModifyTableAssociation(appCode, tableName , associationMode, associationTable , method, foreignKey , option string, owner sdk.AccAddress, ) MsgModifyTableAssociation {
+    return MsgModifyTableAssociation {
+        AppCode: appCode,
+        TableName: tableName,
+        AssociationMode: associationMode,
+        AssociationTable: associationTable,
+        Method: method,
+        ForeignKey: foreignKey,
+        Option: option,
+        Owner: owner,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgModifyTableAssociation) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgModifyTableAssociation) Type() string { return "set_table_association" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgModifyTableAssociation) ValidateBasic() error {
+    if len(msg.AppCode) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
+    }
+    if len(msg.TableName) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "Table name cannot be empty")
+    }
+    if msg.Option != "add" && msg.Option != "drop" {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "Option only can be set add or drop")
+    }
+
+    if msg.AssociationMode != "has_one" && msg.AssociationMode != "has_many" && msg.AssociationMode != "belongs_to" {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "")
+    }
+
+    if msg.AssociationTable == "" {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "AssociationTable name cannot be empty")
+    }
+
+    if msg.Owner.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgModifyTableAssociation) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgModifyTableAssociation) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}

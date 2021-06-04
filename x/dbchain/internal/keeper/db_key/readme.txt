@@ -22,6 +22,8 @@ This readme file is for a better visualization of the db keys
    ├────────────────────┼────────────────────────────────────────────────────────┼─────────────────────┤
    │ Table options      │ db:<appId>:mt:opt:<tableName>                          │                     │
    ├────────────────────┼────────────────────────────────────────────────────────┼─────────────────────┤
+   │ Table association  │ db:<appId>:mt:association:<tableName>                  │                     │
+   ├────────────────────┼────────────────────────────────────────────────────────┼─────────────────────┤
    │ Column options     │ db:<appId>:mt:fldopt:<tableName>:<fieldName>           │                     │
    ├────────────────────┼────────────────────────────────────────────────────────┼─────────────────────┤
    │ Column type        │ db:<appId>:mt:fldtyp:<tableName>:<fieldName>           │                     │

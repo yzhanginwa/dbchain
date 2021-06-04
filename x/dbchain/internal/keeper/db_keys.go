@@ -44,6 +44,8 @@ var (
     getMetaTableIndexKey = dbk.GetMetaTableIndexKey
     
     getTableOptionsKey = dbk.GetTableOptionsKey
+
+    getTableAssociationsKey = dbk.GetTableAssociationsKey
     
     getColumnOptionsKey = dbk.GetColumnOptionsKey
     getColumnDataTypesKey = dbk.GetColumnDataTypesKey
