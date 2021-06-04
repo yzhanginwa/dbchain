@@ -42,6 +42,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdAddCustomQuerier(cdc),
         GetCmdDropCustomQuerier(cdc),
         GetCmdCreateTable(cdc),
+        GetCmdModifyTableAssociation(cdc),
         GetCmdDropTable(cdc),
         GetCmdAddColumn(cdc),
         GetCmdDropColumn(cdc),
@@ -287,6 +288,36 @@ func GetCmdCreateTable(cdc *codec.Codec) *cobra.Command {
             name := args[1]
             fields := strings.Split(args[2], ",")
             msg := types.NewMsgCreateTable(cliCtx.GetFromAddress(), appCode, name, fields)
+            err := msg.ValidateBasic()
+            if err != nil {
+                return err
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+func GetCmdModifyTableAssociation(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "modify-table-association [appCode] [tableName] [associationMode] [associationTable] [method] [foreignKey] [option]",
+        Short: "add or drop table association a new table",
+        Args:  cobra.ExactArgs(7),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode := args[0]
+            option := args[1]
+            tableName := args[2]
+            associationMode := args[3]
+            associationTable := args[4]
+            method := args[5]
+            foreignKey := args[6]
+
+
+            msg := types.NewMsgModifyTableAssociation(appCode,tableName,associationMode,associationTable,method,foreignKey,option,cliCtx.GetFromAddress())
             err := msg.ValidateBasic()
             if err != nil {
                 return err

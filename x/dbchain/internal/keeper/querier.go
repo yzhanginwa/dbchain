@@ -29,6 +29,7 @@ const (
     QueryTables   = "tables"
     QueryIndex    = "index"
     QueryOption   = "option"
+    QueryAssociation = "association"
     QueryColumnOption   = "column_option"
     QueryColumnDataType = "column_data_type"
     QueryCanAddColumnOption = "can_add_column_option"
@@ -94,6 +95,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryIndex(ctx, path[1:], req, keeper)
         case QueryOption:
             return queryOption(ctx, path[1:], req, keeper)
+        case QueryAssociation:
+            return queryAssociation(ctx, path[1:], req, keeper)
         case QueryColumnOption:
             return queryColumnOption(ctx, path[1:], req, keeper)
         case QueryColumnDataType:
@@ -476,6 +479,33 @@ func queryOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, options)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryAssociation(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    _, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    tableName := path[2]
+    associations := keeper.GetTableAssociations(ctx, appId, tableName)
+
+    if associations == nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Table %s does not have association",  tableName))
+    }
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, associations)
     if err != nil {
         panic("could not marshal result to JSON")
     }
