@@ -47,7 +47,7 @@ func VerifyAccessCode(accessCode string) (sdk.AccAddress, error) {
     }
     now := time.Now().UnixNano() / 1000000
     diff := now - int64(timeStampInt)
-    if diff < 0 { diff -= 0 }
+    if diff < 0 { diff = 0 - diff}
 
     if diff < MaxAllowedTimeDiff {
         return address, nil
