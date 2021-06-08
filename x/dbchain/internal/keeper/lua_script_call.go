@@ -125,8 +125,12 @@ func callLuaScriptQuerierFunc(ctx sdk.Context, appId uint, owner sdk.AccAddress,
 	l := getAppLuaHandle(appId, handleType)
 	//point : get go function
 	goExportFunc := getGoExportQueryFunc(ctx, appId, keeper, owner)
+	goExportFuncNew := getGoExportQueryFuncNew(ctx, appId, keeper, owner)
 	//register go function
 	for name, fn := range goExportFunc{
+		l.SetGlobal(name, l.NewFunction(fn))
+	}
+	for name, fn := range goExportFuncNew{
 		l.SetGlobal(name, l.NewFunction(fn))
 	}
 	//call lua script
@@ -153,7 +157,8 @@ func callLuaScriptQuerierFunc(ctx sdk.Context, appId uint, owner sdk.AccAddress,
 		return bz, nil
 	}
 
-	return nil, errors.New("lua return err")
+	errString := lRes.(lua.LString)
+	return nil, errors.New(errString.String())
 }
 
 

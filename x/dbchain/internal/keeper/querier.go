@@ -1087,7 +1087,7 @@ func queryCallCustomQuerier(ctx sdk.Context, path []string, req abci.RequestQuer
     res , err := keeper.DoCustomQuerier(ctx, appId, querierInfo, path[3], addr)
     //res, err := codec.MarshalJSONIndent(keeper.cdc, functionInfo)
     if err != nil {
-        panic("could not marshal result to JSON")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest,fmt.Sprintf("%v", err))
     }
 
     return res, nil

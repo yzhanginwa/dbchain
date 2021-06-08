@@ -513,50 +513,6 @@ func getGoExportFilterFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk
 }
 func getGoExportQueryFunc(ctx sdk.Context, appId uint, keeper Keeper, addr sdk.AccAddress) map[string]lua.LGFunction {
 	return map[string]lua.LGFunction {
-		"findRow" : func(L *lua.LState) int {
-			tableName := L.ToString(1)
-			id := L.ToInt(2)
-			fields, err := keeper.Find(ctx, appId, tableName, uint(id), addr)
-			if err != nil {
-				setLuaFuncRes(L, createLuaTable(false), lua.LString(""))
-				return 2
-			}
-			ud := setUserData(ctx, appId, keeper, addr, tableName, []map[string]string{fields}, L)
-			L.Push(ud)
-			return 1
-		},
-		"findRows" : func(L *lua.LState) int {
-			tableName := L.ToString(1)
-			ids := L.ToTable(2)
-			res := make([]types.RowFields, 0)
-			ids.ForEach(func(lId lua.LValue, val lua.LValue) {
-				id := val.(lua.LNumber)
-				fields, err := keeper.Find(ctx, appId, tableName, uint(id), addr)
-				if err != nil {
-					return
-				}
-				res = append(res, fields)
-			})
-			sliceFieldTab := createLuaTable(res)
-			setLuaFuncRes(L, sliceFieldTab, lua.LString(""))
-			return 2
-		},
-		"findIdsBy" : func(L *lua.LState) int {
-			tableName := L.ToString(1)
-			fieldName := L.ToString(2)
-			value := L.ToString(3)
-			ids := keeper.FindBy(ctx, appId, tableName, fieldName, []string{value}, addr)
-			idsTable := createLuaTable(ids)
-			setLuaFuncRes(L, idsTable,lua.LString(""))
-			return 2
-		},
-		"findAllIds" : func(L *lua.LState) int {
-			tableName := L.ToString(1)
-			ids := keeper.FindAll(ctx, appId, tableName, addr)
-			idsTable := createLuaTable(ids)
-			setLuaFuncRes(L, idsTable,lua.LString(""))
-			return 2
-		},
 		"specFindRowsBy" : func(L *lua.LState) int {
 			res := make([]types.RowFields, 0)
 			querierObjJson := L.ToString(1)
