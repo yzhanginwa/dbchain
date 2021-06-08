@@ -5,8 +5,10 @@ import (
     "fmt"
     "github.com/cosmos/cosmos-sdk/client/context"
     shell "github.com/ipfs/go-ipfs-api"
+    "github.com/mr-tron/base58"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "net/http"
+    "strings"
     "sync"
 
     "github.com/cosmos/cosmos-sdk/types/rest"
@@ -198,7 +200,11 @@ func showCustomQuerierInfoHandler(cliCtx context.CLIContext, storeName string) h
 func showCallCustomQuerierHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
-        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/callCustomQuerier/%s/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["querierName"], vars["params"]), nil)
+        r.ParseForm()
+        originParams := r.Form["params"]
+        params := strings.Join(originParams, "/")
+        params = base58.Encode([]byte(params))
+        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/callCustomQuerier/%s/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["querierName"], params), nil)
         if err != nil {
             rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
             return

@@ -26,7 +26,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/functionInfo/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "functionName"), showFunctionInfoHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/custom-queriers/{%s}/{%s}", storeName, "accessToken", "appCode"), showCustomQueriersHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/custom-querierInfo/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "querierName"), showCustomQuerierInfoHandler(cliCtx, storeName)).Methods("GET")
-    r.HandleFunc(fmt.Sprintf("/%s/call-custom-querier/{%s}/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "querierName", "params"), showCallCustomQuerierHandler(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/call-custom-querier/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "querierName"), showCallCustomQuerierHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/tx-simple-result/{%s}/{%s}", storeName, "accessToken", "txHash"), showTxSimpleResultHandler(cliCtx, storeName)).Methods("GET")
 
     r.HandleFunc(fmt.Sprintf("/%s/column-options/{%s}/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "tableName", "fieldName"), showColumnOptionsHandler(cliCtx, storeName)).Methods("GET")
