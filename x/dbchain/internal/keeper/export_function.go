@@ -521,9 +521,9 @@ func getGoExportQueryFunc(ctx sdk.Context, appId uint, keeper Keeper, addr sdk.A
 				setLuaFuncRes(L, createLuaTable(false), lua.LString(""))
 				return 2
 			}
-			fieldsTab := createLuaTable(fields)
-			setLuaFuncRes(L, fieldsTab, lua.LString(""))
-			return 2
+			ud := setUserData(ctx, appId, keeper, addr, tableName, []map[string]string{fields}, L)
+			L.Push(ud)
+			return 1
 		},
 		"findRows" : func(L *lua.LState) int {
 			tableName := L.ToString(1)
@@ -659,6 +659,15 @@ func createLuaTable(src interface{}) *lua.LTable{
 			}
 			tb.RawSetInt(index+1,subTb)
 		}
+	case []map[string]string:
+		ns := src.([]map[string]string)
+		for index, m := range ns {
+			subTb := L.NewTable()
+			for key, val := range m {
+				subTb.RawSetString(key,lua.LString(val))
+			}
+			tb.RawSetInt(index+1,subTb)
+		}
 	default:
 		return tb
 	}
@@ -727,4 +736,56 @@ func splitParams(src []string) [][]string {
 		}
 	}
 	return res
+}
+
+func setUserData(ctx sdk.Context, appId uint, keeper Keeper, addr sdk.AccAddress, tableName string, values []map[string]string, L *lua.LState) *lua.LUserData{
+	associations := keeper.GetTableAssociations(ctx, appId, tableName)
+
+	tableObj := registerAssociation(ctx, appId, keeper, addr, L,tableName, associations, values)
+	ud := L.NewUserData()
+	ud.Value = tableObj
+	L.SetMetatable(ud, L.GetTypeMetatable(LuaTableTypeName))
+	return ud
+}
+
+func registerAssociation(ctx sdk.Context, appId uint, keeper Keeper, addr sdk.AccAddress, L *lua.LState, tableName string , associations []types.Association, value []map[string]string)  *TableObj {
+
+	table := &TableObj{
+		TableName: tableName,
+		Value: value,
+	}
+	tableObjMethods := GetTableObjMethods()
+
+	if associations == nil {
+		return table
+	}
+
+	for _, association := range associations {
+
+		TableName := association.AssociationTable
+		ForeignKey := association.ForeignKey
+		MethodName := association.Method
+		switch association.AssociationMode {
+		case "has_one":
+			tableObjMethods[MethodName] = func(state *lua.LState) int {
+				hasOne(ctx, appId, keeper, addr, state, TableName, ForeignKey)
+				return 1
+			}
+		case "has_many":
+			tableObjMethods[MethodName] = func(state *lua.LState) int {
+				hasMany(ctx, appId, keeper, addr, state, TableName, ForeignKey)
+				return 1
+			}
+		case "belongs_to":
+			tableObjMethods[MethodName] = func(state *lua.LState) int {
+				belongsTo(ctx, appId, keeper, addr, state, TableName, ForeignKey)
+				return 1
+			}
+		}
+	}
+
+	mt := L.GetTypeMetatable(LuaTableTypeName)
+	L.SetField(mt, "__index", L.SetFuncs(L.NewTable(), tableObjMethods))
+
+	return table
 }

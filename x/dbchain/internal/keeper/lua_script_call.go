@@ -28,6 +28,9 @@ func getAppLuaHandle(appId uint, handleType int)  *lua.LState {
 		})
 		openBase(luaHandle)
 		luaHandles[appId] = luaHandle
+		if handleType == QueryHandleType {
+			registerTableType(luaHandle)
+		}
 		return luaHandle
 	}
 	return l
