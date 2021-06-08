@@ -375,6 +375,13 @@ func (k Keeper) validateInsertionWithFieldDataType(ctx sdk.Context, appId uint, 
                     return false
                 }
             }
+        } else if fieldDataType ==  string(types.FLDTYP_TIME) {
+            if value, ok := fields[fieldName]; ok {
+                num , err := strconv.ParseInt(value, 10, 64)
+                if err != nil || num < 0 {
+                    return false
+                }
+            }
         }
     }
     return true

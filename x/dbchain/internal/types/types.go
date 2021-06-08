@@ -194,4 +194,5 @@ const (
     FLDTYP_INT        FieldDataType = "int"
     FLDTYP_DECIMAL    FieldDataType = "decimal"
     FLDTYP_ADDRESS    FieldDataType = "address"
+    FLDTYP_TIME       FieldDataType = "time"
 )
