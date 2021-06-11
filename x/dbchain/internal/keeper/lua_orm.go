@@ -265,6 +265,11 @@ func where(L *lua.LState) int {
 	existObj := CheckExist(L)
 	key := L.ToString(2)
 	val := L.ToString(3)
+	operator := L.ToString(4)
+	if operator == "" {
+		operator = "=="
+	}
+
 	existObj.Fields[key] = val
 
 	tableName := existObj.TableName
@@ -276,7 +281,7 @@ func where(L *lua.LState) int {
 	for key, val := range existObj.Fields {
 		qo := map[string]string{
 			"method": "where",
-			"operator": "==",
+			"operator": operator,
 			"field": key,
 			"value": val,
 		}
