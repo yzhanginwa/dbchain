@@ -12,16 +12,46 @@ type TableObj struct {
 	Value        []map[string]string `json:"value"`
 }
 
+type ExistObj struct {
+	TableName  string
+	Fields      map[string]string
+	ctx        sdk.Context
+	appId      uint
+	keeper     Keeper
+	addr       sdk.AccAddress
+}
+
 
 const LuaTableTypeName = "tableObj"
+const LuaTableTypeExist = "existObj"
 
-func registerTableType(L *lua.LState) {
+func registerTableType(L *lua.LState, ctx sdk.Context, appId uint, keeper Keeper, addr sdk.AccAddress) {
 	mt := L.NewTypeMetatable(LuaTableTypeName)
 	L.SetGlobal("tableObj", mt)
 	//static attributes
 	L.SetField(mt, "newObjFromJsonString", L.NewFunction(newTableObjFromJsonString))
 	//methods
 	L.SetField(mt, "__index", L.SetFuncs(L.NewTable(), GetTableObjMethods()))
+	//exist obj
+	exist := L.NewTypeMetatable(LuaTableTypeExist)
+	L.SetGlobal("exist", exist)
+	L.SetField(exist, "table", L.NewFunction(func(state *lua.LState) int {
+		tableName := L.CheckString(1)
+		table := &ExistObj{
+			TableName: tableName,
+			Fields: make(map[string]string, 0),
+			ctx : ctx,
+			appId: appId,
+			keeper: keeper,
+			addr: addr,
+		}
+		ud := L.NewUserData()
+		ud.Value = table
+		L.SetMetatable(ud, L.GetTypeMetatable(LuaTableTypeExist))
+		L.Push(ud)
+		return 1
+	}))
+	L.SetField(exist, "__index", L.SetFuncs(L.NewTable(), map[string]lua.LGFunction {"where": where}))
 
 }
 
@@ -42,6 +72,15 @@ func newTableObjFromJsonString(L *lua.LState) int {
 func CheckTable(L *lua.LState) *TableObj {
 	ud := L.CheckUserData(1)
 	if v, ok := ud.Value.(*TableObj); ok {
+		return v
+	}
+	L.ArgError(1, "TableObj expected")
+	return nil
+}
+
+func CheckExist(L *lua.LState) *ExistObj {
+	ud := L.CheckUserData(1)
+	if v, ok := ud.Value.(*ExistObj); ok {
 		return v
 	}
 	L.ArgError(1, "TableObj expected")
@@ -209,6 +248,41 @@ func hasOne(ctx sdk.Context, appId uint, keeper Keeper, addr sdk.AccAddress, L *
 
 	registerUserData(ctx, appId, keeper, addr, tableObj, L, tableName, []map[string]string{fields})
 	return
+}
+
+func where(L *lua.LState) int {
+	existObj := CheckExist(L)
+	key := L.ToString(2)
+	val := L.ToString(3)
+	existObj.Fields[key] = val
+
+	tableName := existObj.TableName
+	qo := map[string]string{
+		"method": "table",
+		"table": tableName,
+	}
+	querierObjs := []map[string]string{qo}
+	for key, val := range existObj.Fields {
+		qo := map[string]string{
+			"method": "where",
+			"operator": "==",
+			"field": key,
+			"value": val,
+		}
+		querierObjs = append(querierObjs, qo)
+	}
+
+	tableValueCallback := getGetTableValueCallback(existObj.keeper, existObj.ctx, existObj.appId, existObj.addr)
+	result := tableValueCallback(querierObjs)
+	if len(result) > 0 {
+		ud := L.NewUserData()
+		ud.Value = existObj
+		L.SetMetatable(ud, L.GetTypeMetatable(LuaTableTypeExist))
+		L.Push(ud)
+	} else {
+		L.Push(lua.LNil)
+	}
+	return 1
 }
 
 /////////////////////////////////

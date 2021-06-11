@@ -22,6 +22,8 @@ func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields typ
         RegistrySize: 32,
     })
     L.SetGlobal("IsRegisterData",lua.LBool(false))
+    openBase(L)
+    registerTableType(L, ctx, appId, k, owner)
 
     defer L.Close()
     id, err := k.PreInsertCheck(ctx, appId, tableName, fields, owner, L)
@@ -429,10 +431,7 @@ func (k Keeper) runLuaFilter(ctx sdk.Context, appId uint, tableName string, fiel
             L.SetGlobal(name, L.NewFunction(fn))
         }
     }
-    //change script to lua script
-    p := ss.NewPreprocessorOld(strings.NewReader(script))
-    p.Process()
-    newScript := p.Reconstruct()
+    newScript := restructureLuaScript(script)
     if err := L.DoString(newScript); err != nil{
         return false
     }

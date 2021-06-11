@@ -4,9 +4,7 @@ import (
     "errors"
     "fmt"
     sdk "github.com/cosmos/cosmos-sdk/types"
-    "github.com/yuin/gopher-lua/parse"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "strings"
@@ -388,7 +386,7 @@ func (k Keeper) ModifyOption(ctx sdk.Context, appId uint, owner sdk.AccAddress, 
 }
 
 func (k Keeper) AddInsertFilter(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, filter string) bool {
-    if !validateScriptSyntax(k, ctx, appId, tableName, filter) {
+    if err := checkLuaSyntax(filter); err != nil {
         return false
     } 
 
@@ -440,7 +438,7 @@ func (k Keeper) GetInsertFilter(ctx sdk.Context, appId uint, tableName string) s
 }
 
 func (k Keeper) AddTrigger(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, trigger string) bool {
-    if !validateScriptSyntax(k, ctx, appId, tableName, trigger) {
+    if err := checkLuaSyntax(trigger); err != nil {
         return false
     }
 
@@ -828,16 +826,6 @@ func isColumnOptionIncluded(options []string, option string) bool {
     return false
 }
 
-func validateScriptSyntax(k Keeper, ctx sdk.Context, appId uint, tableName string, filter string) bool {
-    p := super_script.NewPreprocessorOld(strings.NewReader(filter))
-    p.Process()
-    newFilter := p.Reconstruct()
-    _,err := parse.Parse(strings.NewReader(newFilter),"<string>")
-    if err != nil {
-        return false
-    }
-    return true
-}
 
 func isColumnValuesUnique(k Keeper, ctx sdk.Context, appId uint, tableName string, fieldName string) bool {
     store := DbChainStore(ctx, k.storeKey)

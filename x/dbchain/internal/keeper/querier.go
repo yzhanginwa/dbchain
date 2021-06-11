@@ -654,6 +654,8 @@ func queryCanAddColumnDataType(ctx sdk.Context, path []string, req abci.RequestQ
          SkipOpenLibs : true,
      })
      defer L.Close()
+     openBase(L)
+     registerTableType(L, ctx, appId, keeper, addr)
      L.SetGlobal("IsRegisterData",lua.LBool(false))
     _, err = keeper.PreInsertCheck(ctx, appId, tableName, rowFields, addr, L)
     if err != nil {

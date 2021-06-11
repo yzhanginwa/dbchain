@@ -117,6 +117,21 @@ func getGoExportFuncNew(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.Ac
 			L.Push(lua.LString(""))
 			return 1
 		},
+		"itemExists" : func(L *lua.LState) int {
+			paramsNum := L.GetTop()
+			if paramsNum < 2 {
+				L.Push(lua.LFalse)
+				return 1
+			}
+			validTables := getValidTables(L)
+			target := L.ToString(2)
+			if validTables[target] {
+				L.Push(lua.LTrue)
+			} else {
+				L.Push(lua.LFalse)
+			}
+			return 1
+		},
 		//add other functions which need to be exported
 	}
 }

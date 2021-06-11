@@ -17,7 +17,7 @@ const (
 	QueryHandleType
 )
 
-func getAppLuaHandle(appId uint, handleType int)  *lua.LState {
+func getAppLuaHandle(ctx sdk.Context, appId uint, owner sdk.AccAddress, keeper Keeper, handleType int)  *lua.LState {
 	var luaHandles = getLuaHandles(handleType)
 
 	l , ok := luaHandles[appId]
@@ -29,7 +29,7 @@ func getAppLuaHandle(appId uint, handleType int)  *lua.LState {
 		openBase(luaHandle)
 		luaHandles[appId] = luaHandle
 		if handleType == QueryHandleType {
-			registerTableType(luaHandle)
+			registerTableType(luaHandle, ctx , appId, keeper, owner)
 		}
 		return luaHandle
 	}
@@ -83,7 +83,7 @@ func voidLuaHandle(appId uint, handleType int) {
 }
 
 func callLuaScriptFunc(ctx sdk.Context, appId uint, owner sdk.AccAddress, keeper Keeper, funcName string, params []lua.LValue, handleType int) error{
-	l := getAppLuaHandle(appId, handleType)
+	l := getAppLuaHandle(ctx, appId, owner, keeper, handleType)
 	//point : get go function
 	goExportFunc := getGoExportFunc(ctx, appId, keeper, owner)
 	//register go function
@@ -122,7 +122,7 @@ func callLuaScriptFunc(ctx sdk.Context, appId uint, owner sdk.AccAddress, keeper
 
 
 func callLuaScriptQuerierFunc(ctx sdk.Context, appId uint, owner sdk.AccAddress, keeper Keeper, querierName string, params []lua.LValue, handleType int) ([]byte, error){
-	l := getAppLuaHandle(appId, handleType)
+	l := getAppLuaHandle(ctx, appId, owner, keeper, handleType)
 	//point : get go function
 	goExportFunc := getGoExportQueryFunc(ctx, appId, keeper, owner)
 	goExportFuncNew := getGoExportQueryFuncNew(ctx, appId, keeper, owner)
@@ -173,8 +173,19 @@ func getLuaHandles(handleType int)  map[uint]*lua.LState {
 }
 
 func openBase(L *lua.LState) {
-	global := L.Get(lua.GlobalsIndex).(*lua.LTable)
-	global.RawSetString("pairs", L.NewClosure(basePairs, L.NewFunction(pairsaux)))
+	libs := map[string]lua.LGFunction{
+		lua.BaseLibName: lua.OpenBase,
+		lua.TabLibName: lua.OpenTable,
+		lua.StringLibName: lua.OpenString,
+		lua.MathLibName: lua.OpenMath,
+	}
+	for libName, lib := range libs {
+		L.Push(L.NewFunction(lib))
+		L.Push(lua.LString(libName))
+		L.Call(1, 0)
+	}
+	//global := L.Get(lua.GlobalsIndex).(*lua.LTable)
+	//global.RawSetString("pairs", L.NewClosure(basePairs, L.NewFunction(pairsaux)))
 }
 
 func basePairs(L *lua.LState) int {
