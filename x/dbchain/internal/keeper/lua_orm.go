@@ -90,6 +90,7 @@ func CheckExist(L *lua.LState) *ExistObj {
 func GetTableObjMethods() map[string]lua.LGFunction {
 	var tableObjMethods = map[string]lua.LGFunction {
 		"data":           data,
+		"getIds":         getIds,
 		"index":           index,
 		"first":          first,
 		"last":           last,
@@ -101,6 +102,16 @@ func data(L *lua.LState) int {
 	p := CheckTable(L)
 	sliceFieldTab := createLuaTable(p.Value)
 	L.Push(sliceFieldTab)
+	return 1
+}
+
+func getIds(L *lua.LState) int {
+	p := CheckTable(L)
+	ids := L.NewTable()
+	for i, row := range p.Value{
+		ids.RawSetInt(i+1,lua.LString(row["id"]))
+	}
+	L.Push(ids)
 	return 1
 }
 

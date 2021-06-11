@@ -520,7 +520,7 @@ func createLuaTable(src interface{}) *lua.LTable{
 
 func convertLuaTableToGo(table *lua.LTable) interface{}{
 	resMap := make(map[string]string)
-	resSlice := make([]uint, 0)
+	resSlice := make([]string, 0)
 	resSliceMap := make([]map[string]string, 0)
 	table.ForEach(func(key lua.LValue, val lua.LValue) {
 		nKey,ok  := key.(lua.LString)
@@ -528,9 +528,9 @@ func convertLuaTableToGo(table *lua.LTable) interface{}{
 			nVal := val.(lua.LString)
 			resMap[nKey.String()] = nVal.String()
 		} else  {
-			nVal, ok  := val.(lua.LNumber)
+			nVal, ok  := val.(lua.LString)
 			if ok { //map[int]int
-				resSlice = append(resSlice, uint(nVal))
+				resSlice = append(resSlice, nVal.String())
 			} else { //[]map[string]string
 				temp := make(map[string]string)
 				tVal := val.(*lua.LTable)

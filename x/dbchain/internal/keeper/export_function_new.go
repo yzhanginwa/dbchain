@@ -11,27 +11,22 @@ import (
 func getGoExportFuncNew(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAddress) map[string]lua.LGFunction {
 	return map[string]lua.LGFunction {
 		"InsertRow" : func(L *lua.LState) int {
+			//params : 1. tableName, 2. fields
 			ParamsNum := L.GetTop()
-			if ParamsNum < 1 {
-				L.Push(lua.LNumber(-1))
+			if ParamsNum < 2 {
+				L.Push(lua.LString("-1"))
 				L.Push(lua.LString("Params Err"))
 				return 2
 			}
-			param := L.ToString(1)
-			var insertRowData ScriptInsertRow
-			err := json.Unmarshal([]byte(param), &insertRowData)
-			if err != nil {
-				L.Push(lua.LNumber(-1))
-				L.Push(lua.LString("Params unmarshal failed"))
-				return 2
-			}
+			tableName := L.CheckString(1)
+			fields := luaTableToGoMap(L.CheckTable(2))
 
-			Id, err := keeper.Insert(ctx, appId, insertRowData.TableName, insertRowData.Fields, owner)
+			Id, err := keeper.Insert(ctx, appId, tableName, fields, owner)
 			if err != nil {
-				L.Push(lua.LNumber(-1))
+				L.Push(lua.LString("-1"))
 				L.Push(lua.LString(err.Error()))
 			} else {
-				L.Push(lua.LNumber(Id))
+				L.Push(lua.LString(Id))
 				L.Push(lua.LString(""))
 			}
 			return 2
@@ -70,49 +65,39 @@ func getGoExportFuncNew(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.Ac
 		},
 		"FreezeMultRow" : func(L *lua.LState) int {
 			ParamsNum := L.GetTop()
-			if ParamsNum < 1 {
+			if ParamsNum < 2 {
 				L.Push(lua.LString("num of param wrong"))
 				return 1
 			}
-			param := L.ToString(1)
-			var freezeMultRow ScriptFreezeMultRow
-			err := json.Unmarshal([]byte(param), &freezeMultRow)
-			if err != nil {
-				L.Push(lua.LString("Param unmarshal failed"))
-				return 1
-			}
+			tableName := L.CheckString(1)
+			Ids := luaArrayToGoArray(L.CheckTable(2))
 
-			for _,id := range freezeMultRow.Ids {
+			for _,id := range Ids {
 				id, err  := strconv.Atoi(id)
 				if err != nil {
 					continue
 				}
-				keeper.Freeze(ctx, appId, freezeMultRow.TableName, uint(id), owner)
+				keeper.Freeze(ctx, appId, tableName, uint(id), owner)
 			}
 			L.Push(lua.LString(""))
 			return 1
 		},
 		"FreezeMultRowByField" : func(L *lua.LState) int {
 			ParamsNum := L.GetTop()
-			if ParamsNum < 1 {
+			if ParamsNum < 2 {
 				L.Push(lua.LString("num of param wrong"))
-				return 1
+				return 2
 			}
-			param := L.ToString(1)
-			var freezeMultRow ScriptFreezeMultRowByField
-			err := json.Unmarshal([]byte(param), &freezeMultRow)
-			if err != nil {
-				L.Push(lua.LString("Param unmarshal failed"))
-				return 1
-			}
+			tableName := L.CheckString(1)
+			Fields := luaTableToGoMap(L.CheckTable(2))
 			fields, values := []string{},[]string{}
-			for k,v := range freezeMultRow.Fields {
+			for k,v := range Fields {
 				fields = append(fields, k)
 				values = append(values, v)
 			}
-			_, ids := findByFields(keeper, ctx, appId, owner, freezeMultRow.TableName, fields, values)
+			_, ids := findByFields(keeper, ctx, appId, owner, tableName, fields, values)
 			for _, id := range ids {
-				keeper.Freeze(ctx, appId, freezeMultRow.TableName, id, owner)
+				keeper.Freeze(ctx, appId, tableName, id, owner)
 			}
 			L.Push(lua.LString(""))
 			return 1
@@ -149,15 +134,7 @@ func getGoExportQueryFuncNew(ctx sdk.Context, appId uint, keeper Keeper, addr sd
 			}
 			//get valid Tables
 			tableName := L.ToString(1)
-
-			//get querier querierTableName
-			querierObjJson := L.ToString(2)
-			var querierObjs [](map[string]string)
-			if err := json.Unmarshal([]byte(querierObjJson), &querierObjs); err != nil {
-				ud := setUserData(ctx, appId, keeper, addr, tableName, validResult, L)
-				L.Push(ud)
-				return 1
-			}
+			var querierObjs  = luaArrayTableToGoArrayMap(L.CheckTable(2))
 
 			querierTableName := ""
 			for _, qo := range querierObjs {
@@ -206,7 +183,13 @@ func getGoExportQueryFuncNew(ctx sdk.Context, appId uint, keeper Keeper, addr sd
 			}
 
 			tableName := L.ToString(1)
-			Id := L.ToInt(2)
+			sId := L.ToString(2)
+			Id , err := strconv.Atoi(sId)
+			if err != nil {
+				ud := setUserData(ctx, appId, keeper, addr, "", res, L)
+				L.Push(ud)
+				return 1
+			}
 			checkField := ""
 			if L.GetTop() > 2 {
 				checkField = L.ToString(3)
@@ -241,15 +224,8 @@ func getGoExportQueryFuncNew(ctx sdk.Context, appId uint, keeper Keeper, addr sd
 			}
 
 			tableName := L.ToString(1)
-			querierString := L.ToString(2)
 
-			var Fields map[string]string
-			err := json.Unmarshal([]byte(querierString), &Fields)
-			if err != nil {
-				ud := setUserData(ctx, appId, keeper, addr, tableName, res, L)
-				L.Push(ud)
-				return 1
-			}
+			var Fields  = luaTableToGoMap(L.CheckTable(2))
 
 			checkTimeField := ""
 			if L.GetTop() > 2 {
@@ -287,6 +263,60 @@ func getGoExportQueryFuncNew(ctx sdk.Context, appId uint, keeper Keeper, addr sd
 			} else {
 				L.Push(lua.LFalse)
 			}
+			return 1
+		},
+	}
+}
+
+func getGoExportToolFunc() map[string]lua.LGFunction {
+	return map[string]lua.LGFunction {
+		"jsonStringToArray" : func(L *lua.LState) int {
+			params := L.CheckString(1)
+			var array []string
+			err := json.Unmarshal([]byte(params), &array)
+			if err != nil {
+				L.Push(lua.LNil)
+				return 1
+			}
+			table := L.NewTable()
+			for i, v := range array {
+				table.RawSetInt(i+1, lua.LString(v))
+			}
+			L.Push(table)
+			return 1
+		},
+		"jsonStringToMap": func(L *lua.LState) int {
+			params := L.CheckString(1)
+			var data = make(map[string]string, 0)
+			err := json.Unmarshal([]byte(params), &data)
+			if err != nil {
+				L.Push(lua.LNil)
+				return 1
+			}
+			table := L.NewTable()
+			for k, v := range data {
+				table.RawSetString(k, lua.LString(v))
+			}
+			L.Push(table)
+			return 1
+		},
+		"jsonStringToArrayMap" : func(L *lua.LState) int {
+			params := L.CheckString(1)
+			var data []map[string]string
+			err := json.Unmarshal([]byte(params), &data)
+			if err != nil {
+				L.Push(lua.LNil)
+				return 1
+			}
+			table := L.NewTable()
+			for i, m := range data {
+				temp := L.NewTable()
+				for k, v := range m {
+					temp.RawSetString(k, lua.LString(v))
+				}
+				table.RawSetInt(i+1, temp)
+			}
+			L.Push(table)
 			return 1
 		},
 	}
@@ -352,4 +382,36 @@ func makeWhereEqualQuerierObjs(tableName string, fields map[string]string) []map
 		querierObjs = append(querierObjs, ent)
 	}
 	return querierObjs
+}
+
+func luaArrayToGoArray(table *lua.LTable) []string{
+	array := make([]string, 0)
+	table.ForEach(func(index lua.LValue, val lua.LValue) {
+		element := val.String()
+		array = append(array, element)
+	})
+	return array
+}
+
+func luaTableToGoMap(table *lua.LTable) map[string]string{
+	data := make(map[string]string, 0)
+	table.ForEach(func(key lua.LValue, val lua.LValue) {
+		mapKey := key.String()
+		element := val.String()
+		data[mapKey] = element
+	})
+	return data
+}
+
+func luaArrayTableToGoArrayMap(arrayTable *lua.LTable) []map[string]string{
+	data := make([]map[string]string, 0)
+	arrayTable.ForEach(func(index lua.LValue, table lua.LValue) {
+		temp := make(map[string]string)
+		nTable := table.(*lua.LTable)
+		nTable.ForEach(func(key lua.LValue, val lua.LValue) {
+			temp[key.String()] = val.String()
+		})
+		data = append(data, temp)
+	})
+	return data
 }
