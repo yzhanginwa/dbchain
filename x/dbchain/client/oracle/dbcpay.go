@@ -178,6 +178,27 @@ func oracleCallDbcPay(cliCtx context.CLIContext, storeName string) http.HandlerF
 	}
 }
 
+func oracleApplepay(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		accessCode      := vars["accessToken"]
+		r.ParseForm()
+
+		buyer, err := utils.VerifyAccessCode(accessCode)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+			return
+		}
+
+		OutTradeNo := strings.TrimSpace(r.Form.Get("out_trade_no"))
+		receiptData := r.Form.Get("receipt_data")
+
+		internalPurchase(cliCtx, storeName, OutTradeNo, "", receiptData, "", ApplePay, buyer, w)
+		return
+
+	}
+}
+
 func internalPurchase(cliCtx context.CLIContext, storeName, OutTradeNo, tableName, receiptData, paymentId, vendor string , buyer sdk.AccAddress, w http.ResponseWriter) {
 	if !checkAppleUnverifyReceipt {
 		go checkAppleReceiptRunner(cliCtx)

@@ -22,6 +22,12 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/oracle/dbcpay/{%s}/{%s}", storeName, "accessToken", "payType"), oracleCallDbcPay(cliCtx, storeName)).Methods("POST")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/dbcpay_query/{%s}", storeName, "accessToken"), oracleQueryPayStatus(cliCtx, storeName)).Methods("POST")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/dbcpay_notify", storeName), oracleSavePayStatus(cliCtx, storeName)).Methods("POST")
+    //payment
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/payment/dbcpay/{%s}/recipient_address", storeName, "accessToken"), oracleRecipientAddress(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/paymnet/{%s}/{%s}", storeName, "accessToken", "payType"), oracleCallDbcPay(cliCtx, storeName)).Methods("POST")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/applepay/{%s}", storeName, "accessToken"), oracleApplepay(cliCtx, storeName)).Methods("POST")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/payment_query/{%s}", storeName, "accessToken"), oracleQueryPayStatus(cliCtx, storeName)).Methods("POST")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/payment_notify", storeName), oracleSavePayStatus(cliCtx, storeName)).Methods("POST")
 
 
     //block browser. do not need access token
