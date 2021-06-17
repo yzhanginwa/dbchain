@@ -359,7 +359,7 @@ func sortIdsOnOrder(ctx sdk.Context, keeper Keeper, appId uint, ids []uint, tabl
         if bz != nil {
             record := idAndValues{Id: id, IsInt: false}
             keeper.cdc.MustUnmarshalBinaryBare(bz, &value)
-            if isInt {
+            if isInt || fieldName == "id" {
                 intValue, err := strconv.Atoi(value)
                 if err != nil { continue }
                 record.IntValue = intValue
