@@ -1,6 +1,7 @@
 package types
 
 import (
+    "encoding/base64"
     sdk "github.com/cosmos/cosmos-sdk/types"
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -80,7 +81,7 @@ func NewMsgSetGroupMemo(appCode string, group string, memo string, owner sdk.Acc
     return MsgSetGroupMemo {
         AppCode: appCode,
         Group: group,
-        Memo: memo,
+        Memo: base64.StdEncoding.EncodeToString([]byte(memo)),
         Owner: owner,
     }
 }

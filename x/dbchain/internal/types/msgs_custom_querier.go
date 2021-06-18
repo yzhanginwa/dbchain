@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/base64"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -25,8 +26,8 @@ func NewMsgAddCustomQuerier(owner sdk.AccAddress, appCode, querierName, descript
 		Owner: owner,
 		AppCode: appCode,
 		QuerierName: querierName,
-		Description: description,
-		Body: body,
+		Description: base64.StdEncoding.EncodeToString([]byte(description)),
+		Body: base64.StdEncoding.EncodeToString([]byte(body)),
 	}
 }
 

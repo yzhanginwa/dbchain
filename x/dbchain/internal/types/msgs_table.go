@@ -1,6 +1,7 @@
 package types
 
 import (
+    "encoding/base64"
     "fmt"
     sdk "github.com/cosmos/cosmos-sdk/types"
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -212,7 +213,7 @@ func NewMsgAddInsertFilter(owner sdk.AccAddress, appCode string, tableName strin
         Owner: owner,
         AppCode: appCode,
         TableName: tableName,
-        Filter: filter,
+        Filter: base64.StdEncoding.EncodeToString([]byte(filter)),
     }
 }
 
@@ -274,7 +275,7 @@ func NewMsgAddTrigger(owner sdk.AccAddress, appCode string, tableName string, tr
         Owner: owner,
         AppCode: appCode,
         TableName: tableName,
-        Trigger: trigger,
+        Trigger: base64.StdEncoding.EncodeToString([]byte(trigger)),
     }
 }
 
@@ -436,7 +437,7 @@ func NewMsgSetTableMemo(appCode, tableName, memo string, owner sdk.AccAddress) M
     return MsgSetTableMemo {
         AppCode: appCode,
         TableName: tableName,
-        Memo: memo,
+        Memo: base64.StdEncoding.EncodeToString([]byte(memo)),
         Owner: owner,
     }
 }

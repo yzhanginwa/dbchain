@@ -1,6 +1,7 @@
 package types
 
 import (
+    "encoding/base64"
     sdk "github.com/cosmos/cosmos-sdk/types"
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -452,7 +453,7 @@ func NewMsgSetColumnMemo(appCode, tableName, fieldName, memo string, owner sdk.A
         AppCode: appCode,
         TableName: tableName,
         FieldName: fieldName,
-        Memo: memo,
+        Memo: base64.StdEncoding.EncodeToString([]byte(memo)),
         Owner: owner,
     }
 }
