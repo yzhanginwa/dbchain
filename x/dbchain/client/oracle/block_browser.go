@@ -115,7 +115,7 @@ func showTotalTxsNum(cliCtx context.CLIContext) http.HandlerFunc {
 		daysAgo := 1
 		updateTimeStamp := getCurrentDayStartTimeStamp()
 
-		if !TotalTxs.compare(updateTimeStamp) {
+		if TotalTxs.date >= updateTimeStamp {
 			bz , _ := json.Marshal(TotalTxs.getTotalTxs())
 			rest.PostProcessResponse(w, cliCtx, bz)
 			return
@@ -123,9 +123,13 @@ func showTotalTxsNum(cliCtx context.CLIContext) http.HandlerFunc {
 		for {
 			tx, timeStamp := getOneDayTxs(cliCtx, daysAgo, false, TxsStatistic)
 			daysAgo++
-			if TotalTxs.compare(timeStamp) {
+			if TotalTxs.date < timeStamp {
 				txs += tx
-			} else if timeStamp == 0 && TotalTxs.isZreo(){
+			} else if TotalTxs.date == timeStamp{
+				txs += tx
+				TotalTxs.update(updateTimeStamp,txs)
+				break
+			}else if timeStamp == 0 && TotalTxs.isZreo(){
 				txs += tx
 				TotalTxs.update(updateTimeStamp,txs)
 				break
