@@ -70,6 +70,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdRespondFriend(cdc),
         GetCmdFreezeSchema(cdc),
         GetCmdUnfreezeSchema(cdc),
+        GetCmdResetTxTotalTxs(cdc),
     )...)
 
     return dbchainTxCmd
@@ -1074,6 +1075,31 @@ func GetCmdUnfreezeSchema(cdc * codec.Codec) *cobra.Command {
 
             appCode := args[0]
             msg := types.NewMsgSetSchemaStatus(cliCtx.GetFromAddress(), appCode, "unfrozen" )
+            err := msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+func GetCmdResetTxTotalTxs(cdc * codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "reset-total-txs",
+        Short: "reset total txs statistics which is used for block browser",
+        Args:  cobra.ExactArgs(0),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            data := map[string]int64 {
+                "txNum" : 0,
+                "date" : 0,
+            }
+            bz , _ := json.Marshal(data)
+            msg := types.NewMsgUpdateTotalTx(cliCtx.GetFromAddress(), string(bz))
             err := msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
