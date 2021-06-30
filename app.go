@@ -2,7 +2,11 @@ package app
 
 import (
     "encoding/json"
+    "fmt"
+    "github.com/cosmos/cosmos-sdk/x/auth/types"
     "os"
+    "reflect"
+    "unsafe"
 
     abci "github.com/tendermint/tendermint/abci/types"
     tmos "github.com/tendermint/tendermint/libs/os"
@@ -276,6 +280,67 @@ func (app *dbChainApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) a
 func (app *dbChainApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
     return app.mm.BeginBlock(ctx, req)
 }
+
+func (app *dbChainApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
+
+    resp :=  app.BaseApp.DeliverTx(req)
+    if resp.GasUsed >= resp.GasWanted {
+        return resp
+    }
+    //get gas price
+    txDecoder := auth.DefaultTxDecoder(app.cdc)
+    tx, err := txDecoder(req.Tx)
+    if err != nil {
+        return resp
+    }
+    stdTx , ok := tx.(auth.StdTx)
+    if !ok {
+        return resp
+    }
+
+    if stdTx.Fee.Amount.IsZero() {
+        return resp
+    }
+    gasPrices := stdTx.Fee.GasPrices()
+    if gasPrices.IsZero() {
+        return resp
+    }
+
+    //calc Fees
+    requiredFees := make(sdk.Coins, len(gasPrices))
+    glDec := sdk.NewDec(int64(resp.GasWanted - resp.GasUsed))
+    for i, gp := range gasPrices {
+        fee := gp.Amount.Mul(glDec)
+        requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
+    }
+    defer func() {
+        // pkg of reflect may be panic
+        recover()
+    }()
+    //get ctx by pkg of reflect because deliverState is private
+    baseApp := reflect.ValueOf(app.BaseApp).Elem()
+    var ctx sdk.Context
+    for i := 0; i < baseApp.NumField(); i++ {
+        if baseApp.Type().Field(i).Name == "deliverState" {
+            p := baseApp.Field(i).Pointer()
+            np := (*state)(unsafe.Pointer(p))
+            ctx = np.Context()
+            break
+        }
+    }
+    if ctx.IsZero() {
+        return resp
+    }
+
+    //return extra fees
+    feePayer := stdTx.FeePayer()
+    err = app.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.FeeCollectorName,feePayer, requiredFees)
+    if err != nil {
+        fmt.Println(err)
+    }
+    return resp
+}
+
 func (app *dbChainApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
     return app.mm.EndBlock(ctx, req)
 }
@@ -310,4 +375,23 @@ func (app *dbChainApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhite
     validators = staking.WriteValidators(ctx, app.stakingKeeper)
 
     return appState, validators, nil
+}
+
+///////////////////////////
+//                       //
+//     help struct       //
+//                       //
+///////////////////////////
+
+type state struct {
+    ms  sdk.CacheMultiStore
+    ctx sdk.Context
+}
+
+func (st *state) CacheMultiStore() sdk.CacheMultiStore {
+    return st.ms.CacheMultiStore()
+}
+
+func (st *state) Context() sdk.Context {
+    return st.ctx
 }
