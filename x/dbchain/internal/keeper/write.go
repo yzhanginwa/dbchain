@@ -13,6 +13,7 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "strconv"
     "strings"
+    storeTypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 
@@ -32,8 +33,7 @@ func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields typ
     }
 
     // as far the first go routine to be used
-    k.tryToPinFile(ctx, appId, tableName, fields, owner)
-
+    _, allUploadFileSize := k.tryToPinFile(ctx, appId, tableName, fields, owner)
     id, err = getNextId(k, ctx, appId, tableName)
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get id for table %s", tableName))
@@ -56,6 +56,8 @@ func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields typ
     }
 
     k.applyTrigger(ctx, appId, tableName, fields, owner, L)
+    k.consumeGasByUploadFile(ctx, allUploadFileSize)
+
     return id, nil
 }
 
@@ -526,11 +528,11 @@ func (k Keeper) runFilterOrTrigger(ctx sdk.Context, appId uint, tableName string
     return result
 }
 
-func (k Keeper) tryToPinFile(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) (result bool) {
+func (k Keeper) tryToPinFile(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) (result bool, allUploadFileSize uint64) {
 
     fieldNames, err := k.getTableFields(ctx, appId, tableName)
     if err != nil {
-        return(false)
+        return(false), 0
     }
 
     for _, fieldName := range fieldNames {
@@ -542,6 +544,7 @@ func (k Keeper) tryToPinFile(ctx sdk.Context, appId uint, tableName string, fiel
             if value, ok := fields[fieldName]; ok {
                 sh := shell.NewShell("localhost:5001")
                 size := getUploadFileSize(sh, value)
+                allUploadFileSize += size
                 k.UpdateAppUserUsedFileVolume(ctx, appId, owner.String(), fmt.Sprintf("%d", size))
                 go func(sh *shell.Shell, value string) {
                     err =sh.Pin(value)
@@ -553,9 +556,18 @@ func (k Keeper) tryToPinFile(ctx sdk.Context, appId uint, tableName string, fiel
             }
         }
     }
-    return true
+    return true, allUploadFileSize
 }
 
+func (k Keeper) consumeGasByUploadFile(ctx sdk.Context, fileSize uint64)  {
+    if fileSize <= 0 {
+        return
+    }
+    //TODO rate of fileSize to gas need to be defined
+    gas := storeTypes.Gas(int64(fileSize))
+    ctx.GasMeter().ConsumeGas(gas,"consume gas by upload file")
+    return
+}
 func (k Keeper) isTablePayment(ctx sdk.Context, appId uint, tableName string) bool {
     tableOptions, _ := k.GetOption(ctx, appId, tableName)
     return utils.ItemExists(tableOptions, string(types.TBLOPT_PAYMENT))
