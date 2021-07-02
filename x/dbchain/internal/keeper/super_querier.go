@@ -247,7 +247,7 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
         } else {
             if builders[j].Offset >= len(ids) {
                 ids = []uint{}
-            } else if builders[j].Limit == 0 || builders[j].Limit + builders[j].Offset >= len(builders[j].Ids) {
+            } else if builders[j].Limit == 0 || builders[j].Limit + builders[j].Offset >= len(ids) {
                 ids = ids[builders[j].Offset :]
             } else {
                 ids = ids[builders[j].Offset : builders[j].Offset + (builders[j].Limit)]
