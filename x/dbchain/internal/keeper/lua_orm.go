@@ -15,6 +15,9 @@ type TableObj struct {
 type ExistObj struct {
 	TableName  string
 	Fields      map[string]string
+	// result is used for the result of where query. when it is false , it means there is no data . otherwise , it means
+	// there is data we want to query
+	Result     bool
 	ctx        sdk.Context
 	appId      uint
 	keeper     Keeper
@@ -40,6 +43,7 @@ func registerTableType(L *lua.LState, ctx sdk.Context, appId uint, keeper Keeper
 		table := &ExistObj{
 			TableName: tableName,
 			Fields: make(map[string]string, 0),
+			Result: true,
 			ctx : ctx,
 			appId: appId,
 			keeper: keeper,
@@ -51,7 +55,10 @@ func registerTableType(L *lua.LState, ctx sdk.Context, appId uint, keeper Keeper
 		L.Push(ud)
 		return 1
 	}))
-	L.SetField(exist, "__index", L.SetFuncs(L.NewTable(), map[string]lua.LGFunction {"where": where}))
+	L.SetField(exist, "__index", L.SetFuncs(L.NewTable(), map[string]lua.LGFunction {
+		"where": where,
+		"result": result,
+		}))
 
 }
 
@@ -263,6 +270,14 @@ func hasOne(ctx sdk.Context, appId uint, keeper Keeper, addr sdk.AccAddress, L *
 
 func where(L *lua.LState) int {
 	existObj := CheckExist(L)
+	if existObj.Result == false {
+		//if the result of previous query is false, these is no necessary to do next query
+		ud := L.NewUserData()
+		ud.Value = existObj
+		L.SetMetatable(ud, L.GetTypeMetatable(LuaTableTypeExist))
+		L.Push(ud)
+		return 1
+	}
 	key := L.ToString(2)
 	val := L.ToString(3)
 	operator := L.ToString(4)
@@ -291,12 +306,26 @@ func where(L *lua.LState) int {
 	tableValueCallback := getGetTableValueCallback(existObj.keeper, existObj.ctx, existObj.appId, existObj.addr)
 	result := tableValueCallback(querierObjs)
 	if len(result) > 0 {
-		ud := L.NewUserData()
-		ud.Value = existObj
-		L.SetMetatable(ud, L.GetTypeMetatable(LuaTableTypeExist))
-		L.Push(ud)
+		existObj.Result = true
 	} else {
-		L.Push(lua.LNil)
+		existObj.Result = false
+	}
+
+	ud := L.NewUserData()
+	ud.Value = existObj
+	L.SetMetatable(ud, L.GetTypeMetatable(LuaTableTypeExist))
+	L.Push(ud)
+	return 1
+}
+
+
+func result(L *lua.LState) int {
+	existObj := CheckExist(L)
+
+	if existObj.Result {
+		L.Push(lua.LTrue)
+	} else {
+		L.Push(lua.LFalse)
 	}
 	return 1
 }
