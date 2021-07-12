@@ -40,4 +40,14 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/oracle/get_shared_key/{organization}/{user_name}", storeName), showUserShareKey(cliCtx)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/verify_auth_code/{organization}/{user_name}/{auth_code}", storeName), showVerifyAuthCode(cliCtx)).Methods("GET")
 
+    //
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/organization/get_secrect_key", storeName), organizationGetSecretKey(cliCtx)).Methods("POST")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/user/get_secrect_key", storeName), userGetSecretKey(cliCtx)).Methods("POST")
+    // organization verify . param : hash_key  state
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/organization/verify", storeName), organizationVerify(cliCtx)).Methods("POST")
+    //user verify
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/user/verify", storeName), userVerifyCode(cliCtx,false)).Methods("POST")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/user/comform", storeName), userVerifyCode(cliCtx, true)).Methods("POST")
+    //user destroy
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/user/destroy", storeName), userDestoryCode(cliCtx)).Methods("POST")
 }

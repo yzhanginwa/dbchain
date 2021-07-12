@@ -20,4 +20,5 @@ require (
 	github.com/tendermint/tendermint v0.33.7
 	github.com/tendermint/tm-db v0.5.1
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da
+	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 )
