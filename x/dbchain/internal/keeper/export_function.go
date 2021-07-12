@@ -349,36 +349,24 @@ func findByFields( keeper Keeper, ctx sdk.Context, appId uint, owner sdk.AccAddr
 }
 func getGoExportFilterFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.AccAddress) map[string]lua.LGFunction {
 	return map[string]lua.LGFunction{
-		"Insert": func(L *lua.LState) int {
+		"InsertRow" : func(L *lua.LState) int {
+			//params : 1. tableName, 2. fields
 			ParamsNum := L.GetTop()
-			if ParamsNum >= 2 && ParamsNum%2 == 0 { //Normal inserttab,fields
-				tableName := L.ToString(1)
-				if strings.HasPrefix(tableName, tablePrefix){
-					tableName = strings.TrimPrefix(tableName, tablePrefix)
-				}
-				sFieldAndValues := L.ToString(2)
-				fieldAndValues, err := getFieldValueMap(ctx, appId, keeper, tableName, sFieldAndValues)
-				if err != nil {
-					L.Push(lua.LNumber(-1))
-					L.Push(lua.LString(err.Error()))
-					return 2
-				}
-				if ParamsNum > 2 { //此时表示有外键插入，可以有多个外键插入，格式为foreigntab，foreignid 循环
-					for i := 3; i < ParamsNum; i+=2{
-						fTableName := L.ToString(i)
-						fId := L.ToString(i+1)
-						fKey := strings.ToLower(fTableName)
-						fieldAndValues[fKey] = fId
-					}
+			if ParamsNum < 2 {
+				L.Push(lua.LString("-1"))
+				L.Push(lua.LString("Params Err"))
+				return 2
+			}
+			tableName := L.CheckString(1)
+			fields := luaTableToGoMap(L.CheckTable(2))
 
-				}
-				Write := getInsertCallback(keeper, ctx, appId, owner)
-				Write(tableName, fieldAndValues)//keeper.Insert(ctx, appId, tableName, fieldAndValues, owner)
-				L.Push(lua.LNumber(1))
-				L.Push(lua.LString(""))
+			Id, err := keeper.Insert(ctx, appId, tableName, fields, owner)
+			if err != nil {
+				L.Push(lua.LString("-1"))
+				L.Push(lua.LString(err.Error()))
 			} else {
-				L.Push(lua.LNumber(-1))
-				L.Push(lua.LString("num of param wrong"))
+				L.Push(lua.LString(Id))
+				L.Push(lua.LString(""))
 			}
 			return 2
 		},
