@@ -36,10 +36,6 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/oracle/blockchain/all_applications", storeName), showAllApplications(cliCtx)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/block/txs_hash/{%s}", storeName, "height"), showBlockTxsHash(cliCtx)).Methods("GET")
 
-    //authenticator
-    r.HandleFunc(fmt.Sprintf("/%s/oracle/get_shared_key/{organization}/{user_name}", storeName), showUserShareKey(cliCtx)).Methods("GET")
-    r.HandleFunc(fmt.Sprintf("/%s/oracle/verify_auth_code/{organization}/{user_name}/{auth_code}", storeName), showVerifyAuthCode(cliCtx)).Methods("GET")
-
     //
     r.HandleFunc(fmt.Sprintf("/%s/oracle/organization/get_secrect_key", storeName), organizationGetSecretKey(cliCtx)).Methods("POST")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/user/get_secrect_key", storeName), userGetSecretKey(cliCtx)).Methods("POST")
