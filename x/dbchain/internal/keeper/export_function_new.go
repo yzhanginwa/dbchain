@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
+	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	lua "github.com/yuin/gopher-lua"
 	"strconv"
@@ -268,7 +269,7 @@ func getGoExportQueryFuncNew(ctx sdk.Context, appId uint, keeper Keeper, addr sd
 	}
 }
 
-func getGoExportToolFunc() map[string]lua.LGFunction {
+func getGoExportToolFunc(ctx sdk.Context) map[string]lua.LGFunction {
 	return map[string]lua.LGFunction {
 		"jsonStringToArray" : func(L *lua.LState) int {
 			params := L.CheckString(1)
@@ -318,6 +319,15 @@ func getGoExportToolFunc() map[string]lua.LGFunction {
 			}
 			L.Push(table)
 			return 1
+		},
+		"scriptConsumeGas" : func(L *lua.LState) int {
+			gasNum := L.ToInt64(1)
+			if gasNum == 0 {
+				gasNum = 1000
+			}
+			gas := storeTypes.Gas(int64(gasNum))
+			ctx.GasMeter().ConsumeGas(gas,"script consume")
+			return 0
 		},
 	}
 }

@@ -13,15 +13,8 @@ type EmbedLoopCount struct {
 	hasEmbedLoopCountSymbol bool
 }
 
-const defineLoopCount = `
-	__script_loop_count__ = 64
-`
-const confirmLoopCount = `
-	if (__script_loop_count__ <= 0) then 
-		break 
-	else 
-		__script_loop_count__ = __script_loop_count__ -1 
-	end
+const consumeGas = `
+	scriptConsumeGas()
 `
 
 func NewPreprocessor(r io.Reader) *EmbedLoopCount {
@@ -60,7 +53,7 @@ func (elc *EmbedLoopCount) Process(){
 				return
 			}
 		} else if tok == REPEAT {
-			elc.ts.Push(confirmLoopCount)
+			elc.ts.Push(consumeGas)
 		}
 	}
 }
@@ -136,11 +129,11 @@ func (elc *EmbedLoopCount) embedCountSymbol() bool {
 	}
 	previousIdent, err := elc.ts.Pop()
 	if err != nil {
-		elc.ts.Push(defineLoopCount)
+		elc.ts.Push(consumeGas)
 		elc.hasEmbedLoopCountSymbol = true
 		return true
 	}
-	elc.ts.Push(defineLoopCount)
+	elc.ts.Push(consumeGas)
 	elc.ts.Push(previousIdent)
 	elc.hasEmbedLoopCountSymbol = true
 	return true
@@ -203,7 +196,7 @@ func (elc *EmbedLoopCount) LoopCondition() bool {
 		if tok == ILLEGAL {
 			return false
 		} else if tok == DO {
-			elc.ts.Push(confirmLoopCount)
+			elc.ts.Push(consumeGas)
 			return true
 		} else if tok == EOF {
 			return false

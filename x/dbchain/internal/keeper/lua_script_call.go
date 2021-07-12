@@ -95,6 +95,10 @@ func callLuaScriptFunc(ctx sdk.Context, appId uint, owner sdk.AccAddress, keeper
 	for name, fn := range goExportFunc{
 		l.SetGlobal(name, l.NewFunction(fn))
 	}
+	goExportToolFunc := getGoExportToolFunc(ctx)
+	for name, fn := range goExportToolFunc{
+		l.SetGlobal(name, l.NewFunction(fn))
+	}
 	//call lua script
 	fn := getRegisterLuaFunc(ctx, keeper, appId, funcName, handleType)
 	if fn == nil || fn.String() == "nil" {
@@ -126,7 +130,7 @@ func callLuaScriptQuerierFunc(ctx sdk.Context, appId uint, owner sdk.AccAddress,
 	//point : get go function
 	goExportFunc := getGoExportQueryFunc(ctx, appId, keeper, owner)
 	goExportFuncNew := getGoExportQueryFuncNew(ctx, appId, keeper, owner)
-	goExportToolFunc := getGoExportToolFunc()
+	goExportToolFunc := getGoExportToolFunc(ctx)
 	//register go function
 	for name, fn := range goExportFunc{
 		l.SetGlobal(name, l.NewFunction(fn))
