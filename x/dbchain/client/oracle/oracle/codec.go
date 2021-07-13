@@ -18,6 +18,7 @@ func init () {
     aminoCdc.RegisterConcrete(types.MsgInsertRow{}, "dbchain/InsertRow", nil)
     aminoCdc.RegisterConcrete(types.MsgUpdateTotalTx{}, "dbchain/UpdateTotalTx", nil)
     aminoCdc.RegisterConcrete(types.MsgUpdateTxStatistic{}, "dbchain/UpdateTxStatistic", nil)
+    aminoCdc.RegisterConcrete(types.MsgFreezeRow{}, "dbchain/FreezeRow", nil)
     cryptoamino.RegisterAmino(aminoCdc)
 
     //authtypes.RegisterCodec(aminoCdc)

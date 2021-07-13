@@ -368,12 +368,18 @@ func getSellableInfo(cliCtx context.CLIContext, storeName, appcode, sellableid s
 }
 
 func getOrderReceiptInfo(cliCtx context.CLIContext, storeName string, fieldValue map[string]string) ([]map[string]string, error){
+	appCode := "0000000001"
+	tableName := "order_receipt"
 
+	return queryByWhere(cliCtx, storeName, appCode, tableName, fieldValue)
+}
+
+func queryByWhere(cliCtx context.CLIContext, storeName, appCode, tableName string, fieldValue map[string]string) ([]map[string]string, error) {
 	querierObjs := []map[string]string{}
 	var ent map[string]string
 	ent = map[string]string{
 		"method": "table",
-		"table":  "order_receipt",
+		"table":  tableName,
 	}
 	querierObjs = append(querierObjs, ent)
 
@@ -386,7 +392,7 @@ func getOrderReceiptInfo(cliCtx context.CLIContext, storeName string, fieldValue
 		}
 		querierObjs = append(querierObjs, ent)
 	}
-	return  querierQuery(cliCtx, storeName, "0000000001", querierObjs)
+	return  querierQuery(cliCtx, storeName, appCode, querierObjs)
 }
 
 func querierQuery(cliCtx context.CLIContext, storeName , appCode string, querierObjs []map[string]string, ) ([]map[string]string, error){
