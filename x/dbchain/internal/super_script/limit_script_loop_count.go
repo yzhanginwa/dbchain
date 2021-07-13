@@ -129,11 +129,11 @@ func (elc *EmbedLoopCount) embedCountSymbol() bool {
 	}
 	previousIdent, err := elc.ts.Pop()
 	if err != nil {
-		elc.ts.Push(consumeGas)
+		//elc.ts.Push(consumeGas) it will be consume gas only in loop
 		elc.hasEmbedLoopCountSymbol = true
 		return true
 	}
-	elc.ts.Push(consumeGas)
+	//elc.ts.Push(consumeGas)  it will be consume gas only in loop
 	elc.ts.Push(previousIdent)
 	elc.hasEmbedLoopCountSymbol = true
 	return true
