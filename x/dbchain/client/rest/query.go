@@ -213,6 +213,18 @@ func showCallCustomQuerierHandler(cliCtx context.CLIContext, storeName string) h
     }
 }
 
+func showCallDynamicScriptHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        vars := mux.Vars(r)
+        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/dynamic_script/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["script"]), nil)
+        if err != nil {
+            rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+            return
+        }
+        rest.PostProcessResponse(w, cliCtx, res)
+    }
+}
+
 func showTableOptionsHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)

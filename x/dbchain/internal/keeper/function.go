@@ -3,6 +3,7 @@ package keeper
 import (
     "encoding/json"
     "errors"
+    "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/mr-tron/base58"
     lua "github.com/yuin/gopher-lua"
@@ -193,6 +194,56 @@ func (k Keeper) DoCustomQuerier(ctx sdk.Context, appId uint, querierInfo types.F
     }
 
     return callLuaScriptQuerierFunc(ctx, appId, addr, k, querierInfo.Name, params, QueryHandleType)
+}
+
+func (k Keeper) DoDynamicScript(ctx sdk.Context, appId uint, script string, addr sdk.AccAddress) ([]byte, error){
+    var l = lua.NewState(lua.Options{
+        SkipOpenLibs: true, //set SkipOpenLibs true to prevent lua open libs,because this libs can call os function and operate files
+        RegistrySize: 256, //Save function return value， default value is 256*20, it is too large
+    })
+    openBase(l)
+    registerTableType(l, ctx , appId, k, addr)
+    //point : get go function
+    goExportFunc := getGoExportQueryFunc(ctx, appId, k, addr)
+    goExportFuncNew := getGoExportQueryFuncNew(ctx, appId, k, addr)
+    goExportToolFunc := getGoExportToolFunc(ctx)
+    //register go function
+    for name, fn := range goExportFunc{
+        l.SetGlobal(name, l.NewFunction(fn))
+    }
+    for name, fn := range goExportFuncNew{
+        l.SetGlobal(name, l.NewFunction(fn))
+    }
+    for name, fn := range goExportToolFunc{
+        l.SetGlobal(name, l.NewFunction(fn))
+    }
+    newScript := restructureLuaScript(script)
+    if err := l.DoString(newScript); err != nil{
+       return nil, err
+    }
+
+    //handle return
+    defer l.Pop(l.GetTop())
+    lRes := l.Get(1)
+    if tableRes ,ok := lRes.(*lua.LTable); ok {
+        res := convertLuaTableToGo(tableRes)
+        bz, err := codec.MarshalJSONIndent(k.cdc, res)
+        if err != nil {
+            return nil, errors.New("could not marshal result to JSON")
+        }
+        return bz, nil
+    }
+
+    switch lRes.Type() {
+    case lua.LTNil:
+        return []byte("[]"), nil
+    case lua.LTString:
+        errString := lRes.(lua.LString)
+        return nil, errors.New(errString.String())
+    default:
+        return []byte("[]") , nil
+    }
+
 }
 
 func checkLuaSyntax(script string) error {

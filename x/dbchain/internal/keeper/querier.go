@@ -50,6 +50,7 @@ const (
     QueryCustomQueriers  = "customQueriers"
     QueryCustomQuerierInfo = "customQuerierInfo"
     QueryCallCustomQuerier = "callCustomQuerier"
+    QueryByDynamicScript  = "dynamic_script"
     QueryTxSimpleResult    = "txSimpleResult"
     QueryAllAccounts       = "allAccounts"
     QueryDbchainTxNum      = "dbchainTxNum"
@@ -137,6 +138,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryCustomQuerierInfo(ctx, path[1:], req, keeper)
         case QueryCallCustomQuerier:
             return queryCallCustomQuerier(ctx, path[1:], req, keeper)
+        case QueryByDynamicScript:
+            return queryByDynamicScript(ctx, path[1:], req, keeper)
         case QueryTxSimpleResult:
             return queryTxSimpleResult(ctx, path[1:], req, keeper)
         case QueryAllAccounts:
@@ -1088,6 +1091,28 @@ func queryCallCustomQuerier(ctx sdk.Context, path []string, req abci.RequestQuer
     querierInfo := keeper.GetFunctionInfo(ctx, appId, path[2], 1)
     res , err := keeper.DoCustomQuerier(ctx, appId, querierInfo, path[3], addr)
     //res, err := codec.MarshalJSONIndent(keeper.cdc, functionInfo)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest,fmt.Sprintf("%v", err))
+    }
+
+    return res, nil
+}
+
+func queryByDynamicScript(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    addr, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    encode := path[2]
+    script, err := base58.Decode(encode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid query data")
+    }
+
+    res , err := keeper.DoDynamicScript(ctx, appId, string(script), addr)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest,fmt.Sprintf("%v", err))
     }

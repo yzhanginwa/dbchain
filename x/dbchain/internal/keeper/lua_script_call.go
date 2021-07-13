@@ -165,8 +165,15 @@ func callLuaScriptQuerierFunc(ctx sdk.Context, appId uint, owner sdk.AccAddress,
 		return bz, nil
 	}
 
-	errString := lRes.(lua.LString)
-	return nil, errors.New(errString.String())
+	switch lRes.Type() {
+	case lua.LTNil:
+		return []byte("[]"), nil
+	case lua.LTString:
+		errString := lRes.(lua.LString)
+		return nil, errors.New(errString.String())
+	default:
+		return []byte("[]") , nil
+	}
 }
 
 
