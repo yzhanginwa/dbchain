@@ -194,7 +194,7 @@ func organizationVerify(cliCtx context.CLIContext) http.HandlerFunc {
 			SaveToOrderInfoTable(cliCtx, oracleAccAddr, fieldValue, secretKeyAuth)
 			b := queryTxResult(cliCtx, "dbchain", "0000000001", secretKeyAuth, fieldValue)
 			if !b {
-				data["result"] = "field"
+				data["result"] = "fail"
 			}
 			bz , _ := json.Marshal(data)
 			successResponse(w, bz)
@@ -255,7 +255,7 @@ func userVerifyCode(cliCtx context.CLIContext, enableAuth bool) http.HandlerFunc
 		//
 		result := "success"
 		if ret == false {
-			result = "field"
+			result = "fail"
 		}
 		reHs := sha256.Sum256([]byte(secretKey + state + result))
 		reHsHex := hex.EncodeToString(reHs[:])
@@ -269,7 +269,7 @@ func userVerifyCode(cliCtx context.CLIContext, enableAuth bool) http.HandlerFunc
 			SaveToOrderInfoTable(cliCtx, oracleAccAddr, fieldValue, secretKeyAuth)
 			b := queryTxResult(cliCtx, "dbchain", "0000000001", secretKeyAuth, fieldValue)
 			if !b {
-				result = "field"
+				result = "fail"
 			}
 		}
 		//redirect
@@ -352,7 +352,7 @@ func userDestoryCode(cliCtx context.CLIContext) http.HandlerFunc {
 		result := "success"
 		b := queryFreezeResult(cliCtx, "dbchain", "0000000001", secretKeyAuth, queryAuth)
 		if !b {
-			result = "field"
+			result = "fail"
 		}
 		//redirect
 
