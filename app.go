@@ -1,16 +1,19 @@
 package app
 
 import (
+    "crypto/sha256"
+    "encoding/hex"
     "encoding/json"
     "fmt"
     "github.com/cosmos/cosmos-sdk/x/auth/types"
     "os"
     "reflect"
+    "strings"
     "unsafe"
 
     abci "github.com/tendermint/tendermint/abci/types"
-    tmos "github.com/tendermint/tendermint/libs/os"
     "github.com/tendermint/tendermint/libs/log"
+    tmos "github.com/tendermint/tendermint/libs/os"
     tmtypes "github.com/tendermint/tendermint/types"
     dbm "github.com/tendermint/tm-db"
 
@@ -284,9 +287,7 @@ func (app *dbChainApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock)
 func (app *dbChainApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
 
     resp :=  app.BaseApp.DeliverTx(req)
-    if resp.GasUsed >= resp.GasWanted {
-        return resp
-    }
+
     //get gas price
     txDecoder := auth.DefaultTxDecoder(app.cdc)
     tx, err := txDecoder(req.Tx)
@@ -298,20 +299,22 @@ func (app *dbChainApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliver
         return resp
     }
 
-    if stdTx.Fee.Amount.IsZero() {
-        return resp
-    }
     gasPrices := stdTx.Fee.GasPrices()
-    if gasPrices.IsZero() {
-        return resp
-    }
+
 
     //calc Fees
-    requiredFees := make(sdk.Coins, len(gasPrices))
-    glDec := sdk.NewDec(int64(resp.GasWanted - resp.GasUsed))
-    for i, gp := range gasPrices {
-        fee := gp.Amount.Mul(glDec)
-        requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
+    requiredFees := make(sdk.Coins, 0)
+    glDecWanted := sdk.NewDec(resp.GasWanted)
+    glDecUsed := sdk.NewDec(resp.GasUsed)
+    for _, gp := range gasPrices {
+        feeWanted := gp.Amount.Mul(glDecWanted)
+        feeUsed := gp.Amount.Mul(glDecUsed)
+        if feeUsed.GTE(feeWanted) {
+            continue
+        }
+        coinWanted := sdk.NewCoin(gp.Denom, feeWanted.Ceil().RoundInt())
+        coinUsed := sdk.NewCoin(gp.Denom, feeUsed.Ceil().RoundInt())
+        requiredFees = append(requiredFees, coinWanted.Sub(coinUsed)) //coinWanted.Sub(coinUsed)
     }
     defer func() {
         // pkg of reflect may be panic
@@ -333,12 +336,56 @@ func (app *dbChainApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliver
     }
 
     //return extra fees
-    feePayer := stdTx.FeePayer()
-    err = app.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.FeeCollectorName,feePayer, requiredFees)
-    if err != nil {
-        fmt.Println(err)
+    if len(requiredFees) > 0 {
+        feePayer := stdTx.FeePayer()
+        err = app.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.FeeCollectorName,feePayer, requiredFees)
+        if err != nil {
+            fmt.Println(err)
+        }
     }
+
+    //set account txs hash
+    var hash = sha256.Sum256(req.Tx)
+    hexHash := hex.EncodeToString(hash[:])
+    app.SaveAddrTx(ctx, resp, stdTx, hexHash)
     return resp
+}
+
+func (app *dbChainApp) SaveAddrTx(ctx sdk.Context ,resp abci.ResponseDeliverTx, stdTx auth.StdTx, txHash string) {
+    //set account txs hash
+    var addr sdk.AccAddress
+    if len(stdTx.Msgs) > 0 {
+        signers := stdTx.Msgs[0].GetSigners()
+        if len(signers) > 0 {
+            addr = signers[0]
+        }
+    }
+    gasPrices := stdTx.Fee.GasPrices()
+    data := map[string]string {
+        "txHash" : txHash,
+    }
+
+    //calc usedFees
+    usedFees := make([]string, len(gasPrices))//
+    glDecWanted := sdk.NewDec(resp.GasWanted)
+    glDecUsed := sdk.NewDec(resp.GasUsed)
+    //usedGas := sdk.NewDec(resp.GasUsed)
+    for i, gp := range gasPrices {
+        feeWanted :=gp.Amount.Mul(glDecWanted)
+        feeUsed := gp.Amount.Mul(glDecUsed)
+
+        if feeUsed.GTE(feeWanted) {
+            coin := sdk.NewCoin(gp.Denom, feeWanted.Ceil().RoundInt())
+            usedFees[i] = coin.String()
+        } else {
+            coin := sdk.NewCoin(gp.Denom, feeUsed.Ceil().RoundInt())
+            usedFees[i] = coin.String()
+        }
+    }
+    usedFeesString := strings.Join(usedFees,",")
+    data["fees"] = string(usedFeesString)
+    app.dbChainKeeper.SaveAddrTxs(ctx, addr, data)
+    return
 }
 
 func (app *dbChainApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {

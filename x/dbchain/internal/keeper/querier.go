@@ -57,6 +57,8 @@ const (
     QueryDbchainRecentTxNum  = "dbchainRecentTxNum"
     QueryApplicationUserFileVolumeLimit  = "application_user_file_volume_limit"
     QueryApplicationUserUsedFileVolume  = "application_user_used_file_volume"
+    //add for bsb
+    QueryAccountTxs = "account_txs"
 )
 
 
@@ -148,6 +150,9 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryDbchainTxNum(ctx, path[1:], req, keeper)
         case QueryDbchainRecentTxNum:
             return queryDbchainRecentTxNum(ctx, path[1:], req, keeper)
+        case QueryAccountTxs:
+            return queryAccountTxs(ctx, path[1:], req, keeper)
+
         default:
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown dbchain query endpoint")
         }
@@ -1146,6 +1151,20 @@ func queryDbchainRecentTxNum(ctx sdk.Context, path []string, req abci.RequestQue
     return res, nil
 }
 
+func queryAccountTxs(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper)([]byte, error) {
+    accessCode := path[0]
+    addr, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+    txs := keeper.GetAddrTxs(ctx, addr)
+    res, err := codec.MarshalJSONIndent(keeper.cdc, txs)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
 //////////////////
 //              //
 // helper funcs //

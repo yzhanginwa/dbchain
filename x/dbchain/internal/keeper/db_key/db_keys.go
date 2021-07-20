@@ -266,3 +266,22 @@ func GetTotalTx() string {
 func GetTxStatistic() string {
     return "blockchain:statistical_tx"
 }
+
+
+////////////////////////////
+//                        //
+//   others               //
+//                        //
+////////////////////////////
+
+func GetAccountTxKey( addr string, index uint) string {
+    return fmt.Sprintf("%s:%d:%s:accountId:%s:%d", KeyPrefixDb, 0, KeyPrefixMeta, addr, index)
+}
+
+func GetAccountTxIteratorKey(addr string) string {
+    return fmt.Sprintf("%s:%d:%s:accountId:%s", KeyPrefixDb, 0, KeyPrefixMeta, addr)
+}
+
+func GetNextAccountTxIdKey(account string) string {
+    return fmt.Sprintf("%s:%s:nextId:%s", KeyPrefixDb, KeyPrefixMeta, account)
+}

@@ -49,5 +49,8 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 
     r.HandleFunc(fmt.Sprintf("/%s/download_file/{%s}/{%s}/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "tableName", "id", "fieldName"), downloadFileHandler(cliCtx, storeName)).Methods("GET")
 
+    //add for bsn
+    r.HandleFunc(fmt.Sprintf("/%s/account_txs/{%s}", storeName, "accessToken"), showAccountTxs(cliCtx, storeName)).Methods("GET")
+
 
 }

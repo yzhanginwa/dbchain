@@ -131,4 +131,14 @@ var (
     getTotalTx = dbk.GetTotalTx
 
     getTxStatistic = dbk.GetTxStatistic
+
+    ////////////////////////////
+    //                        //
+    //   others               //
+    //                        //
+    ////////////////////////////
+
+    getAccountTxKey = dbk.GetAccountTxKey
+    getAccountTxIteratorKey = dbk.GetAccountTxIteratorKey
+    getNextAccountTxIdKey = dbk.GetNextAccountTxIdKey
 )
