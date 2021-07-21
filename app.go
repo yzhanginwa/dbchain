@@ -152,6 +152,7 @@ func NewDbChainApp(
         app.accountKeeper,
         bankSupspace,
         app.ModuleAccountAddrs(),
+        keys[dbchain.StoreKey],
     )
 
     // The SupplyKeeper collects transaction fees and renders them to the fee distribution module

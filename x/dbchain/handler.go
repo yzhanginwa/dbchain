@@ -113,6 +113,10 @@ func NewHandler(keeper Keeper) sdk.Handler {
             result, err = handleMsgUpdateTotalTx(ctx, keeper, msg)
         case MsgUpdateTxStatistic:
             result, err = handleMsgUpdateTxStatistic(ctx, keeper, msg)
+        case MsgModifyP2PTransferLimit:
+            result, err = handleMsgModifyP2PTransferLimit(ctx, keeper, msg)
+        case MsgModifyChainSuperAdminMember:
+            result, err = handleModifyChainSuperAdminMember(ctx, keeper, msg)
         default:
             errMsg := fmt.Sprintf("Unrecognized dbchain Msg type: %v", msg.Type())
             result, err = nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
@@ -951,6 +955,23 @@ func handleMsgUpdateTxStatistic(ctx sdk.Context, keeper Keeper, msg MsgUpdateTxS
     }
 
     err = keeper.UpdateTxStatistic(ctx, msg.Data)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
+    return &sdk.Result{}, nil
+}
+
+func handleMsgModifyP2PTransferLimit(ctx sdk.Context, keeper Keeper, msg MsgModifyP2PTransferLimit) (*sdk.Result, error) {
+    //only chain super admin can set limit
+    err := keeper.SetP2PTransferLimit(ctx, msg.Owner, msg.Limit)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
+    return &sdk.Result{}, nil
+}
+
+func handleModifyChainSuperAdminMember(ctx sdk.Context, keeper Keeper, msg MsgModifyChainSuperAdminMember) (*sdk.Result, error) {
+    err := keeper.ModifyMemberOfAdmins(ctx, msg.Owner, msg.Member, msg.Action)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
     }

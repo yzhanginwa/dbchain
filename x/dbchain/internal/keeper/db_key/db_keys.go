@@ -13,6 +13,7 @@ const (
     KeyPrefixSysGroup = "sysgrp"
     KeyPrefixFriend         = "friend"
     KeyPrefixPendingFriend  = "pending_friend"
+    KeyPrefixBsn   = "bsn"
 
     KeyPrefixUser  = "usr"
     KeyPrefixMeta  = "mt"
@@ -270,7 +271,7 @@ func GetTxStatistic() string {
 
 ////////////////////////////
 //                        //
-//   others               //
+//   others, BSN related  //
 //                        //
 ////////////////////////////
 
@@ -284,4 +285,12 @@ func GetAccountTxIteratorKey(addr string) string {
 
 func GetNextAccountTxIdKey(account string) string {
     return fmt.Sprintf("%s:%s:nextId:%s", KeyPrefixDb, KeyPrefixMeta, account)
+}
+
+func GetP2PTransferLimit() string {
+    return fmt.Sprintf("%s:%s:limit", KeyPrefixBsn, KeyPrefixData)
+}
+
+func GetChainSuperAdminsKey() string {
+    return fmt.Sprintf("%s:%s:superAdmin", KeyPrefixBsn, KeyPrefixData)
 }

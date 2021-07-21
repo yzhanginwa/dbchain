@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -10,8 +11,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
-	"github.com/yzhanginwa/dbchain/x/bank/internal/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/yzhanginwa/dbchain/x/bank/internal/types"
 )
 
 var _ Keeper = (*BaseKeeper)(nil)
@@ -35,12 +36,12 @@ type BaseKeeper struct {
 
 // NewBaseKeeper returns a new BaseKeeper
 func NewBaseKeeper(
-	ak types.AccountKeeper, paramSpace params.Subspace, blacklistedAddrs map[string]bool,
+	ak types.AccountKeeper, paramSpace params.Subspace, blacklistedAddrs map[string]bool, storeKey sdk.StoreKey,
 ) BaseKeeper {
 
 	ps := paramSpace.WithKeyTable(types.ParamKeyTable())
 	return BaseKeeper{
-		BaseSendKeeper: NewBaseSendKeeper(ak, ps, blacklistedAddrs),
+		BaseSendKeeper: NewBaseSendKeeper(ak, ps, blacklistedAddrs, storeKey),
 		ak:             ak,
 		paramSpace:     ps,
 	}
@@ -161,11 +162,13 @@ type BaseSendKeeper struct {
 
 	// list of addresses that are restricted from receiving transactions
 	blacklistedAddrs map[string]bool
+	//dbchain key
+	dbchainKey sdk.StoreKey
 }
 
 // NewBaseSendKeeper returns a new BaseSendKeeper.
 func NewBaseSendKeeper(
-	ak types.AccountKeeper, paramSpace params.Subspace, blacklistedAddrs map[string]bool,
+	ak types.AccountKeeper, paramSpace params.Subspace, blacklistedAddrs map[string]bool, dbchainKey sdk.StoreKey,
 ) BaseSendKeeper {
 
 	return BaseSendKeeper{
@@ -173,6 +176,7 @@ func NewBaseSendKeeper(
 		ak:               ak,
 		paramSpace:       paramSpace,
 		blacklistedAddrs: blacklistedAddrs,
+		dbchainKey: dbchainKey,
 	}
 }
 
@@ -252,6 +256,42 @@ func (keeper BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress,
 	}
 
 	return nil
+}
+
+func (keeper BaseSendKeeper) CheckCanSendCoins(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress) bool {
+	if !keeper.IsLimitP2PTransfer(ctx){
+		return true
+	}
+
+	if !keeper.IsChainSuperAdmin(ctx, fromAddr) && !keeper.IsChainSuperAdmin(ctx, toAddr) {
+		return false
+	}
+
+	return true
+}
+
+func (keeper BaseSendKeeper) CheckCanMultiSend(ctx sdk.Context, inputs []types.Input, outputs []types.Output) bool {
+	if !keeper.IsLimitP2PTransfer(ctx) {
+		return true
+	}
+	inputsValid, outputsValid := true, true
+	for _, input := range inputs {
+		if !keeper.IsChainSuperAdmin(ctx, input.Address) {
+			inputsValid = false
+			break
+		}
+	}
+
+	for _, outputs := range outputs {
+		if !keeper.IsChainSuperAdmin(ctx, outputs.Address) {
+			outputsValid = false
+			break
+		}
+	}
+	if !inputsValid && !outputsValid {
+		return false
+	}
+	return true
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.
@@ -341,6 +381,44 @@ func (keeper BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
 func (keeper BaseSendKeeper) BlacklistedAddr(addr sdk.AccAddress) bool {
 	return keeper.blacklistedAddrs[addr.String()]
 }
+
+//add for bsn
+func (keeper BaseSendKeeper) IsLimitP2PTransfer(ctx sdk.Context) bool {
+	store := ctx.KVStore(keeper.dbchainKey)
+	key := GetP2PTransferLimit()
+	bz := store.Get([]byte(key))
+	if bz == nil {
+		return false
+	}
+	limit := false
+	err := json.Unmarshal(bz, &limit)
+	if err != nil {
+		return false
+	}
+	return limit
+}
+
+func (keeper BaseSendKeeper) IsChainSuperAdmin(ctx sdk.Context, addr sdk.AccAddress) bool {
+	store := ctx.KVStore(keeper.dbchainKey)
+	key := GetChainSuperAdminsKey()
+	bz := store.Get([]byte(key))
+	if bz == nil {
+		return false
+	}
+	admins := make([]string, 0)
+	err := json.Unmarshal(bz, &admins)
+	if err != nil {
+		return false
+	}
+	address := addr.String()
+	for _, admin := range admins {
+		if address == admin {
+			return true
+		}
+	}
+	return false
+}
+
 
 var _ ViewKeeper = (*BaseViewKeeper)(nil)
 
