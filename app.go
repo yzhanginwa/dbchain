@@ -349,11 +349,12 @@ func (app *dbChainApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliver
     //set account txs hash
     var hash = sha256.Sum256(req.Tx)
     hexHash := hex.EncodeToString(hash[:])
-    app.SaveAddrTx(ctx, resp, stdTx, hexHash)
+    usedGas := app.SaveAddrTx(ctx, resp, stdTx, hexHash)
+    resp.Info = usedGas
     return resp
 }
 
-func (app *dbChainApp) SaveAddrTx(ctx sdk.Context ,resp abci.ResponseDeliverTx, stdTx auth.StdTx, txHash string) {
+func (app *dbChainApp) SaveAddrTx(ctx sdk.Context ,resp abci.ResponseDeliverTx, stdTx auth.StdTx, txHash string)  string {
     //set account txs hash
     var addr sdk.AccAddress
     if len(stdTx.Msgs) > 0 {
@@ -387,9 +388,14 @@ func (app *dbChainApp) SaveAddrTx(ctx sdk.Context ,resp abci.ResponseDeliverTx, 
         }
     }
     usedFeesString := strings.Join(usedFees,",")
-    data["fees"] = string(usedFeesString)
+
+    data["fees"] = usedFeesString
     app.dbChainKeeper.SaveAddrTxs(ctx, addr, data)
-    return
+    feeOfTxCost := "fee of tx cost : "
+    if usedFeesString == "" {
+        return feeOfTxCost + "null"
+    }
+    return feeOfTxCost + usedFeesString
 }
 
 func (app *dbChainApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
