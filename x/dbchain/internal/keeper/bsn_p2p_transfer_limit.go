@@ -118,4 +118,19 @@ func (k Keeper) SetP2PTransferLimit(ctx sdk.Context, modifier sdk.Address, limit
 	return store.Set([]byte(key), data)
 }
 
+func (k Keeper)ShowCurrentLimitP2PTransferStatus(ctx sdk.Context) bool {
 
+	store := DbChainStore(ctx, k.storeKey)
+	key := getP2PTransferLimit()
+	bz, err := store.Get([]byte(key))
+	if err != nil || bz == nil {
+		return false
+	}
+
+	var current bool
+	err = json.Unmarshal(bz, & current)
+	if err != nil {
+		return false
+	}
+	return current
+}

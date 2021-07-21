@@ -59,6 +59,8 @@ const (
     QueryApplicationUserUsedFileVolume  = "application_user_used_file_volume"
     //add for bsb
     QueryAccountTxs = "account_txs"
+    QueryChainSuperAdmins = "chain_super_admins"
+    QueryLimitP2PTransferStatus = "limit_p2p_transfer_status"
 )
 
 
@@ -152,7 +154,10 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryDbchainRecentTxNum(ctx, path[1:], req, keeper)
         case QueryAccountTxs:
             return queryAccountTxs(ctx, path[1:], req, keeper)
-
+        case QueryChainSuperAdmins:
+            return queryChainSuperAdmins(ctx, path[1:], req, keeper)
+        case QueryLimitP2PTransferStatus:
+            return queryLimitP2PTransferStatus(ctx, path[1:], req, keeper)
         default:
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown dbchain query endpoint")
         }
@@ -1165,6 +1170,37 @@ func queryAccountTxs(ctx sdk.Context, path []string, req abci.RequestQuery, keep
 
     return res, nil
 }
+
+func queryChainSuperAdmins(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper)([]byte, error) {
+    accessCode := path[0]
+    addr, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+    admins := keeper.ShowChainSuperAdmins(ctx, addr)
+    res, err := codec.MarshalJSONIndent(keeper.cdc, admins)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+//queryLimitP2PTransferStatus
+func queryLimitP2PTransferStatus(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper)([]byte, error) {
+    accessCode := path[0]
+    _, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+    limit := keeper.ShowCurrentLimitP2PTransferStatus(ctx)
+    res, err := codec.MarshalJSONIndent(keeper.cdc, limit)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
 //////////////////
 //              //
 // helper funcs //

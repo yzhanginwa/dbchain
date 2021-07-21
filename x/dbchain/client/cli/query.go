@@ -56,6 +56,8 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdCustomQuerierInfo(storeKey,cdc),
         GetCmdCallCustomQuerier(storeKey,cdc),
         GetCmdTxSimpleResult(storeKey,cdc),
+        GetCmdChainSuperAdmins(storeKey,cdc),
+        GetCmdLimitP2PTransferStatus(storeKey,cdc),
     )...)
     return dbchainQueryCmd
 }
@@ -729,6 +731,52 @@ func GetCmdCallCustomQuerier (queryRoute string, cdc *codec.Codec) *cobra.Comman
                 return nil
             }
             return cliCtx.PrintOutput(out)
+        },
+    }
+}
+
+func GetCmdChainSuperAdmins (queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "chain-super-admins [accessCode]",
+        Short: "query all admins. only admin can get data",
+        Args: cobra.MinimumNArgs(1),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            accessCode   := args[0]
+
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/chain_super_admins/%s", queryRoute, accessCode), nil)
+            if err != nil {
+                fmt.Printf("could not get data")
+                return nil
+            }
+            //TODO What kind of format is needed here
+            admins := make([]string, 0)
+            cdc.MustUnmarshalJSON(res, &admins)
+            return cliCtx.PrintOutput(admins)
+        },
+    }
+}
+
+func GetCmdLimitP2PTransferStatus (queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "limit-p2p-transfer-status [accessCode]",
+        Short: "get current limit p2p transfer status",
+        Args: cobra.MinimumNArgs(1),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            accessCode   := args[0]
+
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/limit_p2p_transfer_status/%s", queryRoute, accessCode), nil)
+            if err != nil {
+                fmt.Printf("could not get data")
+                return nil
+            }
+            //TODO What kind of format is needed here
+            var limit bool
+            cdc.MustUnmarshalJSON(res, &limit)
+            return cliCtx.PrintOutput(limit)
         },
     }
 }
