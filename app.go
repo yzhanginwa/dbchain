@@ -9,6 +9,7 @@ import (
     "os"
     "reflect"
     "strings"
+    "time"
     "unsafe"
 
     abci "github.com/tendermint/tendermint/abci/types"
@@ -362,8 +363,10 @@ func (app *dbChainApp) SaveAddrTx(ctx sdk.Context ,resp abci.ResponseDeliverTx, 
         }
     }
     gasPrices := stdTx.Fee.GasPrices()
+    t := time.Now()
     data := map[string]string {
         "txHash" : txHash,
+        "timestamp" : t.Format("2006-01-02T15:04"),
     }
 
     //calc usedFees
