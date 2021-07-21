@@ -25,9 +25,9 @@ func (k Keeper) GetAddrTxs (ctx sdk.Context, addr sdk.AccAddress,  num ...uint )
 
 	start := getCurrentAddrTxsId(k, ctx, addr)
 	end := uint(0)
-	if len(num) != 0 {
+	if len(num) != 0 && num[0] != 0{
 		if start >= num[0] {
-			end = start - end
+			end = start - num[0]
 		}
 	}
 

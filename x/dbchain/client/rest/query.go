@@ -527,7 +527,13 @@ func downloadFileHandler(cliCtx context.CLIContext, storeName string) http.Handl
 func showAccountTxs(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
-        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/account_txs/%s", storeName, vars["accessToken"]), nil)
+        r.ParseForm()
+        number := r.Form["number"]
+        queryString := fmt.Sprintf("custom/%s/account_txs/%s", storeName, vars["accessToken"])
+        if number != nil && len(number) != 0 {
+            queryString += "/" + number[0]
+        }
+        res, _, err := cliCtx.QueryWithData(queryString, nil)
         if err != nil {
             rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
             return

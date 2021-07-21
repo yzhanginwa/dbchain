@@ -1162,7 +1162,14 @@ func queryAccountTxs(ctx sdk.Context, path []string, req abci.RequestQuery, keep
     if err != nil {
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
-    txs := keeper.GetAddrTxs(ctx, addr)
+    num := 0
+    if len(path) > 1 {
+        num , err = strconv.Atoi(path[1])
+        if err != nil {
+            num = 0
+        }
+    }
+    txs := keeper.GetAddrTxs(ctx, addr, uint(num))
     res, err := codec.MarshalJSONIndent(keeper.cdc, txs)
     if err != nil {
         panic("could not marshal result to JSON")
