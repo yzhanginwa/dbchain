@@ -16,7 +16,7 @@ import (
 )
 
 const (
-    BatchSize int = 10
+    BatchSize int = 100
 )
 
 type UniversalMsg interface {
@@ -24,7 +24,7 @@ type UniversalMsg interface {
 }
 
 var (
-    messageChannel = make(chan []UniversalMsg, 1000)
+    messageChannel = make(chan []UniversalMsg, 5000)
     runnerIsRunning = false
 )
 
