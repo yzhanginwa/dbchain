@@ -53,6 +53,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/account_txs/{%s}", storeName, "accessToken"), showAccountTxs(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/chain_super_admins/{%s}", storeName, "accessToken"), showChainSuperAdmins(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/limit_p2p_transfer_status/{%s}", storeName, "accessToken"), showLimitP2PTransferStatus(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/get_all_txs/{%s}/{%s}", storeName, "start_height", "end_height"), showAllTxs(cliCtx, storeName)).Methods("GET")
 
 
 }

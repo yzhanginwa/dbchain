@@ -1,17 +1,21 @@
 package rest
 
 import (
+    "encoding/hex"
     "encoding/json"
     "fmt"
     "github.com/cosmos/cosmos-sdk/client/context"
+    sdk "github.com/cosmos/cosmos-sdk/types"
+    "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
     shell "github.com/ipfs/go-ipfs-api"
     "github.com/mr-tron/base58"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
-    "net/http"
-    "strings"
-    "sync"
 
     "github.com/cosmos/cosmos-sdk/types/rest"
+    "net/http"
+    "strconv"
+    "strings"
+    "sync"
 
     "github.com/gorilla/mux"
 )
@@ -564,4 +568,74 @@ func showLimitP2PTransferStatus(cliCtx context.CLIContext, storeName string) htt
         }
         rest.PostProcessResponse(w, cliCtx, res)
     }
+}
+
+func showAllTxs(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+
+        vars := mux.Vars(r)
+        startHeight := vars["start_height"]
+        endHeight := vars["end_height"]
+
+        start, err := strconv.Atoi(startHeight)
+        if err != nil {
+            generalResponse(w,map[string]string { "error" : "invalid parameter" })
+            return
+        }
+
+        end, err := strconv.Atoi(endHeight)
+        if err != nil {
+            generalResponse(w,map[string]string { "error" : "invalid parameter" })
+            return
+        }
+
+        if end - start <= 0 {
+            generalResponse(w,map[string]string { "error" : "invalid parameter" })
+            return
+        }
+
+        if start - end > 17280 {
+            generalResponse(w,map[string]string { "error" : "number of query blocks can not more than 17280" })
+            return
+        }
+
+        node, err := cliCtx.GetNode()
+        if err != nil {
+            generalResponse(w,map[string]string { "error" : "GetNode err : " + err.Error()})
+            return
+        }
+        result := make([]sdk.TxResponse,0)
+        for i := start ; i <= end; i++ {
+            height := int64(i)
+            block, err := node.Block(&height)
+            if err != nil {
+                rest.WriteErrorResponse(w, http.StatusBadRequest, "get block err : " + err.Error())
+                return
+            }
+            Txs := block.Block.Txs
+            for _,tx := range Txs {
+                txha := hex.EncodeToString(tx.Hash())
+                out, err := utils.QueryTx(cliCtx,txha)
+                if err != nil {
+                    continue
+                }
+                result = append(result, out)
+            }
+
+        }
+        rest.PostProcessResponseBare(w, cliCtx, result)
+    }
+}
+
+
+///////////////////
+//               //
+//   help func   //
+//               //
+///////////////////
+
+func generalResponse(w http.ResponseWriter, data interface{}) {
+    bz,_ := json.Marshal(data)
+    w.Header().Set("Content-Type", "application/json")
+    _, _ = w.Write(bz)
 }
