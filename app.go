@@ -300,8 +300,11 @@ func (app *dbChainApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliver
     if !ok {
         return resp
     }
+    var gasPrices sdk.DecCoins
+    if !stdTx.Fee.Amount.IsZero() {
+        gasPrices = stdTx.Fee.GasPrices()
+    }
 
-    gasPrices := stdTx.Fee.GasPrices()
 
 
     //calc Fees
