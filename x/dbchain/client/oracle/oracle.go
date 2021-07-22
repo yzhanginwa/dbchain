@@ -2,6 +2,7 @@ package oracle
 
 import (
     "fmt"
+    "sync"
     "time"
     "errors"
     "io/ioutil"
@@ -47,6 +48,7 @@ const AliyunSmsSecret = "aliyun-sms-secret"
 const AliyunSkyEyeAppCode = "aliyun-sky-eye-appcode"
 
 var (
+    mutexForAssociationMap sync.RWMutex
     associationMap = make(map[string]MobileVerfCode)
     aliyunSmsKey string
     aliyunSmsSecret string
@@ -216,10 +218,21 @@ func cacheMobileAndVerificationCode(strAddr string, mobile string, verificationC
         StartTime: time.Now().Unix(),
         InputTimes: 0,
     }
-
+    mutexForAssociationMap.Lock()
     associationMap[strAddr] = mobileVerfCode
+    mutexForAssociationMap.Unlock()
     return true
-}   
+}
+
+func IsCachedMobileAndVerificationCode(strAddr string) bool {
+    mutexForAssociationMap.RLock()
+    defer mutexForAssociationMap.RUnlock()
+    if _, ok := associationMap[strAddr]; ok {
+        return true
+    } else {
+        return false
+    }
+}
 
 func sendVerificationCode(mobile string, verificationCode string) bool {
     if aliyunSmsKey == "" {
@@ -248,6 +261,8 @@ func sendVerificationCode(mobile string, verificationCode string) bool {
 }
 
 func VerifyVerfCode(strAddr string , mobile string, verificationCode string) bool {
+    mutexForAssociationMap.Lock()
+    defer mutexForAssociationMap.Unlock()
     if mobileCode, ok := associationMap[strAddr]; ok {
         nt := time.Now().Unix()
         //Valid in 5 minutes, only 5 times user can input
@@ -437,12 +452,14 @@ func loopCheckVerfCode(){
     for {
         select {
         case <-tk.C:
+            mutexForAssociationMap.Lock()
             nowTime := time.Now().Unix()
             for addr, mobileCode := range associationMap {
                 if nowTime - mobileCode.StartTime >= 300 {
                     delete(associationMap, addr)
                 }
             }
+            mutexForAssociationMap.Unlock()
         }
     }
 }

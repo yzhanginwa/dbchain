@@ -3,8 +3,10 @@ module github.com/yzhanginwa/dbchain
 go 1.13
 
 require (
+	github.com/afocus/captcha v0.0.0-20191010092841-4bd1f21c8868
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.250
 	github.com/cosmos/cosmos-sdk v0.39.1
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
 	github.com/ipfs/go-cid v0.0.1
@@ -21,4 +23,5 @@ require (
 	github.com/tendermint/tendermint v0.33.7
 	github.com/tendermint/tm-db v0.5.1
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da
+	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d // indirect
 )

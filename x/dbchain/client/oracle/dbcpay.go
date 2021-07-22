@@ -377,7 +377,7 @@ func getOrderReceiptInfo(cliCtx context.CLIContext, storeName string, fieldValue
 func queryByWhere(cliCtx context.CLIContext, storeName, appCode, tableName string, fieldValue map[string]string) ([]map[string]string, error) {
 	querierObjs := []map[string]string{}
 	var ent map[string]string
-	ent = map[string]string{
+	ent = map[string]string {
 		"method": "table",
 		"table":  tableName,
 	}
@@ -647,6 +647,10 @@ func OracleQueryAliOrder(outTradeNo string) (map[string]string, error){
 }
 
 func SaveToOrderInfoTable(cliCtx context.CLIContext, oracleAddr sdk.AccAddress,  row map[string]string, tableName string) error{
+	return OracleSaveToTable(cliCtx, oracleAddr, row, tableName, "0000000001")
+}
+
+func OracleSaveToTable(cliCtx context.CLIContext, oracleAddr sdk.AccAddress,  row map[string]string, tableName string, appCode string) error {
 	//write to buyerorder table
 	rowFields := make(types.RowFields)
 	for k, v := range row {
@@ -657,7 +661,7 @@ func SaveToOrderInfoTable(cliCtx context.CLIContext, oracleAddr sdk.AccAddress, 
 	if err != nil {
 		return err
 	}
-	msg := types.NewMsgInsertRow(oracleAddr, "0000000001", tableName, js)
+	msg := types.NewMsgInsertRow(oracleAddr, appCode, tableName, js)
 	err = msg.ValidateBasic()
 	if err != nil {
 		return err
