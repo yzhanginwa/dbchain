@@ -1,11 +1,13 @@
 package keeper
 
 import (
+    "encoding/hex"
     "fmt"
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/cosmos/cosmos-sdk/x/auth"
     "github.com/cosmos/cosmos-sdk/x/auth/exported"
+    "github.com/tendermint/tendermint/crypto/tmhash"
     "github.com/yzhanginwa/dbchain/x/bank"
     "github.com/tendermint/tendermint/libs/log"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
@@ -40,6 +42,11 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) GetAllAccounts(ctx sdk.Context) (accounts []exported.Account) {
     accounts = k.AccountKeeper.GetAllAccounts(ctx)
     return accounts
+}
+
+func (k Keeper) GetTxHash(ctx sdk.Context) string {
+    txHash := hex.EncodeToString(tmhash.Sum(ctx.TxBytes()))
+    return txHash
 }
 
 //////////////////////
