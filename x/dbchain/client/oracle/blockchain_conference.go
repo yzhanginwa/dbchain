@@ -15,9 +15,12 @@ import (
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
 	"image/color"
 	"image/png"
+	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
+	"time"
 )
 // tableName conference_personal_register
 // fields name mobile addr
@@ -65,11 +68,13 @@ func oracleConferencePersonalRegister(cliCtx context.CLIContext) http.HandlerFun
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		appType := vars["app_type"] // appType Only can applet or h5
+		wechatId := vars["wechat_id"]
 		name     := vars["name"]
 		mobile     := vars["mobile"]
 		verifyCode     := strings.ToUpper(vars["verify_code"])
 
 		fieldValue := map[string]string {
+			"wechat_id" : wechatId,
 			"name" : name,
 			"mobile" : mobile,
 		}
@@ -80,6 +85,7 @@ func oracleConferencePersonalRegister(cliCtx context.CLIContext) http.HandlerFun
 func oracleConferenceCorporateRegister(cliCtx context.CLIContext) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		wechatId := vars["wechat_id"]
 		corporateName := vars["company_name"]
 		responsible := vars["responsible"]
 		position := vars["position"]
@@ -88,6 +94,7 @@ func oracleConferenceCorporateRegister(cliCtx context.CLIContext) http.HandlerFu
 		verifyCode     := strings.ToUpper(vars["verify_code"])
 
 		fieldValue := map[string]string {
+			"wechat_id" : wechatId,
 			"corporate_name" : corporateName,
 			"responsible" : responsible,
 			"position" : position,
@@ -136,11 +143,7 @@ func showConferenceRegistrationStatus(cliCtx context.CLIContext) http.HandlerFun
 
 func getConferenceRegistrationStatus(cliCtx context.CLIContext, storeName, appCode, tableName, params string) ([]map[string]string, error) {
 	fields := make(map[string]string)
-	if len(params) == 11 {
-		fields["mobile"] = params
-	} else {
-		fields["addr"] = params
-	}
+	fields["wechat_id"] = params
 
 	result , err := queryByWhere(cliCtx, storeName, appCode, tableName, fields)
 	return result, err
@@ -189,6 +192,40 @@ func loadConferenceAppCode() string{
 func generalResponse(w http.ResponseWriter, data interface{}) {
 	bz,_ := json.Marshal(data)
 	successResponse(w,bz)
+}
+
+func getWeChatUserInfo() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		result, err  := ioutil.ReadAll(r.Body)
+		if err != nil {
+			generalResponse(w, map[string]string{"error" : err.Error()})
+			return
+		}
+		data := make(map[string]string)
+		err = json.Unmarshal(result, &data)
+		if err != nil {
+			generalResponse(w, map[string]string{"error" : err.Error()})
+			return
+		}
+
+		postUrl := "https://api.weixin.qq.com/sns/jscode2session"
+		DataUrlVal := url.Values{}
+		for key,val := range data{
+			DataUrlVal.Add(key,val)
+		}
+		contentType := "application/x-www-form-urlencoded"
+		client := &http.Client{Timeout: 5 * time.Second}
+		resp, err := client.Post(postUrl, contentType, bytes.NewBuffer([]byte(DataUrlVal.Encode())))
+		if err != nil {
+			panic(err)
+		}
+		defer resp.Body.Close()
+
+		result, _ = ioutil.ReadAll(resp.Body)
+		successResponse(w,result)
+		return
+	}
 }
 
 func registerCore(cliCtx context.CLIContext, w http.ResponseWriter, appType, verifyCode string, tableName string, fieldValue map[string]string) {
