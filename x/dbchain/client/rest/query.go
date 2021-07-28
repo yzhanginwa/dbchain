@@ -16,8 +16,7 @@ import (
     "github.com/mr-tron/base58"
     "github.com/spf13/viper"
     "github.com/tendermint/tendermint/crypto"
-    "github.com/tendermint/tendermint/crypto/secp256k1"
-    //btypes "github.com/yzhanginwa/dbchain/x/bank/internal/types"
+    tmamino "github.com/tendermint/tendermint/crypto/encoding/amino"
     "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "io"
@@ -703,13 +702,17 @@ func applyAccountInfoByPublicKey() http.HandlerFunc {
             return
         }
         publicKey := postData["publicKey"]
-        var pubKey secp256k1.PubKeySecp256k1
-        bz, err :=  hex.DecodeString(publicKey)
+        pubBytes , err := hex.DecodeString(publicKey)
+        if err != nil {
+            generalResponse(w, map[string]string{"error" : err.Error()})
+            return
+        }
+        pubKey, err  := tmamino.PubKeyFromBytes(pubBytes)
         if err != nil {
             generalResponse(w, map[string]string{"error" : "Public key format should be hexadecimal string"})
             return
         }
-        copy(pubKey[:], bz[:])
+
         add := sdk.AccAddress(pubKey.Address())
         data := map[string]string {
             "publicKey" : publicKey,
