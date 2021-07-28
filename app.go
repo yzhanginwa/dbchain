@@ -352,12 +352,12 @@ func (app *dbChainApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliver
     //set account txs hash
     var hash = sha256.Sum256(req.Tx)
     hexHash := hex.EncodeToString(hash[:])
-    usedGas := app.SaveAddrTx(ctx, resp, stdTx, hexHash)
+    usedGas := app.SaveAddrTx(ctx, resp, stdTx, gasPrices, hexHash)
     resp.Info = usedGas
     return resp
 }
 
-func (app *dbChainApp) SaveAddrTx(ctx sdk.Context ,resp abci.ResponseDeliverTx, stdTx auth.StdTx, txHash string)  string {
+func (app *dbChainApp) SaveAddrTx(ctx sdk.Context ,resp abci.ResponseDeliverTx, stdTx auth.StdTx, gasPrices sdk.DecCoins, txHash string)  string {
     //set account txs hash
     var addr sdk.AccAddress
     if len(stdTx.Msgs) > 0 {
@@ -366,7 +366,7 @@ func (app *dbChainApp) SaveAddrTx(ctx sdk.Context ,resp abci.ResponseDeliverTx, 
             addr = signers[0]
         }
     }
-    gasPrices := stdTx.Fee.GasPrices()
+
     t := time.Now()
     data := map[string]string {
         "txHash" : txHash,
