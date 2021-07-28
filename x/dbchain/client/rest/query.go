@@ -5,13 +5,23 @@ import (
     "encoding/json"
     "fmt"
     "github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/client/flags"
+    keys2 "github.com/cosmos/cosmos-sdk/client/keys"
+    "github.com/cosmos/cosmos-sdk/crypto/keys"
     sdk "github.com/cosmos/cosmos-sdk/types"
+    "github.com/cosmos/cosmos-sdk/types/rest"
     "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+    "github.com/cosmos/go-bip39"
     shell "github.com/ipfs/go-ipfs-api"
     "github.com/mr-tron/base58"
+    "github.com/spf13/viper"
+    "github.com/tendermint/tendermint/crypto"
+    "github.com/tendermint/tendermint/crypto/secp256k1"
+    //btypes "github.com/yzhanginwa/dbchain/x/bank/internal/types"
+    "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
-
-    "github.com/cosmos/cosmos-sdk/types/rest"
+    "io"
+    "io/ioutil"
     "net/http"
     "strconv"
     "strings"
@@ -628,6 +638,107 @@ func showAllTxs(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 }
 
 
+func applyAccountInfo() http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        kb, err := keys.NewKeyring(sdk.KeyringServiceName(), keys.BackendOS, viper.GetString(flags.FlagHome), nil)
+        if err != nil {
+           generalResponse(w, map[string]string {"error " : err.Error()})
+           return
+        }
+        //genName
+        nameBytes := make([]byte, 24)
+        keyName := ""
+        for i := 0; i < 10; i++ {
+           io.ReadFull(crypto.CReader(), nameBytes)
+           keyName = hex.EncodeToString(nameBytes)
+           info, err := kb.Get(keyName)
+           if err != nil {
+               continue
+           }
+           if info != nil && i == 9 {
+               generalResponse(w, map[string]string {"error " : "generate key pairs err"})
+               return
+           } else if info == nil {
+               break
+           }
+        }
+
+        info, secret, err := CreateMnemonic(kb, keyName, keys.English, keys2.DefaultKeyPass, keys.Secp256k1)
+        if err != nil {
+           generalResponse(w, map[string]string {"error " : "generate key pairs err"})
+           return
+        }
+
+        pk, err := kb.ExportPrivateKeyObject(keyName, keys2.DefaultKeyPass)
+        if err != nil {
+           generalResponse(w, map[string]string {"error " : "generate key pairs err"})
+           return
+        }
+
+        add := sdk.AccAddress(info.GetPubKey().Address())
+
+        data := map[string]string {
+            "publicKey" : hex.EncodeToString(pk.PubKey().Bytes()),
+            "privateKey" : hex.EncodeToString(pk.Bytes()),
+            "address" : add.String(),
+            "mnemonic" : secret,
+        }
+        generalResponse(w, data)
+        return
+
+    }
+}
+
+func applyAccountInfoByPublicKey() http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        result, err  := ioutil.ReadAll(r.Body)
+        if err != nil {
+            generalResponse(w, map[string]string{"error" : err.Error()})
+            return
+        }
+        postData := make(map[string]string)
+        err = json.Unmarshal(result, &postData)
+        if err != nil {
+            generalResponse(w, map[string]string{"error" : err.Error()})
+            return
+        }
+        publicKey := postData["publicKey"]
+        var pubKey secp256k1.PubKeySecp256k1
+        bz, err :=  hex.DecodeString(publicKey)
+        if err != nil {
+            generalResponse(w, map[string]string{"error" : "Public key format should be hexadecimal string"})
+            return
+        }
+        copy(pubKey[:], bz[:])
+        add := sdk.AccAddress(pubKey.Address())
+        data := map[string]string {
+            "publicKey" : publicKey,
+            "address" : add.String(),
+        }
+        generalResponse(w, data)
+        return
+
+    }
+}
+
+func rechargeTx(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        data, err := readBodyData(r)
+        if err != nil {
+            generalResponse(w, map[string]string{ "error" : err.Error()})
+        }
+        bsnAddress := data["bsnAddress"]
+        userAccountAddress := data["userAccountAddress"]
+        rechargeGas := data["rechargeGas"]
+        tx, status, errInfo := sendFromBsnAddressToUserAddress(cliCtx, bsnAddress, userAccountAddress, rechargeGas)
+        generalResponse(w, map[string]interface{}{
+            "txHash" : tx,
+            "state" : status,
+            "remarks" : errInfo,
+        })
+        return
+    }
+}
 ///////////////////
 //               //
 //   help func   //
@@ -638,4 +749,72 @@ func generalResponse(w http.ResponseWriter, data interface{}) {
     bz,_ := json.Marshal(data)
     w.Header().Set("Content-Type", "application/json")
     _, _ = w.Write(bz)
+}
+
+func CreateMnemonic(
+    kb keys.Keybase,name string, language keys.Language, passwd string, algo keys.SigningAlgo,
+) (keys.Info,  string,  error) {
+
+    entropy, err := bip39.NewEntropy(128)
+    if err != nil {
+        return  nil, "", err
+    }
+
+    mnemonic, err := bip39.NewMnemonic(entropy)
+    if err != nil {
+        return nil, "", err
+    }
+
+    info, err := kb.CreateAccount( name, mnemonic, keys.DefaultBIP39Passphrase, passwd, sdk.GetConfig().GetFullFundraiserPath(), algo)
+    if err != nil {
+        return nil, "", err
+    }
+    return info, mnemonic, nil
+}
+
+func readBodyData(r *http.Request) (map[string]string, error) {
+    result, err  := ioutil.ReadAll(r.Body)
+    if err != nil {
+        return nil , err
+    }
+
+    postData := make(map[string]string)
+    err = json.Unmarshal(result, &postData)
+    if err != nil {
+        return nil, err
+    }
+    return postData, nil
+}
+
+func sendFromBsnAddressToUserAddress(cliCtx context.CLIContext, bsnAddress, userAccountAddress, rechargeGas string) (string, int, string){
+    from, err  := sdk.AccAddressFromBech32(bsnAddress)
+    if err != nil {
+        return "", oracle.Failed, err.Error()
+    }
+    to, err := sdk.AccAddressFromBech32(userAccountAddress)
+    if err != nil {
+        return "", oracle.Failed, err.Error()
+    }
+    coins, err := sdk.ParseCoins(rechargeGas)
+    if err != nil {
+        return "", oracle.Failed, err.Error()
+    }
+
+    kb, err := keys.NewKeyring(sdk.KeyringServiceName(), keys.BackendOS, viper.GetString(flags.FlagHome), nil)
+    if err != nil {
+        return "", oracle.Failed, err.Error()
+    }
+
+    info , err := kb.GetByAddress(from)
+    if err != nil {
+        return "", oracle.Failed, err.Error()
+    }
+    fmt.Println(info.GetName())
+
+    pk , err := kb.ExportPrivateKeyObject(info.GetName(), keys2.DefaultKeyPass)
+
+    msg := oracle.NewMsgSend(from, to, coins)
+    txHash, status, errInfo := oracle.BuildAndSignBroadcastTx(cliCtx, []oracle.UniversalMsg{msg}, pk, from)
+    fmt.Println(txHash, status, errInfo)
+    return txHash, status, errInfo
 }

@@ -55,5 +55,11 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/limit_p2p_transfer_status/{%s}", storeName, "accessToken"), showLimitP2PTransferStatus(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/get_all_txs/{%s}/{%s}", storeName, "start_height", "end_height"), showAllTxs(cliCtx, storeName)).Methods("GET")
 
+    // bsn open interface
+    //密钥托管创建链账户
+    r.HandleFunc("/api/v1/account/apply", applyAccountInfo()).Methods("POST")
+    r.HandleFunc("/api/v1/account/apply/publicKey", applyAccountInfoByPublicKey()).Methods("POST")
+    r.HandleFunc("/api/v1/account/recharge", rechargeTx(cliCtx, storeName)).Methods("POST")
+
 
 }

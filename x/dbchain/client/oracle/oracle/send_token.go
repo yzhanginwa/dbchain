@@ -4,6 +4,8 @@ import (
     "fmt"
     "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
+    sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+    dtypes "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
 // MsgSend - high level transaction of the coin module
@@ -19,6 +21,34 @@ func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) MsgSend {
 
 func (msg MsgSend) GetSignBytes() []byte {
     return sdk.MustSortJSON(aminoCdc.MustMarshalJSON(msg))
+}
+
+// Route Implements Msg.
+func (msg MsgSend) Route() string { return dtypes.RouterKey }
+
+// Type Implements Msg.
+func (msg MsgSend) Type() string { return "send" }
+
+// ValidateBasic Implements Msg.
+func (msg MsgSend) ValidateBasic() error {
+    if msg.FromAddress.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
+    }
+    if msg.ToAddress.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
+    }
+    if !msg.Amount.IsValid() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+    }
+    if !msg.Amount.IsAllPositive() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+    }
+    return nil
+}
+
+// GetSigners Implements Msg.
+func (msg MsgSend) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.FromAddress}
 }
 
 func GetSendTokenMsg(addr sdk.AccAddress) (UniversalMsg, error) {
