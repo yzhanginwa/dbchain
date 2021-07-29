@@ -59,8 +59,10 @@ const (
     QueryApplicationUserUsedFileVolume  = "application_user_used_file_volume"
     //add for bsb
     QueryAccountTxs = "account_txs"
+    QueryAccountTxsByTime  = "account_txs_by_time"
     QueryChainSuperAdmins = "chain_super_admins"
     QueryLimitP2PTransferStatus = "limit_p2p_transfer_status"
+
 )
 
 
@@ -154,6 +156,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryDbchainRecentTxNum(ctx, path[1:], req, keeper)
         case QueryAccountTxs:
             return queryAccountTxs(ctx, path[1:], req, keeper)
+        case QueryAccountTxsByTime:
+            return queryAccountTxsByTime(ctx, path[1:], req, keeper)
         case QueryChainSuperAdmins:
             return queryChainSuperAdmins(ctx, path[1:], req, keeper)
         case QueryLimitP2PTransferStatus:
@@ -1170,7 +1174,26 @@ func queryAccountTxs(ctx sdk.Context, path []string, req abci.RequestQuery, keep
         }
     }
     txs := keeper.GetAddrTxs(ctx, addr, uint(num))
-    res, err := codec.MarshalJSONIndent(keeper.cdc, txs)
+    res, err := json.Marshal(txs)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryAccountTxsByTime(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper)([]byte, error) {
+    userAccountAddress := path[0]
+    startDate := path[1]
+    endDate := path[2]
+
+    addr , err := sdk.AccAddressFromBech32(userAccountAddress)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "userAccountAddress error")
+    }
+
+    txs := keeper.GetAddrTxsByTime(ctx, addr, startDate, endDate)
+    res, err := json.Marshal(txs)
     if err != nil {
         panic("could not marshal result to JSON")
     }

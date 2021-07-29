@@ -60,6 +60,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc("/api/v1/account/apply", applyAccountInfo()).Methods("POST")
     r.HandleFunc("/api/v1/account/apply/publicKey", applyAccountInfoByPublicKey()).Methods("POST")
     r.HandleFunc("/api/v1/account/recharge", rechargeTx(cliCtx, storeName)).Methods("POST")
+    r.HandleFunc("/api/v1/account/tx", getAccountTxByTime(cliCtx, storeName)).Methods("POST")
 
 
 }

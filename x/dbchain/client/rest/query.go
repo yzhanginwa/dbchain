@@ -742,6 +742,40 @@ func rechargeTx(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
         return
     }
 }
+
+func getAccountTxByTime(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        data, err := readBodyData(r)
+        if err != nil {
+            generalResponse(w, map[string]string{ "error" : err.Error()})
+        }
+
+        userAccountAddress := data["userAccountAddress"]
+        startDate := data["startDate"]
+        endDate := data["endDate"]
+        if userAccountAddress == "" || startDate == "" || endDate == "" {
+            generalResponse(w, map[string]string{"error" : "expect 3 parameters : userAccountAddress, startDate, endDate"})
+            return
+        }
+
+        year, month, day := 0,0,0
+        nStartDate , _ := fmt.Sscanf(startDate,"%d-%d-%d", &year, &month, &day)
+        nEndDate , _ := fmt.Sscanf(endDate,"%d-%d-%d", &year, &month, &day)
+        if nStartDate != 3 || nEndDate != 3 {
+            generalResponse(w, map[string]string{"error" : "time format error, it should be  yyyy-mm-dd"})
+            return
+        }
+
+
+
+        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/account_txs_by_time/%s/%s/%s", storeName, userAccountAddress, startDate, endDate), nil)
+        if err != nil {
+            rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+            return
+        }
+        rest.PostProcessResponse(w, cliCtx, res)
+    }
+}
 ///////////////////
 //               //
 //   help func   //
