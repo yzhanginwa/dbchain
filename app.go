@@ -9,7 +9,6 @@ import (
     "os"
     "reflect"
     "strings"
-    "time"
     "unsafe"
 
     abci "github.com/tendermint/tendermint/abci/types"
@@ -336,6 +335,7 @@ func (app *dbChainApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliver
             break
         }
     }
+
     if ctx.IsZero() {
         return resp
     }
@@ -367,10 +367,11 @@ func (app *dbChainApp) SaveAddrTx(ctx sdk.Context ,resp abci.ResponseDeliverTx, 
         }
     }
 
-    t := time.Now()
-    data := map[string]string {
+    data := map[string]interface{} {
+        "userAccountAddress" : addr.String(),
         "txHash" : txHash,
-        "timestamp" : t.Format("2006-01-02T15:04"),
+        "txTime" : ctx.BlockHeader().Time.Local().Format("2006-01-02 15:04:05"),
+        "state" : checkTxStatus(resp.Log),
     }
 
     //calc usedFees
@@ -392,7 +393,7 @@ func (app *dbChainApp) SaveAddrTx(ctx sdk.Context ,resp abci.ResponseDeliverTx, 
     }
     usedFeesString := strings.Join(usedFees,",")
 
-    data["fees"] = usedFeesString
+    data["gas"] = usedFeesString
     app.dbChainKeeper.SaveAddrTxs(ctx, addr, data)
     feeOfTxCost := "fee of tx cost : "
     if usedFeesString == "" {
@@ -454,4 +455,20 @@ func (st *state) CacheMultiStore() sdk.CacheMultiStore {
 
 func (st *state) Context() sdk.Context {
     return st.ctx
+}
+
+// 2 : success
+// 3 : fail
+func checkTxStatus(log string) int {
+    data := make([]interface{}, 0)
+    err := json.Unmarshal([]byte(log), &data)
+    if err != nil {
+        //tx fail
+        // "insufficient funds: insufficient account funds; 18dbctoken \u003c 10000dbctoken: failed to execute message; message index: 0"
+        return 3
+    } else {
+        //tx success
+        //[{"msg_index":0,"log":"","events":[{"type":"message","attributes":[{"key":"action","value":"send"},{"key":"sender","value":"cosmos1n6yqmysvcz0cpnd52427ldjmjj493pk2uhpcu3"},{"key":"module","value":"bank"}]},{"type":"transfer","attributes":[{"key":"recipient","value":"cosmos156p5rmhpd3l709ygg7t80fu96fm4mrtsqhftvx"},{"key":"sender","value":"cosmos1n6yqmysvcz0cpnd52427ldjmjj493pk2uhpcu3"},{"key":"amount","value":"1dbctoken"}]}]}]
+        return 2
+    }
 }
