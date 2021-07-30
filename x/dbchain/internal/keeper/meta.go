@@ -761,11 +761,12 @@ func (k Keeper) GetCanSetColumnDataType(ctx sdk.Context, appId uint, tableName, 
 // to make sure the fields be lowercase
 // to make sure field id be in place
 func preProcessFields(fieldNames []string) []string {
-    var result = []string{"id", "created_by", "created_at"}
+    var result = []string{"id", "created_by", "created_at", "tx_hash"}
     m := map[string]bool{
         "id" : true,
         "created_by" : true,
         "created_at" : true,
+        "tx_hash" : true,
     }
 
     for _, field := range fieldNames {

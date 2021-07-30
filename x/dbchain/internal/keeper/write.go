@@ -44,6 +44,7 @@ func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields typ
     fields["created_by"] = owner.String()
     //测试改为时间戳
     fields["created_at"] = fmt.Sprintf("%d",other.GetCurrentBlockTime().UnixNano()/(1000*1000))
+    fields["tx_hash"] = k.GetTxHash(ctx)
 
     id, err = k.Write(ctx, appId, tableName, id, fields, owner)
     if err != nil {
