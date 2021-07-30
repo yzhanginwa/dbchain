@@ -15,9 +15,7 @@ import (
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
 	"io/ioutil"
-	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -57,27 +55,27 @@ const (
  	ApplePay = "applepay"
 )
 
-func init(){
-	var err error
-	if aliClient, err = alipay.New(kAppId, cmsDbchainCloudPriKey, IsProduction); err != nil {
-		fmt.Println("init aliclient err : ", err)
-		os.Exit(-1)
-	}
-	// 使用支付宝证书
-	if err = aliClient.LoadAppPublicCert(appCertPublicKey); err != nil {
-		fmt.Println("load app public cert from file fail : ", err)
-		os.Exit(-1)
-	}
-	if err = aliClient.LoadAliPayRootCert(alipayRootCert); err != nil {
-		log.Println("load alipay root cert from file fail : ", err)
-		os.Exit(-1)
-	}
-	if err = aliClient.LoadAliPayPublicCert(alipayCertPublicKeyRSA2); err != nil {
-		log.Println("load aliPay public cert from file fail : ", err)
-		os.Exit(-1)
-	}
-	//need create table buyerorder and orderinfo
-}
+//func init(){
+//	var err error
+//	if aliClient, err = alipay.New(kAppId, cmsDbchainCloudPriKey, IsProduction); err != nil {
+//		fmt.Println("init aliclient err : ", err)
+//		os.Exit(-1)
+//	}
+//	// 使用支付宝证书
+//	if err = aliClient.LoadAppPublicCert(appCertPublicKey); err != nil {
+//		fmt.Println("load app public cert from file fail : ", err)
+//		os.Exit(-1)
+//	}
+//	if err = aliClient.LoadAliPayRootCert(alipayRootCert); err != nil {
+//		log.Println("load alipay root cert from file fail : ", err)
+//		os.Exit(-1)
+//	}
+//	if err = aliClient.LoadAliPayPublicCert(alipayCertPublicKeyRSA2); err != nil {
+//		log.Println("load aliPay public cert from file fail : ", err)
+//		os.Exit(-1)
+//	}
+//	//need create table buyerorder and orderinfo
+//}
 
 func oracleRecipientAddress(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
