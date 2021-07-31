@@ -639,7 +639,7 @@ func showAllTxs(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 
 func applyAccountInfo() http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
-        kb, err := keys.NewKeyring(sdk.KeyringServiceName(), keys.BackendOS, viper.GetString(flags.FlagHome), nil)
+        kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), nil)
         if err != nil {
            generalResponse(w, map[string]string {"error " : err.Error()})
            return
@@ -837,7 +837,7 @@ func sendFromBsnAddressToUserAddress(cliCtx context.CLIContext, bsnAddress, user
         return "", oracle.Failed, err.Error()
     }
 
-    kb, err := keys.NewKeyring(sdk.KeyringServiceName(), keys.BackendOS, viper.GetString(flags.FlagHome), nil)
+    kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), nil)
     if err != nil {
         return "", oracle.Failed, err.Error()
     }
