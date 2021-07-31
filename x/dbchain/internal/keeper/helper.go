@@ -9,7 +9,7 @@ import (
 )
 
 func isSystemField(fieldName string) bool {
-    systemFields := []string{"id", "created_by", "created_at"}
+    systemFields := []string{"id", "created_by", "created_at", "tx_hash"}
     return utils.ItemExists(systemFields, fieldName)
 }
 
