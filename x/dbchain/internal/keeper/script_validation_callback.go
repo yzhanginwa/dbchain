@@ -5,8 +5,8 @@ import (
     "fmt"
     "strconv"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
-    "github.com/yzhanginwa/dbchain-sm/x/dbchain/internal/utils"
-    "github.com/yzhanginwa/dbchain-sm/x/dbchain/internal/other"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/other"
 )
 
 // return the function which checks whether a table contains a field

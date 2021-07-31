@@ -4,6 +4,7 @@ import (
     "encoding/base64"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     sdkerrors "github.com/dbchaincloud/cosmos-sdk/types/errors"
+)
 
 //////////////////////////
 //                      //

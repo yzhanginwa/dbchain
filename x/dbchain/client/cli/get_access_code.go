@@ -13,7 +13,7 @@ import (
     "github.com/dbchaincloud/cosmos-sdk/client/keys"
     cryptoKeys "github.com/dbchaincloud/cosmos-sdk/crypto/keys"
     "github.com/mr-tron/base58"
-    "github.com/yzhanginwa/dbchain-sm/x/dbchain/internal/types"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/dbchaincloud/tendermint/crypto/sm2"
 )
 

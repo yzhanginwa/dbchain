@@ -8,18 +8,18 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/dbchaincloud/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/dbchaincloud/cosmos-sdk/client/context"
+	"github.com/dbchaincloud/cosmos-sdk/codec"
+	sdk "github.com/dbchaincloud/cosmos-sdk/types"
+	"github.com/dbchaincloud/cosmos-sdk/types/module"
 	"github.com/yzhanginwa/dbchain/x/bank/client/cli"
 	"github.com/yzhanginwa/dbchain/x/bank/client/rest"
 	"github.com/yzhanginwa/dbchain/x/bank/internal/keeper"
 	"github.com/yzhanginwa/dbchain/x/bank/internal/types"
 	"github.com/yzhanginwa/dbchain/x/bank/simulation"
-	sim "github.com/cosmos/cosmos-sdk/x/simulation"
+	sim "github.com/dbchaincloud/cosmos-sdk/x/simulation"
 )
 
 var (

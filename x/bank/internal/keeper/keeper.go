@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/dbchaincloud/tendermint/libs/log"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
-	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
-	"github.com/cosmos/cosmos-sdk/x/params"
+	sdk "github.com/dbchaincloud/cosmos-sdk/types"
+	sdkerrors "github.com/dbchaincloud/cosmos-sdk/types/errors"
+	authexported "github.com/dbchaincloud/cosmos-sdk/x/auth/exported"
+	vestexported "github.com/dbchaincloud/cosmos-sdk/x/auth/vesting/exported"
+	"github.com/dbchaincloud/cosmos-sdk/x/params"
 	"github.com/yzhanginwa/dbchain/x/bank/internal/types"
 )
 

@@ -3,10 +3,10 @@ package oracle
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/context"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/dbchaincloud/cosmos-sdk/client/context"
+	sdk "github.com/dbchaincloud/cosmos-sdk/types"
+	"github.com/dbchaincloud/tendermint/crypto"
+	"github.com/dbchaincloud/tendermint/crypto/sm2"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -31,7 +31,7 @@ func BuildAndSignBroadcastTx(cliCtx context.CLIContext, batch []UniversalMsg, pr
 		}
 	}
 
-	pk := privKey.(secp256k1.PrivKeySecp256k1)
+	pk := privKey.(sm2.PrivKeySm2)
 	txBytes, err := buildAndSignAndBuildTxBytes(newBatch, accNum, seq, pk)
 	if err != nil {
 		return "", Failed, err.Error()

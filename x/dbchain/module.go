@@ -5,7 +5,6 @@ import (
     "os"
     "time"
     "encoding/json"
-    "time"
 
     "github.com/gorilla/mux"
     "github.com/spf13/cobra"

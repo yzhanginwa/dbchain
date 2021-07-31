@@ -7,7 +7,7 @@ import (
 	"math/rand"
 
 	"github.com/yzhanginwa/dbchain/x/bank/internal/types"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
+	"github.com/dbchaincloud/cosmos-sdk/x/simulation"
 )
 
 const keySendEnabled = "sendenabled"

@@ -3,8 +3,8 @@ package keeper
 import (
     "encoding/json"
     "errors"
-    "github.com/cosmos/cosmos-sdk/codec"
-    sdk "github.com/cosmos/cosmos-sdk/types"
+    "github.com/dbchaincloud/cosmos-sdk/codec"
+    sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/mr-tron/base58"
     lua "github.com/yuin/gopher-lua"
     "github.com/yuin/gopher-lua/parse"

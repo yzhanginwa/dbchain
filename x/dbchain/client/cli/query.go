@@ -4,7 +4,6 @@ import (
     "encoding/json"
     "fmt"
     "github.com/mr-tron/base58"
-    "github.com/dbchaincloud/tendermint/crypto/sm2"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/dbchaincloud/cosmos-sdk/client"
     "github.com/dbchaincloud/cosmos-sdk/client/context"

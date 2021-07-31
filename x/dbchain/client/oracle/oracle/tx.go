@@ -1,18 +1,18 @@
 package oracle
 
 import (
+    "encoding/hex"
     "encoding/json"
     "fmt"
-    "github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/dbchaincloud/cosmos-sdk/client/context"
+    sdk "github.com/dbchaincloud/cosmos-sdk/types"
+    "github.com/dbchaincloud/tendermint/crypto/sm2"
+    rpchttp "github.com/dbchaincloud/tendermint/rpc/client/http"
     "github.com/mr-tron/base58"
-    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
-    "time"
-    "encoding/hex"
     "github.com/spf13/viper"
-    rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-    "github.com/tendermint/tendermint/crypto/secp256k1"
-    sdk "github.com/cosmos/cosmos-sdk/types"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    "time"
 )
 
 const (
@@ -88,7 +88,7 @@ func txRunner(cliCtx context.CLIContext) {
     }
 }
 
-func executeTxs(cliCtx context.CLIContext, batch []UniversalMsg, privKey secp256k1.PrivKeySecp256k1, oracleAccAddr sdk.AccAddress) error {
+func executeTxs(cliCtx context.CLIContext, batch []UniversalMsg, privKey sm2.PrivKeySm2, oracleAccAddr sdk.AccAddress) error {
     accNum, seq, err := GetAccountInfo(oracleAccAddr.String())
     if err != nil {
         fmt.Println("Failed to load oracle's account info!!!")
@@ -115,7 +115,7 @@ func buildTxAndBroadcast(cliCtx context.CLIContext, msg UniversalMsg) {
     BuildTxsAndBroadcast(cliCtx, msgs)
 }
 
-func buildAndSignAndBuildTxBytes(msgs []UniversalMsg, accNum uint64, seq uint64, privKey secp256k1.PrivKeySecp256k1) ([]byte, error) {
+func buildAndSignAndBuildTxBytes(msgs []UniversalMsg, accNum uint64, seq uint64, privKey sm2.PrivKeySm2) ([]byte, error) {
     size := len(msgs)
     stdFee := NewStdFee(uint64(200000 * size), sdk.Coins{sdk.NewCoin("dbctoken", sdk.NewInt(int64(0)))})
     chainId := viper.GetString("chain-id")

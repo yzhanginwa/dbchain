@@ -3,7 +3,7 @@ package super_script
 import (
     "fmt"
     "io"
-    "github.com/yzhanginwa/dbchain-sm/x/dbchain/internal/super_script/eval"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/eval"
 )
 
 type ScriptType int

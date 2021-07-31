@@ -1,9 +1,9 @@
 package keeper
 
 import (
-    "github.com/cosmos/cosmos-sdk/codec"
+    "github.com/dbchaincloud/cosmos-sdk/codec"
     "strconv"
-    "github.com/yzhanginwa/dbchain-sm/x/dbchain/internal/utils"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/ipfs/go-cid"
 )

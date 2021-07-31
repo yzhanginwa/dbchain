@@ -9,11 +9,11 @@ ldflags1 = -X github.com/dbchaincloud/cosmos-sdk/version.Name=dbChain \
 	-X github.com/dbchaincloud/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/dbchaincloud/cosmos-sdk/version.Commit=$(COMMIT) 
 
-ldflagsoracle1 = -X github.com/cosmos/cosmos-sdk/version.Name=dbChain \
-       	-X github.com/cosmos/cosmos-sdk/version.ServerName=dbchaind \
-	-X github.com/cosmos/cosmos-sdk/version.ClientName=dbchainoracle \
-	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
-	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT)
+ldflagsoracle1 = -X github.com/dbchaincloud/cosmos-sdk/version.Name=dbChain \
+       	-X github.com/dbchaincloud/cosmos-sdk/version.ServerName=dbchaind \
+	-X github.com/dbchaincloud/cosmos-sdk/version.ClientName=dbchainoracle \
+	-X github.com/dbchaincloud/cosmos-sdk/version.Version=$(VERSION) \
+	-X github.com/dbchaincloud/cosmos-sdk/version.Commit=$(COMMIT)
 
 BUILD_FLAGS1 := -ldflags '$(ldflags1)'
 BUILD_FLAGS_ORACLE1 := -ldflags '$(ldflagsoracle1)'
@@ -24,11 +24,11 @@ ldflags2 = -X github.com/dbchaincloud/cosmos-sdk/version.Name=dbChainCommunity \
 	-X github.com/dbchaincloud/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/dbchaincloud/cosmos-sdk/version.Commit=$(COMMIT) 
 
-ldflagsoracle2 = -X github.com/cosmos/cosmos-sdk/version.Name=dbChainCommunity \
-        -X github.com/cosmos/cosmos-sdk/version.ServerName=dbchaind \
-    -X github.com/cosmos/cosmos-sdk/version.ClientName=dbchainoracle \
-    -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
-    -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT)
+ldflagsoracle2 = -X github.com/dbchaincloud/cosmos-sdk/version.Name=dbChainCommunity \
+        -X github.com/dbchaincloud/cosmos-sdk/version.ServerName=dbchaind \
+    -X github.com/dbchaincloud/cosmos-sdk/version.ClientName=dbchainoracle \
+    -X github.com/dbchaincloud/cosmos-sdk/version.Version=$(VERSION) \
+    -X github.com/dbchaincloud/cosmos-sdk/version.Commit=$(COMMIT)
 
 BUILD_FLAGS2 := -ldflags '$(ldflags2)'
 BUILD_FLAGS_ORACLE2 := -ldflags '$(ldflagsoracle2)'

@@ -85,7 +85,7 @@ func GetAddrFromAccessCode(accessCode string) (sdk.AccAddress, error) {
         return nil, errors.New("Wrong access code format")
     }
     pubKeyBytes, _ := base58.Decode(parts[0])
-    var pubKey secp256k1.PubKeySecp256k1
+    var pubKey sm2.PubKeySm2
     copy(pubKey[:], pubKeyBytes)
     address := sdk.AccAddress(pubKey.Address())
     return address, nil

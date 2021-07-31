@@ -5,7 +5,7 @@ import (
     "encoding/json"
     "github.com/dbchaincloud/cosmos-sdk/client/context"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
-    "github.com/yzhanginwa/dbchain-sm/x/dbchain/internal/types"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
 func GetInsertRowMsgs(appCode string, tableName string, rowFieldss []types.RowFields) []UniversalMsg {

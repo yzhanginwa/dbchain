@@ -3,8 +3,8 @@ package types
 import (
     "encoding/base64"
     "fmt"
-    sdk "github.com/cosmos/cosmos-sdk/types"
-    sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+    sdk "github.com/dbchaincloud/cosmos-sdk/types"
+    sdkerrors "github.com/dbchaincloud/cosmos-sdk/types/errors"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script"
     "strings"
 )

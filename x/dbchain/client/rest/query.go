@@ -11,7 +11,7 @@ import (
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/dbchaincloud/cosmos-sdk/types/rest"
     "github.com/dbchaincloud/cosmos-sdk/x/auth/client/utils"
-    "github.com/dbchaincloud/go-bip39"
+    "github.com/cosmos/go-bip39"
     shell "github.com/ipfs/go-ipfs-api"
     "github.com/mr-tron/base58"
     "github.com/spf13/viper"

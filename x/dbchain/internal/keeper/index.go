@@ -4,7 +4,7 @@ import (
     "fmt"
     "errors"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
-    "github.com/yzhanginwa/dbchain-sm/x/dbchain/internal/utils"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
 )
 
 // for now we only support indexes on single field

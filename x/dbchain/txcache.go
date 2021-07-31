@@ -3,9 +3,9 @@ package dbchain
 import (
 	"encoding/hex"
 	"errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stdtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/tendermint/tendermint/crypto/tmhash"
+	sdk "github.com/dbchaincloud/cosmos-sdk/types"
+	stdtypes "github.com/dbchaincloud/cosmos-sdk/x/auth/types"
+	"github.com/dbchaincloud/tendermint/crypto/tmhash"
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 	"time"

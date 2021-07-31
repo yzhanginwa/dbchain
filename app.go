@@ -5,7 +5,7 @@ import (
     "encoding/hex"
     "encoding/json"
     "fmt"
-    "github.com/cosmos/cosmos-sdk/x/auth/types"
+    "github.com/dbchaincloud/cosmos-sdk/x/auth/types"
     "os"
     "reflect"
     "strings"
@@ -32,7 +32,7 @@ import (
     "github.com/dbchaincloud/cosmos-sdk/x/staking"
     "github.com/dbchaincloud/cosmos-sdk/x/supply"
 
-    "github.com/yzhanginwa/dbchain-sm/x/dbchain"
+    "github.com/yzhanginwa/dbchain/x/dbchain"
 )
 
 const (

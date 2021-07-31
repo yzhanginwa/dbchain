@@ -10,7 +10,7 @@ import (
     "github.com/dbchaincloud/tendermint/crypto/tmhash"
     "github.com/yzhanginwa/dbchain/x/bank"
     "github.com/dbchaincloud/tendermint/libs/log"
-    "github.com/yzhanginwa/dbchain-sm/x/dbchain/internal/types"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
 // Keeper maintains the link to storage and exposes getter/setter methods for the various parts of the state machine
