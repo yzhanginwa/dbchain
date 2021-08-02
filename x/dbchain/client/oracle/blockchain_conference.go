@@ -91,6 +91,7 @@ func oracleConferenceCorporateRegister(cliCtx context.CLIContext) http.HandlerFu
 		position := vars["position"]
 		mobile := vars["mobile"]
 		appType := vars["app_type"] // appType Only can applet or h5
+		inviter := vars["inviter"]
 		verifyCode     := strings.ToUpper(vars["verify_code"])
 
 		fieldValue := map[string]string {
@@ -98,6 +99,7 @@ func oracleConferenceCorporateRegister(cliCtx context.CLIContext) http.HandlerFu
 			"corporate_name" : corporateName,
 			"responsible" : responsible,
 			"position" : position,
+			"inviter" : inviter,
 			"mobile" : mobile,
 		}
 		registerCore(cliCtx, w, appType, verifyCode, conferenceCompanyRegister, fieldValue)
