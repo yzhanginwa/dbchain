@@ -56,6 +56,6 @@ func RegisterCodec(cdc *codec.Codec) {
     cdc.RegisterConcrete(MsgUpdateTotalTx{}, "dbchain/UpdateTotalTx", nil)
     cdc.RegisterConcrete(MsgUpdateTxStatistic{}, "dbchain/UpdateTxStatistic", nil)
     cdc.RegisterConcrete(MsgModifyP2PTransferLimit{}, "dbchain/ModifyP2PTransferLimit", nil)
-    cdc.RegisterConcrete(MsgModifyChainSuperAdminMember{}, "dbchain/ModifyChainSuperAdminMember", nil)
+    cdc.RegisterConcrete(MsgModifyTokenKeeperMember{}, "dbchain/ModifyTokenKeeperMember", nil)
 }
 

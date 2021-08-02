@@ -60,7 +60,7 @@ const (
     //add for bsb
     QueryAccountTxs = "account_txs"
     QueryAccountTxsByTime  = "account_txs_by_time"
-    QueryChainSuperAdmins = "chain_super_admins"
+    QueryTokenKeepers = "token_keepers"
     QueryLimitP2PTransferStatus = "limit_p2p_transfer_status"
 
 )
@@ -158,8 +158,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryAccountTxs(ctx, path[1:], req, keeper)
         case QueryAccountTxsByTime:
             return queryAccountTxsByTime(ctx, path[1:], req, keeper)
-        case QueryChainSuperAdmins:
-            return queryChainSuperAdmins(ctx, path[1:], req, keeper)
+        case QueryTokenKeepers:
+            return queryTokenKeepers(ctx, path[1:], req, keeper)
         case QueryLimitP2PTransferStatus:
             return queryLimitP2PTransferStatus(ctx, path[1:], req, keeper)
         default:
@@ -1201,13 +1201,13 @@ func queryAccountTxsByTime(ctx sdk.Context, path []string, req abci.RequestQuery
     return res, nil
 }
 
-func queryChainSuperAdmins(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper)([]byte, error) {
+func queryTokenKeepers(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper)([]byte, error) {
     accessCode := path[0]
     addr, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
-    admins := keeper.ShowChainSuperAdmins(ctx, addr)
+    admins := keeper.ShowTokenKeepers(ctx, addr)
     res, err := codec.MarshalJSONIndent(keeper.cdc, admins)
     if err != nil {
         panic("could not marshal result to JSON")

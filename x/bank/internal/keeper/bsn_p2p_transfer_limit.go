@@ -12,8 +12,8 @@ func GetP2PTransferLimit() string {
 	return fmt.Sprintf("%s:%s:limit", KeyPrefixBsn, KeyPrefixData)
 }
 
-func GetChainSuperAdminsKey() string {
-	return fmt.Sprintf("%s:%s:superAdmin", KeyPrefixBsn, KeyPrefixData)
+func GetTokenKeeperKey() string {
+	return fmt.Sprintf("%s:%s:tokenKeeper", KeyPrefixBsn, KeyPrefixData)
 }
 
 

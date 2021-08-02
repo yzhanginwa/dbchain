@@ -263,7 +263,7 @@ func (keeper BaseSendKeeper) CheckCanSendCoins(ctx sdk.Context, fromAddr, toAddr
 		return true
 	}
 
-	if !keeper.IsChainSuperAdmin(ctx, fromAddr) && !keeper.IsChainSuperAdmin(ctx, toAddr) {
+	if !keeper.IsTokenKeeper(ctx, fromAddr) && !keeper.IsTokenKeeper(ctx, toAddr) {
 		return false
 	}
 
@@ -276,14 +276,14 @@ func (keeper BaseSendKeeper) CheckCanMultiSend(ctx sdk.Context, inputs []types.I
 	}
 	inputsValid, outputsValid := true, true
 	for _, input := range inputs {
-		if !keeper.IsChainSuperAdmin(ctx, input.Address) {
+		if !keeper.IsTokenKeeper(ctx, input.Address) {
 			inputsValid = false
 			break
 		}
 	}
 
 	for _, outputs := range outputs {
-		if !keeper.IsChainSuperAdmin(ctx, outputs.Address) {
+		if !keeper.IsTokenKeeper(ctx, outputs.Address) {
 			outputsValid = false
 			break
 		}
@@ -398,9 +398,9 @@ func (keeper BaseSendKeeper) IsLimitP2PTransfer(ctx sdk.Context) bool {
 	return limit
 }
 
-func (keeper BaseSendKeeper) IsChainSuperAdmin(ctx sdk.Context, addr sdk.AccAddress) bool {
+func (keeper BaseSendKeeper) IsTokenKeeper(ctx sdk.Context, addr sdk.AccAddress) bool {
 	store := ctx.KVStore(keeper.dbchainKey)
-	key := GetChainSuperAdminsKey()
+	key := GetTokenKeeperKey()
 	bz := store.Get([]byte(key))
 	if bz == nil {
 		return false

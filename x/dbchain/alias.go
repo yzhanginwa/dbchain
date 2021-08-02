@@ -72,5 +72,5 @@ type (
     GenesisState    = types.GenesisState
     //bsn
     MsgModifyP2PTransferLimit = types.MsgModifyP2PTransferLimit
-    MsgModifyChainSuperAdminMember = types.MsgModifyChainSuperAdminMember
+    MsgModifyTokenKeeperMember = types.MsgModifyTokenKeeperMember
 )

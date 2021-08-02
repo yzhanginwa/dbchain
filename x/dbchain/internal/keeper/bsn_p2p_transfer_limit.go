@@ -9,8 +9,8 @@ import (
 )
 
 
-func (k Keeper) ShowChainSuperAdmins(ctx sdk.Context, addr sdk.Address) []string {
-	admins := k.getChainSuperAdmins(ctx, addr)
+func (k Keeper) ShowTokenKeepers(ctx sdk.Context, addr sdk.Address) []string {
+	admins := k.getTokenKeepers(ctx, addr)
 	// only admin can query all admins
 	for _, admin := range admins {
 		if addr.String() == admin {
@@ -20,10 +20,10 @@ func (k Keeper) ShowChainSuperAdmins(ctx sdk.Context, addr sdk.Address) []string
 	return nil
 }
 
-func (k Keeper) getChainSuperAdmins(ctx sdk.Context, addr sdk.Address) []string {
+func (k Keeper) getTokenKeepers(ctx sdk.Context, addr sdk.Address) []string {
 	admins := make([]string, 0)
 	store := DbChainStore(ctx, k.storeKey)
-	key := getChainSuperAdminsKey()
+	key := getTokenKeeperKey()
 	bz, err := store.Get([]byte(key))
 	if err != nil || bz == nil {
 		return admins
@@ -35,20 +35,20 @@ func (k Keeper) getChainSuperAdmins(ctx sdk.Context, addr sdk.Address) []string 
 	return admins
 }
 
-func (k Keeper)  IsChainSuperAdmin(ctx sdk.Context, addr sdk.Address) bool {
-	admins := k.ShowChainSuperAdmins(ctx, addr)
+func (k Keeper)  IsTokenKeeper(ctx sdk.Context, addr sdk.Address) bool {
+	admins := k.ShowTokenKeepers(ctx, addr)
 	if len(admins) > 0 {
 		return true
 	}
 	return false
 }
 
-func (k Keeper) ModifyMemberOfAdmins(ctx sdk.Context, modifier , addr sdk.Address, action string) error {
+func (k Keeper) ModifyMemberOfTokenKeepers(ctx sdk.Context, modifier , addr sdk.Address, action string) error {
 
-	admins := k.getChainSuperAdmins(ctx, modifier)
+	admins := k.getTokenKeepers(ctx, modifier)
 	if len(admins) == 0 {
 		admins = make([]string, 0)
-	} else if !k.IsChainSuperAdmin(ctx, modifier) {
+	} else if !k.IsTokenKeeper(ctx, modifier) {
 		return errors.New("permission forbidden")
 	}
 
@@ -77,12 +77,12 @@ func (k Keeper) ModifyMemberOfAdmins(ctx sdk.Context, modifier , addr sdk.Addres
 		return err
 	}
 	store := DbChainStore(ctx, k.storeKey)
-	key := getChainSuperAdminsKey()
+	key := getTokenKeeperKey()
 	return store.Set([]byte(key), bz)
 }
 
 func (k Keeper) SetP2PTransferLimit(ctx sdk.Context, modifier sdk.Address, limit bool) error {
-	if !k.IsChainSuperAdmin(ctx, modifier) {
+	if !k.IsTokenKeeper(ctx, modifier) {
 		return errors.New("permission forbidden")
 	}
 	store := DbChainStore(ctx, k.storeKey)

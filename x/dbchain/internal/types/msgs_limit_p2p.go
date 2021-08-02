@@ -57,15 +57,15 @@ func (msg MsgModifyP2PTransferLimit) GetSigners() []sdk.AccAddress {
 ///////////////////////////////
 
 // MsgChangeP2PTransferLimit is used to add or remove superAdmin
-type MsgModifyChainSuperAdminMember struct {
+type MsgModifyTokenKeeperMember struct {
 	Owner sdk.AccAddress `json:"owner"`
 	Action string       `json:"action"`  //add or remove
 	Member sdk.AccAddress `json:"member"`
 }
 
 // NewMsgChangeP2PTransferLimit is a constructor function for NewMsgChangeP2PTransferLimit
-func NewMsgChainModifySuperAdminMember(owner, member sdk.AccAddress, action string, ) MsgModifyChainSuperAdminMember {
-	return MsgModifyChainSuperAdminMember {
+func NewMsgChainModifyTokenKeeperMember(owner, member sdk.AccAddress, action string, ) MsgModifyTokenKeeperMember {
+	return MsgModifyTokenKeeperMember {
 		Owner: owner,
 		Action: action,
 		Member: member,
@@ -73,13 +73,13 @@ func NewMsgChainModifySuperAdminMember(owner, member sdk.AccAddress, action stri
 }
 
 // Route should return the name of the module
-func (msg MsgModifyChainSuperAdminMember) Route() string { return RouterKey }
+func (msg MsgModifyTokenKeeperMember) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgModifyChainSuperAdminMember) Type() string { return "create_table" }
+func (msg MsgModifyTokenKeeperMember) Type() string { return "create_table" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgModifyChainSuperAdminMember) ValidateBasic() error {
+func (msg MsgModifyTokenKeeperMember) ValidateBasic() error {
 	if msg.Owner.Empty() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
 	}
@@ -95,11 +95,11 @@ func (msg MsgModifyChainSuperAdminMember) ValidateBasic() error {
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgModifyChainSuperAdminMember) GetSignBytes() []byte {
+func (msg MsgModifyTokenKeeperMember) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg MsgModifyChainSuperAdminMember) GetSigners() []sdk.AccAddress {
+func (msg MsgModifyTokenKeeperMember) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.Owner}
 }

@@ -56,7 +56,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdCustomQuerierInfo(storeKey,cdc),
         GetCmdCallCustomQuerier(storeKey,cdc),
         GetCmdTxSimpleResult(storeKey,cdc),
-        GetCmdChainSuperAdmins(storeKey,cdc),
+        GetCmdTokenKeepers(storeKey,cdc),
         GetCmdLimitP2PTransferStatus(storeKey,cdc),
     )...)
     return dbchainQueryCmd
@@ -735,17 +735,17 @@ func GetCmdCallCustomQuerier (queryRoute string, cdc *codec.Codec) *cobra.Comman
     }
 }
 
-func GetCmdChainSuperAdmins (queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdTokenKeepers (queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "chain-super-admins [accessCode]",
-        Short: "query all admins. only admin can get data",
+        Use: "token-keepers [accessCode]",
+        Short: "query all token keepers. only token keepers can get data",
         Args: cobra.MinimumNArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
 
             accessCode   := args[0]
 
-            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/chain_super_admins/%s", queryRoute, accessCode), nil)
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/token_keepers/%s", queryRoute, accessCode), nil)
             if err != nil {
                 fmt.Printf("could not get data")
                 return nil

@@ -142,5 +142,5 @@ var (
     getAccountTxIteratorKey = dbk.GetAccountTxIteratorKey
     getNextAccountTxIdKey = dbk.GetNextAccountTxIdKey
     getP2PTransferLimit = dbk.GetP2PTransferLimit
-    getChainSuperAdminsKey = dbk.GetChainSuperAdminsKey
+    getTokenKeeperKey = dbk.GetTokenKeeperKey
 )

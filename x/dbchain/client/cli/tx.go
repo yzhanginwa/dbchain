@@ -71,7 +71,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdFreezeSchema(cdc),
         GetCmdUnfreezeSchema(cdc),
         GetCmdResetTxTotalTxs(cdc),
-        GetCmdModifyChainSuperAdmins(cdc),
+        GetCmdModifyTokenKeepers(cdc),
         GetCmdModifyP2PTransferLimit(cdc),
     )...)
 
@@ -1114,22 +1114,22 @@ func GetCmdResetTxTotalTxs(cdc * codec.Codec) *cobra.Command {
 // GetCmdModifyChainSuperAdmins(cdc),
 //        GetCmdChangeP2PTransferLimit(cdc),
 
-func GetCmdModifyChainSuperAdmins(cdc * codec.Codec) *cobra.Command {
+func GetCmdModifyTokenKeepers(cdc * codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use:   "modify-chain-super-admin",
-        Short: "add or remove chain super admin, need two agrs : address, action",
+        Use:   "modify-token-keeper [action] [address]",
+        Short: "add or remove token keeper, need two agrs : address, action",
         Args:  cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            address, err  := sdk.AccAddressFromBech32(args[0])
+            action := args[0]
+            address, err  := sdk.AccAddressFromBech32(args[1])
             if err != nil {
                 return errors.New("invalid address")
             }
-            action := args[1]
-            msg := types.NewMsgChainModifySuperAdminMember(cliCtx.GetFromAddress(), address, action)
+            msg := types.NewMsgChainModifyTokenKeeperMember(cliCtx.GetFromAddress(), address, action)
             err = msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
@@ -1142,7 +1142,7 @@ func GetCmdModifyChainSuperAdmins(cdc * codec.Codec) *cobra.Command {
 func GetCmdModifyP2PTransferLimit(cdc * codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use:   "modify-p2p-transfer-limit",
-        Short: "limit p2p transfer or not",
+        Short: "limit p2p transfer or not, set true of false, only token keeper can submit this tx successfully",
         Args:  cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)

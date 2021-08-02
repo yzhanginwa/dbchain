@@ -555,10 +555,10 @@ func showAccountTxs(cliCtx context.CLIContext, storeName string) http.HandlerFun
     }
 }
 
-func showChainSuperAdmins(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showTokenKeepers(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
-        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/chain_super_admins/%s", storeName, vars["accessToken"]), nil)
+        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/token_keepers/%s", storeName, vars["accessToken"]), nil)
         if err != nil {
             rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
             return
