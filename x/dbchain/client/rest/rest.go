@@ -57,10 +57,10 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 
     // bsn open interface
     //密钥托管创建链账户
-    r.HandleFunc("/api/v1/account/apply", applyAccountInfo()).Methods("POST")
-    r.HandleFunc("/api/v1/account/apply/publicKey", applyAccountInfoByPublicKey()).Methods("POST")
-    r.HandleFunc("/api/v1/account/recharge", rechargeTx(cliCtx, storeName)).Methods("POST")
-    r.HandleFunc("/api/v1/account/tx", getAccountTxByTime(cliCtx, storeName)).Methods("POST")
+    r.HandleFunc(fmt.Sprintf("/%s/account/apply", storeName), applyAccountInfo()).Methods("POST")
+    r.HandleFunc(fmt.Sprintf("/%s/account/apply/publicKey", storeName), applyAccountInfoByPublicKey()).Methods("POST")
+    r.HandleFunc(fmt.Sprintf("/%s/account/recharge", storeName), rechargeTx(cliCtx, storeName)).Methods("POST")
+    r.HandleFunc(fmt.Sprintf("/%s/account/tx", storeName), getAccountTxByTime(cliCtx, storeName)).Methods("POST")
 
 
 }

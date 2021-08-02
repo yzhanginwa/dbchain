@@ -773,7 +773,9 @@ func getAccountTxByTime(cliCtx context.CLIContext, storeName string) http.Handle
             rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
             return
         }
-        rest.PostProcessResponse(w, cliCtx, res)
+        w.Header().Set("Content-Type", "application/json")
+        w.Write(res)
+        return
     }
 }
 ///////////////////
