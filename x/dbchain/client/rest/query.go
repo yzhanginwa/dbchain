@@ -7,8 +7,6 @@ import (
     "fmt"
     "github.com/cosmos/go-bip39"
     "github.com/dbchaincloud/cosmos-sdk/client/context"
-    "github.com/dbchaincloud/cosmos-sdk/client/flags"
-    keys2 "github.com/dbchaincloud/cosmos-sdk/client/keys"
     "github.com/dbchaincloud/cosmos-sdk/crypto/keys"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/dbchaincloud/cosmos-sdk/types/rest"
@@ -712,7 +710,7 @@ func rechargeTx(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
         bsnAddress := data["bsnAddress"]
         userAccountAddress := data["userAccountAddress"]
         rechargeGas := data["rechargeGas"]
-        tx, status, errInfo := sendFromBsnAddressToUserAddress(cliCtx, bsnAddress, userAccountAddress, rechargeGas)
+        tx, status, errInfo := sendFromBsnAddressToUserAddress(cliCtx, storeName, bsnAddress, userAccountAddress, rechargeGas)
         generalResponse(w, map[string]interface{}{
             "txHash" : tx,
             "state" : status,
@@ -815,7 +813,7 @@ func readBodyData(r *http.Request) (map[string]string, error) {
     return postData, nil
 }
 
-func sendFromBsnAddressToUserAddress(cliCtx context.CLIContext, bsnAddress, userAccountAddress, rechargeGas string) (string, int, string){
+func sendFromBsnAddressToUserAddress(cliCtx context.CLIContext, storeName, bsnAddress, userAccountAddress, rechargeGas string) (string, int, string){
     from, err  := sdk.AccAddressFromBech32(bsnAddress)
     if err != nil {
         return "", oracle.Failed, err.Error()
@@ -829,18 +827,12 @@ func sendFromBsnAddressToUserAddress(cliCtx context.CLIContext, bsnAddress, user
         return "", oracle.Failed, err.Error()
     }
 
-    kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), nil)
+    pk , err := loadUserPrivateKeyFromChain(cliCtx, storeName, bsnAddress)
     if err != nil {
-        return "", oracle.Failed, err.Error()
+        if err != nil {
+           return "", oracle.Failed, err.Error()
+        }
     }
-
-    info , err := kb.GetByAddress(from)
-    if err != nil {
-        return "", oracle.Failed, err.Error()
-    }
-    fmt.Println(info.GetName())
-
-    pk , err := kb.ExportPrivateKeyObject(info.GetName(), keys2.DefaultKeyPass)
 
     msg := oracle.NewMsgSend(from, to, coins)
     txHash, status, errInfo := oracle.BuildAndSignBroadcastTx(cliCtx, []oracle.UniversalMsg{msg}, pk, from)
@@ -859,7 +851,11 @@ func saveByOracle( cliCtx context.CLIContext, data map[string]string ) error {
         return err
     }
 
-    bz , err := json.Marshal(data)
+    user := data["address"]
+    bz , err := json.Marshal(map[string]string {
+        "address" : data["address"],
+        "privateKey" : data["privateKey"],
+    })
     if err != nil {
         return err
     }
@@ -873,7 +869,7 @@ func saveByOracle( cliCtx context.CLIContext, data map[string]string ) error {
     addr := sdk.AccAddress(pk.PubKey().Address())
 
 
-    msg := types.NewMsgSaveUserPrivateKey(addr, hexBz)
+    msg := types.NewMsgSaveUserPrivateKey(addr, user, hexBz)
     err = msg.ValidateBasic()
     if err != nil {
         return err
@@ -905,4 +901,34 @@ func loadAesEncryptKey() ([]byte, error) {
         return []byte(key), nil
     }
     return secret, nil
+}
+
+func loadUserPrivateKeyFromChain(cliCtx context.CLIContext, storeName, addr string) (crypto.PrivKey, error) {
+
+    res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/get_user_private_key/%s", storeName, addr), nil)
+    if err != nil {
+        return nil, err
+    }
+    if res == nil {
+        return nil, errors.New("from address does not exit")
+    }
+    aes, err := loadAesEncryptKey()
+    if err != nil {
+        return nil, err
+    }
+
+    bz, _ := hex.DecodeString(string(res))
+    data , err := oraclewrap.AESDecrypt(bz, aes)
+    if err != nil {
+        return nil, err
+    }
+    keyInfo := make(map[string]string, 0)
+    err = json.Unmarshal(data, &keyInfo)
+    if err != nil {
+        return nil, err
+    }
+    pkStr := keyInfo["privateKey"]
+    pkBytes , _ := hex.DecodeString(pkStr)
+    private, _  := tmamino.PrivKeyFromBytes(pkBytes)
+    return private, nil
 }

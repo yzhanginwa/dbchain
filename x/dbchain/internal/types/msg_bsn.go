@@ -15,12 +15,14 @@ import (
 // MsgCreateApplication defines a CreateApplication message
 type MsgSaveUserPrivateKey struct {
 	Owner   sdk.AccAddress `json:"owner"`
+	User    string         `json:"user"`
 	KeyInfo string         `json:"key_info"`
 }
 // NewMsgCreateApplication is a constructor function for MsgCreatTable
-func NewMsgSaveUserPrivateKey(owner sdk.AccAddress, keyInfo string) MsgSaveUserPrivateKey {
+func NewMsgSaveUserPrivateKey(owner sdk.AccAddress, user,keyInfo string) MsgSaveUserPrivateKey {
 	return MsgSaveUserPrivateKey {
 		Owner: owner,
+		User: user,
 		KeyInfo: keyInfo,
 	}
 }

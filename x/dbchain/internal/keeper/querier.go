@@ -62,6 +62,7 @@ const (
     QueryAccountTxsByTime  = "account_txs_by_time"
     QueryTokenKeepers = "token_keepers"
     QueryLimitP2PTransferStatus = "limit_p2p_transfer_status"
+    QueryUserPrivateKey = "get_user_private_key"
 
 )
 
@@ -162,6 +163,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryTokenKeepers(ctx, path[1:], req, keeper)
         case QueryLimitP2PTransferStatus:
             return queryLimitP2PTransferStatus(ctx, path[1:], req, keeper)
+        case QueryUserPrivateKey:
+            return queryUserPrivateKey(ctx, path[1:], req, keeper)
         default:
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown dbchain query endpoint")
         }
@@ -1229,6 +1232,12 @@ func queryLimitP2PTransferStatus(ctx sdk.Context, path []string, req abci.Reques
     }
 
     return res, nil
+}
+
+func queryUserPrivateKey(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper)([]byte, error) {
+    addr := path[0]
+    limit := keeper.GetUserPrivateInfo(ctx, addr)
+    return limit, nil
 }
 
 //////////////////

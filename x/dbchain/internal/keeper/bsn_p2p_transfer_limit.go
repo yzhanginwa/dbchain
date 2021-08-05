@@ -136,18 +136,18 @@ func (k Keeper)ShowCurrentLimitP2PTransferStatus(ctx sdk.Context) bool {
 }
 
 
-func (k Keeper) SaveUserPrivateInfo(ctx sdk.Context, owner sdk.Address, keyInfo string) error {
+func (k Keeper) SaveUserPrivateInfo(ctx sdk.Context, owner sdk.Address, user, keyInfo string) error {
 	store := DbChainStore(ctx, k.storeKey)
-	key := getBsnUserPrivateKey(owner.String())
+	key := getBsnUserPrivateKey(user)
 	return store.Set([]byte(key), []byte(keyInfo))
 }
 
-func (k Keeper) GetUserPrivateInfo(ctx sdk.Context, user sdk.Address) string {
+func (k Keeper) GetUserPrivateInfo(ctx sdk.Context, user string) []byte {
 	store := DbChainStore(ctx, k.storeKey)
-	key := getBsnUserPrivateKey(user.String())
+	key := getBsnUserPrivateKey(user)
 	data, err  := store.Get([]byte(key))
 	if err != nil {
-		return ""
+		return nil
 	}
-	return string(data)
+	return data
 }

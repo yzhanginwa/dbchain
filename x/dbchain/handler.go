@@ -981,7 +981,7 @@ func handleMsgModifyTokenKeeperMember(ctx sdk.Context, keeper Keeper, msg MsgMod
 }
 
 func handleMsgSaveUserPrivateKey(ctx sdk.Context, keeper Keeper, msg MsgSaveUserPrivateKey) (*sdk.Result, error) {
-    err := keeper.SaveUserPrivateInfo(ctx, msg.Owner, msg.KeyInfo)
+    err := keeper.SaveUserPrivateInfo(ctx, msg.Owner, msg.User, msg.KeyInfo)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
     }
