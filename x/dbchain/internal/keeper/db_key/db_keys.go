@@ -294,3 +294,7 @@ func GetP2PTransferLimit() string {
 func GetTokenKeeperKey() string {
     return fmt.Sprintf("%s:%s:tokenKeeper", KeyPrefixBsn, KeyPrefixData)
 }
+
+func GetBsnUserPrivateKey(addr string) string {
+    return fmt.Sprintf("%s:%s:addr:%s", KeyPrefixBsn, KeyPrefixData, addr)
+}

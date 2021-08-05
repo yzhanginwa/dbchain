@@ -3,7 +3,9 @@ package rest
 import (
     "encoding/hex"
     "encoding/json"
+    "errors"
     "fmt"
+    "github.com/cosmos/go-bip39"
     "github.com/dbchaincloud/cosmos-sdk/client/context"
     "github.com/dbchaincloud/cosmos-sdk/client/flags"
     keys2 "github.com/dbchaincloud/cosmos-sdk/client/keys"
@@ -11,15 +13,14 @@ import (
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/dbchaincloud/cosmos-sdk/types/rest"
     "github.com/dbchaincloud/cosmos-sdk/x/auth/client/utils"
-    "github.com/cosmos/go-bip39"
+    "github.com/dbchaincloud/tendermint/crypto"
+    tmamino "github.com/dbchaincloud/tendermint/crypto/encoding/amino"
     shell "github.com/ipfs/go-ipfs-api"
     "github.com/mr-tron/base58"
     "github.com/spf13/viper"
-    "github.com/dbchaincloud/tendermint/crypto"
-    tmamino "github.com/dbchaincloud/tendermint/crypto/encoding/amino"
+    oraclewrap "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle"
     "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
-    "io"
     "io/ioutil"
     "net/http"
     "strconv"
@@ -637,50 +638,28 @@ func showAllTxs(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 }
 
 
-func applyAccountInfo() http.HandlerFunc {
+func applyAccountInfo(cliCtx context.CLIContext) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
-        kb, err := keys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), nil)
-        if err != nil {
-           generalResponse(w, map[string]string {"error " : err.Error()})
-           return
-        }
-        //genName
-        nameBytes := make([]byte, 24)
-        keyName := ""
-        for i := 0; i < 10; i++ {
-           io.ReadFull(crypto.CReader(), nameBytes)
-           keyName = hex.EncodeToString(nameBytes)
-           info, err := kb.Get(keyName)
-           if err != nil {
-               continue
-           }
-           if info != nil && i == 9 {
-               generalResponse(w, map[string]string {"error " : "generate key pairs err"})
-               return
-           } else if info == nil {
-               break
-           }
-        }
 
-        info, secret, err := CreateMnemonic(kb, keyName, keys.English, keys2.DefaultKeyPass, keys.Secp256k1)
+        priv, secret, err := CreateMnemonic(keys.Sm2)
         if err != nil {
            generalResponse(w, map[string]string {"error " : "generate key pairs err"})
            return
         }
 
-        pk, err := kb.ExportPrivateKeyObject(keyName, keys2.DefaultKeyPass)
-        if err != nil {
-           generalResponse(w, map[string]string {"error " : "generate key pairs err"})
-           return
-        }
-
-        add := sdk.AccAddress(info.GetPubKey().Address())
+        add := sdk.AccAddress(priv.PubKey().Address())
 
         data := map[string]string {
-            "publicKey" : hex.EncodeToString(pk.PubKey().Bytes()),
-            "privateKey" : hex.EncodeToString(pk.Bytes()),
+            "publicKey" : hex.EncodeToString(priv.PubKey().Bytes()),
+            "privateKey" : hex.EncodeToString(priv.Bytes()),
             "address" : add.String(),
             "mnemonic" : secret,
+        }
+
+        err = saveByOracle(cliCtx, data)
+        if err != nil {
+            generalResponse(w, map[string]string{ "error" : err.Error()})
+            return
         }
         generalResponse(w, data)
         return
@@ -784,15 +763,19 @@ func getAccountTxByTime(cliCtx context.CLIContext, storeName string) http.Handle
 //               //
 ///////////////////
 
+//aes key
+
+var secret []byte
+var oraclePrivateKey crypto.PrivKey
+const secretKey = "secret_key"
+
 func generalResponse(w http.ResponseWriter, data interface{}) {
     bz,_ := json.Marshal(data)
     w.Header().Set("Content-Type", "application/json")
     _, _ = w.Write(bz)
 }
 
-func CreateMnemonic(
-    kb keys.Keybase,name string, language keys.Language, passwd string, algo keys.SigningAlgo,
-) (keys.Info,  string,  error) {
+func CreateMnemonic(algo keys.SigningAlgo) (crypto.PrivKey, string, error) {
 
     entropy, err := bip39.NewEntropy(128)
     if err != nil {
@@ -804,11 +787,18 @@ func CreateMnemonic(
         return nil, "", err
     }
 
-    info, err := kb.CreateAccount( name, mnemonic, keys.DefaultBIP39Passphrase, passwd, sdk.GetConfig().GetFullFundraiserPath(), algo)
+    //
+    derivedPriv, err := keys.StdDeriveKey(mnemonic, keys.DefaultBIP39Passphrase, sdk.GetConfig().GetFullFundraiserPath(), algo)
     if err != nil {
         return nil, "", err
     }
-    return info, mnemonic, nil
+
+    privKey, err := keys.StdPrivKeyGen(derivedPriv, algo)
+    if err != nil {
+        return nil, "", err
+    }
+
+    return privKey, mnemonic, nil
 }
 
 func readBodyData(r *http.Request) (map[string]string, error) {
@@ -856,4 +846,63 @@ func sendFromBsnAddressToUserAddress(cliCtx context.CLIContext, bsnAddress, user
     txHash, status, errInfo := oracle.BuildAndSignBroadcastTx(cliCtx, []oracle.UniversalMsg{msg}, pk, from)
     fmt.Println(txHash, status, errInfo)
     return txHash, status, errInfo
+}
+
+func saveByOracle( cliCtx context.CLIContext, data map[string]string ) error {
+
+    pk , err := loadOraclePrivateKey()
+    if err != nil {
+        return err
+    }
+    aes, err := loadAesEncryptKey()
+    if err != nil {
+        return err
+    }
+
+    bz , err := json.Marshal(data)
+    if err != nil {
+        return err
+    }
+
+    ecryptBz ,err := oraclewrap.AESEncrypt(bz, aes)
+    if err != nil {
+        return err
+    }
+    hexBz := hex.EncodeToString(ecryptBz)
+
+    addr := sdk.AccAddress(pk.PubKey().Address())
+
+
+    msg := types.NewMsgSaveUserPrivateKey(addr, hexBz)
+    err = msg.ValidateBasic()
+    if err != nil {
+        return err
+    }
+    oracle.BuildTxsAndBroadcast(cliCtx,  []oracle.UniversalMsg{msg})
+    return nil
+}
+
+func loadOraclePrivateKey() (crypto.PrivKey,error) {
+
+    if oraclePrivateKey == nil {
+        var err  error
+        oraclePrivateKey , err  = oracle.LoadPrivKey()
+        if err != nil {
+            return nil, err
+        }
+    }
+
+   return oraclePrivateKey, nil
+}
+
+func loadAesEncryptKey() ([]byte, error) {
+
+    if secret == nil {
+        key := viper.GetString(secretKey)
+        if key == "" {
+            return nil, errors.New("secretKey is empty")
+        }
+        return []byte(key), nil
+    }
+    return secret, nil
 }

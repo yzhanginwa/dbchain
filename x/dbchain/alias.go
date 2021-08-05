@@ -73,4 +73,5 @@ type (
     //bsn
     MsgModifyP2PTransferLimit = types.MsgModifyP2PTransferLimit
     MsgModifyTokenKeeperMember = types.MsgModifyTokenKeeperMember
+    MsgSaveUserPrivateKey = types.MsgSaveUserPrivateKey
 )

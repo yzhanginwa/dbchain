@@ -143,4 +143,5 @@ var (
     getNextAccountTxIdKey = dbk.GetNextAccountTxIdKey
     getP2PTransferLimit = dbk.GetP2PTransferLimit
     getTokenKeeperKey = dbk.GetTokenKeeperKey
+    getBsnUserPrivateKey = dbk.GetBsnUserPrivateKey
 )
