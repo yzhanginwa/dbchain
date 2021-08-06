@@ -46,4 +46,11 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     //r.HandleFunc(fmt.Sprintf("/%s/oracle/user/comform", storeName), userVerifyCode(cliCtx, true)).Methods("POST")
     ////user destroy
     //r.HandleFunc(fmt.Sprintf("/%s/oracle/user/destroy", storeName), userDestoryCode(cliCtx)).Methods("POST")
+
+    // bsn open interface
+    //密钥托管创建链账户
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/bsn/account/apply", storeName), applyAccountInfo(cliCtx)).Methods("POST")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/bsn/account/apply/publicKey", storeName), applyAccountInfoByPublicKey()).Methods("POST")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/bsn/account/recharge", storeName), rechargeTx(cliCtx, storeName)).Methods("POST")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/bsn/account/tx", storeName), getAccountTxByTime(cliCtx, storeName)).Methods("POST")
 }
