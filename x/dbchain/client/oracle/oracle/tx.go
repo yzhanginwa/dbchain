@@ -101,7 +101,7 @@ func executeTxs(cliCtx context.CLIContext, batch []UniversalMsg, privKey sm2.Pri
         }
     }
 
-    txBytes, err := buildAndSignAndBuildTxBytes(newBatch, accNum, seq, privKey)
+    txBytes, err := buildAndSignAndBuildTxBytes(cliCtx, newBatch, accNum, seq, privKey)
     if err != nil {
         return err
     }
@@ -115,9 +115,14 @@ func buildTxAndBroadcast(cliCtx context.CLIContext, msg UniversalMsg) {
     BuildTxsAndBroadcast(cliCtx, msgs)
 }
 
-func buildAndSignAndBuildTxBytes(msgs []UniversalMsg, accNum uint64, seq uint64, privKey sm2.PrivKeySm2) ([]byte, error) {
+func buildAndSignAndBuildTxBytes(cliCtx context.CLIContext, msgs []UniversalMsg, accNum uint64, seq uint64, privKey sm2.PrivKeySm2) ([]byte, error) {
     size := len(msgs)
-    stdFee := NewStdFee(uint64(200000 * size), sdk.Coins{sdk.NewCoin("dbctoken", sdk.NewInt(int64(0)))})
+
+    needFee , err := setStdFee(cliCtx, "dbchain", size)
+    if err != nil {
+        return nil, err
+    }
+    stdFee := NewStdFee(uint64(200000 * size), needFee)
     chainId := viper.GetString("chain-id")
     stdSignMsgBytes := StdSignBytes(chainId, accNum, seq, stdFee, msgs, "")
 
@@ -226,4 +231,35 @@ func getMsgKey(msg UniversalMsg) string {
         return hex.EncodeToString(msg.GetSignBytes())
     }
     return vendor_payment_no
+}
+
+func getCurrentMinGasPrices(cliCtx context.CLIContext, storeName string) (sdk.DecCoins, error){
+    res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/current_min_gas_prices", storeName), nil)
+    if err != nil {
+        return nil, err
+    }
+    var decCoins sdk.DecCoins
+    err = cliCtx.Codec.UnmarshalJSON(res, &decCoins)
+    if err != nil {
+        return nil, err
+    }
+    return decCoins, nil
+}
+
+func setStdFee(cliCtx context.CLIContext, storeName string, size int)  (sdk.Coins, error) {
+    minGasPrices , err := getCurrentMinGasPrices(cliCtx, "dbchain")
+    if err != nil {
+        return nil, err
+    }
+    if len(minGasPrices) == 0 {
+        return sdk.Coins{sdk.NewCoin("dbctoken", sdk.NewInt(int64(0)))}, nil
+    }
+
+    requiredFees := make(sdk.Coins, len(minGasPrices))
+    glDec := sdk.NewDec(int64(200000 * size))
+    for i, gp := range minGasPrices {
+        fee := gp.Amount.Mul(glDec)
+        requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
+    }
+    return requiredFees, nil
 }

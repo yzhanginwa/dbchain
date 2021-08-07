@@ -63,6 +63,7 @@ const (
     QueryTokenKeepers = "token_keepers"
     QueryLimitP2PTransferStatus = "limit_p2p_transfer_status"
     QueryUserPrivateKey = "get_user_private_key"
+    QueryCurrentMinGasPrices = "current_min_gas_prices"
 
 )
 
@@ -165,6 +166,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryLimitP2PTransferStatus(ctx, path[1:], req, keeper)
         case QueryUserPrivateKey:
             return queryUserPrivateKey(ctx, path[1:], req, keeper)
+        case QueryCurrentMinGasPrices:
+            return queryCurrentMinGasPrices(ctx, path[1:], req, keeper)
         default:
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown dbchain query endpoint")
         }
@@ -1238,6 +1241,16 @@ func queryUserPrivateKey(ctx sdk.Context, path []string, req abci.RequestQuery, 
     addr := path[0]
     limit := keeper.GetUserPrivateInfo(ctx, addr)
     return limit, nil
+}
+
+func queryCurrentMinGasPrices(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper)([]byte, error) {
+    minGasPrices := ctx.MinGasPrices()
+    res, err := codec.MarshalJSONIndent(keeper.cdc, minGasPrices)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
 }
 
 //////////////////

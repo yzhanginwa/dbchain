@@ -32,7 +32,7 @@ func BuildAndSignBroadcastTx(cliCtx context.CLIContext, batch []UniversalMsg, pr
 	}
 
 	pk := privKey.(sm2.PrivKeySm2)
-	txBytes, err := buildAndSignAndBuildTxBytes(newBatch, accNum, seq, pk)
+	txBytes, err := buildAndSignAndBuildTxBytes(cliCtx, newBatch, accNum, seq, pk)
 	if err != nil {
 		return "", Failed, err.Error()
 	}
