@@ -16,6 +16,7 @@ import (
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 func applyAccountInfo(cliCtx context.CLIContext) http.HandlerFunc {
@@ -102,7 +103,7 @@ func rechargeTx(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	}
 }
 
-func getAccountTxByTime(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func getAccountTxByTimeOrByHeight(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := readBodyData(r)
 		if err != nil {
@@ -112,6 +113,13 @@ func getAccountTxByTime(cliCtx context.CLIContext, storeName string) http.Handle
 		userAccountAddress := data["userAccountAddress"]
 		startDate := data["startDate"]
 		endDate := data["endDate"]
+		if startDate == "" || endDate == "" {
+			startDate, endDate = getQueryDate(cliCtx, data)
+			if startDate == "" || endDate == "" {
+				generalResponse(w, map[string]string{"error" : "parameters err"})
+				return
+			}
+		}
 		if userAccountAddress == "" || startDate == "" || endDate == "" {
 			generalResponse(w, map[string]string{"error" : "expect 3 parameters : userAccountAddress, startDate, endDate"})
 			return
@@ -136,6 +144,37 @@ func getAccountTxByTime(cliCtx context.CLIContext, storeName string) http.Handle
 		w.Write(res)
 		return
 	}
+}
+
+func getQueryDate(cliCtx context.CLIContext, data map[string]string) (string, string) {
+	startHeight := data["startBlockHeight"]
+	endHeight := data["endBlockHeight"]
+	if startHeight == "" || endHeight == "" {
+		return "", ""
+	}
+	node , err := cliCtx.GetNode()
+	if err != nil {
+		return "", ""
+	}
+	start , err := strconv.ParseInt(startHeight,10, 64)
+	if err != nil {
+		return "", ""
+	}
+	end , err := strconv.ParseInt(endHeight,10, 64)
+	if err != nil {
+		return "", ""
+	}
+	startBlock,err := node.Block(&start)
+	if err != nil {
+		return "", ""
+	}
+	endBlock , err := node.Block(&end)
+	if err != nil {
+		return "", ""
+	}
+	startTime := startBlock.Block.Time.Local().Format("2006-01-02 15:04:05")
+	endTime := endBlock.Block.Time.Local().Format("2006-01-02 15:04:05")
+	return startTime, endTime
 }
 ///////////////////
 //               //
