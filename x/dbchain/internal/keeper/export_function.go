@@ -360,7 +360,7 @@ func getGoExportFilterFunc(ctx sdk.Context, appId uint, keeper Keeper, owner sdk
 			tableName := L.CheckString(1)
 			fields := luaTableToGoMap(L.CheckTable(2))
 
-			Id, err := keeper.Insert(ctx, appId, tableName, fields, owner)
+			Id, err := keeper.InsertCore(ctx, appId, tableName, fields, owner, false)
 			if err != nil {
 				L.Push(lua.LString("-1"))
 				L.Push(lua.LString(err.Error()))
