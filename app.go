@@ -380,7 +380,9 @@ func (app *dbChainApp) SaveAddrTx(ctx sdk.Context ,resp abci.ResponseDeliverTx, 
         "txHash" : txHash,
         "txTime" : ctx.BlockHeader().Time.Local().Format("2006-01-02 15:04:05"),
         "state" : checkTxStatus(resp.Log),
+        "blockHeight" : ctx.BlockHeader().Height,
     }
+
 
     //calc usedFees
     usedFees := make([]string, len(gasPrices))//
