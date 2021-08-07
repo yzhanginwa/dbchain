@@ -117,9 +117,9 @@ func getAccountTxByTime(cliCtx context.CLIContext, storeName string) http.Handle
 			return
 		}
 
-		year, month, day := 0,0,0
-		nStartDate , _ := fmt.Sscanf(startDate,"%d-%d-%d", &year, &month, &day)
-		nEndDate , _ := fmt.Sscanf(endDate,"%d-%d-%d", &year, &month, &day)
+		year, month, day, hour, minite, second := 0,0,0,0,0,0
+		nStartDate , _ := fmt.Sscanf(startDate,"%d-%d-%d %d:%d:%d", &year, &month, &day, hour, minite, second)
+		nEndDate , _ := fmt.Sscanf(endDate,"%d-%d-%d %d:%d:%d", &year, &month, &day)
 		if nStartDate != 3 || nEndDate != 3 {
 			generalResponse(w, map[string]string{"error" : "time format error, it should be  yyyy-mm-dd"})
 			return

@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"encoding/json"
-	"fmt"
 	sdk "github.com/dbchaincloud/cosmos-sdk/types"
+	"time"
 )
 
 func (k Keeper) SaveAddrTxs ( ctx sdk.Context, addr sdk.AccAddress, value map[string]interface{}) error {
@@ -55,10 +55,6 @@ func (k Keeper) GetAddrTxsByTime(ctx sdk.Context, addr sdk.AccAddress, startDate
 	start := getCurrentAddrTxsId(k, ctx, addr)
 	end := uint(0)
 	result := make([]map[string]interface{}, 0)
-	var endYear,endMonth,endDay, startYear, startMonth, startDay int
-	fmt.Sscanf(startDate, "%d-%d-%d", &startYear, &startMonth, &startDay)
-	fmt.Sscanf(endDate, "%d-%d-%d", &endYear, &endMonth, &endDay)
-
 
 	for i := start; i > end; i--{
 		key := getAccountTxKey(addr.String(), i)
@@ -76,8 +72,7 @@ func (k Keeper) GetAddrTxsByTime(ctx sdk.Context, addr sdk.AccAddress, startDate
 			continue
 		}
 		t := txTime.(string)
-		status := checkTimeValid(endYear, endMonth, endDay, startYear, startMonth, startDay, t)
-
+		status := checkTimeValid(endDate, startDate, t)
 		if status == "high" {
 			continue
 		} else if status == "low" {
@@ -142,26 +137,15 @@ func getNextSaveAddrTxsId(k Keeper, ctx sdk.Context, addr sdk.AccAddress) (uint,
 // when txDate lower than endDate and higher than startDate , return right
 // endData is higher than startDate
 
-func checkTimeValid(endYear, endMonth, endDay, startYear, startMonth, startDay int, txDate string)  string {
-	txYear, txMonth, txDay := 0,0,0
-	fmt.Sscanf(txDate, "%d-%d-%d", &txYear, &txMonth, & txDay)
-	if txYear > endYear {
+func checkTimeValid(endTime , startTime , txDate string) string {
+	end, _ := time.ParseInLocation("2006-01-02 15:04:05", endTime, time.Local)
+	start, _ := time.ParseInLocation("2006-01-02 15:04:05", startTime, time.Local)
+	txTime, _ := time.ParseInLocation("2006-01-02 15:04:05", txDate, time.Local)
+	txSec := txTime.Unix()
+	if txSec > end.Unix() {
 		return "high"
-	} else if txYear < startYear {
-		return "low"
-	}
-
-	if txMonth > endMonth {
-		return "high"
-	} else if txMonth < startMonth {
-		return "low"
-	}
-
-	if txDay > endDay {
-		return "high"
-	} else if txDay < startDay {
+	} else if txSec < start.Unix() {
 		return "low"
 	}
 	return "right"
-
 }
