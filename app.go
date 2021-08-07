@@ -326,6 +326,9 @@ func (app *dbChainApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliver
         }
         coinWanted := sdk.NewCoin(gp.Denom, feeWanted.Ceil().RoundInt())
         coinUsed := sdk.NewCoin(gp.Denom, feeUsed.Ceil().RoundInt())
+        if coinUsed.IsGTE(coinWanted) {
+            continue
+        }
         requiredFees = append(requiredFees, coinWanted.Sub(coinUsed)) //coinWanted.Sub(coinUsed)
     }
     defer func() {
