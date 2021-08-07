@@ -5,7 +5,9 @@ import (
     "encoding/hex"
     "encoding/json"
     "fmt"
+    "github.com/dbchaincloud/cosmos-sdk/server"
     "github.com/dbchaincloud/cosmos-sdk/x/auth/types"
+    "github.com/spf13/viper"
     "os"
     "reflect"
     "strings"
@@ -112,6 +114,11 @@ func NewDbChainApp(
 
     // First define the top level codec that will be shared by the different modules
     cdc := MakeCodec()
+    //set minGasPrices
+    miniGasPrice := viper.GetString(server.FlagMinGasPrices)
+    if miniGasPrice != "" {
+        baseAppOptions = append(baseAppOptions, bam.SetMinGasPrices(miniGasPrice))
+    }
 
     // BaseApp handles interactions with Tendermint through the ABCI protocol
     bApp := bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...)

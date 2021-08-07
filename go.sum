@@ -143,10 +143,14 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dbchaincloud/cosmos-sdk v0.39.2-0.20201209072910-db412a17c8f9 h1:kOFU3v5VIoD+Gs41Ywv6o4MvyCHHdIfsmuwGaHSrqNQ=
 github.com/dbchaincloud/cosmos-sdk v0.39.2-0.20201209072910-db412a17c8f9/go.mod h1:1G6OeZnmOvxOwFw52d0rzoby713C7XauEy5GJkwUoCc=
+github.com/dbchaincloud/cosmos-sdk v0.39.2-0.20210807015239-2e03cbaac972 h1:Uv6ZmHla7f8bVok56V7+dNaigvZp+q3NsE4rExxBYGE=
+github.com/dbchaincloud/cosmos-sdk v0.39.2-0.20210807015239-2e03cbaac972/go.mod h1:1G6OeZnmOvxOwFw52d0rzoby713C7XauEy5GJkwUoCc=
 github.com/dbchaincloud/iavl v0.14.1-0.20201209071511-be7afd71a3c4 h1:pubIK43FRCI1p/GI+zKOH8CPQiQyWMwaNwaY2c//qg4=
 github.com/dbchaincloud/iavl v0.14.1-0.20201209071511-be7afd71a3c4/go.mod h1:IQpKzIk/waYY6KvPD+9Fw3YiI2M3Q9geD2QtjzVSnas=
 github.com/dbchaincloud/tendermint v0.33.8-0.20201209031923-7f51ff50057c h1:LPuYvrXzuJuG//1wgExQQhBNmBC0wuqAodUT6epeCgc=
 github.com/dbchaincloud/tendermint v0.33.8-0.20201209031923-7f51ff50057c/go.mod h1:hqbTNQoVzTymXX/a9DjG1Le5dH7E8CJLk5gqu0bWWYI=
+github.com/dbchaincloud/tendermint v0.33.8-0.20210806024904-539c9974ac15 h1:KJsHOYph6z3TXzoUW9LeiZEitTMRY0Br91Ua0/mBNWY=
+github.com/dbchaincloud/tendermint v0.33.8-0.20210806024904-539c9974ac15/go.mod h1:hqbTNQoVzTymXX/a9DjG1Le5dH7E8CJLk5gqu0bWWYI=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/dgryski/go-sip13 v0.0.0-20181026042036-e10d5fee7954/go.mod h1:vAd38F8PWV+bWy6jNmig1y/TA+kYO4g3RSRF0IAv0no=
 github.com/dustin/go-humanize v0.0.0-20171111073723-bb3d318650d4/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=

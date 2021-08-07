@@ -5,8 +5,8 @@ go 1.13
 require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.250
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
-	github.com/dbchaincloud/cosmos-sdk v0.39.2-0.20201209072910-db412a17c8f9
-	github.com/dbchaincloud/tendermint v0.33.8-0.20201209031923-7f51ff50057c
+	github.com/dbchaincloud/cosmos-sdk v0.39.2-0.20210807015239-2e03cbaac972
+	github.com/dbchaincloud/tendermint v0.33.8-0.20210806024904-539c9974ac15
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
 	github.com/ipfs/go-cid v0.0.1
