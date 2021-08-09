@@ -467,7 +467,19 @@ func (k Keeper) registerThisData(ctx sdk.Context, appId uint, tableName string, 
                 }
             }
             if !isForeignKey {
-                this.RawSetString(field, lua.LString(v))
+                dataType, err := k.GetColumnDataType(ctx, appId, tableName, field)
+                if err == nil && (dataType == string(types.FLDTYP_INT) || dataType == string(types.FLDTYP_DECIMAL)){
+                    number , err := strconv.ParseFloat(v,64)
+                    if err == nil {
+                        this.RawSetString(field, lua.LNumber(number))
+                    } else {
+                        this.RawSetString(field, lua.LString(v))
+                    }
+
+                } else {
+                    this.RawSetString(field, lua.LString(v))
+                }
+
             }
         } else if field == "created_by"{
             this.RawSetString(field, lua.LString(owner.String()))
