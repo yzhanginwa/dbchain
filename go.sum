@@ -145,6 +145,10 @@ github.com/dbchaincloud/cosmos-sdk v0.39.2-0.20201209072910-db412a17c8f9 h1:kOFU
 github.com/dbchaincloud/cosmos-sdk v0.39.2-0.20201209072910-db412a17c8f9/go.mod h1:1G6OeZnmOvxOwFw52d0rzoby713C7XauEy5GJkwUoCc=
 github.com/dbchaincloud/cosmos-sdk v0.39.2-0.20210807015239-2e03cbaac972 h1:Uv6ZmHla7f8bVok56V7+dNaigvZp+q3NsE4rExxBYGE=
 github.com/dbchaincloud/cosmos-sdk v0.39.2-0.20210807015239-2e03cbaac972/go.mod h1:1G6OeZnmOvxOwFw52d0rzoby713C7XauEy5GJkwUoCc=
+github.com/dbchaincloud/cosmos-sdk v0.39.2-0.20210809120611-a327d85ac5d5 h1:PDKSys61R0x0RygQdtas4pJqIeF28tVhUvQU0Y+9nuk=
+github.com/dbchaincloud/cosmos-sdk v0.39.2-0.20210809120611-a327d85ac5d5/go.mod h1:1G6OeZnmOvxOwFw52d0rzoby713C7XauEy5GJkwUoCc=
+github.com/dbchaincloud/cosmos-sdk v0.39.2-0.20210810072955-60a881428de1 h1:F0PTcH323qVsMah3MmJY+Xn5E15pELwPBxOTgXb/1R0=
+github.com/dbchaincloud/cosmos-sdk v0.39.2-0.20210810072955-60a881428de1/go.mod h1:1G6OeZnmOvxOwFw52d0rzoby713C7XauEy5GJkwUoCc=
 github.com/dbchaincloud/iavl v0.14.1-0.20201209071511-be7afd71a3c4 h1:pubIK43FRCI1p/GI+zKOH8CPQiQyWMwaNwaY2c//qg4=
 github.com/dbchaincloud/iavl v0.14.1-0.20201209071511-be7afd71a3c4/go.mod h1:IQpKzIk/waYY6KvPD+9Fw3YiI2M3Q9geD2QtjzVSnas=
 github.com/dbchaincloud/tendermint v0.33.8-0.20201209031923-7f51ff50057c h1:LPuYvrXzuJuG//1wgExQQhBNmBC0wuqAodUT6epeCgc=

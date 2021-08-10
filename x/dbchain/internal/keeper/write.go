@@ -64,7 +64,9 @@ func (k Keeper) InsertCore(ctx sdk.Context, appId uint, tableName string, fields
         k.applyTrigger(ctx, appId, tableName, fields, owner, L)
     }
     k.consumeGasByUploadFile(ctx, allUploadFileSize)
-
+    if ctx.GasMeter().IsOutOfGas() {
+        return 0, errors.New("out of gas")
+    }
     return id, nil
 }
 // TODO: need to think over how and when to allow updating
@@ -446,6 +448,7 @@ func (k Keeper) runLuaFilter(ctx sdk.Context, appId uint, tableName string, fiel
 
     //handle return
     strSuccess := L.Get(1).String()
+    defer L.Pop(L.GetTop())
     if strSuccess == "true" {
         return true
     }

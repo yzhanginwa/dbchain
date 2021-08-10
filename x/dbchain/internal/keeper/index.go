@@ -1,8 +1,8 @@
 package keeper
 
 import (
-    "fmt"
     "errors"
+    "fmt"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
 )
@@ -14,7 +14,7 @@ func (k Keeper) CreateIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, t
         return errors.New("No index can be created on field id")
     }
 
-    store := DbChainStore(ctx, k.storeKey)
+    store := DbChainStoreWithOutGas(ctx, k.storeKey)
     key := getMetaTableIndexKey(appId, tableName)
     var indexFields []string
 
@@ -39,7 +39,7 @@ func (k Keeper) CreateIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, t
 }
 
 func (k Keeper) DropIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, fieldName string) error {
-    store := DbChainStore(ctx, k.storeKey)
+    store := DbChainStoreWithOutGas(ctx, k.storeKey)
 
     indexFields, err := k.GetIndexFields(ctx, appId, tableName)
     if err != nil {
@@ -72,7 +72,7 @@ func (k Keeper) DropIndex(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
 }
 
 func (k Keeper) GetIndexFields(ctx sdk.Context, appId uint, tableName string) ([]string, error) {
-    store := DbChainStore(ctx, k.storeKey)
+    store := DbChainStoreWithOutGas(ctx, k.storeKey)
     key := getMetaTableIndexKey(appId, tableName)
     bz, err := store.Get([]byte(key))
     if err != nil{
@@ -88,7 +88,7 @@ func (k Keeper) GetIndexFields(ctx sdk.Context, appId uint, tableName string) ([
 }
 
 func (k Keeper) appendIndexForRow(ctx sdk.Context, appId uint, tableName string, id uint) (uint, error){
-    store := DbChainStore(ctx, k.storeKey)
+    store := DbChainStoreWithOutGas(ctx, k.storeKey)
     indexFields, err := k.GetIndexFields(ctx, appId, tableName)
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get index for table %s", tableName))
@@ -121,7 +121,7 @@ func (k Keeper) appendIndexForRow(ctx sdk.Context, appId uint, tableName string,
 
 
 func (k Keeper) dropIndexForRow(ctx sdk.Context, appId uint, tableName string, id uint) (uint, error) {
-    store := DbChainStore(ctx, k.storeKey)
+    store := DbChainStoreWithOutGas(ctx, k.storeKey)
     indexFields, err := k.GetIndexFields(ctx, appId, tableName)
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get index for table %s", tableName))
@@ -172,7 +172,7 @@ func createIndexData(k Keeper, ctx sdk.Context, appId uint, tableName, fieldName
     var dataValue string
     var indexValue []string
 
-    store := DbChainStore(ctx, k.storeKey)
+    store := DbChainStoreWithOutGas(ctx, k.storeKey)
     start, end := getFieldDataIteratorStartAndEndKey(appId, tableName, fieldName)
     iter := store.Iterator([]byte(start), []byte(end))
     for ; iter.Valid(); iter.Next() {
@@ -208,7 +208,7 @@ func createIndexData(k Keeper, ctx sdk.Context, appId uint, tableName, fieldName
 }
 
 func dropIndexData(k Keeper, ctx sdk.Context, appId uint, tableName, fieldName string) error {
-    store := DbChainStore(ctx, k.storeKey)
+    store := DbChainStoreWithOutGas(ctx, k.storeKey)
     start, end := getIndexDataIteratorStartAndEndKey(appId, tableName, fieldName)
 
     iter := store.Iterator([]byte(start), []byte(end))

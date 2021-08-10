@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+	"github.com/dbchaincloud/cosmos-sdk/store/gaskv"
 	sdk "github.com/dbchaincloud/cosmos-sdk/types"
 	"reflect"
 )
@@ -19,6 +20,20 @@ type SafeStore struct {
 
 func DbChainStore(ctx sdk.Context,storeKey sdk.StoreKey) *SafeStore{
 	rawStore := ctx.KVStore(storeKey)
+	return NewSafeStore(rawStore)
+}
+
+func DbChainStoreWithOutGas(ctx sdk.Context,storeKey sdk.StoreKey) *SafeStore{
+	gasConfig := sdk.GasConfig {
+		HasCost:          0,
+		DeleteCost:       0,
+		ReadCostFlat:     0,
+		ReadCostPerByte:  0,
+		WriteCostFlat:    0,
+		WriteCostPerByte: 0,
+		IterNextCostFlat: 0,
+	}
+	rawStore := gaskv.NewStore(ctx.MultiStore().GetKVStore(storeKey), ctx.GasMeter(), gasConfig)
 	return NewSafeStore(rawStore)
 }
 
