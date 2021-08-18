@@ -22,4 +22,6 @@ require (
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/tm-db v0.5.1
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da
+	//github.com/alexedwards/scs/v2 v2.4.0
+	github.com/go-session/session v1.0.2-0.20210731003437-77451f66169e
 )

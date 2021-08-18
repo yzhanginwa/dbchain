@@ -1,26 +1,30 @@
 package oracle
 
 import (
+    "bytes"
     "encoding/hex"
     "encoding/json"
     "fmt"
     "github.com/dbchaincloud/cosmos-sdk/client/context"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/dbchaincloud/tendermint/crypto/sm2"
-    rpchttp "github.com/dbchaincloud/tendermint/rpc/client/http"
     "github.com/mr-tron/base58"
     "github.com/spf13/viper"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    "io/ioutil"
+    "net/http"
     "time"
 )
 
 const (
     BatchSize int = 10
+    BaseUrl = "http://controlpanel.dbchain.cloud/relay/dbchain/"
 )
 
 type UniversalMsg interface {
     GetSignBytes() []byte
+    GetSigners() []sdk.AccAddress
 }
 
 var (
@@ -149,19 +153,28 @@ func buildAndSignAndBuildTxBytes(cliCtx context.CLIContext, msgs []UniversalMsg,
 }
 
 func broadcastTxBytes(txBytes []byte) string {
-    rpc, err := rpchttp.New("http://localhost:26657", "/websocket")
+
+    resp, err := http.Post(BaseUrl, "application/json", bytes.NewBuffer(txBytes))
+    defer resp.Body.Close()
     if err != nil {
-        fmt.Printf("failted to get client: %v\n", err)
+        fmt.Println(err)
+        return ""
+    }
+    bz, err  := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        fmt.Println(err)
         return ""
     }
 
-    resp, err := rpc.BroadcastTxAsync(txBytes)
-    if err != nil {
-        fmt.Printf("failted to broadcast transaction: %v\n", err)
-        return ""
-    } else {
-        return hex.EncodeToString(resp.Hash)
+    type result struct {
+        Height string
+        Txhash string
+        Code int
     }
+    temp := result{}
+    json.Unmarshal(bz, &temp)
+    return temp.Txhash
+
 }
 
 func makeBatches(msgs []UniversalMsg, batchSize int) [][]UniversalMsg {

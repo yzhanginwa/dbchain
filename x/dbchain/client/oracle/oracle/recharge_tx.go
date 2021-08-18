@@ -19,24 +19,11 @@ const (
 
 )
 func BuildAndSignBroadcastTx(cliCtx context.CLIContext, batch []UniversalMsg, privKey crypto.PrivKey, oracleAccAddr sdk.AccAddress) (string, int, string) {
-	accNum, seq, err := GetAccountInfo(oracleAccAddr.String())
-	if err != nil {
-		fmt.Println("Failed to load oracle's account info!!!")
-		return "", Failed, err.Error()
-	}
-	newBatch := make([]UniversalMsg, 0)
-	for _, msg := range batch {
-		if checkCanInsertRow(cliCtx, msg) {
-			newBatch = append(newBatch, msg)
-		}
-	}
 
-	pk := privKey.(sm2.PrivKeySm2)
-	txBytes, err := buildAndSignAndBuildTxBytes(cliCtx, newBatch, accNum, seq, pk)
+	txHash, err := BuildAndSignBroadcastTxWithoutResult(cliCtx, batch, privKey, oracleAccAddr)
 	if err != nil {
 		return "", Failed, err.Error()
 	}
-	txHash := broadcastTxBytes(txBytes)
 
 	var errInfo  = "undefined"
 	var status int
@@ -59,6 +46,28 @@ func BuildAndSignBroadcastTx(cliCtx context.CLIContext, batch []UniversalMsg, pr
 	}
 
 	return txHash, status, errInfo
+}
+
+func BuildAndSignBroadcastTxWithoutResult(cliCtx context.CLIContext, batch []UniversalMsg, privKey crypto.PrivKey, oracleAccAddr sdk.AccAddress) (string, error) {
+	accNum, seq, err := GetAccountInfo(oracleAccAddr.String())
+	if err != nil {
+		fmt.Println("Failed to load oracle's account info!!!")
+		return "", err
+	}
+	newBatch := make([]UniversalMsg, 0)
+	for _, msg := range batch {
+		if checkCanInsertRow(cliCtx, msg) {
+			newBatch = append(newBatch, msg)
+		}
+	}
+
+	pk := privKey.(sm2.PrivKeySm2)
+	txBytes, err := buildAndSignAndBuildTxBytes(cliCtx, newBatch, accNum, seq, pk)
+	if err != nil {
+		return "", err
+	}
+	txHash := broadcastTxBytes(txBytes)
+	return txHash, nil
 }
 
 //status 1: query err

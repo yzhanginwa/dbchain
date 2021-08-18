@@ -20,6 +20,7 @@ func init () {
     aminoCdc.RegisterConcrete(types.MsgUpdateTxStatistic{}, "dbchain/UpdateTxStatistic", nil)
     aminoCdc.RegisterConcrete(types.MsgFreezeRow{}, "dbchain/FreezeRow", nil)
     aminoCdc.RegisterConcrete(types.MsgSaveUserPrivateKey{}, "dbchain/SaveUserPrivateKey", nil)
+    aminoCdc.RegisterConcrete(types.MsgCallFunction{}, "dbchain/CallFunction", nil)
     cryptoamino.RegisterAmino(aminoCdc)
 
     //authtypes.RegisterCodec(aminoCdc)
