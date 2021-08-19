@@ -15,7 +15,7 @@ func getGoExportFuncNew(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.Ac
 			//params : 1. tableName, 2. fields
 			ParamsNum := L.GetTop()
 			if ParamsNum < 2 {
-				L.Push(lua.LString("-1"))
+				L.Push(lua.LNumber(-1))
 				L.Push(lua.LString("Params Err"))
 				return 2
 			}
@@ -24,10 +24,10 @@ func getGoExportFuncNew(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.Ac
 
 			Id, err := keeper.Insert(ctx, appId, tableName, fields, owner)
 			if err != nil {
-				L.Push(lua.LString("-1"))
+				L.Push(lua.LNumber(-1))
 				L.Push(lua.LString(err.Error()))
 			} else {
-				L.Push(lua.LString(Id))
+				L.Push(lua.LNumber(Id))
 				L.Push(lua.LString(""))
 			}
 			return 2
