@@ -72,6 +72,10 @@ func nftUserRegister(cliCtx context.CLIContext, storeName string) http.HandlerFu
 		tel password invitation_code
 		*/
 		tel := data["tel"]
+		if verifyTelCache.Get(tel) == nil {
+			generalResponse(w, map[string]string{"error" : "please verify tel first"})
+			return
+		}
 		password := data["password"]//
 		password, valid := passwordFormatCheck(password)
 		if !valid {

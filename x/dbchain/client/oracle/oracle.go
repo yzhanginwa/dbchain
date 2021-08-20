@@ -2,6 +2,7 @@ package oracle
 
 import (
     "fmt"
+    "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/cache"
     "time"
     "errors"
     "io/ioutil"
@@ -50,7 +51,13 @@ var (
     associationMap = make(map[string]MobileVerfCode)
     aliyunSmsKey string
     aliyunSmsSecret string
+    verifyTelCache *cache.MemoryCache
 )
+
+func init () {
+    verifyTelCache = cache.NewMemoryCache(time.NewTicker(300 * time.Second), 300)
+    go verifyTelCache.Gc()
+}
 
 func newMobile(mobile string) Mobile {
     return Mobile {
@@ -109,7 +116,7 @@ func oracleVerifyVerfCode(cliCtx context.CLIContext, storeName string) http.Hand
         }
 
         if VerifyVerfCode(addr.String(), mobile, verificationCode) {
-            saveToAuthTable(cliCtx, addr, "mobile", newMobile(mobile))
+            verifyTelCache.Set(mobile, time.Now().Unix())
             rest.PostProcessResponse(w, cliCtx, "Success")
         } else {
             rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to verify")
