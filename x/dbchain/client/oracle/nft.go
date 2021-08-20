@@ -82,10 +82,15 @@ func nftUserRegister(cliCtx context.CLIContext, storeName string) http.HandlerFu
 			generalResponse(w, map[string]string{"error" : "format of password err"})
 			return
 		}
+		myCode := genCode(4, cliCtx, storeName, nftUserTable, "my_code")
+		if myCode == "" {
+			generalResponse(w, map[string]string{"error" : "gen invitation code fail"})
+			return
+		}
 		invitationCode := data["invitation_code"]
 		fieldsOfUser := map[string]string {
 			"tel" : tel,
-			"my_code" : genCode(4),
+			"my_code" : myCode,
 			"address" : genUserAddress(),
 			"invitation_code" : invitationCode,
 		}
@@ -238,11 +243,16 @@ func nftMake(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		}
 
 		id := res["id"]
+		denomCode := genCode(16, cliCtx, storeName, denomTable, "code")
+		if denomCode == "" {
+			generalResponse(w, map[string]string{"error" : "gen denom token err"})
+			return
+		}
 		//make callFunction data
 		argument := make([]string, 0)
 		fieldsOfDenom := map[string]string {
 			"user_id" : id,
-			"code" : codePre + genCode(16),
+			"code" : codePre + denomCode,
 			"name" : name,
 			"file" : cid,
 			"description" : description,
@@ -259,9 +269,14 @@ func nftMake(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 
 		for i := 0; i < int(inumber); i++{
 
+			nftCode := genCode(16, cliCtx, storeName, nftTable, "code")
+			if nftCode == "" {
+				generalResponse(w, map[string]string{"error" : "gen nft token err"})
+				return
+			}
 			fieldOfNFT := map[string]string {
 				"denom_id" : "",
-				"code" : codePre + genCode(16),
+				"code" : codePre + nftCode,
 			}
 			strFieldOfNFT, _ := json.Marshal(fieldOfNFT)
 			argument = append(argument, string(strFieldOfNFT))
@@ -695,12 +710,18 @@ func genUserAddress() string {
 	return addr.String()
 }
 
-func genCode(length int) string {
-	code := make([]byte, length)
-	rand.Read(code)
-	//TODO check code exist or not
-	return hex.EncodeToString(code)
-
+func genCode(length int, cliCtx context.CLIContext, storeName ,tableName , field string) string {
+	for i := 0; i < 0; i++{
+		code := make([]byte, length)
+		rand.Read(code)
+		strCode := hex.EncodeToString(code)
+		ac := getOracleAc()
+		ids, _ := findByCoreIds(cliCtx, storeName, ac, nftAppCode, tableName, field, strCode)
+		if len(ids) ==  0 {
+			return strCode
+		}
+	}
+	return ""
 }
 
 func callFunction(cliCtx context.CLIContext, appCode, functionName, argument string) error {
