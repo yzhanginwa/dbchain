@@ -7,6 +7,9 @@ import (
     "fmt"
     "github.com/dbchaincloud/cosmos-sdk/client/context"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
+
+    "github.com/dbchaincloud/cosmos-sdk/x/auth/client/rest"
+    std "github.com/dbchaincloud/cosmos-sdk/x/auth/types"
     "github.com/dbchaincloud/tendermint/crypto/sm2"
     "github.com/mr-tron/base58"
     "github.com/spf13/viper"
@@ -19,7 +22,8 @@ import (
 
 const (
     BatchSize int = 10
-    BaseUrl = "http://controlpanel.dbchain.cloud/relay/dbchain/"
+    //BaseUrl = "http://192.168.0.19/relay/"
+    BaseUrl = "http://192.168.0.19:3001/relay/"
 )
 
 type UniversalMsg interface {
@@ -126,7 +130,7 @@ func buildAndSignAndBuildTxBytes(cliCtx context.CLIContext, msgs []UniversalMsg,
     if err != nil {
         return nil, err
     }
-    stdFee := NewStdFee(uint64(200000 * size), needFee)
+    stdFee := NewStdFee(uint64(2000000 * size), needFee)
     chainId := viper.GetString("chain-id")
     stdSignMsgBytes := StdSignBytes(chainId, accNum, seq, stdFee, msgs, "")
 
@@ -142,8 +146,7 @@ func buildAndSignAndBuildTxBytes(cliCtx context.CLIContext, msgs []UniversalMsg,
         Signature: sig,
     }
 
-    newStdTx := NewStdTx(msgs, stdFee, []StdSignature{stdSignature}, "")
-    txBytes, err := aminoCdc.MarshalBinaryLengthPrefixed(newStdTx)
+    txBytes, err := genPostTxBytes(cliCtx, stdFee, "",msgs, []StdSignature{stdSignature})
     if err != nil {
         fmt.Println("Oracle: Failed to marshal StdTx!!!")
         return nil, err
@@ -154,7 +157,7 @@ func buildAndSignAndBuildTxBytes(cliCtx context.CLIContext, msgs []UniversalMsg,
 
 func broadcastTxBytes(txBytes []byte) string {
 
-    resp, err := http.Post(BaseUrl, "application/json", bytes.NewBuffer(txBytes))
+    resp, err := http.Post(BaseUrl + "txs", "application/json", bytes.NewBuffer(txBytes))
     defer resp.Body.Close()
     if err != nil {
         fmt.Println(err)
@@ -247,16 +250,34 @@ func getMsgKey(msg UniversalMsg) string {
 }
 
 func getCurrentMinGasPrices(cliCtx context.CLIContext, storeName string) (sdk.DecCoins, error){
-    res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/current_min_gas_prices", storeName), nil)
+    ac := generateAccessToken()
+    res, err := httpGetRequest(fmt.Sprintf("%s/dbchain/min_gas_prices/%s", BaseUrl, ac))
     if err != nil {
         return nil, err
     }
-    var decCoins sdk.DecCoins
-    err = cliCtx.Codec.UnmarshalJSON(res, &decCoins)
+    type response struct {
+        Height string
+        Result sdk.DecCoins
+    }
+    temp := response{}
+    err = json.Unmarshal(res, &temp)
     if err != nil {
         return nil, err
     }
-    return decCoins, nil
+    return temp.Result, nil
+}
+
+func httpGetRequest(url string) ([]byte, error) {
+    resp, err := http.Get(url)
+    defer resp.Body.Close()
+    if err != nil {
+        return nil, err
+    }
+    bz, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        return nil, err
+    }
+    return bz, nil
 }
 
 func setStdFee(cliCtx context.CLIContext, storeName string, size int)  (sdk.Coins, error) {
@@ -275,4 +296,20 @@ func setStdFee(cliCtx context.CLIContext, storeName string, size int)  (sdk.Coin
         requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
     }
     return requiredFees, nil
+}
+
+func genPostTxBytes(cliCtx context.CLIContext, Fee StdFee, Memo string, msgs []UniversalMsg, Signatures []StdSignature) ([]byte, error) {
+    stdFee := std.StdFee(Fee)
+    stdMsgs := make([]sdk.Msg  , 0)
+    for _, m := range msgs {
+        stdMsg := m.(sdk.Msg)
+        stdMsgs = append(stdMsgs, stdMsg)
+    }
+    sdkStdSignature := make([]std.StdSignature, 0)
+    for _, signature := range Signatures {
+        sdkStdSignature = append(sdkStdSignature, std.StdSignature(signature))
+    }
+    newStdTx := std.NewStdTx(stdMsgs, stdFee, sdkStdSignature, Memo)
+    txBytes, err := cliCtx.Codec.MarshalJSON(rest.BroadcastReq{Tx: newStdTx, Mode: "async"})
+    return txBytes, err
 }

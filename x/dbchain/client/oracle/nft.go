@@ -1,6 +1,7 @@
 package oracle
 
 import (
+	"bytes"
 	stdCtx "context"
 	"crypto/rand"
 	"crypto/sha256"
@@ -13,10 +14,11 @@ import (
 	"github.com/dbchaincloud/tendermint/crypto"
 	"github.com/dbchaincloud/tendermint/crypto/sm2"
 	"github.com/go-session/session"
-	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 	"io"
+	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -25,7 +27,8 @@ import (
 )
 
 const (
-	nftAppCode = ""
+	//nftAppCode = "9SXMMWWR8A"
+	nftAppCode = "KQ3TVRJC15"
 	codePre = "dbc"
 	//tables
 	nftUserTable = "user"
@@ -198,13 +201,13 @@ func nftUserLogin(cliCtx context.CLIContext, storeName string) http.HandlerFunc 
 func nftMake(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//TODO 查询制作订单
-		file, _, err := r.FormFile("file")
+		file, fileHeader, err := r.FormFile("file")
 		if err != nil {
 			generalResponse(w, map[string]string{"error" : err.Error()})
 			return
 		}
 
-		cid, err := uploadFileToIpfs(file)
+		cid, err := uploadFileToIpfs(file, fileHeader.Filename)
 		if err != nil {
 			generalResponse(w, map[string]string{"error" : err.Error()})
 			return
@@ -262,7 +265,7 @@ func nftMake(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 
 		strArgument, _ := json.Marshal(argument)
 		//make nft
-		err = callFunction(cliCtx,nftAppCode, "register", string(strArgument))
+		err = callFunction(cliCtx,nftAppCode, "makeNFT", string(strArgument))
 		if err != nil {
 			generalResponse(w, map[string]string{"error" : "make err"})
 			return
@@ -591,13 +594,13 @@ func nftEditPersonalInformation(cliCtx context.CLIContext, storeName string) htt
 			return
 		}
 
-		file, _, err := r.FormFile("file")
+		file, fileHeader, err := r.FormFile("file")
 		if err != nil {
 			generalResponse(w, map[string]string{"error" : err.Error()})
 			return
 		}
 
-		cid, err := uploadFileToIpfs(file)
+		cid, err := uploadFileToIpfs(file, fileHeader.Filename)
 		if err != nil {
 			generalResponse(w, map[string]string{"error" : err.Error()})
 			return
@@ -715,15 +718,51 @@ func loadOracleAddr() sdk.AccAddress {
 	return addr
 }
 
-func uploadFileToIpfs(file io.Reader) (string, error) {
+func uploadFileToIpfs(file io.Reader, fileName string) (string, error) {
+	ac := getOracleAc()
+	url := fmt.Sprintf("%s/upload/%s/%s", BaseUrl, ac, nftAppCode)
+	return postFile(file, fileName, url)
+}
 
-	sh := shell.NewShell("localhost:5001")
-	cid, err := sh.Add(file)
+
+func postFile(file io.Reader, fileName string, targetUrl string) (string,error) {
+	bodyBuf := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuf)
+
+	//关键的一步操作
+	fileWriter, err := bodyWriter.CreateFormFile("file", fileName)
+	if err != nil {
+		fmt.Println("error writing to buffer")
+		return "", err
+	}
+	//iocopy
+	_, err = io.Copy(fileWriter, file)
 	if err != nil {
 		return "", err
 	}
-	return cid, err
+
+	contentType := bodyWriter.FormDataContentType()
+	bodyWriter.Close()
+
+	resp, err := http.Post(targetUrl, contentType, bodyBuf)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	result := make(map[string]string, 0)
+	json.Unmarshal(respBody, &result)
+	cid := result["result"]
+	if cid == "" {
+		return "", errors.New("upload file fail")
+	} else {
+		return cid, nil
+	}
 }
+
 
 func genNFTCode() string {
 	code := make([]byte, 16)

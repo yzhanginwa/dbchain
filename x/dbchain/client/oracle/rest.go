@@ -57,7 +57,6 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     //nft
     //register
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/register", storeName), nftUserRegister(cliCtx, storeName)).Methods("POST")
-    r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/update_s", storeName), nftUserRegister(cliCtx, storeName)).Methods("POST")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/login", storeName), nftUserLogin(cliCtx, storeName)).Methods("POST")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/nft_make", storeName), nftMake(cliCtx, storeName)).Methods("POST")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/nft_public", storeName), nftPublish(cliCtx, storeName)).Methods("POST")

@@ -2,7 +2,6 @@ package oracle
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/dbchaincloud/cosmos-sdk/client/context"
 	"github.com/dbchaincloud/cosmos-sdk/types/rest"
@@ -13,7 +12,7 @@ import (
 	"net/http"
 )
 
-const BaseUrl = oracle.BaseUrl
+const BaseUrl = oracle.BaseUrl + "dbchain/"
 
 func CanEditPersonalInfo(cliCtx context.CLIContext, storeName string, tel string) (string,bool) {
 	ac := getOracleAc()
@@ -143,13 +142,13 @@ func findByCoreIds(cliCtx context.CLIContext, storeName, ac, appcode, tableName,
 		fmt.Printf("could not find ids")
 		return nil, err
 	}
-
-	var out types.QuerySliceOfString
-	json.Unmarshal(res, &out)
-	if len(out) < 1 {
-		return nil, errors.New("could not find sellable id")
+	type response struct {
+		Height string
+		Result types.QuerySliceOfString
 	}
-	return out, nil
+	temp := response{}
+	json.Unmarshal(res, &temp)
+	return temp.Result, nil
 }
 
 func findRow(cliCtx context.CLIContext, query string) (map[string]string, error) {
@@ -157,10 +156,15 @@ func findRow(cliCtx context.CLIContext, query string) (map[string]string, error)
 	if err != nil {
 		return nil, err
 	}
-	orderInfo := make(map[string]string)
-	err = json.Unmarshal(res, &orderInfo)
+	type response struct {
+		Height string
+		Result map[string]string
+	}
+
+	temp := response{}
+	err = json.Unmarshal(res, &temp)
 	if err != nil {
 		return nil, err
 	}
-	return orderInfo, err
+	return temp.Result, err
 }
