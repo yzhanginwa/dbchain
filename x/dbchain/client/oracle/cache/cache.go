@@ -39,12 +39,27 @@ func (m *MemoryCache) Gc() {
 		case <-m.ticker.C:
 			nowTimeSecond := time.Now().Unix()
 			m.data.Range(func(key, value interface{}) bool {
-				saveTime := value.(int64)
-				if nowTimeSecond > saveTime + m.expiration {
-					m.data.Delete(key)
+				saveTime, ok := value.(int64)
+				if ok {
+					if nowTimeSecond > saveTime + m.expiration {
+						m.data.Delete(key)
+					}
+					return true
+				}
+
+				saveData , ok := value.(MakeNftInfo)
+				if ok {
+					if nowTimeSecond > saveData.TimeStamp + m.expiration {
+						m.data.Delete(key)
+					}
 				}
 				return true
 			})
 		}
 	}
+}
+
+type MakeNftInfo struct {
+	Data []byte
+	TimeStamp int64
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/dbchaincloud/tendermint/crypto"
 	"github.com/dbchaincloud/tendermint/crypto/sm2"
 	"github.com/go-session/session"
+	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/cache"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 	"io"
@@ -42,18 +43,24 @@ const (
 	nftCardBagTable = "nft_card_bag"
 	nftPublishOrder = "nft_publish_order"
 	nftOrderReceipt = "nft_order_receipt"
+	nftMakeOrder = "nft_make_order"
 
 	priceRegExp = `(^[1-9]\d*(\.\d{1,2})?$)|(^0(\.\d{1,2})?$)`
 	invitationScore = 10
+	nftMakePricePerNft = 0.01
 )
 
 var priceRex *regexp.Regexp
 var orderSet *nftOrderSet
+var makeOrderCache *cache.MemoryCache
 
 func init() {
 	// order cache
 	orderSet = newNftOrderSet(time.Second * 300)
 	go orderSet.GC()
+	makeOrderCache = cache.NewMemoryCache(time.NewTicker(30 * time.Minute), 1800)
+	go makeOrderCache.Gc()
+
 	//session
 	session.InitManager(
 		session.SetCookieLifeTime(300),
@@ -207,9 +214,8 @@ func nftUserLogin(cliCtx context.CLIContext, storeName string) http.HandlerFunc 
 	}
 }
 
-func nftMake(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func nftMakeBefore(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//TODO 查询制作订单
 		file, fileHeader, err := r.FormFile("file")
 		if err != nil {
 			generalResponse(w, map[string]string{"error" : err.Error()})
@@ -224,13 +230,14 @@ func nftMake(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 
 		name := r.FormValue("name")
 		description := r.FormValue("description")
+		redirectURL := r.FormValue("redirect_url")
 		number := r.FormValue("number")
 		tel := r.FormValue("tel")
 		if !verifySession(w, r, tel) {
 			generalResponse(w, map[string]string{"error" : "please login first"})
 			return
 		}
-		//find user_id
+		//check if user exist
 		ac := getOracleAc()
 		res, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", tel)
 		if err != nil {
@@ -241,11 +248,73 @@ func nftMake(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			generalResponse(w, map[string]string{"error" : "tel not exist"})
 			return
 		}
+		//下订单
+		inumber, err := strconv.Atoi(number)
+		if err != nil {
+			generalResponse(w, map[string]string{"error" : "number of nft err"})
+			return
+		}
+		price := fmt.Sprintf("%f", float32(inumber) * nftMakePricePerNft)
 
+		pk, addr , _ := loadSpecialPkForNtf()
+		fields , _ := json.Marshal(map[string]string{
+			"tel" : tel,
+			"price" : price,
+		})
+
+		msg := types.NewMsgInsertRow(addr, nftAppCode, nftMakeOrder, fields)
+		if msg.ValidateBasic() != nil {
+			generalResponse(w, map[string]string{ "error" : "all booked"})
+			return
+		}
+
+		_, status, errInfo := oracle.BuildAndSignBroadcastTx(cliCtx, []oracle.UniversalMsg{msg}, pk,  addr)
+		if status != oracle.Success {
+			generalResponse(w, map[string]string{ "error" : errInfo})
+			return
+		}
+
+		//get Order Id
+		ac = getOracleAc()
+		order, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftMakeOrder, "tel", tel)
+		if err != nil {
+			generalResponse(w, map[string]string{ "error" : err.Error()})
+			return
+		}
+		id := order["id"]
+		nftPay(w, redirectURL, price, nftAppCode + "_make_" + id)
+		//cache data
+		data, _ := json.Marshal(map[string]string {
+			"name" : name,
+			"description" : description,
+			"number" : number,
+			"tel" : tel,
+			"cid" : cid,
+		})
+		makeOrderCache.Set(nftAppCode + "_make_" + id, cache.MakeNftInfo{Data: data, TimeStamp: time.Now().Unix()})
+	}
+}
+
+func nftMakeCore(cliCtx context.CLIContext, storeName string, outTradeNo string)  {
+	    cacheData := makeOrderCache.Get(outTradeNo)
+	    if cacheData == nil {
+			return
+		}
+	    nftInfo := cacheData.(cache.MakeNftInfo)
+	    info := make(map[string]string)
+	    json.Unmarshal(nftInfo.Data, &info)
+		name := info["name"]
+		description := info["description"]
+		number := info["number"]
+		tel := info["tel"]
+		cid := info["cid"]
+
+		ac := getOracleAc()
+		res, _ := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", tel)
 		id := res["id"]
 		denomCode := genCode(16, cliCtx, storeName, denomTable, "code")
 		if denomCode == "" {
-			generalResponse(w, map[string]string{"error" : "gen denom token err"})
+			fmt.Println("error : gen denom token err")
 			return
 		}
 		//make callFunction data
@@ -261,17 +330,13 @@ func nftMake(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		strFieldsOfDenom, _ := json.Marshal(fieldsOfDenom)
 
 		argument = append(argument, denomTable, string(strFieldsOfDenom), "nft")
-		inumber, err  := strconv.ParseInt(number, 10, 64)
-		if err != nil {
-			generalResponse(w, map[string]string{"error" : "number err"})
-			return
-		}
+		inumber, _  := strconv.ParseInt(number, 10, 64)
 
 		for i := 0; i < int(inumber); i++{
 
 			nftCode := genCode(16, cliCtx, storeName, nftTable, "code")
 			if nftCode == "" {
-				generalResponse(w, map[string]string{"error" : "gen nft token err"})
+				fmt.Println("error : gen nft token err")
 				return
 			}
 			fieldOfNFT := map[string]string {
@@ -284,14 +349,12 @@ func nftMake(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 
 		strArgument, _ := json.Marshal(argument)
 		//make nft
-		err = callFunction(cliCtx,nftAppCode, "makeNFT", string(strArgument))
+		err := callFunction(cliCtx,nftAppCode, "makeNFT", string(strArgument))
 		if err != nil {
-			generalResponse(w, map[string]string{"error" : "make err"})
+			fmt.Println("error ： make err")
 			return
 		}
-		generalResponse(w, map[string]string{"success" : "make NFT success",  "denom code" : codePre + denomCode})
 		return
-	}
 }
 
 func nftPublish(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
@@ -457,9 +520,32 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		}
 		money := publish["price"]
 		//4、 pay
-		nftPay(w, redirectURL, money, nftAppCode + "_" + id)
+		nftPay(w, redirectURL, money, nftAppCode + "_buy_" + id)
 		return
 	}
+}
+
+func nftBuyCore( cliCtx context.CLIContext, storeName string, nftId, addr, outTradeNo string) {
+	// nft transfer
+	freezeIds, _ := json.Marshal([]string{nftId})
+	insertValue, _ := json.Marshal(map[string]string {
+		"nft_id" : nftId,
+		"owner" : addr,
+	})
+
+	denomId, sellOut := checkIfSellOut(cliCtx, storeName, nftId)
+	argument := []string{ nftTable, string(freezeIds), nftCardBagTable, string(insertValue) }
+	strArgument, _ := json.Marshal(argument)
+	err := callFunction(cliCtx,nftAppCode, "nft_deliver", string(strArgument))
+	if err != nil {
+		fmt.Println("serious error ： ", outTradeNo, " nft deliver fail" )
+		return
+	}
+
+	if sellOut {
+		withdrawSoldOut(cliCtx, storeName, denomId)
+	}
+	return
 }
 //
 func nftPay(w http.ResponseWriter, RedirectURL, Money, OutTradeNo string) {
@@ -487,7 +573,7 @@ func nftSaveReceipt(cliCtx context.CLIContext, storeName string) http.HandlerFun
 		//get owner
 		ac := getOracleAc()
 		ss := strings.Split(outTradeNo, "_")
-		id := ss[1]
+		id := ss[2]
 		queryString := fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, ac, nftAppCode, nftPublishOrder, id)
 		order, err := oracleQueryUserTable(cliCtx, queryString)
 		if err != nil {
@@ -515,26 +601,10 @@ func nftSaveReceipt(cliCtx context.CLIContext, storeName string) http.HandlerFun
 			fmt.Println("serious error ： ", tradeNo, " save receipt fail, but payed" )
 			return
 		}
-
-		// nft transfer
-		freezeIds, _ := json.Marshal([]string{order["nft_id"]})
-		insertValue, _ := json.Marshal(map[string]string {
-			"nft_id" : order["nft_id"],
-			"owner" : user["address"],
-		})
-
-		denomId, sellOut := checkIfSellOut(cliCtx, storeName, order["nft_id"])
-		argument := []string{ nftTable, string(freezeIds), nftCardBagTable, string(insertValue) }
-		strArgument, _ := json.Marshal(argument)
-		err = callFunction(cliCtx,nftAppCode, "nft_deliver", string(strArgument))
-		if err != nil {
-			fmt.Println("serious error ： ", tradeNo, " nft deliver fail" )
-			return
-		}
-		generalResponse(w, map[string]string{"success" : "nft deliver success"})
-
-		if sellOut {
-			withdrawSoldOut(cliCtx, storeName, denomId)
+		if ss[1] == "make" {
+			nftMakeCore(cliCtx, storeName, outTradeNo)
+		} else {
+			nftBuyCore(cliCtx,storeName, order["nft_id"], user["address"], tradeNo)
 		}
 		return
 	}

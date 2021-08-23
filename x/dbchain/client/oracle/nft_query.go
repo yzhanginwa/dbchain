@@ -130,6 +130,9 @@ func findByCore(cliCtx context.CLIContext, storeName, ac, appcode, tableName, fi
 	if err != nil {
 		return nil, err
 	}
+	if len(out) == 0 {
+		return nil, nil
+	}
 	id := out[len(out) - 1]
 	queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, appcode, tableName, id)
 	return findRow(cliCtx, queryString)
