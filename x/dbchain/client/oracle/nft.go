@@ -289,7 +289,7 @@ func nftMake(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			generalResponse(w, map[string]string{"error" : "make err"})
 			return
 		}
-		generalResponse(w, map[string]string{"success" : "make NFT success"})
+		generalResponse(w, map[string]string{"success" : "make NFT success",  "denom code" : codePre + denomCode})
 		return
 	}
 }
@@ -640,7 +640,7 @@ func nftEditPersonalInformation(cliCtx context.CLIContext, storeName string) htt
 		}
 
 		oracle.BuildTxsAndBroadcast(cliCtx, []oracle.UniversalMsg{msg})
-		generalResponse(w, map[string]string{"success" : "edit success"})
+		generalResponse(w, map[string]string{"success" : "edit success", "user_id" : userId})
 		return
 	}
 }
