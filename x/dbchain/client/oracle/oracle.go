@@ -83,17 +83,10 @@ func newCorpInfo(corpName, regNumber, creditCode string) CorpInfo {
 func oracleSendVerfCode(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
-        accessCode := vars["accessToken"]
         mobile     := vars["mobile"]
-
-        addr, err := utils.VerifyAccessCode(accessCode)
-        if err != nil {
-            rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
-            return
-        }
        
         verificationCode := utils.GenerateVerfCode(6)
-        cacheMobileAndVerificationCode(addr.String(), mobile, verificationCode)
+        cacheMobileAndVerificationCode(mobile, mobile, verificationCode)
         if sent := sendVerificationCode(mobile, verificationCode); !sent {
             rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to send sms")
             return
@@ -105,17 +98,10 @@ func oracleSendVerfCode(cliCtx context.CLIContext, storeName string) http.Handle
 func oracleVerifyVerfCode(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
-        accessCode      := vars["accessToken"]
         mobile          := vars["mobile"]
         verificationCode := vars["verificationCode"]
 
-        addr, err := utils.VerifyAccessCode(accessCode)
-        if err != nil {
-            rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
-            return
-        }
-
-        if VerifyVerfCode(addr.String(), mobile, verificationCode) {
+        if VerifyVerfCode(mobile, mobile, verificationCode) {
             verifyTelCache.Set(mobile, time.Now().Unix())
             rest.PostProcessResponse(w, cliCtx, "Success")
         } else {
