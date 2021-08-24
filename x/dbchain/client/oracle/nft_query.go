@@ -6,10 +6,12 @@ import (
 	"github.com/dbchaincloud/cosmos-sdk/client/context"
 	"github.com/dbchaincloud/cosmos-sdk/types/rest"
 	"github.com/gorilla/mux"
+	"github.com/mr-tron/base58"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 const BaseUrl = oracle.BaseUrl + "dbchain/"
@@ -41,7 +43,8 @@ func nftFindById(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return
 		}
-		rest.PostProcessResponse(w, cliCtx, res)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(res)
 	}
 }
 
@@ -55,7 +58,8 @@ func nftFindByField(cliCtx context.CLIContext, storeName string) http.HandlerFun
 			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return
 		}
-		rest.PostProcessResponse(w, cliCtx, res)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(res)
 	}
 }
 
@@ -69,7 +73,8 @@ func nftFindAll(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return
 		}
-		rest.PostProcessResponse(w, cliCtx, res)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(res)
 	}
 }
 
@@ -83,10 +88,101 @@ func nftFindByQuerier(cliCtx context.CLIContext, storeName string) http.HandlerF
 			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return
 		}
-		rest.PostProcessResponse(w, cliCtx, res)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(res)
 	}
 }
 
+func nftFindPopularAuthor(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		numbers := vars["numbers"]
+		inumber, err := strconv.Atoi(numbers)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusNotFound, "numbers err")
+			return
+		}
+		_ = numbers
+		queryString := `[{"method":"table","table":"denom"},{"method":"select","fields":"user_id"}]`
+		baseQueryString := base58.Encode([]byte(queryString))
+
+		ac := getOracleAc()
+		requestUrl := fmt.Sprintf("%s/querier/%s/%s/%s", BaseUrl,ac, nftAppCode,baseQueryString)
+		res, err := httpGetRequest(requestUrl)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+			return
+		}
+
+		type response struct {
+			Height string
+			Result []map[string]string
+		}
+		temp := response{}
+		err = json.Unmarshal(res, &temp)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+			return
+		}
+
+		Statistics := make(map[string]int, 0)
+		for _, v := range temp.Result {
+			userId := v["user_id"]
+			num := Statistics[userId]
+			num++
+			Statistics[userId] = num
+		}
+
+		popularAuthor := make(map[int]string)
+		count := 0
+		min := 0
+		for user, num := range Statistics {
+			count++
+			if min == 0 {
+				min = num
+			}
+
+			if count <= inumber {
+				popularAuthor[num] = user
+			} else {
+				if min < num {
+					delete(popularAuthor, min)
+					popularAuthor[num] = user
+					min = num
+				}
+			}
+		}
+		//query popular
+		type userInfo struct {
+			Height string
+			Result []map[string]string
+		}
+		tempUserInfo := userInfo{}
+		popularAuthorsInfo := make([]map[string]string, 0)
+		for _, userid := range popularAuthor {
+			queryString := `[{"method":"table","table":"user_info"},{"method":"select","fields":"user_id,avatar,nickname"},{"method" : "where", "field" : "user_id", "operator" : "=", "value" : "` + userid + `"}]`
+			baseQueryString := base58.Encode([]byte(queryString))
+			ac := getOracleAc()
+			requestUrl := fmt.Sprintf("%s/querier/%s/%s/%s", BaseUrl,ac, nftAppCode,baseQueryString)
+			res, err := httpGetRequest(requestUrl)
+			if err != nil {
+				rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+				return
+			}
+			err = json.Unmarshal(res, &tempUserInfo)
+			if err != nil {
+				continue
+			}
+			if len(tempUserInfo.Result) > 0 {
+				popularAuthorsInfo = append(popularAuthorsInfo, tempUserInfo.Result[0])
+			}
+		}
+
+		bz, _ := json.Marshal(popularAuthorsInfo)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(bz)
+	}
+}
 //////////////////////////
 //                      //
 //      help func       //
