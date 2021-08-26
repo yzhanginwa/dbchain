@@ -59,6 +59,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/register", storeName), nftUserRegister(cliCtx, storeName)).Methods("POST")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/login", storeName), nftUserLogin(cliCtx, storeName)).Methods("POST")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/nft_make_before", storeName), nftMakeBefore(cliCtx, storeName)).Methods("POST")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/nft_make_without_money", storeName), nftMakeOld(cliCtx, storeName)).Methods("POST")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/nft_public", storeName), nftPublish(cliCtx, storeName)).Methods("POST")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/nft_withdraw", storeName), nftWithdraw(cliCtx, storeName)).Methods("POST")
     //only published can be purchased
@@ -73,5 +74,9 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/querier/{%s}", storeName, "querierBase58"), nftFindByQuerier(cliCtx, storeName)).Methods("GET")
 
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/popular_author/{%s}", storeName, "numbers"), nftFindPopularAuthor(cliCtx, storeName)).Methods("GET")
-
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/lastest_nft/{%s}", storeName, "numbers"), nftFindLastestNft(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/nft_details/{%s}", storeName, "denom_id"), nftFindNftDetails(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user_info/{%s}", storeName, "tel"), nftUserInfo(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/nfts_of_user_make/{%s}", storeName, "tel"), nftsOfUserMake(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/nfts_of_user_buy/{%s}", storeName, "tel"), nftsOfUserBuy(cliCtx, storeName)).Methods("GET")
 }

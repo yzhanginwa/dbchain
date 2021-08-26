@@ -38,6 +38,7 @@ func (k Keeper) InsertCore(ctx sdk.Context, appId uint, tableName string, fields
 
     // as far the first go routine to be used
     _, allUploadFileSize := k.tryToPinFile(ctx, appId, tableName, fields, owner)
+    _ = allUploadFileSize
     id, err = getNextId(k, ctx, appId, tableName)
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get id for table %s", tableName))

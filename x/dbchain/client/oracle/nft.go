@@ -15,6 +15,7 @@ import (
 	"github.com/dbchaincloud/tendermint/crypto/sm2"
 	"github.com/go-session/session"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/cache"
+	oerr "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/error"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 	"io"
@@ -29,7 +30,7 @@ import (
 
 const (
 	//nftAppCode = "9SXMMWWR8A"
-	nftAppCode = "KQ3TVRJC15"
+	nftAppCode = "3CASSKY7NQ"
 	codePre = "dbc"
 	//tables
 	nftUserTable = "user"
@@ -63,7 +64,8 @@ func init() {
 
 	//session
 	session.InitManager(
-		session.SetCookieLifeTime(300),
+		session.SetCookieLifeTime(86400),
+		session.SetEnableSIDInHTTPHeader(true),
 	)
 }
 
@@ -73,25 +75,44 @@ func nftUserRegister(cliCtx context.CLIContext, storeName string) http.HandlerFu
 		if err != nil {
 			generalResponse(w, map[string]string{ "error" : err.Error()})
 		}
+		verificationCode := data["verification_code"]
 		/* user table
 		tel code address invitation code
 		input params
 		tel password invitation_code
 		*/
+		//TODO check if register
 		tel := data["tel"]
-		if verifyTelCache.Get(tel) == nil {
-			generalResponse(w, map[string]string{"error" : "please verify tel first"})
+		ac := getOracleAc()
+		res , _ := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", tel)
+		if len(res) != 0 {
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.RegisteredErrCode],
+				"code" : oerr.RegisteredErrCode})
 			return
 		}
+		if !VerifyVerfCode(tel, tel, verificationCode) {
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.TelNoVerifyCode],
+				"code" : oerr.TelNoVerifyCode})
+			return
+		}
+
 		password := data["password"]//
 		password, valid := passwordFormatCheck(password)
 		if !valid {
-			generalResponse(w, map[string]string{"error" : "format of password err"})
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.FormatErrCode],
+				"code" : oerr.FormatErrCode,
+			})
 			return
 		}
 		myCode := genCode(4, cliCtx, storeName, nftUserTable, "my_code")
 		if myCode == "" {
-			generalResponse(w, map[string]string{"error" : "gen invitation code fail"})
+			generalResponse(w, map[string]string{
+				"error" : "gen invitation code fail",
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 		invitationCode := data["invitation_code"]
@@ -113,13 +134,19 @@ func nftUserRegister(cliCtx context.CLIContext, storeName string) http.HandlerFu
 
 		err = callFunction(cliCtx,nftAppCode, "register", string(strArgument))
 		if err != nil {
-			generalResponse(w, map[string]string{"error" : "register fail"})
+			generalResponse(w, map[string]string{
+				"error" : "register fail",
+				"code" : oerr.UndefinedErr,
+			})
 			return
 		}
 		if invitationCode != "" {
 			updateScore(cliCtx, storeName, invitationCode)
 		}
-		generalResponse(w, map[string]string{"success" : "register success"})
+		generalResponse(w, map[string]string{
+			"success" : oerr.ErrDescription[oerr.SuccessCode],
+			"code" : oerr.SuccessCode,
+		})
 		return
 	}
 }
@@ -167,7 +194,10 @@ func nftUserLogin(cliCtx context.CLIContext, storeName string) http.HandlerFunc 
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := readBodyData(r)
 		if err != nil {
-			generalResponse(w, map[string]string{ "error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.ParamsErrCode],
+				"code" : oerr.ParamsErrCode,
+			})
 		}
 
 		tel := data["tel"]
@@ -176,12 +206,18 @@ func nftUserLogin(cliCtx context.CLIContext, storeName string) http.HandlerFunc 
 		ac := getOracleAc()
 		res, err := findByCore(cliCtx, storeName, ac, nftAppCode, "user", "tel", tel)
 		if err != nil {
-			generalResponse(w, map[string]string{"error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
 		if len(res) == 0 {
-			generalResponse(w, map[string]string{"error" : "tel not exist"})
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.UnregisterErrCode],
+				"code" : oerr.UnregisterErrCode,
+			})
 			return
 		}
 
@@ -189,12 +225,18 @@ func nftUserLogin(cliCtx context.CLIContext, storeName string) http.HandlerFunc 
 		ac = getOracleAc()
 		res, err = findByCore(cliCtx, storeName, ac, nftAppCode, "password", "user_id", id)
 		if err != nil {
-			generalResponse(w, map[string]string{"error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
 		if len(res) == 0 {
-			generalResponse(w, map[string]string{"error" : "unknown error"})
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.UndefinedErrCode],
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
@@ -202,13 +244,22 @@ func nftUserLogin(cliCtx context.CLIContext, storeName string) http.HandlerFunc 
 		hs := sha256.Sum256([]byte(password))
 		if hex.EncodeToString(hs[:]) == hspswd {
 			if !saveSession(w, r , tel) {
-				generalResponse(w, map[string]string{"error" : "save session err"})
+				generalResponse(w, map[string]string{
+					"error" : "save session err",
+					"code" : oerr.UndefinedErrCode,
+				})
 				return
 			}
-			generalResponse(w, map[string]string{"success" : ""})
+			generalResponse(w, map[string]string{
+				"success" : oerr.ErrDescription[oerr.SuccessCode],
+				"code" : oerr.SuccessCode,
+			})
 			return
 		} else {
-			generalResponse(w, map[string]string{"error" : "password err"})
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.PasswordErrCode],
+				"code" : oerr.PasswordErrCode,
+			})
 			return
 		}
 	}
@@ -218,13 +269,19 @@ func nftMakeBefore(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 	return func(w http.ResponseWriter, r *http.Request) {
 		file, fileHeader, err := r.FormFile("file")
 		if err != nil {
-			generalResponse(w, map[string]string{"error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
 		cid, err := uploadFileToIpfs(file, fileHeader.Filename)
 		if err != nil {
-			generalResponse(w, map[string]string{"error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
@@ -234,24 +291,36 @@ func nftMakeBefore(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 		number := r.FormValue("number")
 		tel := r.FormValue("tel")
 		if !verifySession(w, r, tel) {
-			generalResponse(w, map[string]string{"error" : "please login first"})
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.UnLoginErrCode],
+				"code" : oerr.UnLoginErrCode,
+			})
 			return
 		}
 		//check if user exist
 		ac := getOracleAc()
 		res, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", tel)
 		if err != nil {
-			generalResponse(w, map[string]string{"error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 		if len(res) == 0 {
-			generalResponse(w, map[string]string{"error" : "tel not exist"})
+			generalResponse(w, map[string]string{
+				"error" : "tel not exist",
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 		//下订单
 		inumber, err := strconv.Atoi(number)
 		if err != nil {
-			generalResponse(w, map[string]string{"error" : "number of nft err"})
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.ParamsErrCode],
+				"code" : oerr.ParamsErrCode,
+			})
 			return
 		}
 		price := fmt.Sprintf("%f", float32(inumber) * nftMakePricePerNft)
@@ -264,13 +333,19 @@ func nftMakeBefore(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 
 		msg := types.NewMsgInsertRow(addr, nftAppCode, nftMakeOrder, fields)
 		if msg.ValidateBasic() != nil {
-			generalResponse(w, map[string]string{ "error" : "all booked"})
+			generalResponse(w, map[string]string{
+				"error" : "all booked",
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
 		_, status, errInfo := oracle.BuildAndSignBroadcastTx(cliCtx, []oracle.UniversalMsg{msg}, pk,  addr)
 		if status != oracle.Success {
-			generalResponse(w, map[string]string{ "error" : errInfo})
+			generalResponse(w, map[string]string{
+				"error" : errInfo,
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
@@ -278,7 +353,10 @@ func nftMakeBefore(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 		ac = getOracleAc()
 		order, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftMakeOrder, "tel", tel)
 		if err != nil {
-			generalResponse(w, map[string]string{ "error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 		id := order["id"]
@@ -357,28 +435,158 @@ func nftMakeCore(cliCtx context.CLIContext, storeName string, outTradeNo string)
 		return
 }
 
+func nftMakeOld(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		//TODO 查询制作订单
+		file, fileHeader, err := r.FormFile("file")
+		if err != nil {
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
+			return
+		}
+
+		cid, err := uploadFileToIpfs(file, fileHeader.Filename)
+		if err != nil {
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
+			return
+		}
+
+		name := r.FormValue("name")
+		description := r.FormValue("description")
+		number := r.FormValue("number")
+		tel := r.FormValue("tel")
+		if !verifySession(w, r, tel) {
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.UnLoginErrCode],
+				"code" : oerr.UnLoginErrCode,
+			})
+			return
+		}
+		//find user_id
+		ac := getOracleAc()
+		res, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", tel)
+		if err != nil {
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
+			return
+		}
+		if len(res) == 0 {
+			generalResponse(w, map[string]string{
+				"error" : "tel not exist",
+				"code" : oerr.UndefinedErrCode,
+			})
+			return
+		}
+
+		id := res["id"]
+		//make callFunction data
+		argument := make([]string, 0)
+		denomCode := genCode(16, cliCtx, storeName, denomTable, "code")
+		if denomCode == "" {
+			generalResponse(w, map[string]string{
+				"error" : "gen denom token err",
+				"code" : oerr.UndefinedErrCode,
+			})
+			return
+		}
+		fieldsOfDenom := map[string]string {
+			"user_id" : id,
+			"code" : codePre + denomCode,
+			"name" : name,
+			"file" : cid,
+			"description" : description,
+			"number" : number,
+		}
+		strFieldsOfDenom, _ := json.Marshal(fieldsOfDenom)
+
+		argument = append(argument, denomTable, string(strFieldsOfDenom), "nft")
+		inumber, err  := strconv.ParseInt(number, 10, 64)
+		if err != nil {
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.ParamsErrCode],
+				"code" : oerr.ParamsErrCode,
+			})
+			return
+		}
+
+		for i := 0; i < int(inumber); i++{
+
+			nftCode := genCode(16, cliCtx, storeName, nftTable, "code")
+			if nftCode == "" {
+				generalResponse(w, map[string]string{
+					"error" : "gen nft token err",
+					"code" : oerr.UndefinedErrCode,
+				})
+				return
+			}
+
+			fieldOfNFT := map[string]string {
+				"denom_id" : "",
+				"code" : codePre + nftCode,
+			}
+			strFieldOfNFT, _ := json.Marshal(fieldOfNFT)
+			argument = append(argument, string(strFieldOfNFT))
+		}
+
+		strArgument, _ := json.Marshal(argument)
+		//make nft
+		err = callFunction(cliCtx,nftAppCode, "makeNFT", string(strArgument))
+		if err != nil {
+			generalResponse(w, map[string]string{
+				"error" : "make err",
+				"code" : oerr.UndefinedErrCode,
+			})
+			return
+		}
+		generalResponse(w, map[string]string{
+			"success" : oerr.ErrDescription[oerr.SuccessCode],
+			"code" : oerr.SuccessCode,
+		})
+		return
+	}
+}
+
 func nftPublish(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//denom tel
 		data, err := readBodyData(r)
 		if err != nil {
-			generalResponse(w, map[string]string{ "error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 		tel := data["tel"] //be used to check session
 		if !verifySession(w, r, tel) {
-			generalResponse(w, map[string]string{ "error" : "please login first"})
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.UnLoginErrCode],
+				"code" : oerr.UnLoginErrCode,
+			})
 			return
 		}
 		denomId := data["denom_id"]
 		price := data["price"]
 		if !checkPriceValid(price) {
-			generalResponse(w, map[string]string{"error" : "prices err"})
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.ParamsErrCode],
+				"code" : oerr.ParamsErrCode,
+			})
 			return
 		}
 		//check if denomId exists
 		if !checkIfDataExistInDatabaseByFindBy(cliCtx, storeName, nftAppCode, nftTable, "denom_id", denomId) {
-			generalResponse(w, map[string]string{"error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : "nft dont exist",
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
@@ -391,12 +599,18 @@ func nftPublish(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		strFields , _ := json.Marshal(fields)
 		msg := types.NewMsgInsertRow(owner, nftAppCode, nftPublishTable, strFields)
 		if msg.ValidateBasic() != nil {
-			generalResponse(w, map[string]string{"error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.UndefinedErrCode],
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
 		oracle.BuildTxsAndBroadcast(cliCtx, []oracle.UniversalMsg{msg})
-		generalResponse(w, map[string]string{"success" : "publishing"})
+		generalResponse(w, map[string]string{
+			"success" : oerr.ErrDescription[oerr.SuccessCode],
+			"code" : oerr.SuccessCode,
+		})
 		return
 	}
 }
@@ -406,12 +620,18 @@ func nftWithdraw(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		//denom tel
 		data, err := readBodyData(r)
 		if err != nil {
-			generalResponse(w, map[string]string{ "error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 		tel := data["tel"] //be used to check session
 		if !verifySession(w, r, tel) {
-			generalResponse(w, map[string]string{ "error" : "please login first"})
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.UnLoginErrCode],
+				"code" : oerr.UnLoginErrCode,
+			})
 			return
 		}
 		denomId := data["denom_id"]
@@ -419,12 +639,18 @@ func nftWithdraw(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		ac := getOracleAc()
 		res, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftPublishTable, "denom_id", denomId)
 		if err != nil {
-			generalResponse(w, map[string]string{"error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
 		if len(res) == 0 {
-			generalResponse(w, map[string]string{"error" : "tel not exist"})
+			generalResponse(w, map[string]string{
+				"error" : "tel not exist",
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 		strId := res["id"]
@@ -432,11 +658,17 @@ func nftWithdraw(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		addr := loadOracleAddr()
 		msg := types.NewMsgFreezeRow(addr, nftAppCode, nftPublishTable, uint(id))
 		if msg.ValidateBasic() != nil {
-			generalResponse(w, map[string]string{"error" : "tel not exist"})
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.UndefinedErrCode],
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 		oracle.BuildTxsAndBroadcast(cliCtx, []oracle.UniversalMsg{msg})
-		generalResponse(w, map[string]string{"success" : ""})
+		generalResponse(w, map[string]string{
+			"success" : oerr.ErrDescription[oerr.SuccessCode],
+			"code" : oerr.SuccessCode,
+		})
 		return
 	}
 }
@@ -451,12 +683,18 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 
 		data, err := readBodyData(r)
 		if err != nil {
-			generalResponse(w, map[string]string{ "error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 		tel := data["tel"] //be used to check session
 		if !verifySession(w, r, tel) {
-			generalResponse(w, map[string]string{ "error" : "please login first"})
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.UnLoginErrCode],
+				"code" : oerr.UnLoginErrCode,
+			})
 			return
 		}
 		denomId := data["denom_id"]
@@ -465,20 +703,33 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		ac := getOracleAc()
 		nfts, err := findByAll(cliCtx, storeName, ac, nftAppCode, nftTable, "denom_id", denomId)
 		if err != nil {
-			generalResponse(w, map[string]string{ "error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
+
 			return
 		}
 		if len(nfts) == 0 {
-			generalResponse(w, map[string]string{ "error" : "sell out"})
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.SoldOutErrCode],
+				"code" : oerr.SoldOutErrCode,
+			})
 			return
 		}
 		//2、检查当前下单量
 		if orderSet.Size() >= len(nfts) {
-			generalResponse(w, map[string]string{ "error" : "all booked"})
+			generalResponse(w, map[string]string{
+				"error" : "all booked",
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 		if !orderSet.Set(len(nfts)) {
-			generalResponse(w, map[string]string{ "error" : "all booked"})
+			generalResponse(w, map[string]string{
+				"error" : "all booked",
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 		//3、下单
@@ -489,13 +740,19 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		})
 		msg := types.NewMsgInsertRow(addr, nftAppCode, nftPublishOrder, fields)
 		if msg.ValidateBasic() != nil {
-			generalResponse(w, map[string]string{ "error" : "all booked"})
+			generalResponse(w, map[string]string{
+				"error" : "all booked",
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
 		_, status, errInfo := oracle.BuildAndSignBroadcastTx(cliCtx, []oracle.UniversalMsg{msg}, pk,  addr)
 		if status != oracle.Success {
-			generalResponse(w, map[string]string{ "error" : errInfo})
+			generalResponse(w, map[string]string{
+				"error" : errInfo,
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
@@ -503,7 +760,10 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		ac = getOracleAc()
 		order, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftPublishOrder, "nft_id", denomId)
 		if err != nil {
-			generalResponse(w, map[string]string{ "error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 		id := order["id"]
@@ -511,11 +771,17 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		ac = getOracleAc()
 		publish, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftPublishTable, "denom_id", denomId)
 		if err != nil {
-			generalResponse(w, map[string]string{ "error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 		if len(publish) == 0 {
-			generalResponse(w, map[string]string{ "error" : "sell out"})
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.SoldOutErrCode],
+				"code" : oerr.SoldOutErrCode,
+			})
 			return
 		}
 		money := publish["price"]
@@ -615,12 +881,18 @@ func nftTransfer(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 
 		data, err := readBodyData(r)
 		if err != nil {
-			generalResponse(w, map[string]string{ "error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 		tel := data["tel"] //be used to check session
 		if !verifySession(w, r, tel) {
-			generalResponse(w, map[string]string{ "error" : "please login first"})
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.UnLoginErrCode],
+				"code" : oerr.UnLoginErrCode,
+			})
 			return
 		}
 		nftId := data["nft_id"]
@@ -629,7 +901,10 @@ func nftTransfer(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		ac := getOracleAc()
 		user, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", tel)
 		if err != nil || len(user) == 0 {
-			generalResponse(w, map[string]string{ "error" : "user don't exit"})
+			generalResponse(w, map[string]string{
+				"error" : "user don't exit",
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 		addr := user["address"]
@@ -637,11 +912,17 @@ func nftTransfer(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		ac = getOracleAc()
 		nft, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftCardBagTable, "nft_id", nftId)
 		if err != nil || len(nft) == 0 {
-			generalResponse(w, map[string]string{ "error" : "nft don't exit"})
+			generalResponse(w, map[string]string{
+				"error" : "nft don't exit",
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 		if addr != nft["owner"] {
-			generalResponse(w, map[string]string{ "error" : "permission forbidden"})
+			generalResponse(w, map[string]string{
+				"error" : "permission forbidden",
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
@@ -657,10 +938,16 @@ func nftTransfer(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		strArgument, _ := json.Marshal(argument)
 		err = callFunction(cliCtx,nftAppCode, "nft_deliver", string(strArgument))
 		if err != nil {
-			generalResponse(w, map[string]string{"error" : "nft transfer fail"})
+			generalResponse(w, map[string]string{
+				"error" : "nft transfer fail",
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
-		generalResponse(w, map[string]string{"success" : "nft transfer success"})
+		generalResponse(w, map[string]string{
+			"success" : oerr.ErrDescription[oerr.SuccessCode],
+			"code" : oerr.SuccessCode,
+		})
 		return
 	}
 }
@@ -673,25 +960,37 @@ func nftEditPersonalInformation(cliCtx context.CLIContext, storeName string) htt
 		description := r.FormValue("description")
 		tel := r.FormValue("tel")
 		if !verifySession(w, r, tel) {
-			generalResponse(w, map[string]string{"error" : "please login first"})
+			generalResponse(w, map[string]string{
+				"error" : oerr.ErrDescription[oerr.UnLoginErrCode],
+				"code" : oerr.UnLoginErrCode,
+			})
 			return
 		}
 
 		userId, ok := CanEditPersonalInfo(cliCtx, storeName, tel)
 		if ! ok {
-			generalResponse(w, map[string]string{"error" : "edit err"})
+			generalResponse(w, map[string]string{
+				"error" : "edit err",
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
 		file, fileHeader, err := r.FormFile("file")
 		if err != nil {
-			generalResponse(w, map[string]string{"error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
 		cid, err := uploadFileToIpfs(file, fileHeader.Filename)
 		if err != nil {
-			generalResponse(w, map[string]string{"error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
@@ -705,12 +1004,18 @@ func nftEditPersonalInformation(cliCtx context.CLIContext, storeName string) htt
 		owner := loadOracleAddr()
 		msg := types.NewMsgInsertRow(owner, nftAppCode, nftUserInfoTable, fields)
 		if msg.ValidateBasic() != nil {
-			generalResponse(w, map[string]string{"error" : err.Error()})
+			generalResponse(w, map[string]string{
+				"error" : err.Error(),
+				"code" : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
 		oracle.BuildTxsAndBroadcast(cliCtx, []oracle.UniversalMsg{msg})
-		generalResponse(w, map[string]string{"success" : "edit success", "user_id" : userId})
+		generalResponse(w, map[string]string{
+			"success" : oerr.ErrDescription[oerr.SuccessCode],
+			"code" : oerr.SuccessCode,
+		})
 		return
 	}
 }
@@ -781,7 +1086,7 @@ func genUserAddress() string {
 }
 
 func genCode(length int, cliCtx context.CLIContext, storeName ,tableName , field string) string {
-	for i := 0; i < 0; i++{
+	for i := 0; i < 10; i++{
 		code := make([]byte, length)
 		rand.Read(code)
 		strCode := hex.EncodeToString(code)

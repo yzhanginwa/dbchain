@@ -26,6 +26,7 @@ const (
     BaseUrl = "http://192.168.0.19:3001/relay/"
 )
 
+const gasNum = 2000000
 type UniversalMsg interface {
     GetSignBytes() []byte
     GetSigners() []sdk.AccAddress
@@ -130,7 +131,7 @@ func buildAndSignAndBuildTxBytes(cliCtx context.CLIContext, msgs []UniversalMsg,
     if err != nil {
         return nil, err
     }
-    stdFee := NewStdFee(uint64(2000000 * size), needFee)
+    stdFee := NewStdFee(uint64(gasNum * size), needFee)
     chainId := viper.GetString("chain-id")
     stdSignMsgBytes := StdSignBytes(chainId, accNum, seq, stdFee, msgs, "")
 
@@ -290,7 +291,7 @@ func setStdFee(cliCtx context.CLIContext, storeName string, size int)  (sdk.Coin
     }
 
     requiredFees := make(sdk.Coins, len(minGasPrices))
-    glDec := sdk.NewDec(int64(200000 * size))
+    glDec := sdk.NewDec(int64(gasNum * size))
     for i, gp := range minGasPrices {
         fee := gp.Amount.Mul(glDec)
         requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
