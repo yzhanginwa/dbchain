@@ -300,6 +300,13 @@ func nftFindNftDetails(cliCtx context.CLIContext, storeName string) http.Handler
 			})
 			return
 		}
+
+		if len(publishInfo) != 0 {
+			ntfInfo["publish"] = "true"
+		} else {
+			ntfInfo["publish"] = "false"
+		}
+
 		ntfInfo["price"] = publishInfo["price"]
 
 		nfts , err := findByCoreIds(cliCtx, storeName, ac, nftAppCode, nftTable, "denom_id", denomId)
@@ -359,6 +366,57 @@ func nftUserInfo(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			result["description"] =  res["description"]
 		}
 		bz, _ := json.Marshal(result)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(bz)
+	}
+}
+
+func nftUserInvitationRecord(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		tel := vars["tel"]
+		inviteOrAll := vars["invite_or_all"]
+		userId, ok := verifySession(w, r, tel)
+		if !ok {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
+				ErrCode : oerr.UnLoginErrCode})
+			return
+		}
+		queryString := ""
+		if inviteOrAll == "invite" {
+			queryString = `[{"method":"table","table":"score"},{"method":"select","fields":"token,action,memo,increment,created_at"},{"method" : "where", "field" : "user_id", "operator" : "=", "value" : "` + userId + `"}, {"method" : "where", "field" : "memo", "operator" : "=", "value" : "Invite users"}]`
+
+		} else if inviteOrAll == "all" {
+			queryString = `[{"method":"table","table":"score"},{"method":"select","fields":"token,action,memo,increment,created_at"},{"method" : "where", "field" : "user_id", "operator" : "=", "value" : "` + userId + `"}]`
+
+		} else {
+			generalResponse(w, map[string]string{
+				ErrInfo : "invalid params",
+				ErrCode : oerr.UndefinedErr})
+			return
+		}
+		baseQueryString := base58.Encode([]byte(queryString))
+
+		ac := getOracleAc()
+		requestUrl := fmt.Sprintf("%s/querier/%s/%s/%s", BaseUrl,ac, nftAppCode,baseQueryString)
+		res, err := httpGetRequest(requestUrl)
+		if err != nil {
+			generalResponse(w, map[string]string{
+				ErrInfo : err.Error(),
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+
+		type tokenRecord struct {
+			Height string
+			Result []map[string]string
+		}
+		temp := tokenRecord{}
+		json.Unmarshal(res, &temp)
+
+		bz, _ := json.Marshal(temp.Result)
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(bz)
 	}

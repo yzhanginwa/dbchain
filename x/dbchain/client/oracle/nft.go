@@ -189,8 +189,7 @@ func updateScore(cliCtx context.CLIContext, storeName string, invitationCode, ac
 	field , _ := json.Marshal(map[string]string{
 		"user_id" : userId[0],
 		"token" : token,
-		"action" : action,
-		"increment" : strconv.Itoa(increment),
+		"action" : action + strconv.Itoa(increment),
 		"memo" : memo})
 	msg := types.NewMsgInsertRow(owner, nftAppCode, nftScoreTable, field)
 	if msg.ValidateBasic() != nil {
