@@ -322,7 +322,8 @@ func nftUserInfo(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		tel := vars["tel"]
-		if !verifySession(w, r, tel) {
+		_, ok := verifySession(w, r, tel)
+		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
 				ErrCode : oerr.UnLoginErrCode})
@@ -367,7 +368,8 @@ func nftsOfUserMake(cliCtx context.CLIContext, storeName string) http.HandlerFun
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		tel := vars["tel"]
-		if !verifySession(w, r, tel) {
+		_, ok := verifySession(w, r, tel)
+		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
 				ErrCode : oerr.UnLoginErrCode},
@@ -416,7 +418,8 @@ func nftsOfUserBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		tel := vars["tel"]
-		if !verifySession(w, r, tel) {
+		_, ok := verifySession(w, r, tel)
+		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
 				ErrCode : oerr.UnLoginErrCode},

@@ -224,9 +224,9 @@ func nftUserLogin(cliCtx context.CLIContext, storeName string) http.HandlerFunc 
 			return
 		}
 
-		id := res["id"]
+		userId := res["id"]
 		ac = getOracleAc()
-		res, err = findByCore(cliCtx, storeName, ac, nftAppCode, "password", "user_id", id)
+		res, err = findByCore(cliCtx, storeName, ac, nftAppCode, "password", "user_id", userId)
 		if err != nil {
 			generalResponse(w, map[string]string{
 				ErrInfo : err.Error(),
@@ -246,7 +246,7 @@ func nftUserLogin(cliCtx context.CLIContext, storeName string) http.HandlerFunc 
 		hspswd := res["password"]
 		hs := sha256.Sum256([]byte(password))
 		if hex.EncodeToString(hs[:]) == hspswd {
-			if !saveSession(w, r , tel) {
+			if !saveSession(w, r , tel, userId) {
 				generalResponse(w, map[string]string{
 					ErrInfo : "save session err",
 					ErrCode : oerr.UndefinedErrCode,
@@ -293,7 +293,8 @@ func nftMakeBefore(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 		redirectURL := r.FormValue("redirect_url")
 		number := r.FormValue("number")
 		tel := r.FormValue("tel")
-		if !verifySession(w, r, tel) {
+		_, ok := verifySession(w, r, tel)
+		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
 				ErrCode : oerr.UnLoginErrCode,
@@ -463,7 +464,8 @@ func nftMakeOld(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		description := r.FormValue("description")
 		number := r.FormValue("number")
 		tel := r.FormValue("tel")
-		if !verifySession(w, r, tel) {
+		_, ok := verifySession(w, r, tel)
+		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
 				ErrCode : oerr.UnLoginErrCode,
@@ -568,7 +570,8 @@ func nftPublish(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			return
 		}
 		tel := data["tel"] //be used to check session
-		if !verifySession(w, r, tel) {
+		_, ok := verifySession(w, r, tel)
+		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
 				ErrCode : oerr.UnLoginErrCode,
@@ -630,7 +633,8 @@ func nftWithdraw(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			return
 		}
 		tel := data["tel"] //be used to check session
-		if !verifySession(w, r, tel) {
+		_, ok := verifySession(w, r, tel)
+		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
 				ErrCode : oerr.UnLoginErrCode,
@@ -693,7 +697,8 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			return
 		}
 		tel := data["tel"] //be used to check session
-		if !verifySession(w, r, tel) {
+		_, ok := verifySession(w, r, tel)
+		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
 				ErrCode : oerr.UnLoginErrCode,
@@ -943,7 +948,8 @@ func nftTransfer(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			return
 		}
 		tel := data["tel"] //be used to check session
-		if !verifySession(w, r, tel) {
+		_, ok := verifySession(w, r, tel)
+		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
 				ErrCode : oerr.UnLoginErrCode,
@@ -1014,7 +1020,8 @@ func nftEditPersonalInformation(cliCtx context.CLIContext, storeName string) htt
 		nickname := r.FormValue("nickname")
 		description := r.FormValue("description")
 		tel := r.FormValue("tel")
-		if !verifySession(w, r, tel) {
+		_, ok := verifySession(w, r, tel)
+		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
 				ErrCode : oerr.UnLoginErrCode,
@@ -1294,12 +1301,13 @@ func withdrawSoldOut(cliCtx context.CLIContext, storeName, denomId string) {
 	return
 }
 
-func saveSession(w http.ResponseWriter, r *http.Request, val string) bool {
+func saveSession(w http.ResponseWriter, r *http.Request, tel, userId string) bool {
 	store, err := session.Start(stdCtx.Background(), w, r)
 	if err != nil {
 		return false
 	}
-	store.Set("tel", val)
+	store.Set("tel", tel)
+	store.Set("userId", userId)
 	err = store.Save()
 	if err != nil {
 		return false
@@ -1307,17 +1315,18 @@ func saveSession(w http.ResponseWriter, r *http.Request, val string) bool {
 	return true
 }
 
-func verifySession(w http.ResponseWriter, r *http.Request, val string) bool {
+func verifySession(w http.ResponseWriter, r *http.Request, val string) (string, bool) {
 	store, err := session.Start(stdCtx.Background(), w, r)
 	if err != nil {
-		return false
+		return "", false
 	}
 	sessionTel, ok := store.Get("tel")
 	if !ok {
-		return false
+		return "", false
 	}
 	if sessionTel.(string) != val {
-		return false
+		return "", false
 	}
-	return true
+	userId, _ := store.Get("userId")
+	return userId.(string), true
 }
