@@ -173,9 +173,15 @@ func nftFindPopularAuthor(cliCtx context.CLIContext, storeName string) http.Hand
 		tempUserInfo := userInfo{}
 		popularAuthorsInfo := make([]map[string]string, 0)
 		for _, userid := range popularAuthor {
+			ac := getOracleAc()
+			userInfo, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "id", userid)
+			if err != nil || userInfo == nil {
+				continue
+			}
+
 			queryString := `[{"method":"table","table":"user_info"},{"method":"select","fields":"user_id,avatar,nickname"},{"method" : "where", "field" : "user_id", "operator" : "=", "value" : "` + userid + `"}]`
 			baseQueryString := base58.Encode([]byte(queryString))
-			ac := getOracleAc()
+
 			requestUrl := fmt.Sprintf("%s/querier/%s/%s/%s", BaseUrl,ac, nftAppCode,baseQueryString)
 			res, err := httpGetRequest(requestUrl)
 			if err != nil {
@@ -187,7 +193,15 @@ func nftFindPopularAuthor(cliCtx context.CLIContext, storeName string) http.Hand
 				continue
 			}
 			if len(tempUserInfo.Result) > 0 {
+				tempUserInfo.Result[0]["tel"] = userInfo["tel"]
 				popularAuthorsInfo = append(popularAuthorsInfo, tempUserInfo.Result[0])
+			} else {
+				popularAuthorsInfo = append(popularAuthorsInfo, map[string]string{
+					"user_id" : userid,
+					"avatar" : "",
+					"nickname" : "",
+					"tel" : userInfo["tel"],
+				})
 			}
 		}
 
@@ -266,6 +280,16 @@ func nftFindNftDetails(cliCtx context.CLIContext, storeName string) http.Handler
 				ErrCode : oerr.UndefinedErrCode,
 			})
 			return
+		}
+
+		userId := ntfInfo["user_id"]
+		userInfo , err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserInfoTable, "user_id", userId)
+		if err != nil || userInfo == nil {
+			ntfInfo["avatar"] =  ""
+			ntfInfo["nickname"] = ""
+		} else {
+			ntfInfo["avatar"] =  userInfo["avatar"]
+			ntfInfo["nickname"] = userInfo["nickname"]
 		}
 
 		publishInfo , err := findByCore(cliCtx, storeName, ac, nftAppCode, nftPublishTable, "denom_id", denomId)
@@ -434,7 +458,11 @@ func nftsOfUserBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 				continue
 			}
 			if id == lastNftTransferInfo["id"] {
-				result = append(result, bought)
+				nftINfo, err := findNftInfoByNftId(cliCtx, storeName, nftId)
+				if err != nil {
+					continue
+				}
+				result = append(result, nftINfo)
 			}
 		}
 		bz, _ := json.Marshal(result)
@@ -548,4 +576,23 @@ func queryByQuerier(queryString string) []map[string]string {
 		return nil
 	}
 	return tempUserInfo.Result
+}
+
+func findNftInfoByNftId(cliCtx context.CLIContext, storeName, nftId string) (map[string]string, error) {
+	ac := getOracleAc()
+
+	queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftTable, nftId)
+	nftInfo, err := findRow(cliCtx, queryString)
+	if err !=nil || nftInfo == nil {
+		return nftInfo, err
+	}
+
+	denomInfo, err := findByCore(cliCtx, storeName, ac, nftAppCode, denomTable, "id", nftInfo["denom_id"])
+	if err != nil || denomInfo == nil {
+		return nftInfo, err
+	}
+	nftInfo["name"] = denomInfo["name"]
+	nftInfo["file"] = denomInfo["file"]
+	nftInfo["description"] = denomInfo["description"]
+	return nftInfo, nil
 }

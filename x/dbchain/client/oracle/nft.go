@@ -737,9 +737,10 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		}
 		//3、下单
 		pk, addr , _ := loadSpecialPkForNtf()
+		orderNftId :=nfts[orderSet.Size()]["id"]
 		fields , _ := json.Marshal(map[string]string{
 			"tel" : tel,
-			"nft_id" : nfts[orderSet.Size()]["id"],
+			"nft_id" : orderNftId,
 		})
 		msg := types.NewMsgInsertRow(addr, nftAppCode, nftPublishOrder, fields)
 		if msg.ValidateBasic() != nil {
@@ -761,7 +762,7 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 
 		//get Order Id
 		ac = getOracleAc()
-		order, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftPublishOrder, "nft_id", denomId)
+		order, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftPublishOrder, "nft_id", orderNftId)
 		if err != nil {
 			generalResponse(w, map[string]string{
 				ErrInfo : err.Error(),
@@ -829,6 +830,57 @@ func nftPay(w http.ResponseWriter, RedirectURL, Money, OutTradeNo string) {
 }
 
 func nftSaveReceipt(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		if _, err := aliClient.VerifySign(r.Form); err != nil {
+			fmt.Println("aliClient.VerifySign  err : ", err.Error())
+			w.Write([]byte("failed"))
+			return
+		}
+		outTradeNo := strings.TrimSpace(r.Form.Get("out_trade_no"))
+		totalAmount  := strings.TrimSpace(r.Form.Get("total_amount"))
+		tradeNo := strings.TrimSpace(r.Form.Get("trade_no"))
+		//get owner
+		ac := getOracleAc()
+		ss := strings.Split(outTradeNo, "_")
+		id := ss[2]
+		queryString := fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, ac, nftAppCode, nftPublishOrder, id)
+		order, err := oracleQueryUserTable(cliCtx, queryString)
+		if err != nil {
+			fmt.Println("serious error ： ", tradeNo, " get order fail, but payed" )
+			return
+		}
+
+		ac = getOracleAc()
+		user, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", order["tel"])
+		if err != nil || len(user) == 0 {
+			fmt.Println("serious error ： ", tradeNo, " get user addr, but payed" )
+		}
+		//
+		fields , _ := json.Marshal(map[string]string {
+			"appcode" : nftAppCode,
+			"orderid" : outTradeNo,
+			"owner" : user["address"],
+			"amount"  : totalAmount,
+			"vendor"  : "alipay",
+			"vendor_payment_no" : tradeNo,
+		})
+
+		err = insertRowWithTx(cliCtx, nftAppCode, nftOrderReceipt, fields)
+		if err != nil {
+			fmt.Println("serious error ： ", tradeNo, " save receipt fail, but payed" )
+			return
+		}
+		if ss[1] == "make" {
+			nftMakeCore(cliCtx, storeName, outTradeNo)
+		} else {
+			nftBuyCore(cliCtx,storeName, order["nft_id"], user["address"], tradeNo)
+		}
+		return
+	}
+}
+
+func nftSaveReceiptInitiative(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		if _, err := aliClient.VerifySign(r.Form); err != nil {
