@@ -144,7 +144,7 @@ func nftUserRegister(cliCtx context.CLIContext, storeName string) http.HandlerFu
 			return
 		}
 		if invitationCode != "" {
-			updateScore(cliCtx, storeName, invitationCode)
+			updateScore(cliCtx, storeName, invitationCode, "+", invitationScore, "Invite users")
 		}
 		generalResponse(w, map[string]string{
 			SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
@@ -154,19 +154,19 @@ func nftUserRegister(cliCtx context.CLIContext, storeName string) http.HandlerFu
 	}
 }
 
-func updateScore(cliCtx context.CLIContext, storeName string, invitationCode string) {
+func updateScore(cliCtx context.CLIContext, storeName string, invitationCode, action string, increment int, memo string) error {
 
 	ac := getOracleAc()
 	//find userId
 	userId, err := findByCoreIds(cliCtx, storeName, ac, nftAppCode, nftUserTable, "my_code", invitationCode)
 	if err != nil || len(userId) == 0 {
-		return
+		return err
 	}
 	//find user score
 	ac = getOracleAc()
 	score, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftScoreTable, "user_id", userId[0])
 	if err != nil {
-		return
+		return err
 	}
 	owner := loadOracleAddr()
 	msgs := make([]oracle.UniversalMsg, 0)
@@ -174,23 +174,31 @@ func updateScore(cliCtx context.CLIContext, storeName string, invitationCode str
 
 	if len(score) != 0 {
 		lastToken, _ = strconv.Atoi(score["token"])
-		id, _ := strconv.Atoi(score["id"])
-		msg := types.NewMsgFreezeRow(owner, nftAppCode, nftScoreTable, uint(id))
-		if msg.ValidateBasic() != nil {
-			return
-		}
-		msgs = append(msgs, msg)
 	}
-	currentToken := lastToken + invitationScore
+	currentToken := 0
+	if action == "+" {
+		currentToken = lastToken + increment
+	} else {
+		if lastToken < increment {
+			return errors.New("not enough token")
+		}
+		currentToken = lastToken - increment
+	}
+
 	token := strconv.Itoa(currentToken)
-	field , _ := json.Marshal(map[string]string{ "user_id" : userId[0], "token" : token})
+	field , _ := json.Marshal(map[string]string{
+		"user_id" : userId[0],
+		"token" : token,
+		"action" : action,
+		"increment" : strconv.Itoa(increment),
+		"memo" : memo})
 	msg := types.NewMsgInsertRow(owner, nftAppCode, nftScoreTable, field)
 	if msg.ValidateBasic() != nil {
-		return
+		return errors.New("internal err")
 	}
 	msgs = append(msgs, msg)
 	oracle.BuildTxsAndBroadcast(cliCtx, msgs)
-	return
+	return nil
 }
 
 func nftUserLogin(cliCtx context.CLIContext, storeName string) http.HandlerFunc {

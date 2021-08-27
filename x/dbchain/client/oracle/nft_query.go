@@ -274,7 +274,7 @@ func nftFindNftDetails(cliCtx context.CLIContext, storeName string) http.Handler
 		ac := getOracleAc()
 		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, denomTable, denomId)
 		ntfInfo, err := findRow(cliCtx, queryString)
-		if err != nil {
+		if err != nil || ntfInfo == nil {
 			generalResponse(w, map[string]string{
 				ErrInfo : "find denom err",
 				ErrCode : oerr.UndefinedErrCode,
@@ -341,6 +341,7 @@ func nftUserInfo(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		result := map[string]string {
 			"tel" : res["tel"],
 			"address" : res["address"],
+			"invitation_code" : res["invitation_code"],
 		}
 
 		userid := res["id"]
