@@ -363,6 +363,81 @@ func nftUserInfo(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	}
 }
 
+func nftUserNftOrderNumber(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		tel := vars["tel"]
+		_, ok := verifySession(w, r, tel)
+		if !ok {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
+				ErrCode : oerr.UnLoginErrCode,
+			})
+			return
+		}
+
+		ac := getOracleAc()
+		orderIds, err := findByCoreIds(cliCtx, storeName, ac, nftAppCode, nftPublishOrder, "tel", tel)
+		if err != nil {
+			generalResponse(w, map[string]string{
+				ErrInfo : "find user info err",
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+		numOfPayOrder := 0
+		for _, orderId := range orderIds {
+			ac := getOracleAc()
+			val := nftAppCode + "_buy_" + orderId
+			payed, _ := findByCoreIds(cliCtx, storeName, ac, nftAppCode, nftOrderReceipt, "orderid", val)
+			if len(payed) != 0 {
+				numOfPayOrder++
+			}
+		}
+		result := map[string]string{
+			"nft_order_numbers" : strconv.Itoa(numOfPayOrder),
+		}
+		bz, _ := json.Marshal(result)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(bz)
+	}
+}
+
+func nftUserNftNumber(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		tel := vars["tel"]
+		userId, ok := verifySession(w, r, tel)
+		if !ok {
+			ac := getOracleAc()
+			res, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", tel)
+			if err != nil || res == nil{
+				generalResponse(w, map[string]string{
+					ErrInfo : "find user info err",
+					ErrCode : oerr.UndefinedErrCode,
+				})
+				return
+			}
+			userId = res["id"]
+		}
+
+		ac := getOracleAc()
+		denomIds, err := findByCoreIds(cliCtx, storeName, ac, nftAppCode, denomTable, "user_id", userId)
+		if err != nil {
+			generalResponse(w, map[string]string{
+				ErrInfo : "find user info err",
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+		result := map[string]string{
+			"nft_numbers" : strconv.Itoa(len(denomIds)),
+		}
+		bz, _ := json.Marshal(result)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(bz)
+	}
+}
 
 func nftsOfUserMake(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

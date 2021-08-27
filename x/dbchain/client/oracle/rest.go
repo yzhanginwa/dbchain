@@ -78,6 +78,8 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/lastest_nft/{%s}", storeName, "numbers"), nftFindLastestNft(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/nft_details/{%s}", storeName, "denom_id"), nftFindNftDetails(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user_info/{%s}", storeName, "tel"), nftUserInfo(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user_nft_number/{%s}", storeName, "tel"), nftUserNftNumber(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user_nft_order_number/{%s}", storeName, "tel"), nftUserNftOrderNumber(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/nfts_of_user_make/{%s}", storeName, "tel"), nftsOfUserMake(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/nfts_of_user_buy/{%s}", storeName, "tel"), nftsOfUserBuy(cliCtx, storeName)).Methods("GET")
 }
