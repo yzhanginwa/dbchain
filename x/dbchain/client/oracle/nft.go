@@ -737,7 +737,7 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		}
 		//3、下单
 		pk, addr , _ := loadSpecialPkForNtf()
-		orderNftId :=nfts[orderSet.Size()]["id"]
+		orderNftId :=nfts[orderSet.Size() - 1]["id"]
 		fields , _ := json.Marshal(map[string]string{
 			"tel" : tel,
 			"nft_id" : orderNftId,
