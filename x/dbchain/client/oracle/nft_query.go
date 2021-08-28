@@ -259,6 +259,7 @@ func nftFindLastestNft(cliCtx context.CLIContext, storeName string) http.Handler
 			}
 			ntfInfo["avatar"] = userInfo["avatar"]
 			ntfInfo["nickname"] = userInfo["nickname"]
+			ntfInfo["price"] = publishInfo["price"]
 			nfts = append(nfts, ntfInfo)
 		}
 		bz, _ := json.Marshal(nfts)
@@ -348,7 +349,7 @@ func nftUserInfo(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		result := map[string]string {
 			"tel" : res["tel"],
 			"address" : res["address"],
-			"invitation_code" : res["invitation_code"],
+			"my_code" : res["my_code"],
 		}
 
 		userid := res["id"]
@@ -365,17 +366,30 @@ func nftUserInfo(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			result["nickname"] =     res["nickname"]
 			result["description"] =  res["description"]
 		}
+
+		res, err = findByCore(cliCtx, storeName, ac, nftAppCode, nftScoreTable, "user_id", userid)
+		if err != nil {
+			generalResponse(w, map[string]string{
+				ErrInfo : "find user info err",
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+		if len(res) != 0 {
+			result["token"] = res["token"]
+		} else {
+			result["token"] = "0"
+		}
 		bz, _ := json.Marshal(result)
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(bz)
 	}
 }
 
-func nftUserInvitationRecord(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func nftUserAllTokenRecord(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		tel := vars["tel"]
-		inviteOrAll := vars["invite_or_all"]
 		userId, ok := verifySession(w, r, tel)
 		if !ok {
 			generalResponse(w, map[string]string{
@@ -383,19 +397,9 @@ func nftUserInvitationRecord(cliCtx context.CLIContext, storeName string) http.H
 				ErrCode : oerr.UnLoginErrCode})
 			return
 		}
-		queryString := ""
-		if inviteOrAll == "invite" {
-			queryString = `[{"method":"table","table":"score"},{"method":"select","fields":"token,action,memo,increment,created_at"},{"method" : "where", "field" : "user_id", "operator" : "=", "value" : "` + userId + `"}, {"method" : "where", "field" : "memo", "operator" : "=", "value" : "Invite users"}]`
+		queryString := `[{"method":"table","table":"score"},{"method":"select","fields":"token,action,memo,increment,created_at"},{"method" : "where", "field" : "user_id", "operator" : "=", "value" : "` + userId + `"}]`
 
-		} else if inviteOrAll == "all" {
-			queryString = `[{"method":"table","table":"score"},{"method":"select","fields":"token,action,memo,increment,created_at"},{"method" : "where", "field" : "user_id", "operator" : "=", "value" : "` + userId + `"}]`
 
-		} else {
-			generalResponse(w, map[string]string{
-				ErrInfo : "invalid params",
-				ErrCode : oerr.UndefinedErr})
-			return
-		}
 		baseQueryString := base58.Encode([]byte(queryString))
 
 		ac := getOracleAc()
@@ -421,6 +425,38 @@ func nftUserInvitationRecord(cliCtx context.CLIContext, storeName string) http.H
 		_, _ = w.Write(bz)
 	}
 }
+
+func nftUserInvitationRecord(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		tel := vars["tel"]
+		userId, ok := verifySession(w, r, tel)
+		if !ok {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
+				ErrCode : oerr.UnLoginErrCode})
+			return
+		}
+		ac := getOracleAc()
+		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftUserTable, userId)
+		userInfo, err := findRow(cliCtx, queryString)
+		if err != nil || userInfo == nil {
+			generalResponse(w, map[string]string{
+				ErrInfo : "find denom err",
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+		myCode := userInfo["my_code"]
+		queryString = `[{"method":"table","table":"user"},{"method":"select","fields":"address,created_at"},{"method" : "where", "field" : "invitation_code", "operator" : "=", "value" : "` + myCode + `"}]`
+		inviteInfos := queryByQuerier(queryString)
+		for _ ,inviteInfo := range inviteInfos {
+			inviteInfo["action"] = "+" + strconv.Itoa(invitationScore)
+		}
+		bz, _ := json.Marshal(inviteInfos)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(bz)
+	}}
 
 func nftUserNftOrderNumber(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
