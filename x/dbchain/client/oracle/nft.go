@@ -275,6 +275,95 @@ func nftUserLogin(cliCtx context.CLIContext, storeName string) http.HandlerFunc 
 	}
 }
 
+func nftUserResetPassword(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		data, err := readBodyData(r)
+		if err != nil {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.ParamsErrCode],
+				ErrCode : oerr.ParamsErrCode,
+			})
+		}
+
+		tel := data["tel"]
+		verificationCode := data["verification_code"]
+		password := data["password"]
+		password, valid := passwordFormatCheck(password)
+		if !valid {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.FormatErrCode],
+				ErrCode : oerr.FormatErrCode,
+			})
+			return
+		}
+		//query tel and password
+		ac := getOracleAc()
+		res, err := findByCore(cliCtx, storeName, ac, nftAppCode, "user", "tel", tel)
+		if err != nil {
+			generalResponse(w, map[string]string{
+				ErrInfo : err.Error(),
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+
+		if len(res) == 0 {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.UnregisterErrCode],
+				ErrCode : oerr.UnregisterErrCode,
+			})
+			return
+		}
+
+		if !VerifyVerfCode(tel, tel, verificationCode) {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.TelNoVerifyCode],
+				ErrCode : oerr.TelNoVerifyCode})
+			return
+		}
+
+		userId := res["id"]
+		ac = getOracleAc()
+		res, err = findByCore(cliCtx, storeName, ac, nftAppCode, "password", "user_id", userId)
+		if err != nil {
+			generalResponse(w, map[string]string{
+				ErrInfo : err.Error(),
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+
+		if len(res) == 0 {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.UndefinedErrCode],
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+		//pswdId := res["id"]
+		pswdId, _ := strconv.Atoi(res["id"])
+		owner := loadOracleAddr()
+		msgs := make([]oracle.UniversalMsg, 0)
+		msgFreeze := types.NewMsgFreezeRow(owner, nftAppCode, nftPasswordTable, uint(pswdId))
+		msgs = append(msgs, msgFreeze)
+		//
+		fieldsOfPassword := map[string]string{
+			"user_id" : userId,
+			"password" : password,
+		}
+		bz , _ := json.Marshal(fieldsOfPassword)
+		msgInsert := types.NewMsgInsertRow(owner, nftAppCode, nftScoreTable, bz)
+		msgs = append(msgs, msgInsert)
+
+		oracle.BuildTxsAndBroadcast(cliCtx, msgs)
+		generalResponse(w, map[string]string{
+			SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
+			ErrCode : oerr.SuccessCode,
+		})
+		return
+	}
+}
+
 func nftMakeBefore(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		file, fileHeader, err := r.FormFile("file")
