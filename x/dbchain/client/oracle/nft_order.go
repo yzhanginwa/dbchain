@@ -1,7 +1,6 @@
 package oracle
 
 import (
-	"math"
 	"sync"
 	"time"
 )
@@ -14,45 +13,77 @@ import (
 ////////////////////////
 
 type nftOrderSet struct {
-	orders map[int]int64//sync.Map
+	ordersTimestamp map[string]map[int64]struct{}//sync.Map
+	ordersDenom map[string]int
 	t *time.Ticker
 	lock sync.RWMutex
+	invalidTime int64
 }
 
 func newNftOrderSet(duration time.Duration) *nftOrderSet {
 	n := &nftOrderSet {
 		t : time.NewTicker(duration),
-		orders: make(map[int]int64),
+		ordersTimestamp: make(map[string]map[int64]struct{}),
+		ordersDenom : make(map[string]int),
+		invalidTime : duration.Nanoseconds(),
 	}
 	return n
 }
 
-func (n *nftOrderSet) Set(maxSize int) bool {
+func (n *nftOrderSet) Set(denonId string, maxSize int) bool {
 	n.lock.Lock()
 	defer n.lock.Unlock()
-	if len(n.orders) >= maxSize {
+	if maxSize <= 0 {
 		return false
 	}
-	index := len(n.orders) % math.MaxInt32
-	n.orders[index] = time.Now().Unix()
+	currentOrderSize, ok := n.ordersDenom[denonId]
+	if !ok {
+		temp := make(map[int64]struct{})
+		nt := time.Now().UnixNano()
+		//temp = append(temp, nt)
+		temp[nt] = struct{}{}
+		n.ordersTimestamp[denonId] = temp
+		n.ordersDenom[denonId] = 1
+		return true
+	}
+
+	if currentOrderSize >= maxSize {
+		return false
+	}
+	currentOrderSize++
+	n.ordersDenom[denonId] = currentOrderSize
+	nt := time.Now().UnixNano()
+	timeStamps := n.ordersTimestamp[denonId]
+	timeStamps[nt] = struct{}{}
 	return true
 }
 
-func (n * nftOrderSet) Delete(orderId int) {
+func (n * nftOrderSet) Delete(denomId string) {
 	n.lock.Lock()
 	defer n.lock.Unlock()
-	delete(n.orders, orderId)
+	delete(n.ordersDenom, denomId)
+	delete(n.ordersTimestamp, denomId)
 }
 
 func (n * nftOrderSet)GC() {
 	for {
 		select {
 		case _ = <-n.t.C :
-			nowTime := time.Now().Unix()
+			nowTime := time.Now().UnixNano()
 			n.lock.Lock()
-			for orderId, orderTime := range n.orders {
-				if nowTime - orderTime > 300 {
-					delete(n.orders, orderId)
+
+			for denomId, timeStamps := range n.ordersTimestamp {
+				currentOrder := n.ordersDenom[denomId]
+				for timeStamp, _ := range timeStamps {
+						if nowTime - timeStamp > n.invalidTime {
+							delete(timeStamps, timeStamp)
+							currentOrder--
+						}
+				}
+				if currentOrder <= 0 {
+					delete(n.ordersDenom, denomId)
+				} else {
+					n.ordersDenom[denomId] = currentOrder
 				}
 			}
 			n.lock.Unlock()
@@ -60,8 +91,8 @@ func (n * nftOrderSet)GC() {
 	}
 }
 
-func (n *nftOrderSet) Size() int {
+func (n *nftOrderSet) Size(denomId string) int {
 	n.lock.RLock()
 	defer n.lock.RUnlock()
-	return len(n.orders)
+	return n.ordersDenom[denomId]
 }
