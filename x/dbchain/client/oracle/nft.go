@@ -76,6 +76,7 @@ func nftUserRegister(cliCtx context.CLIContext, storeName string) http.HandlerFu
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UndefinedErrCode],
 				ErrCode : oerr.UndefinedErrCode})
+			return
 
 		}
 		verificationCode := data["verification_code"]
@@ -261,6 +262,7 @@ func nftUserLogin(cliCtx context.CLIContext, storeName string) http.HandlerFunc 
 				return
 			}
 			generalResponse(w, map[string]string{
+				"user_id" : userId,
 				SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
 				ErrCode : oerr.SuccessCode,
 			})
@@ -333,26 +335,21 @@ func nftUserResetPassword(cliCtx context.CLIContext, storeName string) http.Hand
 			return
 		}
 
-		if len(res) == 0 {
-			generalResponse(w, map[string]string{
-				ErrInfo : oerr.ErrDescription[oerr.UndefinedErrCode],
-				ErrCode : oerr.UndefinedErrCode,
-			})
-			return
-		}
-		//pswdId := res["id"]
-		pswdId, _ := strconv.Atoi(res["id"])
 		owner := loadOracleAddr()
 		msgs := make([]oracle.UniversalMsg, 0)
-		msgFreeze := types.NewMsgFreezeRow(owner, nftAppCode, nftPasswordTable, uint(pswdId))
-		msgs = append(msgs, msgFreeze)
+		if len(res) != 0 {
+			pswdId, _ := strconv.Atoi(res["id"])
+			msgFreeze := types.NewMsgFreezeRow(owner, nftAppCode, nftPasswordTable, uint(pswdId))
+			msgs = append(msgs, msgFreeze)
+		}
+
 		//
 		fieldsOfPassword := map[string]string{
 			"user_id" : userId,
 			"password" : password,
 		}
 		bz , _ := json.Marshal(fieldsOfPassword)
-		msgInsert := types.NewMsgInsertRow(owner, nftAppCode, nftScoreTable, bz)
+		msgInsert := types.NewMsgInsertRow(owner, nftAppCode, nftPasswordTable, bz)
 		msgs = append(msgs, msgInsert)
 
 		oracle.BuildTxsAndBroadcast(cliCtx, msgs)
@@ -389,7 +386,7 @@ func nftMakeBefore(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 		redirectURL := r.FormValue("redirect_url")
 		number := r.FormValue("number")
 		tel := r.FormValue("tel")
-		_, ok := verifySession(w, r, tel)
+		_, ok := verifySession(w, r)
 		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
@@ -560,7 +557,7 @@ func nftMakeOld(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		description := r.FormValue("description")
 		number := r.FormValue("number")
 		tel := r.FormValue("tel")
-		_, ok := verifySession(w, r, tel)
+		_, ok := verifySession(w, r)
 		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
@@ -665,8 +662,7 @@ func nftPublish(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			})
 			return
 		}
-		tel := data["tel"] //be used to check session
-		_, ok := verifySession(w, r, tel)
+		_, ok := verifySession(w, r)
 		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
@@ -697,7 +693,6 @@ func nftPublish(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			"price" : price,
 		}
 		owner := loadOracleAddr()
-		//_, addr, _  := loadNftOraclePkAndAddr()
 		strFields , _ := json.Marshal(fields)
 		msg := types.NewMsgInsertRow(owner, nftAppCode, nftPublishTable, strFields)
 		if msg.ValidateBasic() != nil {
@@ -728,8 +723,7 @@ func nftWithdraw(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			})
 			return
 		}
-		tel := data["tel"] //be used to check session
-		_, ok := verifySession(w, r, tel)
+		_, ok := verifySession(w, r)
 		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
@@ -793,7 +787,7 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			return
 		}
 		tel := data["tel"] //be used to check session
-		_, ok := verifySession(w, r, tel)
+		_, ok := verifySession(w, r)
 		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
@@ -822,23 +816,23 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			return
 		}
 		//2、检查当前下单量
-		if orderSet.Size() >= len(nfts) {
+		if orderSet.Size(denomId) >= len(nfts) {
 			generalResponse(w, map[string]string{
 				ErrInfo : "all booked",
-				ErrCode : oerr.UndefinedErrCode,
+				ErrCode : oerr.AllBookedErrCode,
 			})
 			return
 		}
-		if !orderSet.Set(len(nfts)) {
+		if !orderSet.Set(denomId, len(nfts)) {
 			generalResponse(w, map[string]string{
 				ErrInfo : "all booked",
-				ErrCode : oerr.UndefinedErrCode,
+				ErrCode : oerr.AllBookedErrCode,
 			})
 			return
 		}
 		//3、下单
 		pk, addr , _ := loadSpecialPkForNtf()
-		orderNftId :=nfts[orderSet.Size() - 1]["id"]
+		orderNftId :=nfts[orderSet.Size(denomId) - 1]["id"]
 		fields , _ := json.Marshal(map[string]string{
 			"tel" : tel,
 			"nft_id" : orderNftId,
@@ -846,7 +840,7 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		msg := types.NewMsgInsertRow(addr, nftAppCode, nftPublishOrder, fields)
 		if msg.ValidateBasic() != nil {
 			generalResponse(w, map[string]string{
-				ErrInfo : "all booked",
+				ErrInfo : oerr.ErrDescription[oerr.UndefinedErrCode],
 				ErrCode : oerr.UndefinedErrCode,
 			})
 			return
@@ -922,12 +916,19 @@ func nftBuyCore( cliCtx context.CLIContext, storeName string, nftId, addr, outTr
 func nftPay(w http.ResponseWriter, RedirectURL, Money, OutTradeNo string) {
 	url, err := oraclePagePay(RedirectURL, Money, OutTradeNo)
 	if err != nil {
-		generalResponse(w, map[string]string{ ErrInfo : err.Error()})
+		generalResponse(w, map[string]string{
+			ErrInfo : err.Error(),
+			ErrCode : oerr.UndefinedErr,
+		})
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write([]byte(url))
 
+	generalResponse(w, map[string]string{
+		SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
+		ErrCode : oerr.SuccessCode,
+		"url" : url,
+	})
+	return
 }
 
 func nftSaveReceipt(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
@@ -1044,7 +1045,7 @@ func nftTransfer(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			return
 		}
 		tel := data["tel"] //be used to check session
-		_, ok := verifySession(w, r, tel)
+		_, ok := verifySession(w, r)
 		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
@@ -1116,7 +1117,7 @@ func nftEditPersonalInformation(cliCtx context.CLIContext, storeName string) htt
 		nickname := r.FormValue("nickname")
 		description := r.FormValue("description")
 		tel := r.FormValue("tel")
-		_, ok := verifySession(w, r, tel)
+		_, ok := verifySession(w, r)
 		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
@@ -1197,11 +1198,6 @@ func passwordFormatCheck(password string) (string,bool) {
 
 	 for _, a := range password {
 
-	 	if hasNum && hasLower && hasUper {
-			hs := sha256.Sum256([]byte(password))
-			return hex.EncodeToString(hs[:]), true
-		}
-
 		if a <=  '9' && a >= '0' {
 			hasNum = true
 		} else if a <=  'z' && a >= 'a' {
@@ -1209,6 +1205,11 @@ func passwordFormatCheck(password string) (string,bool) {
 		} else if a <= 'Z' && a >= 'A' {
 			hasUper = true
 		}
+
+		 if hasNum && hasLower && hasUper {
+			 hs := sha256.Sum256([]byte(password))
+			 return hex.EncodeToString(hs[:]), true
+		 }
 	 }
 	return "", false
 }
@@ -1411,18 +1412,16 @@ func saveSession(w http.ResponseWriter, r *http.Request, tel, userId string) boo
 	return true
 }
 
-func verifySession(w http.ResponseWriter, r *http.Request, val string) (string, bool) {
+func verifySession(w http.ResponseWriter, r *http.Request) (string, bool) {
 	store, err := session.Start(stdCtx.Background(), w, r)
 	if err != nil {
 		return "", false
 	}
-	sessionTel, ok := store.Get("tel")
+	_, ok := store.Get("tel")
 	if !ok {
 		return "", false
 	}
-	if sessionTel.(string) != val {
-		return "", false
-	}
+
 	userId, _ := store.Get("userId")
 	return userId.(string), true
 }

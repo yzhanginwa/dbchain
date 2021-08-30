@@ -328,9 +328,7 @@ func nftFindNftDetails(cliCtx context.CLIContext, storeName string) http.Handler
 
 func nftUserInfo(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		tel := vars["tel"]
-		_, ok := verifySession(w, r, tel)
+		userId, ok := verifySession(w, r)
 		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
@@ -338,7 +336,8 @@ func nftUserInfo(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			return
 		}
 		ac := getOracleAc()
-		res, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", tel)
+		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftUserTable, userId)
+		res, err := findRow(cliCtx, queryString)
 		if err != nil || res == nil{
 			generalResponse(w, map[string]string{
 				ErrInfo : "find user info err",
@@ -386,11 +385,47 @@ func nftUserInfo(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	}
 }
 
-func nftUserAllTokenRecord(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func nftOfUserBasicInfo(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		tel := vars["tel"]
-		userId, ok := verifySession(w, r, tel)
+		userId := vars["user_id"]
+		ac := getOracleAc()
+		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftUserTable, userId)
+		res, err := findRow(cliCtx, queryString)
+		if err != nil || res == nil{
+			generalResponse(w, map[string]string{
+				ErrInfo : "find user info err",
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+		result := map[string]string {
+			"address" : res["address"],
+		}
+
+		res, err = findByCore(cliCtx, storeName, ac, nftAppCode, nftUserInfoTable, "user_id", userId)
+		if err != nil {
+			generalResponse(w, map[string]string{
+				ErrInfo : "find user info err",
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+		if len(res) != 0 {
+			result["avatar"] =       res["avatar"]
+			result["nickname"] =     res["nickname"]
+			result["description"] =  res["description"]
+		}
+
+		bz, _ := json.Marshal(result)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(bz)
+	}
+}
+
+func nftUserAllTokenRecord(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userId, ok := verifySession(w, r)
 		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
@@ -428,9 +463,8 @@ func nftUserAllTokenRecord(cliCtx context.CLIContext, storeName string) http.Han
 
 func nftUserInvitationRecord(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		tel := vars["tel"]
-		userId, ok := verifySession(w, r, tel)
+
+		userId, ok := verifySession(w, r)
 		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
@@ -460,9 +494,7 @@ func nftUserInvitationRecord(cliCtx context.CLIContext, storeName string) http.H
 
 func nftUserNftOrderNumber(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		tel := vars["tel"]
-		_, ok := verifySession(w, r, tel)
+		userId, ok := verifySession(w, r)
 		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
@@ -472,6 +504,17 @@ func nftUserNftOrderNumber(cliCtx context.CLIContext, storeName string) http.Han
 		}
 
 		ac := getOracleAc()
+		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftUserTable, userId)
+		userInfo, err :=  findRow(cliCtx, queryString)
+		if err != nil || len(userInfo) == 0 {
+			generalResponse(w, map[string]string{
+				ErrInfo : "find user info err",
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+
+		tel := userInfo["tel"]
 		orderIds, err := findByCoreIds(cliCtx, storeName, ac, nftAppCode, nftPublishOrder, "tel", tel)
 		if err != nil {
 			generalResponse(w, map[string]string{
@@ -501,20 +544,7 @@ func nftUserNftOrderNumber(cliCtx context.CLIContext, storeName string) http.Han
 func nftUserNftNumber(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		tel := vars["tel"]
-		userId, ok := verifySession(w, r, tel)
-		if !ok {
-			ac := getOracleAc()
-			res, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", tel)
-			if err != nil || res == nil{
-				generalResponse(w, map[string]string{
-					ErrInfo : "find user info err",
-					ErrCode : oerr.UndefinedErrCode,
-				})
-				return
-			}
-			userId = res["id"]
-		}
+		userId := vars["user_id"]
 
 		ac := getOracleAc()
 		denomIds, err := findByCoreIds(cliCtx, storeName, ac, nftAppCode, denomTable, "user_id", userId)
@@ -537,25 +567,19 @@ func nftUserNftNumber(cliCtx context.CLIContext, storeName string) http.HandlerF
 func nftsOfUserMake(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		tel := vars["tel"]
-		_, ok := verifySession(w, r, tel)
-		if !ok {
-			generalResponse(w, map[string]string{
-				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
-				ErrCode : oerr.UnLoginErrCode},
-			)
-			return
+		userid := vars["user_id"]
+		publishStatus := vars["publish_status"]
+		if publishStatus == "published" {
+			_, ok := verifySession(w, r)
+			if !ok {
+				generalResponse(w, map[string]string{
+					ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
+					ErrCode : oerr.UnLoginErrCode},
+				)
+				return
+			}
 		}
 		ac := getOracleAc()
-		res, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", tel)
-		if err != nil || res == nil {
-			generalResponse(w, map[string]string{
-				ErrInfo : "find user info err",
-				ErrCode : oerr.UndefinedErrCode,
-			})
-			return
-		}
-		userid := res["id"]
 		denoms, err := findByAll(cliCtx, storeName, ac, nftAppCode, denomTable, "user_id", userid)
 		if err != nil {
 			generalResponse(w, map[string]string{
@@ -564,6 +588,7 @@ func nftsOfUserMake(cliCtx context.CLIContext, storeName string) http.HandlerFun
 			})
 			return
 		}
+		result := make([]map[string]string, 0)
 		for _, denom := range denoms {
 			denomId := denom["id"]
 			ac := getOracleAc()
@@ -571,13 +596,22 @@ func nftsOfUserMake(cliCtx context.CLIContext, storeName string) http.HandlerFun
 			if err != nil {
 				continue
 			}
-			if len(publishId) != 0 {
-				denom["publish"] = "true"
+
+			if publishStatus == "published" {
+				if len(publishId) == 0 {
+					continue
+				}
 			} else {
-				denom["publish"] = "false"
+				if len(publishId) != 0 {
+					denom["publish"] = "true"
+				} else {
+					denom["publish"] = "false"
+				}
 			}
+			result = append(result, denom)
+
 		}
-		bz, _ := json.Marshal(denoms)
+		bz, _ := json.Marshal(result)
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(bz)
 	}
@@ -586,9 +620,7 @@ func nftsOfUserMake(cliCtx context.CLIContext, storeName string) http.HandlerFun
 
 func nftsOfUserBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		tel := vars["tel"]
-		_, ok := verifySession(w, r, tel)
+		userId, ok := verifySession(w, r)
 		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
@@ -597,7 +629,8 @@ func nftsOfUserBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 			return
 		}
 		ac := getOracleAc()
-		res, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", tel)
+		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftUserTable, userId)
+		res, err := findRow(cliCtx, queryString)
 		if err != nil || res == nil {
 			generalResponse(w, map[string]string{
 				ErrInfo : "find user info err",
