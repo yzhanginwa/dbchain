@@ -12,6 +12,7 @@ import (
 	"github.com/dbchaincloud/tendermint/crypto"
 	tmamino "github.com/dbchaincloud/tendermint/crypto/encoding/amino"
 	"github.com/spf13/viper"
+	oerr "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/error"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 	"io/ioutil"
@@ -190,6 +191,17 @@ const secretKey = "secret_key"
 
 func generalResponse(w http.ResponseWriter, data interface{}) {
 	bz,_ := json.Marshal(data)
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(bz)
+}
+
+func successDataResponse(w http.ResponseWriter, data interface{}) {
+	temp := map[string]interface{}{
+		ErrInfo : oerr.ErrDescription[oerr.SuccessCode],
+		ErrCode : oerr.SuccessCode,
+		Result : data,
+	}
+	bz,_ := json.Marshal(temp)
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(bz)
 }

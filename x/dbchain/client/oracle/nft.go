@@ -80,6 +80,7 @@ func nftUserRegister(cliCtx context.CLIContext, storeName string) http.HandlerFu
 
 		}
 		verificationCode := data["verification_code"]
+		_ = verificationCode
 		/* user table
 		tel code address invitation code
 		input params
@@ -261,11 +262,8 @@ func nftUserLogin(cliCtx context.CLIContext, storeName string) http.HandlerFunc 
 				})
 				return
 			}
-			generalResponse(w, map[string]string{
-				"user_id" : userId,
-				SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
-				ErrCode : oerr.SuccessCode,
-			})
+			result := map[string]string{ "user_id" : userId}
+			successDataResponse(w, result)
 			return
 		} else {
 			generalResponse(w, map[string]string{
@@ -386,6 +384,7 @@ func nftMakeBefore(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 		redirectURL := r.FormValue("redirect_url")
 		number := r.FormValue("number")
 		tel := r.FormValue("tel")
+		payType :=  r.FormValue("pay_type")
 		_, ok := verifySession(w, r)
 		if !ok {
 			generalResponse(w, map[string]string{
@@ -457,7 +456,7 @@ func nftMakeBefore(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 			return
 		}
 		id := order["id"]
-		nftPay(w, redirectURL, price, nftAppCode + "_make_" + id)
+		nftPay(w, payType, redirectURL, price, nftAppCode + "_make_" + id)
 		//cache data
 		data, _ := json.Marshal(map[string]string {
 			"name" : name,
@@ -787,6 +786,7 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			return
 		}
 		tel := data["tel"] //be used to check session
+		payType := data["pay_type"]
 		_, ok := verifySession(w, r)
 		if !ok {
 			generalResponse(w, map[string]string{
@@ -885,7 +885,7 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		}
 		money := publish["price"]
 		//4、 pay
-		nftPay(w, redirectURL, money, nftAppCode + "_buy_" + id)
+		nftPay(w, payType,redirectURL, money, nftAppCode + "_buy_" + id)
 		return
 	}
 }
@@ -913,8 +913,17 @@ func nftBuyCore( cliCtx context.CLIContext, storeName string, nftId, addr, outTr
 	return
 }
 //
-func nftPay(w http.ResponseWriter, RedirectURL, Money, OutTradeNo string) {
-	url, err := oraclePagePay(RedirectURL, Money, OutTradeNo)
+func nftPay(w http.ResponseWriter, PayType ,RedirectURL, Money, OutTradeNo string) {
+	var url string
+	var err error
+	if PayType == "app" {
+		url, err = oracleAppPay(Money, OutTradeNo)
+	} else if PayType == "web"{
+		url, err = oraclePagePay(RedirectURL, Money, OutTradeNo)
+	} else {
+		url, err = oracleAppPay(Money, OutTradeNo)
+	}
+
 	if err != nil {
 		generalResponse(w, map[string]string{
 			ErrInfo : err.Error(),
@@ -923,11 +932,10 @@ func nftPay(w http.ResponseWriter, RedirectURL, Money, OutTradeNo string) {
 		return
 	}
 
-	generalResponse(w, map[string]string{
-		SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
-		ErrCode : oerr.SuccessCode,
+	result := map[string]string {
 		"url" : url,
-	})
+	}
+	successDataResponse(w, result)
 	return
 }
 

@@ -12,6 +12,7 @@ import (
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 	"io/ioutil"
 	"net/http"
+	"sort"
 	"strconv"
 )
 
@@ -20,6 +21,7 @@ const (
 	ErrCode = "err_code"
 	ErrInfo = "err_info"
 	SuccessInfo = "success_info"
+	Result = "result"
 )
 
 func CanEditPersonalInfo(cliCtx context.CLIContext, storeName string, tel string) (string,bool) {
@@ -146,31 +148,30 @@ func nftFindPopularAuthor(cliCtx context.CLIContext, storeName string) http.Hand
 			Statistics[userId] = num
 		}
 
-		popularAuthor := make(map[int]string)
-		count := 0
-		min := 0
+		nums := make([]int, 0)
+		numAndUser := make(map[int]string)
 		for user, num := range Statistics {
-			count++
-			if min == 0 {
-				min = num
-			}
-
-			if count <= inumber {
-				popularAuthor[num] = user
-			} else {
-				if min < num {
-					delete(popularAuthor, min)
-					popularAuthor[num] = user
-					min = num
-				}
+			if _, ok := numAndUser[num]; !ok {
+				numAndUser[num] = user
+				nums = append(nums, num)
 			}
 		}
+		sort.Ints(nums)
+		popularAuthor := make([]string, 0)
+		if len(nums) > inumber {
+			nums = nums[len(nums) - inumber : ]
+		}
+		for i := len(nums) - 1; i >= 0; i-- {
+			num := nums[i]
+			popularAuthor = append(popularAuthor, numAndUser[num])
+		}
+
 		//query popular
-		type userInfo struct {
+		type userInfoStruct struct {
 			Height string
 			Result []map[string]string
 		}
-		tempUserInfo := userInfo{}
+
 		popularAuthorsInfo := make([]map[string]string, 0)
 		for _, userid := range popularAuthor {
 			ac := getOracleAc()
@@ -188,6 +189,7 @@ func nftFindPopularAuthor(cliCtx context.CLIContext, storeName string) http.Hand
 				rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 				return
 			}
+			tempUserInfo := userInfoStruct{}
 			err = json.Unmarshal(res, &tempUserInfo)
 			if err != nil {
 				continue
@@ -204,10 +206,12 @@ func nftFindPopularAuthor(cliCtx context.CLIContext, storeName string) http.Hand
 				})
 			}
 		}
+		if len(popularAuthorsInfo) != 4 {
+			fmt.Println("err")
+		}
 
-		bz, _ := json.Marshal(popularAuthorsInfo)
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(bz)
+		successDataResponse(w, popularAuthorsInfo)
+		return
 	}
 }
 
@@ -262,9 +266,9 @@ func nftFindLastestNft(cliCtx context.CLIContext, storeName string) http.Handler
 			ntfInfo["price"] = publishInfo["price"]
 			nfts = append(nfts, ntfInfo)
 		}
-		bz, _ := json.Marshal(nfts)
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(bz)
+
+		successDataResponse(w, nfts)
+		return
 	}
 }
 
@@ -319,9 +323,8 @@ func nftFindNftDetails(cliCtx context.CLIContext, storeName string) http.Handler
 			return
 		}
 		ntfInfo["remaining"] = strconv.Itoa(len(nfts))
-		bz, _ := json.Marshal(ntfInfo)
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(bz)
+		successDataResponse(w, ntfInfo)
+		return
 	}
 }
 
@@ -379,9 +382,9 @@ func nftUserInfo(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		} else {
 			result["token"] = "0"
 		}
-		bz, _ := json.Marshal(result)
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(bz)
+
+		successDataResponse(w, result)
+		return
 	}
 }
 
@@ -417,9 +420,8 @@ func nftOfUserBasicInfo(cliCtx context.CLIContext, storeName string) http.Handle
 			result["description"] =  res["description"]
 		}
 
-		bz, _ := json.Marshal(result)
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(bz)
+		successDataResponse(w, result)
+		return
 	}
 }
 
@@ -455,9 +457,8 @@ func nftUserAllTokenRecord(cliCtx context.CLIContext, storeName string) http.Han
 		temp := tokenRecord{}
 		json.Unmarshal(res, &temp)
 
-		bz, _ := json.Marshal(temp.Result)
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(bz)
+		successDataResponse(w, temp.Result)
+		return
 	}
 }
 
@@ -487,9 +488,9 @@ func nftUserInvitationRecord(cliCtx context.CLIContext, storeName string) http.H
 		for _ ,inviteInfo := range inviteInfos {
 			inviteInfo["action"] = "+" + strconv.Itoa(invitationScore)
 		}
-		bz, _ := json.Marshal(inviteInfos)
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(bz)
+
+		successDataResponse(w, inviteInfos)
+		return
 	}}
 
 func nftUserNftOrderNumber(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
@@ -535,9 +536,9 @@ func nftUserNftOrderNumber(cliCtx context.CLIContext, storeName string) http.Han
 		result := map[string]string{
 			"nft_order_numbers" : strconv.Itoa(numOfPayOrder),
 		}
-		bz, _ := json.Marshal(result)
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(bz)
+
+		successDataResponse(w, result)
+		return
 	}
 }
 
@@ -558,9 +559,9 @@ func nftUserNftNumber(cliCtx context.CLIContext, storeName string) http.HandlerF
 		result := map[string]string{
 			"nft_numbers" : strconv.Itoa(len(denomIds)),
 		}
-		bz, _ := json.Marshal(result)
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(bz)
+
+		successDataResponse(w, result)
+		return
 	}
 }
 
@@ -611,9 +612,8 @@ func nftsOfUserMake(cliCtx context.CLIContext, storeName string) http.HandlerFun
 			result = append(result, denom)
 
 		}
-		bz, _ := json.Marshal(result)
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(bz)
+		successDataResponse(w, result)
+		return
 	}
 }
 
@@ -671,9 +671,8 @@ func nftsOfUserBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 				result = append(result, nftINfo)
 			}
 		}
-		bz, _ := json.Marshal(result)
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(bz)
+		successDataResponse(w, result)
+		return
 	}
 }
 //////////////////////////
