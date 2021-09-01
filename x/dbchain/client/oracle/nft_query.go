@@ -570,7 +570,14 @@ func nftsOfUserMake(cliCtx context.CLIContext, storeName string) http.HandlerFun
 		vars := mux.Vars(r)
 		userid := vars["user_id"]
 		publishStatus := vars["publish_status"]
-		if publishStatus == "published" {
+		if publishStatus != "all" && publishStatus != "published" {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.ParamsErrCode],
+				ErrCode : oerr.ParamsErrCode},
+			)
+			return
+		}
+		if publishStatus == "all" {
 			_, ok := verifySession(w, r)
 			if !ok {
 				generalResponse(w, map[string]string{
