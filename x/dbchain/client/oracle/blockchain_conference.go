@@ -2,8 +2,10 @@ package oracle
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/afocus/captcha"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -16,6 +18,7 @@ import (
 	"image/color"
 	"image/png"
 	"io/ioutil"
+	"math/big"
 	"net/http"
 	"net/url"
 	"os"
@@ -31,6 +34,7 @@ var conferenceAppCode string
 const (
 	conferenceRegister = "conference_personal_register"
 	conferenceCompanyRegister = "conference_company_register"
+	euCodeOfPersonalRegister = "eucode_of_personal_register"
 )
 var cap *captcha.Captcha
 
@@ -72,7 +76,30 @@ func oracleConferencePersonalRegister(cliCtx context.CLIContext) http.HandlerFun
 		name     := vars["name"]
 		mobile     := vars["mobile"]
 		verifyCode     := strings.ToUpper(vars["verify_code"])
+		uiCardidType := vars["ui_cardid_type"]
+		uiCardid := vars["ui_cardid"]
 
+		if checkIfRegister(cliCtx, wechatId) {
+			generalResponse(w, map[string]string {
+				"error" : "this telephone number has been registered",
+			})
+			return
+		}
+
+		euCode, err := oracleConferenceAuthentication(cliCtx, uiCardidType, uiCardid, name)
+		if err != nil {
+			generalResponse(w, map[string]string {
+				"error" : err.Error(),
+			})
+			return
+		}
+		err = oracleConferenceUpdateRegisterIdentityInfo(cliCtx, wechatId, euCode)
+		if err != nil {
+			generalResponse(w, map[string]string {
+				"error" : err.Error(),
+			})
+			return
+		}
 		fieldValue := map[string]string {
 			"wechat_id" : wechatId,
 			"name" : name,
@@ -80,6 +107,61 @@ func oracleConferencePersonalRegister(cliCtx context.CLIContext) http.HandlerFun
 		}
 		registerCore(cliCtx, w, appType, verifyCode, conferenceRegister, fieldValue)
 	}
+}
+
+func checkIfRegister(cliCtx context.CLIContext, wechatId string) bool {
+	ac := getOracleAc()
+	res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find_by/%s/%s/%s/%s/%s","dbchain", ac, loadConferenceAppCode(), conferenceRegister, "wechat_id", wechatId), nil)
+	if err != nil {
+		return true
+	}
+	ids := make([]string, 0)
+	json.Unmarshal(res, &ids)
+	if len(ids) == 0 {
+		return false
+	}
+	return true
+}
+func oracleConferenceAuthentication(cliCtx context.CLIContext, uiCardidType, uiCardid, name string)  (string,error) {
+	code := genIdentityCode(cliCtx)
+	if code == "" {
+		return "", errors.New("gen euCode code err")
+	}
+
+	data := map[string]string {
+		"appKey": "38DB53D9742B7A1D398EBC606FF4C1365127EF8A185E108220428F0219EBF6E3",
+		"appScret": "38DB53D9742B7A1D398EBC606FF4C1365127EF8A185E1082FC627FE6216C6E6B9D7D7FA4EDA09946",
+		"euCode": code,
+		"uiName": name,
+		"uiCardidType" : uiCardidType,
+		"uiCardid" : uiCardid,
+	}
+
+	bz, _ := json.Marshal(data)
+	buf := bytes.NewReader(bz)
+	resp, err := http.Post("http://reg.dataexpo.com.cn/gate-api/api/accept.do", "application/json", buf)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	respData, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	result := make(map[string]interface{})
+	err = json.Unmarshal(respData, &result)
+	if err != nil {
+		return "", err
+	}
+	ErrCode := int(result["errcode"].(float64))
+	ErrMsg := result["errmsg"].(string)
+
+
+	if (ErrCode == 0 && ErrMsg == "成功") || (ErrCode == 1 && ErrMsg == "证件码已存在") {
+		return code,nil
+	}
+
+	return "", errors.New(ErrMsg)
 }
 
 func oracleConferenceCorporateRegister(cliCtx context.CLIContext) http.HandlerFunc{
@@ -106,6 +188,40 @@ func oracleConferenceCorporateRegister(cliCtx context.CLIContext) http.HandlerFu
 	}
 }
 
+func genIdentityCode(cliCtx context.CLIContext) string {
+	max := big.NewInt(89999999)
+	high := big.NewInt(10000000)
+	for i := 0; i < 20; i++ {
+		euCode, err := rand.Int(rand.Reader, max)
+		if err != nil {
+			continue
+		}
+		euCode.Add(euCode, high)
+		ac := getOracleAc()
+		res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find_by/%s/%s/%s/%s/%s","dbchain", ac, loadConferenceAppCode(), euCodeOfPersonalRegister, "eu_code", euCode.String()), nil)
+		if err != nil {
+			continue
+		}
+		ids := make([]string, 0)
+		json.Unmarshal(res, &ids)
+		if len(ids) == 0 {
+			return euCode.String()
+		}
+	}
+	return ""
+}
+
+func oracleConferenceUpdateRegisterIdentityInfo(cliCtx context.CLIContext, wechatId, euCode string) error{
+
+	fieldValue := map[string]string {
+		"wechat_id" : wechatId,
+		"eu_code" : euCode,
+
+	}
+	oracleAccAddr := oracle.GetOracleAccAddr()
+	OracleSaveToTable(cliCtx, oracleAccAddr, fieldValue, euCodeOfPersonalRegister, loadConferenceAppCode())
+	return nil
+}
 
 func showConferenceRegistrationStatus(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -138,9 +254,32 @@ func showConferenceRegistrationStatus(cliCtx context.CLIContext) http.HandlerFun
 			}
 			data[key] = val
 		}
+		identity := getRegisterIdentity(cliCtx, storeName, appCode, euCodeOfPersonalRegister, params)
+		data["identity"] =  identity
 		bz,_ := json.Marshal(data)
 		successResponse(w,bz)
 	}
+}
+
+func getRegisterIdentity(cliCtx context.CLIContext, storeName, appCode, table, wechatId string) string{
+	result, _ := getConferenceRegistrationStatus(cliCtx, storeName, appCode, table, wechatId)
+	if len(result) != 0 {
+		return result[0]["eu_code"]
+	}
+	ac := getOracleAc()
+	res, _, _ := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, ac, appCode, table, "1"), nil)
+	if len(res) == 0 {
+		return "12345678"
+	}
+	data := make(map[string]string)
+	err := json.Unmarshal(res, data)
+	if err != nil {
+		return "12345678"
+	}
+	if data["eu_code"] != "" {
+		return data["eu_code"]
+	}
+	return "12345678"
 }
 
 func getConferenceRegistrationStatus(cliCtx context.CLIContext, storeName, appCode, tableName, params string) ([]map[string]string, error) {
