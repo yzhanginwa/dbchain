@@ -17,6 +17,7 @@ import (
 
 const (
     BatchSize int = 100
+    StdTxGasNum = 2000000
 )
 
 type UniversalMsg interface {
@@ -117,7 +118,7 @@ func buildTxAndBroadcast(cliCtx context.CLIContext, msg UniversalMsg) {
 
 func buildAndSignAndBuildTxBytes(msgs []UniversalMsg, accNum uint64, seq uint64, privKey secp256k1.PrivKeySecp256k1) ([]byte, error) {
     size := len(msgs)
-    stdFee := NewStdFee(uint64(200000 * size), sdk.Coins{sdk.NewCoin("dbctoken", sdk.NewInt(int64(0)))})
+    stdFee := NewStdFee(uint64(StdTxGasNum * size), sdk.Coins{sdk.NewCoin("dbctoken", sdk.NewInt(int64(0)))})
     chainId := viper.GetString("chain-id")
     stdSignMsgBytes := StdSignBytes(chainId, accNum, seq, stdFee, msgs, "")
 
