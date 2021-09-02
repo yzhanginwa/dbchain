@@ -255,7 +255,12 @@ func showConferenceRegistrationStatus(cliCtx context.CLIContext) http.HandlerFun
 			data[key] = val
 		}
 		identity := getRegisterIdentity(cliCtx, storeName, appCode, euCodeOfPersonalRegister, params)
-		data["identity"] =  identity
+		if identity != "" {
+			data["identity"] =  identity
+		} else {
+			data["identity"] =  fmt.Sprintf("%08s", result[0]["id"])
+		}
+
 		bz,_ := json.Marshal(data)
 		successResponse(w,bz)
 	}
@@ -266,20 +271,7 @@ func getRegisterIdentity(cliCtx context.CLIContext, storeName, appCode, table, w
 	if len(result) != 0 {
 		return result[0]["eu_code"]
 	}
-	ac := getOracleAc()
-	res, _, _ := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, ac, appCode, table, "1"), nil)
-	if len(res) == 0 {
-		return "12345678"
-	}
-	data := make(map[string]string)
-	err := json.Unmarshal(res, data)
-	if err != nil {
-		return "12345678"
-	}
-	if data["eu_code"] != "" {
-		return data["eu_code"]
-	}
-	return "12345678"
+	return ""
 }
 
 func getConferenceRegistrationStatus(cliCtx context.CLIContext, storeName, appCode, tableName, params string) ([]map[string]string, error) {
