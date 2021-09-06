@@ -14,6 +14,7 @@ const (
 	SoldOutErr = "sold out"
 	RegisteredErr = "registered"
 	AllBookedErr = "all booked"
+	Unauthorized = "Unauthorized"
 	)
 
 const (
@@ -30,6 +31,7 @@ const (
 	SoldOutErrCode = "10"
 	RegisteredErrCode = "11"
 	AllBookedErrCode = "12"
+	UnauthorizedErrCode = "13"
 )
 
 var ErrDescription = map[string]string{
@@ -46,4 +48,5 @@ var ErrDescription = map[string]string{
 	SoldOutErrCode : SoldOutErr,
 	RegisteredErrCode : RegisteredErr,
 	AllBookedErrCode : AllBookedErr,
+	UnauthorizedErrCode : Unauthorized,
 }

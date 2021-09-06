@@ -323,6 +323,18 @@ func nftFindNftDetails(cliCtx context.CLIContext, storeName string) http.Handler
 			return
 		}
 		ntfInfo["remaining"] = strconv.Itoa(len(nfts))
+		ntfInfo["collected"] = "false"
+		//
+		queryUserId, _ := verifySession(w, r)
+		if queryUserId != "" {
+			ac = getOracleAc()
+			queryString := `[{"method":"table","table":"nft_collection"},{"method":"select","fields":"user_id,denom_id"},{"method":"where", "field" : "user_id", "operator" : "=", "value" : "` + queryUserId + `"},{"method":"where", "field" : "denom_id", "operator" : "=", "value" : "` + denomId + `"}]`
+			collect := queryByQuerier(queryString)
+			if len(collect) != 0 {
+				ntfInfo["collected"] = "true"
+			}
+		}
+
 		successDataResponse(w, ntfInfo)
 		return
 	}
@@ -367,6 +379,15 @@ func nftUserInfo(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			result["avatar"] =       res["avatar"]
 			result["nickname"] =     res["nickname"]
 			result["description"] =  res["description"]
+		} else {
+			result["avatar"] =       ""
+			result["nickname"] =     ""
+			result["description"] =  ""
+		}
+
+		result["authentication"] = "false"
+		if userAuthenticationStatus(userId) {
+			result["authentication"] = "true"
 		}
 
 		res, err = findByCore(cliCtx, storeName, ac, nftAppCode, nftScoreTable, "user_id", userid)
@@ -425,6 +446,95 @@ func nftOfUserBasicInfo(cliCtx context.CLIContext, storeName string) http.Handle
 	}
 }
 
+func nftUserIncome(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userId, ok := verifySession(w, r)
+		if !ok {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
+				ErrCode : oerr.UnLoginErrCode})
+			return
+		}
+		ac := getOracleAc()
+		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftUserTable, userId)
+		userInfo, err := findRow(cliCtx, queryString)
+		if err != nil || userInfo == nil{
+			generalResponse(w, map[string]string{
+				ErrInfo : "find user info err",
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+		seller := userInfo["address"]
+
+		receipts, err := findByAll(cliCtx, storeName, ac, nftAppCode, nftUserInfoTable, "seller", seller)
+		if err != nil {
+			generalResponse(w, map[string]string{
+				ErrInfo : "find user info err",
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+
+		money := 0.0
+		for _, receipt := range receipts {
+			amount := receipt["amount"]
+			fAmount, err := strconv.ParseFloat(amount, 64)
+			if err != nil {
+				continue
+			}
+			money += fAmount
+		}
+		result := map[string]string{
+			"money" : fmt.Sprintf("%f", money),
+		}
+		successDataResponse(w, result)
+		return
+	}
+}
+
+func nftUserCollectInfo(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		numOrDetail := vars["number_or_detail"]
+		userId, ok := verifySession(w, r)
+		if !ok {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
+				ErrCode : oerr.UnLoginErrCode})
+			return
+		}
+
+		queryString := `[{"method":"table","table":"nft_collection"},{"method":"select","fields":"denom_id"},{"method":"where", "field" : "user_id", "operator" : "=", "value" : "` + userId + `"}]`
+		collects := queryByQuerier(queryString)
+		if numOrDetail == "number" {
+			number := strconv.Itoa(len(collects))
+			result := map[string]string {
+				"number" : number,
+			}
+			successDataResponse(w, result)
+			return
+		}
+
+		result := make([]map[string]string, 0)
+		for _, collect := range collects {
+			denomId := collect["denom_id"]
+			ac := getOracleAc()
+			queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftPublishOrder, denomId)
+			denomInfo, err := findRow(cliCtx, queryString)
+			if err != nil {
+				continue
+			}
+			if len(denomInfo) != 0 {
+				result = append(result, denomInfo)
+			}
+		}
+		successDataResponse(w, result)
+		return
+
+	}
+}
+
 func nftUserAllTokenRecord(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userId, ok := verifySession(w, r)
@@ -435,8 +545,6 @@ func nftUserAllTokenRecord(cliCtx context.CLIContext, storeName string) http.Han
 			return
 		}
 		queryString := `[{"method":"table","table":"score"},{"method":"select","fields":"token,action,memo,increment,created_at"},{"method" : "where", "field" : "user_id", "operator" : "=", "value" : "` + userId + `"}]`
-
-
 		baseQueryString := base58.Encode([]byte(queryString))
 
 		ac := getOracleAc()
@@ -600,22 +708,23 @@ func nftsOfUserMake(cliCtx context.CLIContext, storeName string) http.HandlerFun
 		for _, denom := range denoms {
 			denomId := denom["id"]
 			ac := getOracleAc()
-			publishId, err := findByCoreIds(cliCtx, storeName, ac, nftAppCode, nftPublishTable, "denom_id", denomId)
+			publish, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftPublishTable, "denom_id", denomId)
 			if err != nil {
 				continue
 			}
 
 			if publishStatus == "published" {
-				if len(publishId) == 0 {
+				if len(publish) == 0 {
 					continue
 				}
 			} else {
-				if len(publishId) != 0 {
+				if len(publish) != 0 {
 					denom["publish"] = "true"
 				} else {
 					denom["publish"] = "false"
 				}
 			}
+			denom["price"] = publish["price"]
 			result = append(result, denom)
 
 		}
@@ -675,6 +784,9 @@ func nftsOfUserBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 				if err != nil {
 					continue
 				}
+				userInfo := findAuthorInfoByNftId(cliCtx, storeName, nftId)
+				nftINfo["avatar"] = userInfo["avatar"]
+				nftINfo["nickname"] = userInfo["nickname"]
 				result = append(result, nftINfo)
 			}
 		}
@@ -682,11 +794,52 @@ func nftsOfUserBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 		return
 	}
 }
+
+
 //////////////////////////
 //                      //
 //      help func       //
 //                      //
 //////////////////////////
+
+func userAuthenticationStatus(userId string) bool {
+	queryString := `[{"method":"table","table":"nft_real_name_authentication"},{"method":"select","fields":"user_id"},{"method":"where", "field" : "user_id", "operator" : "=", "value" : "` + userId + `"}]`
+	userAuthenticationInfo := queryByQuerier(queryString)
+	if len(userAuthenticationInfo) > 0 {
+		return true
+	}
+	return false
+}
+
+func userProductionPermission(userId string) bool {
+	queryString := `[{"method":"table","table":"nft_production_permission"},{"method":"select","fields":"user_id"},{"method":"where", "field" : "user_id", "operator" : "=", "value" : "` + userId + `"}]`
+	permission := queryByQuerier(queryString)
+	if len(permission) > 0 {
+		return true
+	}
+	return false
+}
+
+func findAuthorInfoByNftId(cliCtx context.CLIContext, storeName, nftId string) map[string]string {
+	ac := getOracleAc()
+	queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftTable, nftId)
+	nftInfo, err := findRow(cliCtx, queryString)
+	if err != nil {
+		return map[string]string{}
+	}
+	ac = getOracleAc()
+	queryString = fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, denomTable, nftInfo["denom_id"])
+	denomInfo, err := findRow(cliCtx, queryString)
+	if err != nil {
+		return map[string]string{}
+	}
+	ac = getOracleAc()
+	userInfo, err :=findByCore(cliCtx, storeName, ac, nftAppCode, nftUserInfoTable, "user_id", denomInfo["user_id"])
+	if err != nil {
+		return map[string]string{}
+	}
+	return userInfo
+}
 
 func httpGetRequest(url string) ([]byte, error) {
 	resp, err := http.Get(url)

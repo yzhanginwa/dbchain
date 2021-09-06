@@ -3,6 +3,9 @@ package oracle
 import (
     "fmt"
     "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/cache"
+    oerr "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/error"
+    core "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/core"
+    //"strconv"
     "time"
     "errors"
     "io/ioutil"
@@ -186,6 +189,71 @@ func appNewOneCoin(cliCtx context.CLIContext, storeName string) http.HandlerFunc
         }
 
         rest.PostProcessResponse(w, cliCtx, "success")
+        return
+    }
+}
+
+func realNameAuthentication(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        data, err := readBodyData(r)
+        if err != nil {
+            generalResponse(w, map[string]string{
+                ErrInfo : oerr.ErrDescription[oerr.ParamsErrCode],
+                ErrCode : oerr.ParamsErrCode,
+            })
+        }
+
+        idNumber := data["id_number"]
+        name := data["name"]
+        userId, ok := verifySession(w, r)
+        if !ok {
+            generalResponse(w, map[string]string{
+                ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
+                ErrCode : oerr.UnLoginErrCode,
+            })
+            return
+        }
+        //query tel and password
+        ac := getOracleAc()
+        res, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftRealNameAuthentication, "user_id", userId)
+        if err != nil {
+            generalResponse(w, map[string]string{
+                ErrInfo : err.Error(),
+                ErrCode : oerr.UndefinedErrCode,
+            })
+            return
+        }
+
+        if len(res) != 0 {
+            generalResponse(w, map[string]string{
+                ErrInfo : "certified",
+                ErrCode : oerr.UndefinedErrCode,
+            })
+            return
+        }
+        //authentication by huawei
+        if !authenticationByHuawei(name, idNumber) {
+            generalResponse(w, map[string]string{
+                ErrInfo : "authentication failed",
+                ErrCode : oerr.UndefinedErrCode,
+            })
+            return
+        }
+        //
+        msgs := make([]oracle.UniversalMsg, 0)
+        owner := loadOracleAddr()
+        fieldsOfPassword := map[string]string{
+            "user_id" : userId,
+        }
+        bz , _ := json.Marshal(fieldsOfPassword)
+        msgInsert := types.NewMsgInsertRow(owner, nftAppCode, nftRealNameAuthentication, bz)
+        msgs = append(msgs, msgInsert)
+
+        oracle.BuildTxsAndBroadcast(cliCtx, msgs)
+        generalResponse(w, map[string]string{
+            SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
+            ErrCode : oerr.SuccessCode,
+        })
         return
     }
 }
@@ -438,4 +506,50 @@ func loopCheckVerfCode(){
             }
         }
     }
+}
+
+func authenticationByHuawei(realName, cardNo string)  bool {
+    var s = core.Signer{
+        Key:    "42f67972fbd0428496f09b9271617b1c",
+        Secret: "16e11bcac5ac4c16bd3fc2fc2f58b197",
+    }
+    r, _ := http.NewRequest("GET", "https://bck.apistore.huaweicloud.com/v1/idcheck/forcheck",
+        nil)
+    r.Header.Add("content-type", "application/json; charset=utf-8")
+    r.Header.Add("x-stage", "RELEASE")
+    q := r.URL.Query()
+    q.Add("cardNo", cardNo)
+    q.Add("realName", realName)
+    r.URL.RawQuery = q.Encode()
+    fmt.Println(r.URL.String())
+    s.Sign(r)
+    
+    client := http.DefaultClient
+    resp, err := client.Do(r)
+    if err != nil {
+        return false
+    }
+
+    defer resp.Body.Close()
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        return false
+    }
+
+    result := make(map[string]interface{})
+    json.Unmarshal(body, &result)
+    errCode, ok  := result["error_code"].(float64)
+    if !ok {
+        return false
+    }
+
+    reason, ok := result["reason"].(string)
+    if !ok {
+        return false
+    }
+
+    if int(errCode) == 0 && reason == "成功" {
+        return true
+    }
+    return false
 }

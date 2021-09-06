@@ -45,6 +45,10 @@ const (
 	nftPublishOrder = "nft_publish_order"
 	nftOrderReceipt = "nft_order_receipt"
 	nftMakeOrder = "nft_make_order"
+	nftCollection = "nft_collection"
+	nftRealNameAuthentication = "nft_real_name_authentication"
+	//only user in this table can make nft
+	nftProductionPermission = "nft_production_permission"
 
 	priceRegExp = `(^[1-9]\d*(\.\d{1,2})?$)|(^0(\.\d{1,2})?$)`
 	invitationScore = 10
@@ -612,6 +616,13 @@ func nftMakeOld(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			})
 			return
 		}
+		if inumber > 100 {
+			generalResponse(w, map[string]string{
+				ErrInfo : "max nft number cannot exceed 100",
+				ErrCode : oerr.UndefinedErr,
+			})
+			return
+		}
 
 		for i := 0; i < int(inumber); i++{
 
@@ -661,7 +672,7 @@ func nftPublish(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			})
 			return
 		}
-		_, ok := verifySession(w, r)
+		userId, ok := verifySession(w, r)
 		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
@@ -669,6 +680,15 @@ func nftPublish(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			})
 			return
 		}
+
+		if !userAuthenticationStatus(userId) {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.UnauthorizedErrCode],
+				ErrCode : oerr.UnauthorizedErrCode,
+			})
+			return
+		}
+
 		denomId := data["denom_id"]
 		price := data["price"]
 		if !checkPriceValid(price) {
@@ -787,7 +807,7 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		}
 		tel := data["tel"] //be used to check session
 		payType := data["pay_type"]
-		_, ok := verifySession(w, r)
+		userId, ok := verifySession(w, r)
 		if !ok {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
@@ -795,6 +815,14 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			})
 			return
 		}
+		if !userAuthenticationStatus(userId) {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.UnauthorizedErrCode],
+				ErrCode : oerr.UnauthorizedErrCode,
+			})
+			return
+		}
+
 		denomId := data["denom_id"]
 		redirectURL := data["redirect_url"]
 		//1、下订单先检查库存
@@ -1001,6 +1029,7 @@ func nftSaveReceiptInitiative(cliCtx context.CLIContext, storeName string) http.
 		outTradeNo := strings.TrimSpace(r.Form.Get("out_trade_no"))
 		totalAmount  := strings.TrimSpace(r.Form.Get("total_amount"))
 		tradeNo := strings.TrimSpace(r.Form.Get("trade_no"))
+
 		//get owner
 		ac := getOracleAc()
 		ss := strings.Split(outTradeNo, "_")
@@ -1018,6 +1047,10 @@ func nftSaveReceiptInitiative(cliCtx context.CLIContext, storeName string) http.
 			fmt.Println("serious error ： ", tradeNo, " get user addr, but payed" )
 		}
 		//
+		seller := ""
+		if ss[1] == "buy" {
+			seller = getNftMakerFromOutTradeNum(cliCtx, storeName, outTradeNo)
+		}
 		fields , _ := json.Marshal(map[string]string {
 			"appcode" : nftAppCode,
 			"orderid" : outTradeNo,
@@ -1025,8 +1058,8 @@ func nftSaveReceiptInitiative(cliCtx context.CLIContext, storeName string) http.
 			"amount"  : totalAmount,
 			"vendor"  : "alipay",
 			"vendor_payment_no" : tradeNo,
+			"seller" : seller,
 		})
-
 		err = insertRowWithTx(cliCtx, nftAppCode, nftOrderReceipt, fields)
 		if err != nil {
 			fmt.Println("serious error ： ", tradeNo, " save receipt fail, but payed" )
@@ -1187,12 +1220,145 @@ func nftEditPersonalInformation(cliCtx context.CLIContext, storeName string) htt
 	}
 }
 
+func nftCollect(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		data, err := readBodyData(r)
+		if err != nil {
+			generalResponse(w, map[string]string{
+				ErrInfo : err.Error(),
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+		denomId := data["denom_id"]
+		userId, ok := verifySession(w, r)
+		if !ok {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
+				ErrCode : oerr.UnLoginErrCode,
+			})
+			return
+		}
+		queryString := `[{"method":"table","table":"nft_collection"},{"method":"select","fields":"user_id,denom_id"},{"method":"where", "field" : "user_id", "operator" : "=", "value" : "` + userId + `"},{"method":"where", "field" : "denom_id", "operator" : "=", "value" : "` + denomId + `"}]`
+		collect := queryByQuerier(queryString)
+		if len(collect) != 0 {
+			generalResponse(w, map[string]string{
+				ErrInfo : "have collected",
+				ErrCode : oerr.UndefinedErr,
+			})
+			return
+		}
+
+		fields,_ := json.Marshal(map[string]string{
+			"user_id" : userId,
+			"denom_id" : denomId,
+		})
+
+		owner := loadOracleAddr()
+		msg := types.NewMsgInsertRow(owner, nftAppCode, nftCollection, fields)
+		if msg.ValidateBasic() != nil {
+			generalResponse(w, map[string]string{
+				ErrInfo : err.Error(),
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+
+		oracle.BuildTxsAndBroadcast(cliCtx, []oracle.UniversalMsg{msg})
+		generalResponse(w, map[string]string{
+			SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
+			ErrCode : oerr.SuccessCode,
+		})
+		return
+	}
+}
+
+func nftCancelCollect(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		data, err := readBodyData(r)
+		if err != nil {
+			generalResponse(w, map[string]string{
+				ErrInfo : err.Error(),
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+		denomId := data["denom_id"]
+		userId, ok := verifySession(w, r)
+		if !ok {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
+				ErrCode : oerr.UnLoginErrCode,
+			})
+			return
+		}
+		queryString := `[{"method":"table","table":"nft_collection"},{"method":"select","fields":"id"},{"method":"where", "field" : "user_id", "operator" : "=", "value" : "` + userId + `"},{"method":"where", "field" : "denom_id", "operator" : "=", "value" : "` + denomId + `"}]`
+		collect := queryByQuerier(queryString)
+		if len(collect) == 0 {
+			generalResponse(w, map[string]string{
+				ErrInfo : "not collected",
+				ErrCode : oerr.UndefinedErr,
+			})
+			return
+		}
+
+		owner := loadOracleAddr()
+		id , _ := strconv.Atoi(collect[0]["id"])
+		msg := types.NewMsgFreezeRow(owner, nftAppCode, nftCollection, uint(id))
+		if msg.ValidateBasic() != nil {
+			generalResponse(w, map[string]string{
+				ErrInfo : err.Error(),
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+
+		oracle.BuildTxsAndBroadcast(cliCtx, []oracle.UniversalMsg{msg})
+		generalResponse(w, map[string]string{
+			SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
+			ErrCode : oerr.SuccessCode,
+		})
+		return
+	}
+}
+
 //////////////////////////////////
 //                              //
 // help func                    //
 //                              //
 //////////////////////////////////
 //register tel must verify code first, tel which was verified should be cached for register
+func getNftMakerFromOutTradeNum(cliCtx context.CLIContext, storeName, outTradeNumber string) string {
+	tradeInfo := strings.Split(outTradeNumber, "_")
+	orderId := tradeInfo[2]
+	ac := getOracleAc()
+	queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftPublishOrder, orderId)
+	orderInfo, err := findRow(cliCtx, queryString)
+	if err != nil {
+		return ""
+	}
+	ac = getOracleAc()
+	queryString = fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftTable, orderInfo["nft_id"])
+	nftInfo, err := findRow(cliCtx, queryString)
+	if err != nil {
+		return ""
+	}
+	ac = getOracleAc()
+	queryString = fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, denomTable, nftInfo["denom_id"])
+	denomInfo, err := findRow(cliCtx, queryString)
+	if err != nil {
+		return ""
+	}
+	ac = getOracleAc()
+	queryString = fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftUserTable, denomInfo["user_id"])
+	userInfo, err := findRow(cliCtx, queryString)
+	if err != nil {
+		return ""
+	}
+	return userInfo["address"]
+}
+
 func verifyTel() bool {
 	//TODO
 	return true
