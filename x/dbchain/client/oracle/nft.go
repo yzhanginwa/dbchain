@@ -14,6 +14,7 @@ import (
 	"github.com/dbchaincloud/tendermint/crypto"
 	"github.com/dbchaincloud/tendermint/crypto/sm2"
 	"github.com/go-session/session"
+	"github.com/smartwalle/alipay/v3"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/cache"
 	oerr "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/error"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
@@ -423,6 +424,13 @@ func nftMakeBefore(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 			})
 			return
 		}
+		if inumber > 100 || inumber <= 0 {
+			generalResponse(w, map[string]string{
+				ErrInfo : "the quantity is between 1 and 100",
+				ErrCode : oerr.UndefinedErr,
+			})
+			return
+		}
 		price := fmt.Sprintf("%f", float32(inumber) * nftMakePricePerNft)
 
 		pk, addr , _ := loadSpecialPkForNtf()
@@ -616,9 +624,9 @@ func nftMakeOld(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			})
 			return
 		}
-		if inumber > 100 {
+		if inumber > 100 || inumber <= 0 {
 			generalResponse(w, map[string]string{
-				ErrInfo : "max nft number cannot exceed 100",
+				ErrInfo : "the quantity is between 1 and 100",
 				ErrCode : oerr.UndefinedErr,
 			})
 			return
@@ -702,6 +710,14 @@ func nftPublish(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		if !checkIfDataExistInDatabaseByFindBy(cliCtx, storeName, nftAppCode, nftTable, "denom_id", denomId) {
 			generalResponse(w, map[string]string{
 				ErrInfo : "nft dont exist",
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+
+		if checkIfDataExistInDatabaseByFindBy(cliCtx, storeName, nftAppCode, nftPublishTable, "denom_id", denomId) {
+			generalResponse(w, map[string]string{
+				ErrInfo : "nfts have been published",
 				ErrCode : oerr.UndefinedErrCode,
 			})
 			return
@@ -970,14 +986,18 @@ func nftPay(w http.ResponseWriter, PayType ,RedirectURL, Money, OutTradeNo strin
 func nftSaveReceipt(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
-		if _, err := aliClient.VerifySign(r.Form); err != nil {
-			fmt.Println("aliClient.VerifySign  err : ", err.Error())
-			w.Write([]byte("failed"))
-			return
+		outTradeNo := r.Form.Get("out_trade_no")
+		totalAmount, tradeNo := verifyAlipay(outTradeNo)
+		if totalAmount == "" {
+			if _, err := aliClient.VerifySign(r.Form); err != nil {
+				fmt.Println("aliClient.VerifySign  err : ", err.Error())
+				w.Write([]byte("failed"))
+				return
+			}
+			totalAmount  = strings.TrimSpace(r.Form.Get("total_amount"))
+			tradeNo = strings.TrimSpace(r.Form.Get("trade_no"))
 		}
-		outTradeNo := strings.TrimSpace(r.Form.Get("out_trade_no"))
-		totalAmount  := strings.TrimSpace(r.Form.Get("total_amount"))
-		tradeNo := strings.TrimSpace(r.Form.Get("trade_no"))
+
 		//get owner
 		ac := getOracleAc()
 		ss := strings.Split(outTradeNo, "_")
@@ -1021,14 +1041,17 @@ func nftSaveReceipt(cliCtx context.CLIContext, storeName string) http.HandlerFun
 func nftSaveReceiptInitiative(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
-		if _, err := aliClient.VerifySign(r.Form); err != nil {
-			fmt.Println("aliClient.VerifySign  err : ", err.Error())
-			w.Write([]byte("failed"))
-			return
+		outTradeNo := r.Form.Get("out_trade_no")
+		totalAmount, tradeNo := verifyAlipay(outTradeNo)
+		if totalAmount == "" {
+			if _, err := aliClient.VerifySign(r.Form); err != nil {
+				fmt.Println("aliClient.VerifySign  err : ", err.Error())
+				w.Write([]byte("failed"))
+				return
+			}
+			totalAmount  = strings.TrimSpace(r.Form.Get("total_amount"))
+			tradeNo = strings.TrimSpace(r.Form.Get("trade_no"))
 		}
-		outTradeNo := strings.TrimSpace(r.Form.Get("out_trade_no"))
-		totalAmount  := strings.TrimSpace(r.Form.Get("total_amount"))
-		tradeNo := strings.TrimSpace(r.Form.Get("trade_no"))
 
 		//get owner
 		ac := getOracleAc()
@@ -1038,6 +1061,10 @@ func nftSaveReceiptInitiative(cliCtx context.CLIContext, storeName string) http.
 		order, err := oracleQueryUserTable(cliCtx, queryString)
 		if err != nil {
 			fmt.Println("serious error ： ", tradeNo, " get order fail, but payed" )
+			generalResponse(w, map[string]string{
+				ErrInfo : "serious error ： " + tradeNo + " get order fail, but payed",
+				ErrCode : oerr.UndefinedErrCode,
+			})
 			return
 		}
 
@@ -1045,6 +1072,11 @@ func nftSaveReceiptInitiative(cliCtx context.CLIContext, storeName string) http.
 		user, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", order["tel"])
 		if err != nil || len(user) == 0 {
 			fmt.Println("serious error ： ", tradeNo, " get user addr, but payed" )
+			generalResponse(w, map[string]string{
+				ErrInfo : "serious error ： " + tradeNo + " get user addr, but payed",
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
 		}
 		//
 		seller := ""
@@ -1063,6 +1095,10 @@ func nftSaveReceiptInitiative(cliCtx context.CLIContext, storeName string) http.
 		err = insertRowWithTx(cliCtx, nftAppCode, nftOrderReceipt, fields)
 		if err != nil {
 			fmt.Println("serious error ： ", tradeNo, " save receipt fail, but payed" )
+			generalResponse(w, map[string]string{
+				ErrInfo : "serious error ： " + tradeNo + " save receipt fail, but payed",
+				ErrCode : oerr.UndefinedErrCode,
+			})
 			return
 		}
 		if ss[1] == "make" {
@@ -1070,6 +1106,10 @@ func nftSaveReceiptInitiative(cliCtx context.CLIContext, storeName string) http.
 		} else {
 			nftBuyCore(cliCtx,storeName, order["nft_id"], user["address"], tradeNo)
 		}
+		generalResponse(w, map[string]string{
+			SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
+			ErrCode : oerr.SuccessCode,
+		})
 		return
 	}
 }
@@ -1598,4 +1638,18 @@ func verifySession(w http.ResponseWriter, r *http.Request) (string, bool) {
 
 	userId, _ := store.Get("userId")
 	return userId.(string), true
+}
+
+func verifyAlipay(outTradeNo string) (string, string){
+	aliOrderStatus, err := OracleQueryAliOrder(outTradeNo)
+	if err != nil {
+		return "", ""
+	}
+	if aliOrderStatus["trade_status"] != string(alipay.TradeStatusSuccess) {
+		return "", ""
+	}
+	// save to OrderReceipt table
+	totalAmount  := aliOrderStatus["total_amount"]
+	tradeNo := aliOrderStatus["trade_no"]
+	return totalAmount, tradeNo
 }

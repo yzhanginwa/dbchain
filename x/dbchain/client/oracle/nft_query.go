@@ -334,6 +334,9 @@ func nftFindNftDetails(cliCtx context.CLIContext, storeName string) http.Handler
 				ntfInfo["collected"] = "true"
 			}
 		}
+		//
+		collectNum , err := findByCoreIds(cliCtx, storeName, ac, nftAppCode, nftCollection, "denom_id", denomId)
+		ntfInfo["collected_number"] = strconv.Itoa(len(collectNum))
 
 		successDataResponse(w, ntfInfo)
 		return
@@ -467,7 +470,7 @@ func nftUserIncome(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 		}
 		seller := userInfo["address"]
 
-		receipts, err := findByAll(cliCtx, storeName, ac, nftAppCode, nftUserInfoTable, "seller", seller)
+		receipts, err := findByAll(cliCtx, storeName, ac, nftAppCode, nftOrderReceipt, "seller", seller)
 		if err != nil {
 			generalResponse(w, map[string]string{
 				ErrInfo : "find user info err",
@@ -520,7 +523,7 @@ func nftUserCollectInfo(cliCtx context.CLIContext, storeName string) http.Handle
 		for _, collect := range collects {
 			denomId := collect["denom_id"]
 			ac := getOracleAc()
-			queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftPublishOrder, denomId)
+			queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, denomTable, denomId)
 			denomInfo, err := findRow(cliCtx, queryString)
 			if err != nil {
 				continue
@@ -591,10 +594,21 @@ func nftUserInvitationRecord(cliCtx context.CLIContext, storeName string) http.H
 			return
 		}
 		myCode := userInfo["my_code"]
-		queryString = `[{"method":"table","table":"user"},{"method":"select","fields":"address,created_at"},{"method" : "where", "field" : "invitation_code", "operator" : "=", "value" : "` + myCode + `"}]`
+		queryString = `[{"method":"table","table":"user"},{"method":"select","fields":"id,tel,created_at"},{"method" : "where", "field" : "invitation_code", "operator" : "=", "value" : "` + myCode + `"}]`
 		inviteInfos := queryByQuerier(queryString)
 		for _ ,inviteInfo := range inviteInfos {
 			inviteInfo["action"] = "+" + strconv.Itoa(invitationScore)
+			tel := inviteInfo["tel"]
+			tel = tel[:3] + "****" + tel[7:]
+			inviteInfo["tel"] = tel
+			queryString = `[{"method":"table","table":"user_info"},{"method":"select","fields":"nickname"},{"method" : "where", "field" : "user_id", "operator" : "=", "value" : "` + inviteInfo["id"] + `"}]`
+			inviteeInfo := queryByQuerier(queryString)
+			if len(inviteeInfo) > 0 {
+				inviteInfo["nickname"] = inviteeInfo[0]["nickname"]
+			} else {
+				inviteInfo["nickname"] = ""
+			}
+			delete(inviteInfo, "id")
 		}
 
 		successDataResponse(w, inviteInfos)

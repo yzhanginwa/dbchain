@@ -26,7 +26,7 @@ const (
     BaseUrl = "http://192.168.0.19:3001/relay/"
 )
 
-const gasNum = 2000000
+const gasNum = 3000000
 type UniversalMsg interface {
     GetSignBytes() []byte
     GetSigners() []sdk.AccAddress

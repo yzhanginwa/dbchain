@@ -15,6 +15,7 @@ const (
 	RegisteredErr = "registered"
 	AllBookedErr = "all booked"
 	Unauthorized = "Unauthorized"
+	AuthenticationFailed = "authentication failed"
 	)
 
 const (
@@ -32,6 +33,7 @@ const (
 	RegisteredErrCode = "11"
 	AllBookedErrCode = "12"
 	UnauthorizedErrCode = "13"
+	AuthenticationFailedErrCode = "14"
 )
 
 var ErrDescription = map[string]string{
@@ -49,4 +51,5 @@ var ErrDescription = map[string]string{
 	RegisteredErrCode : RegisteredErr,
 	AllBookedErrCode : AllBookedErr,
 	UnauthorizedErrCode : Unauthorized,
+	AuthenticationFailedErrCode : AuthenticationFailed,
 }

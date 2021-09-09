@@ -1,6 +1,8 @@
 package oracle
 
 import (
+    "crypto/sha256"
+    "encoding/hex"
     "fmt"
     "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/cache"
     oerr "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/error"
@@ -87,14 +89,36 @@ func oracleSendVerfCode(cliCtx context.CLIContext, storeName string) http.Handle
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         mobile     := vars["mobile"]
-       
+        purpose    := vars["purpose"]
+        if purpose == "register" {
+            if checkIfDataExistInDatabaseByFindBy(cliCtx, storeName, nftAppCode, nftUserTable, "tel", mobile) {
+                generalResponse(w, map[string]string{
+                    ErrInfo : oerr.ErrDescription[oerr.RegisteredErrCode],
+                    ErrCode : oerr.RegisteredErrCode,
+                })
+                return
+            }
+        } else if purpose != "reset_password" {
+            generalResponse(w, map[string]string{
+                ErrInfo : "Request error",
+                ErrCode : oerr.UndefinedErr,
+            })
+            return
+        }
         verificationCode := utils.GenerateVerfCode(6)
         cacheMobileAndVerificationCode(mobile, mobile, verificationCode)
         if sent := sendVerificationCode(mobile, verificationCode); !sent {
-            rest.WriteErrorResponse(w, http.StatusNotFound, "Failed to send sms")
+            generalResponse(w, map[string]string{
+                ErrInfo : "Failed to send sms",
+                ErrCode : oerr.UndefinedErr,
+            })
             return
         } 
-        rest.PostProcessResponse(w, cliCtx, "Success")
+        //rest.PostProcessResponse(w, cliCtx, "Success")
+        generalResponse(w, map[string]string{
+            SuccessInfo : oerr.ErrDescription[oerr.UndefinedErr],
+            ErrCode : oerr.UndefinedErr,
+        })
     }
 }
 
@@ -204,6 +228,7 @@ func realNameAuthentication(cliCtx context.CLIContext, storeName string) http.Ha
         }
 
         idNumber := data["id_number"]
+        idHash := hashData(idNumber)
         name := data["name"]
         userId, ok := verifySession(w, r)
         if !ok {
@@ -213,29 +238,48 @@ func realNameAuthentication(cliCtx context.CLIContext, storeName string) http.Ha
             })
             return
         }
+
+        //TODO check idHash
         //query tel and password
         ac := getOracleAc()
         res, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftRealNameAuthentication, "user_id", userId)
         if err != nil {
-            generalResponse(w, map[string]string{
-                ErrInfo : err.Error(),
-                ErrCode : oerr.UndefinedErrCode,
-            })
-            return
+           generalResponse(w, map[string]string{
+               ErrInfo : err.Error(),
+               ErrCode : oerr.UndefinedErrCode,
+           })
+           return
         }
 
         if len(res) != 0 {
-            generalResponse(w, map[string]string{
-                ErrInfo : "certified",
-                ErrCode : oerr.UndefinedErrCode,
-            })
-            return
+           generalResponse(w, map[string]string{
+               ErrInfo : "certified",
+               ErrCode : oerr.UndefinedErrCode,
+           })
+           return
+        }
+        ac = getOracleAc()
+        res, err = findByCore(cliCtx, storeName, ac, nftAppCode, nftRealNameAuthentication, "id_number_hash", idHash)
+        if err != nil {
+           generalResponse(w, map[string]string{
+               ErrInfo : err.Error(),
+               ErrCode : oerr.UndefinedErrCode,
+           })
+           return
+        }
+
+        if len(res) != 0 {
+           generalResponse(w, map[string]string{
+               ErrInfo : "certified",
+               ErrCode : oerr.UndefinedErrCode,
+           })
+           return
         }
         //authentication by huawei
         if !authenticationByHuawei(name, idNumber) {
             generalResponse(w, map[string]string{
-                ErrInfo : "authentication failed",
-                ErrCode : oerr.UndefinedErrCode,
+                ErrInfo : oerr.ErrDescription[oerr.AuthenticationFailedErrCode],
+                ErrCode : oerr.AuthenticationFailedErrCode,
             })
             return
         }
@@ -244,6 +288,7 @@ func realNameAuthentication(cliCtx context.CLIContext, storeName string) http.Ha
         owner := loadOracleAddr()
         fieldsOfPassword := map[string]string{
             "user_id" : userId,
+            "id_number_hash" : idHash,
         }
         bz , _ := json.Marshal(fieldsOfPassword)
         msgInsert := types.NewMsgInsertRow(owner, nftAppCode, nftRealNameAuthentication, bz)
@@ -536,20 +581,28 @@ func authenticationByHuawei(realName, cardNo string)  bool {
         return false
     }
 
-    result := make(map[string]interface{})
-    json.Unmarshal(body, &result)
-    errCode, ok  := result["error_code"].(float64)
-    if !ok {
-        return false
+    type IdInfo struct {
+        Realname string `json:"realname"`
+        Idcard string	`json:"idcard"`
+        Isok bool `json:"isok"`
+        IdCardInfor interface{} `json:"IdCardInfor"`
     }
-
-    reason, ok := result["reason"].(string)
-    if !ok {
-        return false
+    type ReturnData struct {
+        ErrorCode int
+        Reason string
+        Result IdInfo
     }
-
-    if int(errCode) == 0 && reason == "成功" {
+    temp := ReturnData{}
+    json.Unmarshal(body, &temp)
+    if temp.ErrorCode == 0 && temp.Result.Isok {
         return true
     }
     return false
+}
+
+func hashData(data string) string {
+    bz := []byte(data)
+    ha := sha256.Sum256(bz)
+    result := hex.EncodeToString(ha[:])
+    return result
 }
