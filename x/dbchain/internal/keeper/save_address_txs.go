@@ -99,15 +99,11 @@ func getCurrentAddrTxsId(k Keeper, ctx sdk.Context, addr sdk.AccAddress) uint {
 	mutex.Lock()
 	defer mutex.Unlock()
 	var key = getNextAccountTxIdKey(addr.String())
-	nextId ,ok := NextIds[key]
-	if  ok {
-		return nextId -1
-	} else {
-		bz, _ := store.Get([]byte(key))
-		if bz != nil {
-			k.cdc.MustUnmarshalBinaryBare(bz, &nextId)
-			return nextId - 1
-		}
+	var nextId uint = 0
+	bz, _ := store.Get([]byte(key))
+	if bz != nil {
+		k.cdc.MustUnmarshalBinaryBare(bz, &nextId)
+		return nextId - 1
 	}
 	return 0
 }
@@ -119,10 +115,7 @@ func getNextSaveAddrTxsId(k Keeper, ctx sdk.Context, addr sdk.AccAddress) (uint,
 
 	var nextIdKey = getNextAccountTxIdKey(addr.String())
 	var nextId uint
-	var found bool
-	if nextId, found = NextIds[nextIdKey]; found {
-
-	} else if bz, _ := store.Get([]byte(nextIdKey)); bz != nil {
+	if bz, _ := store.Get([]byte(nextIdKey)); bz != nil {
 		k.cdc.MustUnmarshalBinaryBare(bz, &nextId)
 	} else {
 		nextId = 1
@@ -132,7 +125,6 @@ func getNextSaveAddrTxsId(k Keeper, ctx sdk.Context, addr sdk.AccAddress) (uint,
 	if err != nil{
 		return 0, err
 	}
-	NextIds[nextIdKey] = nextId + 1
 
 	return nextId, nil
 }

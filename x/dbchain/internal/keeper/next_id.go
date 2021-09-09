@@ -1,21 +1,21 @@
 package keeper
 
 import (
-    "fmt"
-    "sync"
     "errors"
+    "fmt"
     sdk "github.com/cosmos/cosmos-sdk/types"
+    "sync"
 )
 
 var mutex = &sync.Mutex{}
-var NextIds = make(map[string]uint)
 var nextAppId uint
 
 func (k Keeper) PeekNextId(ctx sdk.Context, appId uint, tableName string) (uint, error) {
     var nextIdKey = getNextIdKey(appId, tableName)
     var nextId uint
-    var found bool
-    if nextId, found = NextIds[nextIdKey]; found {
+    store := DbChainStore(ctx, k.storeKey)
+    if bz, _ := store.Get([]byte(nextIdKey)); bz != nil {
+        k.cdc.MustUnmarshalBinaryBare(bz, &nextId)
         return nextId, nil
     } else {
         return 0, nil
@@ -29,9 +29,7 @@ func getNextId(k Keeper, ctx sdk.Context, appId uint, tableName string) (uint, e
 
     var nextIdKey = getNextIdKey(appId, tableName)
     var nextId uint
-    var found bool
-    if nextId, found = NextIds[nextIdKey]; found {
-    } else if bz, err := store.Get([]byte(nextIdKey)); bz != nil {
+    if bz, err := store.Get([]byte(nextIdKey)); bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &nextId)
     } else if bz, err = store.Get([]byte(getTableKey(appId, tableName))); bz != nil {
         nextId = 1
@@ -45,7 +43,6 @@ func getNextId(k Keeper, ctx sdk.Context, appId uint, tableName string) (uint, e
     if err != nil{
         return 0, err
     }
-    NextIds[nextIdKey] = nextId + 1
 
     return nextId, nil
 }
@@ -56,7 +53,6 @@ func dropNextId(k Keeper, ctx sdk.Context, appId uint, tableName string) {
     defer mutex.Unlock()
 
     var nextIdKey = getNextIdKey(appId, tableName)
-    delete(NextIds, nextIdKey)
     store.Delete([]byte(nextIdKey))
 }
 
