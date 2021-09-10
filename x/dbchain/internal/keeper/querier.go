@@ -425,7 +425,7 @@ func queryTables(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
 
 func queryTable(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
-    _, err := utils.VerifyAccessCode(accessCode)
+    addr, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
@@ -433,6 +433,10 @@ func queryTable(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
     appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    if !keeper.isAdmin(ctx, appId, addr) {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Admin privilege is needed!")
     }
 
     table, err := keeper.GetTable(ctx, appId, path[2])
@@ -532,7 +536,7 @@ func queryAssociation(ctx sdk.Context, path []string, req abci.RequestQuery, kee
 
 func queryColumnOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
-    _, err := utils.VerifyAccessCode(accessCode)
+    addr, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
@@ -540,6 +544,10 @@ func queryColumnOption(ctx sdk.Context, path []string, req abci.RequestQuery, ke
     appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    if !keeper.isAdmin(ctx, appId, addr) {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Admin privilege is needed!")
     }
 
     tableName := path[2]
@@ -561,7 +569,7 @@ func queryColumnOption(ctx sdk.Context, path []string, req abci.RequestQuery, ke
 
 func queryColumnDataType(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
-    _, err := utils.VerifyAccessCode(accessCode)
+    addr, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
@@ -569,6 +577,10 @@ func queryColumnDataType(ctx sdk.Context, path []string, req abci.RequestQuery, 
     appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    if !keeper.isAdmin(ctx, appId, addr) {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Admin privilege is needed!")
     }
 
     tableName := path[2]
@@ -991,7 +1003,7 @@ func queryFunctions(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
 
 func queryFunctionsInfo(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
-    _, err := utils.VerifyAccessCode(accessCode)
+    addr, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
@@ -999,6 +1011,10 @@ func queryFunctionsInfo(ctx sdk.Context, path []string, req abci.RequestQuery, k
     appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    if !keeper.isAdmin(ctx, appId, addr) {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Admin privilege is needed!")
     }
 
     functionInfo := keeper.GetFunctionInfo(ctx, appId, path[2], 0)
@@ -1071,7 +1087,7 @@ func queryCustomQueriers(ctx sdk.Context, path []string, req abci.RequestQuery, 
 
 func queryCustomQuerierInfo(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     accessCode:= path[0]
-    _, err := utils.VerifyAccessCode(accessCode)
+    addr, err := utils.VerifyAccessCode(accessCode)
     if err != nil {
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
@@ -1079,6 +1095,10 @@ func queryCustomQuerierInfo(ctx sdk.Context, path []string, req abci.RequestQuer
     appId, err := keeper.GetDatabaseId(ctx, path[1])
     if err != nil {
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    if !keeper.isAdmin(ctx, appId, addr) {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Admin privilege is needed!")
     }
 
     querierInfo := keeper.GetFunctionInfo(ctx, appId, path[2], 1)
