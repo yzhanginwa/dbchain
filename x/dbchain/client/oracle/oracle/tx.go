@@ -212,15 +212,21 @@ func checkCanInsertRow(cliCtx context.CLIContext, msg UniversalMsg) bool {
         return false
     }
     ac := utils.MakeAccessCode(privKey)
-    res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/can_insert_row/%s/%s/%s/%s", "dbchain", ac, insertRow.AppCode, insertRow.TableName, rowFieldsJson), nil)
+    query := fmt.Sprintf("%s/dbchain/can_insert_row/%s/%s/%s/%s", BaseUrl, ac, insertRow.AppCode, insertRow.TableName, rowFieldsJson)
+
+    res, err := httpGetRequest(query)
     if err != nil {
         fmt.Println("---------------------> msg is  : ", insertRow)
         return false
     }
 
-    result := false
+    type response struct {
+        Height string
+        Result bool
+    }
+    result := response{}
     err = json.Unmarshal(res, &result)
-    if err != nil || !result {
+    if err != nil || !result.Result {
         fmt.Println("---------------------> msg is  : ", insertRow)
         return false
     }
@@ -311,6 +317,6 @@ func genPostTxBytes(cliCtx context.CLIContext, Fee StdFee, Memo string, msgs []U
         sdkStdSignature = append(sdkStdSignature, std.StdSignature(signature))
     }
     newStdTx := std.NewStdTx(stdMsgs, stdFee, sdkStdSignature, Memo)
-    txBytes, err := cliCtx.Codec.MarshalJSON(rest.BroadcastReq{Tx: newStdTx, Mode: "async"})
+    txBytes, err := aminoCdc.MarshalJSON(rest.BroadcastReq{Tx: newStdTx, Mode: "async"})
     return txBytes, err
 }
