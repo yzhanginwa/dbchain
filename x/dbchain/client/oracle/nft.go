@@ -154,7 +154,7 @@ func nftUserRegister(cliCtx context.CLIContext, storeName string) http.HandlerFu
 			updateScore(cliCtx, storeName, invitationCode, "+", invitationScore, "Invite users")
 		}
 		generalResponse(w, map[string]string{
-			SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
+			ErrInfo : oerr.ErrDescription[oerr.SuccessCode],
 			ErrCode : oerr.SuccessCode,
 		})
 		return
@@ -357,7 +357,7 @@ func nftUserResetPassword(cliCtx context.CLIContext, storeName string) http.Hand
 
 		oracle.BuildTxsAndBroadcast(cliCtx, msgs)
 		generalResponse(w, map[string]string{
-			SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
+			ErrInfo : oerr.ErrDescription[oerr.SuccessCode],
 			ErrCode : oerr.SuccessCode,
 		})
 		return
@@ -662,7 +662,7 @@ func nftMakeOld(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			return
 		}
 		generalResponse(w, map[string]string{
-			SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
+			ErrInfo : oerr.ErrDescription[oerr.SuccessCode],
 			ErrCode : oerr.SuccessCode,
 		})
 		return
@@ -740,7 +740,7 @@ func nftPublish(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 
 		oracle.BuildTxsAndBroadcast(cliCtx, []oracle.UniversalMsg{msg})
 		generalResponse(w, map[string]string{
-			SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
+			ErrInfo : oerr.ErrDescription[oerr.SuccessCode],
 			ErrCode : oerr.SuccessCode,
 		})
 		return
@@ -798,7 +798,7 @@ func nftWithdraw(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		}
 		oracle.BuildTxsAndBroadcast(cliCtx, []oracle.UniversalMsg{msg})
 		generalResponse(w, map[string]string{
-			SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
+			ErrInfo : oerr.ErrDescription[oerr.SuccessCode],
 			ErrCode : oerr.SuccessCode,
 		})
 		return
@@ -1107,7 +1107,7 @@ func nftSaveReceiptInitiative(cliCtx context.CLIContext, storeName string) http.
 			nftBuyCore(cliCtx,storeName, order["nft_id"], user["address"], tradeNo)
 		}
 		generalResponse(w, map[string]string{
-			SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
+			ErrInfo : oerr.ErrDescription[oerr.SuccessCode],
 			ErrCode : oerr.SuccessCode,
 		})
 		return
@@ -1184,7 +1184,7 @@ func nftTransfer(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			return
 		}
 		generalResponse(w, map[string]string{
-			SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
+			ErrInfo : oerr.ErrDescription[oerr.SuccessCode],
 			ErrCode : oerr.SuccessCode,
 		})
 		return
@@ -1253,7 +1253,7 @@ func nftEditPersonalInformation(cliCtx context.CLIContext, storeName string) htt
 
 		oracle.BuildTxsAndBroadcast(cliCtx, []oracle.UniversalMsg{msg})
 		generalResponse(w, map[string]string{
-			SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
+			ErrInfo : oerr.ErrDescription[oerr.SuccessCode],
 			ErrCode : oerr.SuccessCode,
 		})
 		return
@@ -1307,7 +1307,7 @@ func nftCollect(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 
 		oracle.BuildTxsAndBroadcast(cliCtx, []oracle.UniversalMsg{msg})
 		generalResponse(w, map[string]string{
-			SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
+			ErrInfo : oerr.ErrDescription[oerr.SuccessCode],
 			ErrCode : oerr.SuccessCode,
 		})
 		return
@@ -1356,7 +1356,7 @@ func nftCancelCollect(cliCtx context.CLIContext, storeName string) http.HandlerF
 
 		oracle.BuildTxsAndBroadcast(cliCtx, []oracle.UniversalMsg{msg})
 		generalResponse(w, map[string]string{
-			SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
+			ErrInfo : oerr.ErrDescription[oerr.SuccessCode],
 			ErrCode : oerr.SuccessCode,
 		})
 		return

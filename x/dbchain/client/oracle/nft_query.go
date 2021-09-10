@@ -20,7 +20,6 @@ const (
 	BaseUrl = oracle.BaseUrl + "dbchain/"
 	ErrCode = "err_code"
 	ErrInfo = "err_info"
-	SuccessInfo = "success_info"
 	Result = "result"
 )
 
@@ -529,6 +528,9 @@ func nftUserCollectInfo(cliCtx context.CLIContext, storeName string) http.Handle
 				continue
 			}
 			if len(denomInfo) != 0 {
+				AuthorInfo := findAuthorInfoFromDenomId(cliCtx, storeName, denomId)
+				denomInfo["avatar"] =  AuthorInfo["avatar"]
+				denomInfo["nickname"] = AuthorInfo["nickname"]
 				result = append(result, denomInfo)
 			}
 		}
@@ -841,8 +843,13 @@ func findAuthorInfoByNftId(cliCtx context.CLIContext, storeName, nftId string) m
 	if err != nil {
 		return map[string]string{}
 	}
-	ac = getOracleAc()
-	queryString = fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, denomTable, nftInfo["denom_id"])
+	userInfo := findAuthorInfoFromDenomId(cliCtx, storeName, nftInfo["denom_id"])
+	return userInfo
+}
+
+func findAuthorInfoFromDenomId(cliCtx context.CLIContext, storeName, denomId string) map[string]string{
+	ac := getOracleAc()
+	queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, denomTable, denomId)
 	denomInfo, err := findRow(cliCtx, queryString)
 	if err != nil {
 		return map[string]string{}

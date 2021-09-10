@@ -90,18 +90,18 @@ func oracleSendVerfCode(cliCtx context.CLIContext, storeName string) http.Handle
         vars := mux.Vars(r)
         mobile     := vars["mobile"]
         purpose    := vars["purpose"]
-        if purpose == "register" {
-            if checkIfDataExistInDatabaseByFindBy(cliCtx, storeName, nftAppCode, nftUserTable, "tel", mobile) {
-                generalResponse(w, map[string]string{
-                    ErrInfo : oerr.ErrDescription[oerr.RegisteredErrCode],
-                    ErrCode : oerr.RegisteredErrCode,
-                })
-                return
-            }
-        } else if purpose != "reset_password" {
+        exist := checkIfDataExistInDatabaseByFindBy(cliCtx, storeName, nftAppCode, nftUserTable, "tel", mobile)
+        if purpose == "register"  && exist {
             generalResponse(w, map[string]string{
-                ErrInfo : "Request error",
-                ErrCode : oerr.UndefinedErr,
+                ErrInfo : oerr.ErrDescription[oerr.RegisteredErrCode],
+                ErrCode : oerr.RegisteredErrCode,
+            })
+            return
+
+        } else if purpose == "reset_password" && !exist {
+            generalResponse(w, map[string]string{
+                ErrInfo : oerr.ErrDescription[oerr.UnregisterErrCode],
+                ErrCode : oerr.UnregisterErrCode,
             })
             return
         }
@@ -110,14 +110,13 @@ func oracleSendVerfCode(cliCtx context.CLIContext, storeName string) http.Handle
         if sent := sendVerificationCode(mobile, verificationCode); !sent {
             generalResponse(w, map[string]string{
                 ErrInfo : "Failed to send sms",
-                ErrCode : oerr.UndefinedErr,
+                ErrCode : oerr.UndefinedErrCode,
             })
             return
-        } 
-        //rest.PostProcessResponse(w, cliCtx, "Success")
+        }
         generalResponse(w, map[string]string{
-            SuccessInfo : oerr.ErrDescription[oerr.UndefinedErr],
-            ErrCode : oerr.UndefinedErr,
+            ErrInfo : oerr.ErrDescription[oerr.SuccessCode],
+            ErrCode : oerr.SuccessCode,
         })
     }
 }
@@ -253,8 +252,8 @@ func realNameAuthentication(cliCtx context.CLIContext, storeName string) http.Ha
 
         if len(res) != 0 {
            generalResponse(w, map[string]string{
-               ErrInfo : "certified",
-               ErrCode : oerr.UndefinedErrCode,
+               ErrInfo : oerr.ErrDescription[oerr.AuthenticationFailedErrCode],
+               ErrCode : oerr.AuthenticationFailedErrCode,
            })
            return
         }
@@ -270,8 +269,8 @@ func realNameAuthentication(cliCtx context.CLIContext, storeName string) http.Ha
 
         if len(res) != 0 {
            generalResponse(w, map[string]string{
-               ErrInfo : "certified",
-               ErrCode : oerr.UndefinedErrCode,
+               ErrInfo : oerr.ErrDescription[oerr.AuthenticationFailedErrCode],
+               ErrCode : oerr.AuthenticationFailedErrCode,
            })
            return
         }
@@ -296,7 +295,7 @@ func realNameAuthentication(cliCtx context.CLIContext, storeName string) http.Ha
 
         oracle.BuildTxsAndBroadcast(cliCtx, msgs)
         generalResponse(w, map[string]string{
-            SuccessInfo : oerr.ErrDescription[oerr.SuccessCode],
+            ErrInfo : oerr.ErrDescription[oerr.SuccessCode],
             ErrCode : oerr.SuccessCode,
         })
         return
