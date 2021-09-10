@@ -45,8 +45,8 @@ var (
 	notifyUrl string
 )
 const (
-	kAppId = "2021002129602543"
-	OrderSub   = "YTBox"
+	kAppId = "2021002177695653"
+	OrderSub   = "YIYUAN NFT"
 	AlipayNotifyURL  = "alipay-notify-url"
  	IsProduction = true
  	OrderReceipt = "order_receipt"
