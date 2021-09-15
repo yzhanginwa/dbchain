@@ -8,6 +8,7 @@ const (
     StoreKey = ModuleName
 
     //the folder where the applcation data and configuration will be stored
+    NFTHome = "$HOME/.dbchainnft"
     OracleHome = "$HOME/.dbchainoracle"
     CLIHome = "$HOME/.dbchaincli"
     NodeHome = "$HOME/.dbchaind"

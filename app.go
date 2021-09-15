@@ -39,12 +39,16 @@ import (
 
 const (
 	appName     = "dbchain"
+    NFTHome     = dbchain.NFTHome
 	OracleHome  = dbchain.OracleHome
 	CLIHome     = dbchain.CLIHome
 	NodeHome    = dbchain.NodeHome
 )
 
 var (
+    // default OracleHome directories for the application oracle
+    DefaultNFTHome = os.ExpandEnv(NFTHome)
+
     // default OracleHome directories for the application oracle
     DefaultOracleHome = os.ExpandEnv(OracleHome)
 
