@@ -15,6 +15,7 @@ import (
 	"github.com/dbchaincloud/tendermint/crypto/sm2"
 	"github.com/go-session/session"
 	"github.com/smartwalle/alipay/v3"
+	"github.com/spf13/viper"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/cache"
 	oerr "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/error"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
@@ -31,7 +32,7 @@ import (
 
 const (
 	//nftAppCode = "9SXMMWWR8A"
-	nftAppCode = "3CASSKY7NQ"
+	nftAppCodeKey = "app-code"
 	codePre = "dbc"
 	//tables
 	nftUserTable = "user"
@@ -59,8 +60,14 @@ const (
 var priceRex *regexp.Regexp
 var orderSet *nftOrderSet
 var makeOrderCache *cache.MemoryCache
+var nftAppCode = "3CASSKY7NQ"
 
 func init() {
+	//get appcode
+	appCode := viper.GetString(nftAppCodeKey)
+	if appCode != "" {
+		nftAppCode = appCode
+	}
 	// order cache
 	orderSet = newNftOrderSet(time.Second * 300)
 	go orderSet.GC()

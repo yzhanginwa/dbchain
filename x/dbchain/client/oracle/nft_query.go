@@ -17,11 +17,12 @@ import (
 )
 
 const (
-	BaseUrl = oracle.BaseUrl + "dbchain/"
 	ErrCode = "err_code"
 	ErrInfo = "err_info"
 	Result = "result"
 )
+var BaseUrl = oracle.BaseUrl + "dbchain/"
+
 
 func CanEditPersonalInfo(cliCtx context.CLIContext, storeName string, tel string) (string,bool) {
 	ac := getOracleAc()
