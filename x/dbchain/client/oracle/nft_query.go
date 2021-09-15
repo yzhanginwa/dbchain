@@ -218,14 +218,23 @@ func nftFindPopularAuthor(cliCtx context.CLIContext, storeName string) http.Hand
 func nftFindLastestNft(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		page := vars["page"]
 		numbers := vars["numbers"]
 		inumber, err := strconv.Atoi(numbers)
-		if err != nil {
+		if err != nil || inumber <= 0 {
 			generalResponse(w, map[string]string{
 				ErrInfo : oerr.ErrDescription[oerr.ParamsErrCode],
 				ErrCode : oerr.ParamsErrCode})
 			return
 		}
+		ipage, err := strconv.Atoi(page)
+		if err != nil || ipage <= 0 {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.ParamsErrCode],
+				ErrCode : oerr.ParamsErrCode})
+			return
+		}
+
 		queryString := `[{"method":"table","table":"nft_publish"},{"method":"select","fields":"id"}]`
 		ids := queryByQuerier(queryString)
 		if len(ids) == 0 {
@@ -236,12 +245,15 @@ func nftFindLastestNft(cliCtx context.CLIContext, storeName string) http.Handler
 			return
 		}
 		var validIds []map[string]string
-		if len(ids) > inumber {
-			staid := len(ids) - inumber
-			validIds = ids[staid : ]
-		} else {
-			validIds = ids
+		if len(ids) >= ipage * inumber {
+			staid := len(ids) - ipage * inumber
+			end := len(ids) - inumber * (ipage - 1)
+			validIds = ids[staid : end]
+		} else if (len(ids) < ipage * inumber) && (len(ids) >= inumber * (ipage - 1)){
+			end := len(ids) - inumber * (ipage - 1)
+			validIds = ids[ : end]
 		}
+
 		nfts := make([]map[string]string, 0)
 		for _, validId := range validIds {
 			id  := validId["id"]

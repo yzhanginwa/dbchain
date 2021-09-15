@@ -80,7 +80,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/querier/{%s}", storeName, "querierBase58"), nftFindByQuerier(cliCtx, storeName)).Methods("GET")
 
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/popular_author/{%s}", storeName, "numbers"), nftFindPopularAuthor(cliCtx, storeName)).Methods("GET")
-    r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/lastest_nft/{%s}", storeName, "numbers"), nftFindLastestNft(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/lastest_nft/{%s}/{%s}", storeName, "page","numbers"), nftFindLastestNft(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/nft_details/{%s}", storeName, "denom_id"), nftFindNftDetails(cliCtx, storeName)).Methods("GET")
     //get data from session
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user_info", storeName), nftUserInfo(cliCtx, storeName)).Methods("GET")
