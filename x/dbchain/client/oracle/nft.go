@@ -60,14 +60,10 @@ const (
 var priceRex *regexp.Regexp
 var orderSet *nftOrderSet
 var makeOrderCache *cache.MemoryCache
-var nftAppCode = "3CASSKY7NQ"
+//var nftAppCode = "3CASSKY7NQ"
+var nftAppCode = ""
 
 func init() {
-	//get appcode
-	appCode := viper.GetString(nftAppCodeKey)
-	if appCode != "" {
-		nftAppCode = appCode
-	}
 	// order cache
 	orderSet = newNftOrderSet(time.Second * 300)
 	go orderSet.GC()
@@ -1659,4 +1655,16 @@ func verifyAlipay(outTradeNo string) (string, string){
 	totalAmount  := aliOrderStatus["total_amount"]
 	tradeNo := aliOrderStatus["trade_no"]
 	return totalAmount, tradeNo
+}
+
+func LoadNFTConfig() {
+	//get appcode
+	appCode := viper.GetString(nftAppCodeKey)
+	if appCode != "" {
+		nftAppCode = appCode
+	}
+	baseUrl := viper.GetString(oracle.BaseUrlKey)
+	if baseUrl != "" {
+		oracle.BaseUrl = baseUrl
+	}
 }

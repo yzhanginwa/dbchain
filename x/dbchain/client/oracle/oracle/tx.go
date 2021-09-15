@@ -28,13 +28,6 @@ const (
 )
 var BaseUrl string = "http://192.168.0.19:3001/relay/"
 
-func init() {
-    baseUrl := viper.GetString(BaseUrlKey)
-    if baseUrl != "" {
-        BaseUrl = baseUrl
-    }
-}
-
 const gasNum = 3000000
 type UniversalMsg interface {
     GetSignBytes() []byte
