@@ -37,7 +37,7 @@ BUILD_FLAGS_ORACLE2 := -ldflags '$(ldflagsoracle2)'
 all: install
 
 install: go.sum
-	make -j 3 daemon cli oracle
+	make -j 3 nft
 
 installc: go.sum
 	make -j 2 daemonc clic oraclec
@@ -46,8 +46,8 @@ daemon:
 	go install  $(BUILD_FLAGS1) ./cmd/dbchaind
 cli:
 	go install  $(BUILD_FLAGS1) ./cmd/dbchaincli
-oracle:
-	go install  $(BUILD_FLAGS_ORACLE1) ./cmd/dbchainoracle
+nft:
+	go build -o $(GOPATH)/bin/dbchainnft  $(BUILD_FLAGS_ORACLE1) ./cmd/dbchainnft
 
 daemonc:
 	go install  $(BUILD_FLAGS2) ./cmd/dbchaind
