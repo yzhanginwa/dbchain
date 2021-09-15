@@ -1,0 +1,14 @@
+
+start dbchainnft server need a config.toml file. it is located in $HOME/.dbchainnft/config/config.toml
+This file contains the following configuration：
+
+chain-id = "testnet"
+indent = true
+output = "json"
+trust-node = true
+oracle-encrypted-key = "3J48zHWNtT5fXzpB4a5FGGVzc18r7JHHsRXpZJfrBFfR" //oracle addr
+aliyun-sky-eye-appcode = "55e0db5ddbe04532ab47dd9443972c2e"
+aliyun-sms-key = "LTAI4G24JoCd5J5qcfanbYC9"
+aliyun-sms-secret = "SIbTWp7B6niIxjxAh0INI9lmeett6v"
+base-url = "http://192.168.0.19:3001/relay/"                          //chain url
+app-code = "3CASSKY7NQ"                                               //database appcode
