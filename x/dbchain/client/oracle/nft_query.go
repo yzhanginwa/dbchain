@@ -463,13 +463,8 @@ func nftOfUserBasicInfo(cliCtx context.CLIContext, storeName string) http.Handle
 
 func nftUserIncome(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userId, ok := verifySession(w, r)
-		if !ok {
-			generalResponse(w, map[string]string{
-				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
-				ErrCode : oerr.UnLoginErrCode})
-			return
-		}
+		vars := mux.Vars(r)
+		userId := vars["user_id"]
 		ac := getOracleAc()
 		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftUserTable, userId)
 		userInfo, err := findRow(cliCtx, queryString)
@@ -512,13 +507,7 @@ func nftUserCollectInfo(cliCtx context.CLIContext, storeName string) http.Handle
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		numOrDetail := vars["number_or_detail"]
-		userId, ok := verifySession(w, r)
-		if !ok {
-			generalResponse(w, map[string]string{
-				ErrInfo : oerr.ErrDescription[oerr.UnLoginErrCode],
-				ErrCode : oerr.UnLoginErrCode})
-			return
-		}
+		userId := vars["user_id"]
 
 		queryString := `[{"method":"table","table":"nft_collection"},{"method":"select","fields":"denom_id"},{"method":"where", "field" : "user_id", "operator" : "=", "value" : "` + userId + `"}]`
 		collects := queryByQuerier(queryString)

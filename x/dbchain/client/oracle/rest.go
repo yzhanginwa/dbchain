@@ -9,7 +9,7 @@ import (
 // RegisterRoutes - Central function to define routes that get registered by the main application
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) {
     r.HandleFunc(fmt.Sprintf("/%s/upload/{%s}/{%s}", storeName, "accessToken", "appCode"), uploadFileHandler(cliCtx)).Methods("POST")
-    r.HandleFunc(fmt.Sprintf("/%s/oracle/send_verf_code/{%s}/{%s}", storeName, "purpose", "mobile"), oracleSendVerfCode(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/send_verf_code/{%s}/{%s}", storeName, "purpose", "mobile"), oracleSendVerfCode(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/verify_verf_code/{%s}/{%s}", storeName, "mobile", "verificationCode"), oracleVerifyVerfCode(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/verify_name_and_id_number/{%s}/{%s}/{%s}", storeName, "accessToken", "name", "id_number"), oracleVerifyNameAndIdNumber(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/verify_corp_info/{%s}/{%s}/{%s}/{%s}", storeName, "accessToken", "corp_name", "reg_number", "credit_code"), oracleVerifyCorpInfo(cliCtx, storeName)).Methods("GET")
@@ -84,8 +84,8 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/nft_details/{%s}", storeName, "denom_id"), nftFindNftDetails(cliCtx, storeName)).Methods("GET")
     //get data from session
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user_info", storeName), nftUserInfo(cliCtx, storeName)).Methods("GET")
-    r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user_income", storeName), nftUserIncome(cliCtx, storeName)).Methods("GET")
-    r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user_collect/{%s}", storeName, "number_or_detail"), nftUserCollectInfo(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user_income/{%s}", storeName, "user_id"), nftUserIncome(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user_collect/{%s}/{%s}", storeName, "user_id", "number_or_detail"), nftUserCollectInfo(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user/all/token_record", storeName), nftUserAllTokenRecord(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user/invite/token_record", storeName), nftUserInvitationRecord(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user_nft_number/{%s}", storeName, "user_id"), nftUserNftNumber(cliCtx, storeName)).Methods("GET")
