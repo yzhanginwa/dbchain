@@ -53,7 +53,7 @@ const (
 	nftProductionPermission = "nft_production_permission"
 
 	priceRegExp = `(^[1-9]\d*(\.\d{1,2})?$)|(^0(\.\d{1,2})?$)`
-	invitationScore = 10
+	invitationScore = 1000
 	nftMakePricePerNft = 0.01
 )
 
@@ -154,7 +154,7 @@ func nftUserRegister(cliCtx context.CLIContext, storeName string) http.HandlerFu
 			return
 		}
 		if invitationCode != "" {
-			updateScore(cliCtx, storeName, invitationCode, "+", invitationScore, "Invite users")
+			updateScoreOfInvite(cliCtx, storeName, invitationCode, "+", invitationScore, "Invite users")
 		}
 		generalResponse(w, map[string]string{
 			ErrInfo : oerr.ErrDescription[oerr.SuccessCode],
@@ -164,17 +164,20 @@ func nftUserRegister(cliCtx context.CLIContext, storeName string) http.HandlerFu
 	}
 }
 
-func updateScore(cliCtx context.CLIContext, storeName string, invitationCode, action string, increment int, memo string) error {
-
+func updateScoreOfInvite(cliCtx context.CLIContext, storeName string, invitationCode, action string, increment int, memo string) error {
 	ac := getOracleAc()
 	//find userId
 	userId, err := findByCoreIds(cliCtx, storeName, ac, nftAppCode, nftUserTable, "my_code", invitationCode)
 	if err != nil || len(userId) == 0 {
 		return err
 	}
+	return updateScoreCore(cliCtx, storeName, userId[0], action, increment, memo)
+}
+
+func updateScoreCore(cliCtx context.CLIContext, storeName string, userId, action string, increment int, memo string) error {
 	//find user score
-	ac = getOracleAc()
-	score, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftScoreTable, "user_id", userId[0])
+	ac := getOracleAc()
+	score, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftScoreTable, "user_id", userId)
 	if err != nil {
 		return err
 	}
@@ -197,7 +200,7 @@ func updateScore(cliCtx context.CLIContext, storeName string, invitationCode, ac
 
 	token := strconv.Itoa(currentToken)
 	field , _ := json.Marshal(map[string]string{
-		"user_id" : userId[0],
+		"user_id" : userId,
 		"token" : token,
 		"action" : action + strconv.Itoa(increment),
 		"memo" : memo})
@@ -937,7 +940,7 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	}
 }
 
-func nftBuyCore( cliCtx context.CLIContext, storeName string, nftId, addr, outTradeNo string) {
+func nftBuyCore( cliCtx context.CLIContext, storeName string, nftId, addr, outTradeNo ,money string) {
 	// nft transfer
 	freezeIds, _ := json.Marshal([]string{nftId})
 	insertValue, _ := json.Marshal(map[string]string {
@@ -952,6 +955,19 @@ func nftBuyCore( cliCtx context.CLIContext, storeName string, nftId, addr, outTr
 	if err != nil {
 		fmt.Println("serious error ： ", outTradeNo, " nft deliver fail" )
 		return
+	}
+	//update token for seller and buyer
+	sellerInfo := findAuthorInfoByNftId(cliCtx, storeName, nftId)
+	ac := getOracleAc()
+	buyerInfo, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "address", addr)
+	if err != nil {
+		fmt.Println("find buyer info err" )
+		return
+	}
+	imoney, _ := strconv.ParseFloat(money, 32)
+	if int(imoney) != 0 {
+		updateScoreCore(cliCtx, storeName, sellerInfo["user_id"], "+", int(imoney), "sell")
+		updateScoreCore(cliCtx, storeName, buyerInfo["id"], "+", int(imoney), "buy")
 	}
 
 	if sellOut {
@@ -1035,7 +1051,7 @@ func nftSaveReceipt(cliCtx context.CLIContext, storeName string) http.HandlerFun
 		if ss[1] == "make" {
 			nftMakeCore(cliCtx, storeName, outTradeNo)
 		} else {
-			nftBuyCore(cliCtx,storeName, order["nft_id"], user["address"], tradeNo)
+			nftBuyCore(cliCtx,storeName, order["nft_id"], user["address"], tradeNo, totalAmount)
 		}
 		return
 	}
@@ -1107,7 +1123,7 @@ func nftSaveReceiptInitiative(cliCtx context.CLIContext, storeName string) http.
 		if ss[1] == "make" {
 			nftMakeCore(cliCtx, storeName, outTradeNo)
 		} else {
-			nftBuyCore(cliCtx,storeName, order["nft_id"], user["address"], tradeNo)
+			nftBuyCore(cliCtx,storeName, order["nft_id"], user["address"], tradeNo, totalAmount)
 		}
 		generalResponse(w, map[string]string{
 			ErrInfo : oerr.ErrDescription[oerr.SuccessCode],
