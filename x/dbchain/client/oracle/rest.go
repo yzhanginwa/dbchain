@@ -86,6 +86,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     //get data from session
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user_info", storeName), nftUserInfo(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user_income/{%s}", storeName, "user_id"), nftUserIncome(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user_income/{%s}/{%s}/{%s}", storeName, "user_id", "start_time", "end_time"), nftUserIncomeByTime(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user_collect/{%s}/{%s}", storeName, "user_id", "number_or_detail"), nftUserCollectInfo(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user/all/token_record", storeName), nftUserAllTokenRecord(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/nft/user/invite/token_record", storeName), nftUserInvitationRecord(cliCtx, storeName)).Methods("GET")

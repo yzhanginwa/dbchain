@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"time"
 )
 
 const (
@@ -488,6 +489,76 @@ func nftUserIncome(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 
 		money := 0.0
 		for _, receipt := range receipts {
+			amount := receipt["amount"]
+			fAmount, err := strconv.ParseFloat(amount, 64)
+			if err != nil {
+				continue
+			}
+			money += fAmount
+		}
+		result := map[string]string{
+			"money" : fmt.Sprintf("%f", money),
+		}
+		successDataResponse(w, result)
+		return
+	}
+}
+
+func nftUserIncomeByTime(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		userId := vars["user_id"]
+		startTimeStr := vars["start_time"]
+		startTime, err := time.Parse("2006-01-02", startTimeStr)
+		if err != nil {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.ParamsErrCode],
+				ErrCode : oerr.ParamsErrCode,
+			})
+			return
+		}
+		endTimeStr := vars["end_time"]
+		endTime, err := time.Parse("2006-01-02", endTimeStr)
+		if err != nil {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.ParamsErrCode],
+				ErrCode : oerr.ParamsErrCode,
+			})
+			return
+		}
+		startStamp := startTime.UnixNano() / 1000000
+		endStamp := endTime.UnixNano() / 1000000
+
+
+		ac := getOracleAc()
+		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftUserTable, userId)
+		userInfo, err := findRow(cliCtx, queryString)
+		if err != nil || userInfo == nil{
+			generalResponse(w, map[string]string{
+				ErrInfo : "find user info err",
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+		seller := userInfo["address"]
+
+		receipts, err := findByAll(cliCtx, storeName, ac, nftAppCode, nftOrderReceipt, "seller", seller)
+		if err != nil {
+			generalResponse(w, map[string]string{
+				ErrInfo : "find user info err",
+				ErrCode : oerr.UndefinedErrCode,
+			})
+			return
+		}
+
+		money := 0.0
+		for _, receipt := range receipts {
+			createdTime := receipt["created_at"]
+			createStamp , _ := strconv.ParseInt(createdTime, 10, 64)
+			if createStamp < startStamp || createStamp > endStamp {
+				continue
+			}
+
 			amount := receipt["amount"]
 			fAmount, err := strconv.ParseFloat(amount, 64)
 			if err != nil {
