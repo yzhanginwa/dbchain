@@ -286,6 +286,24 @@ func nftUserLogin(cliCtx context.CLIContext, storeName string) http.HandlerFunc 
 	}
 }
 
+func nftUserLogout(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		if deleteSession(w, r) {
+			generalResponse(w, map[string]string{
+				ErrInfo : oerr.ErrDescription[oerr.SuccessCode],
+				ErrCode : oerr.SuccessCode,
+			})
+			return
+		}
+		generalResponse(w, map[string]string{
+			ErrInfo : oerr.ErrDescription[oerr.ServerErrCode],
+			ErrCode : oerr.ServerErrCode,
+		})
+		return
+	}
+}
+
 func nftUserResetPassword(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := readBodyData(r)
@@ -1657,6 +1675,14 @@ func verifySession(w http.ResponseWriter, r *http.Request) (string, bool) {
 
 	userId, _ := store.Get("userId")
 	return userId.(string), true
+}
+
+func deleteSession(w http.ResponseWriter, r *http.Request)  bool {
+	err := session.Destroy(stdCtx.Background(), w, r)
+	if err != nil {
+		return false
+	}
+	return  true
 }
 
 func verifyAlipay(outTradeNo string) (string, string){
