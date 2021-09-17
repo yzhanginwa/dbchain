@@ -15,8 +15,15 @@ ldflagsoracle1 = -X github.com/dbchaincloud/cosmos-sdk/version.Name=dbChain \
 	-X github.com/dbchaincloud/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/dbchaincloud/cosmos-sdk/version.Commit=$(COMMIT)
 
+ldflagsnft1 = -X github.com/dbchaincloud/cosmos-sdk/version.Name=dbChain \
+        -X github.com/dbchaincloud/cosmos-sdk/version.ServerName=dbchaind \
+    -X github.com/dbchaincloud/cosmos-sdk/version.ClientName=dbchainnft \
+    -X github.com/dbchaincloud/cosmos-sdk/version.Version=$(VERSION) \
+    -X github.com/dbchaincloud/cosmos-sdk/version.Commit=$(COMMIT)
+
 BUILD_FLAGS1 := -ldflags '$(ldflags1)'
 BUILD_FLAGS_ORACLE1 := -ldflags '$(ldflagsoracle1)'
+BUILD_FLAGS_NFT1 := -ldflags '$(ldflagsnft1)'
 
 ldflags2 = -X github.com/dbchaincloud/cosmos-sdk/version.Name=dbChainCommunity \
        	-X github.com/dbchaincloud/cosmos-sdk/version.ServerName=dbchaind \
@@ -47,7 +54,7 @@ daemon:
 cli:
 	go install  $(BUILD_FLAGS1) ./cmd/dbchaincli
 nft:
-	go build -o $(GOPATH)/bin/dbchainnft  $(BUILD_FLAGS_ORACLE1) ./cmd/dbchainnft
+	go install  $(BUILD_FLAGS_NFT1) ./cmd/dbchainnft
 
 daemonc:
 	go install  $(BUILD_FLAGS2) ./cmd/dbchaind
