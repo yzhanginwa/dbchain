@@ -58,7 +58,9 @@ func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields typ
 
     k.applyTrigger(ctx, appId, tableName, fields, owner, L)
     k.consumeGasByUploadFile(ctx, allUploadFileSize)
-
+    if ctx.GasMeter().IsOutOfGas() {
+        return 0, errors.New("out of gas")
+    }
     return id, nil
 }
 
