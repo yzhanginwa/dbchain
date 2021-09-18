@@ -207,9 +207,6 @@ func nftFindPopularAuthor(cliCtx context.CLIContext, storeName string) http.Hand
 				})
 			}
 		}
-		if len(popularAuthorsInfo) != 4 {
-			fmt.Println("err")
-		}
 
 		successDataResponse(w, popularAuthorsInfo)
 		return
