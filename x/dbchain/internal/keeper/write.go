@@ -16,7 +16,7 @@ import (
     storeTypes "github.com/dbchaincloud/cosmos-sdk/store/types"
 )
 
-
+const fileSizeGasRate = 10
 func (k Keeper) Insert(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) (uint, error){
     return k.InsertCore(ctx, appId, tableName, fields, owner, true)
 }
@@ -585,8 +585,7 @@ func (k Keeper) consumeGasByUploadFile(ctx sdk.Context, fileSize uint64)  {
     if fileSize <= 0 {
         return
     }
-    //TODO rate of fileSize to gas need to be defined
-    gas := storeTypes.Gas(int64(fileSize))
+    gas := storeTypes.Gas(int64(fileSize)) / fileSizeGasRate
     ctx.GasMeter().ConsumeGas(gas,"consume gas by upload file")
     return
 }
