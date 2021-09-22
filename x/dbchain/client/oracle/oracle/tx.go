@@ -7,6 +7,7 @@ import (
     "fmt"
     "github.com/dbchaincloud/cosmos-sdk/client/context"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
+    "strings"
 
     "github.com/dbchaincloud/cosmos-sdk/x/auth/client/rest"
     std "github.com/dbchaincloud/cosmos-sdk/x/auth/types"
@@ -22,11 +23,9 @@ import (
 
 const (
     BatchSize int = 10
-    //BaseUrl = "http://192.168.0.19/relay/"
-    //BaseUrlKey = "http://192.168.0.19:3001/relay/"
     BaseUrlKey = "base-url"
 )
-var BaseUrl string = "http://192.168.0.19:3001/relay/"
+var BASEURL string
 
 const gasNum = 3000000
 type UniversalMsg interface {
@@ -160,6 +159,7 @@ func buildAndSignAndBuildTxBytes(cliCtx context.CLIContext, msgs []UniversalMsg,
 
 func broadcastTxBytes(txBytes []byte) string {
 
+    BaseUrl := LoadNFTBaseUrl()
     resp, err := http.Post(BaseUrl + "txs", "application/json", bytes.NewBuffer(txBytes))
     defer resp.Body.Close()
     if err != nil {
@@ -214,6 +214,7 @@ func checkCanInsertRow(cliCtx context.CLIContext, msg UniversalMsg) bool {
         return false
     }
     ac := utils.MakeAccessCode(privKey)
+    BaseUrl := LoadNFTBaseUrl()
     query := fmt.Sprintf("%s/dbchain/can_insert_row/%s/%s/%s/%s", BaseUrl, ac, insertRow.AppCode, insertRow.TableName, rowFieldsJson)
 
     res, err := httpGetRequest(query)
@@ -260,6 +261,7 @@ func getMsgKey(msg UniversalMsg) string {
 
 func getCurrentMinGasPrices(cliCtx context.CLIContext, storeName string) (sdk.DecCoins, error){
     ac := generateAccessToken()
+    BaseUrl := LoadNFTBaseUrl()
     res, err := httpGetRequest(fmt.Sprintf("%s/dbchain/min_gas_prices/%s", BaseUrl, ac))
     if err != nil {
         return nil, err
@@ -321,4 +323,18 @@ func genPostTxBytes(cliCtx context.CLIContext, Fee StdFee, Memo string, msgs []U
     newStdTx := std.NewStdTx(stdMsgs, stdFee, sdkStdSignature, Memo)
     txBytes, err := aminoCdc.MarshalJSON(rest.BroadcastReq{Tx: newStdTx, Mode: "async"})
     return txBytes, err
+}
+
+func LoadNFTBaseUrl()  string {
+    if BASEURL != "" {
+        return BASEURL
+    }
+    BASEURL = viper.GetString(BaseUrlKey)
+    if BASEURL == "" {
+        fmt.Println("serious err : baseurl is null")
+    } else if !strings.HasSuffix(BASEURL, "/") {
+        BASEURL += "/"
+    }
+
+    return BASEURL
 }

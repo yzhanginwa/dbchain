@@ -90,6 +90,7 @@ func oracleSendVerfCode(cliCtx context.CLIContext, storeName string) http.Handle
         vars := mux.Vars(r)
         mobile     := vars["mobile"]
         purpose    := vars["purpose"]
+        nftAppCode := LoadNFTAppCode()
         exist := checkIfDataExistInDatabaseByFindBy(cliCtx, storeName, nftAppCode, nftUserTable, "tel", mobile)
         if purpose == "register"  && exist {
             generalResponse(w, map[string]string{
@@ -241,6 +242,7 @@ func realNameAuthentication(cliCtx context.CLIContext, storeName string) http.Ha
         //TODO check idHash
         //query tel and password
         ac := getOracleAc()
+        nftAppCode := LoadNFTAppCode()
         res, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftRealNameAuthentication, "user_id", userId)
         if err != nil {
            generalResponse(w, map[string]string{

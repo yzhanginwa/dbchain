@@ -10,6 +10,7 @@ import (
 )
 
 func GetAccountInfo(address string) (uint64, uint64, error) {
+    BaseUrl := LoadNFTBaseUrl()
     resp, err := http.Get(fmt.Sprintf("%s/auth/accounts/%s", BaseUrl, address))
     if err != nil {
         fmt.Println("failed to get account info")
@@ -57,6 +58,7 @@ func CheckTxStatus(accessCode, txHash string) (string, error) {
     }
 
     var txState response
+    BaseUrl := LoadNFTBaseUrl()
     resp, err := http.Get(fmt.Sprintf("%s/dbchain/tx-simple-result/%s/%s", BaseUrl, accessCode, txHash))
     if err != nil {
         return "", err

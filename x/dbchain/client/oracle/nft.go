@@ -61,7 +61,7 @@ var priceRex *regexp.Regexp
 var orderSet *nftOrderSet
 var makeOrderCache *cache.MemoryCache
 //var nftAppCode = "3CASSKY7NQ"
-var nftAppCode = ""
+var NFTAppCode = ""
 
 func init() {
 	// order cache
@@ -97,6 +97,7 @@ func nftUserRegister(cliCtx context.CLIContext, storeName string) http.HandlerFu
 		//TODO check if register
 		tel := data["tel"]
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
 		res , _ := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", tel)
 		if len(res) != 0 {
 			generalResponse(w, map[string]string{
@@ -166,6 +167,7 @@ func nftUserRegister(cliCtx context.CLIContext, storeName string) http.HandlerFu
 
 func updateScoreOfInvite(cliCtx context.CLIContext, storeName string, invitationCode, action string, increment int, memo string) error {
 	ac := getOracleAc()
+	nftAppCode := LoadNFTAppCode()
 	//find userId
 	userId, err := findByCoreIds(cliCtx, storeName, ac, nftAppCode, nftUserTable, "my_code", invitationCode)
 	if err != nil || len(userId) == 0 {
@@ -177,6 +179,7 @@ func updateScoreOfInvite(cliCtx context.CLIContext, storeName string, invitation
 func updateScoreCore(cliCtx context.CLIContext, storeName string, userId, action string, increment int, memo string) error {
 	//find user score
 	ac := getOracleAc()
+	nftAppCode := LoadNFTAppCode()
 	score, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftScoreTable, "user_id", userId)
 	if err != nil {
 		return err
@@ -227,6 +230,7 @@ func nftUserLogin(cliCtx context.CLIContext, storeName string) http.HandlerFunc 
 		password := data["password"]
 		//query tel and password
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
 		res, err := findByCore(cliCtx, storeName, ac, nftAppCode, "user", "tel", tel)
 		if err != nil {
 			generalResponse(w, map[string]string{
@@ -327,6 +331,7 @@ func nftUserResetPassword(cliCtx context.CLIContext, storeName string) http.Hand
 		}
 		//query tel and password
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
 		res, err := findByCore(cliCtx, storeName, ac, nftAppCode, "user", "tel", tel)
 		if err != nil {
 			generalResponse(w, map[string]string{
@@ -424,6 +429,7 @@ func nftMakeBefore(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 		}
 		//check if user exist
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
 		res, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", tel)
 		if err != nil {
 			generalResponse(w, map[string]string{
@@ -520,6 +526,7 @@ func nftMakeCore(cliCtx context.CLIContext, storeName string, outTradeNo string)
 		cid := info["cid"]
 
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
 		res, _ := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", tel)
 		id := res["id"]
 		denomCode := genCode(16, cliCtx, storeName, denomTable, "code")
@@ -602,6 +609,7 @@ func nftMakeOld(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		}
 		//find user_id
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
 		res, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", tel)
 		if err != nil {
 			generalResponse(w, map[string]string{
@@ -731,6 +739,7 @@ func nftPublish(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			return
 		}
 		//check if denomId exists
+		nftAppCode := LoadNFTAppCode()
 		if !checkIfDataExistInDatabaseByFindBy(cliCtx, storeName, nftAppCode, nftTable, "denom_id", denomId) {
 			generalResponse(w, map[string]string{
 				ErrInfo : "nft dont exist",
@@ -793,6 +802,7 @@ func nftWithdraw(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		denomId := data["denom_id"]
 		//check if denomId exists
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
 		res, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftPublishTable, "denom_id", denomId)
 		if err != nil {
 			generalResponse(w, map[string]string{
@@ -833,6 +843,7 @@ func nftWithdraw(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		nftAppCode := LoadNFTAppCode()
 		store, err := session.Start(stdCtx.Background(), w, r)
 		ms , _ := store.Get("tel")
 		fmt.Println(ms)
@@ -960,6 +971,7 @@ func nftBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 
 func nftBuyCore( cliCtx context.CLIContext, storeName string, nftId, addr, outTradeNo ,money string) {
 	// nft transfer
+	nftAppCode := LoadNFTAppCode()
 	freezeIds, _ := json.Marshal([]string{nftId})
 	insertValue, _ := json.Marshal(map[string]string {
 		"nft_id" : nftId,
@@ -1037,6 +1049,7 @@ func nftSaveReceipt(cliCtx context.CLIContext, storeName string) http.HandlerFun
 
 		//get owner
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
 		ss := strings.Split(outTradeNo, "_")
 		id := ss[2]
 		queryString := fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, ac, nftAppCode, nftPublishOrder, id)
@@ -1092,6 +1105,7 @@ func nftSaveReceiptInitiative(cliCtx context.CLIContext, storeName string) http.
 
 		//get owner
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
 		ss := strings.Split(outTradeNo, "_")
 		id := ss[2]
 		queryString := fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, ac, nftAppCode, nftPublishOrder, id)
@@ -1175,6 +1189,7 @@ func nftTransfer(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		toAddr := data["to_addr"]
 		//1、check owner
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
 		user, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", tel)
 		if err != nil || len(user) == 0 {
 			generalResponse(w, map[string]string{
@@ -1279,6 +1294,7 @@ func nftEditPersonalInformation(cliCtx context.CLIContext, storeName string) htt
 		})
 
 		owner := loadOracleAddr()
+		nftAppCode := LoadNFTAppCode()
 		msg := types.NewMsgInsertRow(owner, nftAppCode, nftUserInfoTable, fields)
 		if msg.ValidateBasic() != nil {
 			generalResponse(w, map[string]string{
@@ -1333,6 +1349,7 @@ func nftCollect(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 		})
 
 		owner := loadOracleAddr()
+		nftAppCode := LoadNFTAppCode()
 		msg := types.NewMsgInsertRow(owner, nftAppCode, nftCollection, fields)
 		if msg.ValidateBasic() != nil {
 			generalResponse(w, map[string]string{
@@ -1361,6 +1378,8 @@ func nftCancelCollect(cliCtx context.CLIContext, storeName string) http.HandlerF
 			})
 			return
 		}
+
+		nftAppCode := LoadNFTAppCode()
 		denomId := data["denom_id"]
 		userId, ok := verifySession(w, r)
 		if !ok {
@@ -1407,9 +1426,11 @@ func nftCancelCollect(cliCtx context.CLIContext, storeName string) http.HandlerF
 //////////////////////////////////
 //register tel must verify code first, tel which was verified should be cached for register
 func getNftMakerFromOutTradeNum(cliCtx context.CLIContext, storeName, outTradeNumber string) string {
+	nftAppCode := LoadNFTAppCode()
 	tradeInfo := strings.Split(outTradeNumber, "_")
 	orderId := tradeInfo[2]
 	ac := getOracleAc()
+	BaseUrl := LoadNFTBaseUrl()
 	queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftPublishOrder, orderId)
 	orderInfo, err := findRow(cliCtx, queryString)
 	if err != nil {
@@ -1496,6 +1517,7 @@ func genUserAddress() string {
 }
 
 func genCode(length int, cliCtx context.CLIContext, storeName ,tableName , field string) string {
+	nftAppCode := LoadNFTAppCode()
 	for i := 0; i < 10; i++{
 		code := make([]byte, length)
 		rand.Read(code)
@@ -1530,6 +1552,8 @@ func loadOracleAddr() sdk.AccAddress {
 
 func uploadFileToIpfs(file io.Reader, fileName string) (string, error) {
 	ac := getOracleAc()
+	nftAppCode := LoadNFTAppCode()
+	BaseUrl := LoadNFTBaseUrl()
 	url := fmt.Sprintf("%s/upload/%s/%s", BaseUrl, ac, nftAppCode)
 	return postFile(file, fileName, url)
 }
@@ -1615,6 +1639,7 @@ func loadNftOraclePkAndAddr() (crypto.PrivKey, sdk.AccAddress, error) {
 func checkIfSellOut(cliCtx context.CLIContext, storeName , nftId string) (string, bool){
 	// the last nft was sold, it should be withdraw
 	ac := getOracleAc()
+	nftAppCode := LoadNFTAppCode()
 	queryString := fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, ac, nftAppCode, nftTable, nftId)
 	nft, err := oracleQueryUserTable(cliCtx, queryString)
 	if err != nil || nft == nil {
@@ -1634,6 +1659,7 @@ func checkIfSellOut(cliCtx context.CLIContext, storeName , nftId string) (string
 
 func withdrawSoldOut(cliCtx context.CLIContext, storeName, denomId string) {
 	ac := getOracleAc()
+	nftAppCode := LoadNFTAppCode()
 	res, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftPublishTable, "denom_id", denomId)
 	if err != nil || len(res) == 0{
 		return
@@ -1699,14 +1725,13 @@ func verifyAlipay(outTradeNo string) (string, string){
 	return totalAmount, tradeNo
 }
 
-func LoadNFTConfig() {
-	//get appcode
-	appCode := viper.GetString(nftAppCodeKey)
-	if appCode != "" {
-		nftAppCode = appCode
+func LoadNFTAppCode() string {
+	if NFTAppCode != "" {
+		return NFTAppCode
 	}
-	baseUrl := viper.GetString(oracle.BaseUrlKey)
-	if baseUrl != "" {
-		oracle.BaseUrl = baseUrl
+	NFTAppCode = viper.GetString(nftAppCodeKey)
+	if NFTAppCode == "" {
+		fmt.Println("serious err : NFTAppCode is null")
 	}
+	return NFTAppCode
 }

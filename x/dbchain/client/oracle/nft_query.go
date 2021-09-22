@@ -22,11 +22,19 @@ const (
 	ErrInfo = "err_info"
 	Result = "result"
 )
-var BaseUrl = oracle.BaseUrl + "dbchain/"
+var BASEURL string
 
+func LoadNFTBaseUrl() string {
+	if BASEURL != "" {
+		return BASEURL
+	}
+	BASEURL = oracle.LoadNFTBaseUrl() + "dbchain/"
+	return BASEURL
+}
 
 func CanEditPersonalInfo(cliCtx context.CLIContext, storeName string, tel string) (string,bool) {
 	ac := getOracleAc()
+	nftAppCode := LoadNFTAppCode()
 	userId, err := findByCoreIds(cliCtx, storeName, ac, nftAppCode, nftUserTable, "tel", tel)
 	if err != nil || len(userId) == 0{
 		return "",false
@@ -46,6 +54,8 @@ func nftFindById(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		ac := getOracleAc()
+		BaseUrl := LoadNFTBaseUrl()
+		nftAppCode := LoadNFTAppCode()
 		requestUrl := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl,ac, nftAppCode,vars["name"], vars["id"])
 		res, err := httpGetRequest(requestUrl)
 		if err != nil {
@@ -61,6 +71,8 @@ func nftFindByField(cliCtx context.CLIContext, storeName string) http.HandlerFun
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		ac := getOracleAc()
+		BaseUrl := LoadNFTBaseUrl()
+		nftAppCode := LoadNFTAppCode()
 		requestUrl := fmt.Sprintf("%s/find_by/%s/%s/%s/%s/%s", BaseUrl,ac, nftAppCode,vars["name"], vars["field"], vars["value"])
 		res, err := httpGetRequest(requestUrl)
 		if err != nil {
@@ -76,6 +88,8 @@ func nftFindAll(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
+		BaseUrl := LoadNFTBaseUrl()
 		requestUrl := fmt.Sprintf("%s/find_all/%s/%s/%s", BaseUrl,ac, nftAppCode,vars["name"])
 		res, err := httpGetRequest(requestUrl)
 		if err != nil {
@@ -91,6 +105,8 @@ func nftFindByQuerier(cliCtx context.CLIContext, storeName string) http.HandlerF
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
+		BaseUrl := LoadNFTBaseUrl()
 		requestUrl := fmt.Sprintf("%s/querier/%s/%s/%s", BaseUrl,ac, nftAppCode,vars["querierBase58"])
 		res, err := httpGetRequest(requestUrl)
 		if err != nil {
@@ -120,6 +136,8 @@ func nftFindPopularAuthor(cliCtx context.CLIContext, storeName string) http.Hand
 		baseQueryString := base58.Encode([]byte(queryString))
 
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
+		BaseUrl := LoadNFTBaseUrl()
 		requestUrl := fmt.Sprintf("%s/querier/%s/%s/%s", BaseUrl,ac, nftAppCode,baseQueryString)
 		res, err := httpGetRequest(requestUrl)
 		if err != nil {
@@ -253,6 +271,8 @@ func nftFindLastestNft(cliCtx context.CLIContext, storeName string) http.Handler
 		}
 
 		nfts := make([]map[string]string, 0)
+		nftAppCode := LoadNFTAppCode()
+		BaseUrl := LoadNFTBaseUrl()
 		for _, validId := range validIds {
 			id  := validId["id"]
 			ac := getOracleAc()
@@ -287,6 +307,8 @@ func nftFindNftDetails(cliCtx context.CLIContext, storeName string) http.Handler
 		vars := mux.Vars(r)
 		denomId := vars["denom_id"]
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
+		BaseUrl := LoadNFTBaseUrl()
 		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, denomTable, denomId)
 		ntfInfo, err := findRow(cliCtx, queryString)
 		if err != nil || ntfInfo == nil {
@@ -364,6 +386,8 @@ func nftUserInfo(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 			return
 		}
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
+		BaseUrl := LoadNFTBaseUrl()
 		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftUserTable, userId)
 		res, err := findRow(cliCtx, queryString)
 		if err != nil || res == nil{
@@ -427,6 +451,8 @@ func nftOfUserBasicInfo(cliCtx context.CLIContext, storeName string) http.Handle
 		vars := mux.Vars(r)
 		userId := vars["user_id"]
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
+		BaseUrl := LoadNFTBaseUrl()
 		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftUserTable, userId)
 		res, err := findRow(cliCtx, queryString)
 		if err != nil || res == nil{
@@ -464,6 +490,8 @@ func nftUserIncome(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 		vars := mux.Vars(r)
 		userId := vars["user_id"]
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
+		BaseUrl := LoadNFTBaseUrl()
 		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftUserTable, userId)
 		userInfo, err := findRow(cliCtx, queryString)
 		if err != nil || userInfo == nil{
@@ -528,6 +556,8 @@ func nftUserIncomeByTime(cliCtx context.CLIContext, storeName string) http.Handl
 
 
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
+		BaseUrl := LoadNFTBaseUrl()
 		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftUserTable, userId)
 		userInfo, err := findRow(cliCtx, queryString)
 		if err != nil || userInfo == nil{
@@ -589,6 +619,8 @@ func nftUserCollectInfo(cliCtx context.CLIContext, storeName string) http.Handle
 		}
 
 		result := make([]map[string]string, 0)
+		nftAppCode := LoadNFTAppCode()
+		BaseUrl := LoadNFTBaseUrl()
 		for _, collect := range collects {
 			denomId := collect["denom_id"]
 			ac := getOracleAc()
@@ -623,6 +655,8 @@ func nftUserAllTokenRecord(cliCtx context.CLIContext, storeName string) http.Han
 		baseQueryString := base58.Encode([]byte(queryString))
 
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
+		BaseUrl := LoadNFTBaseUrl()
 		requestUrl := fmt.Sprintf("%s/querier/%s/%s/%s", BaseUrl,ac, nftAppCode,baseQueryString)
 		res, err := httpGetRequest(requestUrl)
 		if err != nil {
@@ -656,6 +690,8 @@ func nftUserInvitationRecord(cliCtx context.CLIContext, storeName string) http.H
 			return
 		}
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
+		BaseUrl := LoadNFTBaseUrl()
 		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftUserTable, userId)
 		userInfo, err := findRow(cliCtx, queryString)
 		if err != nil || userInfo == nil {
@@ -699,6 +735,8 @@ func nftUserNftOrderNumber(cliCtx context.CLIContext, storeName string) http.Han
 		}
 
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
+		BaseUrl := LoadNFTBaseUrl()
 		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftUserTable, userId)
 		userInfo, err :=  findRow(cliCtx, queryString)
 		if err != nil || len(userInfo) == 0 {
@@ -742,6 +780,7 @@ func nftUserNftNumber(cliCtx context.CLIContext, storeName string) http.HandlerF
 		userId := vars["user_id"]
 
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
 		denomIds, err := findByCoreIds(cliCtx, storeName, ac, nftAppCode, denomTable, "user_id", userId)
 		if err != nil {
 			generalResponse(w, map[string]string{
@@ -782,6 +821,7 @@ func nftsOfUserMake(cliCtx context.CLIContext, storeName string) http.HandlerFun
 			}
 		}
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
 		denoms, err := findByAll(cliCtx, storeName, ac, nftAppCode, denomTable, "user_id", userid)
 		if err != nil {
 			generalResponse(w, map[string]string{
@@ -831,6 +871,8 @@ func nftsOfUserBuy(cliCtx context.CLIContext, storeName string) http.HandlerFunc
 			return
 		}
 		ac := getOracleAc()
+		nftAppCode := LoadNFTAppCode()
+		BaseUrl := LoadNFTBaseUrl()
 		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftUserTable, userId)
 		res, err := findRow(cliCtx, queryString)
 		if err != nil || res == nil {
@@ -908,6 +950,8 @@ func userProductionPermission(userId string) bool {
 
 func findAuthorInfoByNftId(cliCtx context.CLIContext, storeName, nftId string) map[string]string {
 	ac := getOracleAc()
+	nftAppCode := LoadNFTAppCode()
+	BaseUrl := LoadNFTBaseUrl()
 	queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftTable, nftId)
 	nftInfo, err := findRow(cliCtx, queryString)
 	if err != nil {
@@ -919,6 +963,8 @@ func findAuthorInfoByNftId(cliCtx context.CLIContext, storeName, nftId string) m
 
 func findAuthorInfoFromDenomId(cliCtx context.CLIContext, storeName, denomId string) map[string]string{
 	ac := getOracleAc()
+	nftAppCode := LoadNFTAppCode()
+	BaseUrl := LoadNFTBaseUrl()
 	queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, denomTable, denomId)
 	denomInfo, err := findRow(cliCtx, queryString)
 	if err != nil {
@@ -952,6 +998,7 @@ func findByAll(cliCtx context.CLIContext, storeName, ac, appcode, tableName, fie
 		return nil, err
 	}
 	result := make([]map[string]string, 0)
+	BaseUrl := LoadNFTBaseUrl()
 	for _, id := range out {
 		queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, appcode, tableName, id)
 		res, err := findRow(cliCtx, queryString)
@@ -973,11 +1020,13 @@ func findByCore(cliCtx context.CLIContext, storeName, ac, appcode, tableName, fi
 		return nil, nil
 	}
 	id := out[len(out) - 1]
+	BaseUrl := LoadNFTBaseUrl()
 	queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, appcode, tableName, id)
 	return findRow(cliCtx, queryString)
 }
 
 func findByCoreIds(cliCtx context.CLIContext, storeName, ac, appcode, tableName, fieldName, value string ) (types.QuerySliceOfString, error) {
+	BaseUrl := LoadNFTBaseUrl()
 	requestUrl := fmt.Sprintf("%s/find_by/%s/%s/%s/%s/%s", BaseUrl, ac, appcode, tableName, fieldName, value)
 	res, err := httpGetRequest(requestUrl)
 	if err != nil {
@@ -1015,6 +1064,8 @@ func findRow(cliCtx context.CLIContext, query string) (map[string]string, error)
 func queryByQuerier(queryString string) []map[string]string {
 	baseQueryString := base58.Encode([]byte(queryString))
 	ac := getOracleAc()
+	nftAppCode := LoadNFTAppCode()
+	BaseUrl := LoadNFTBaseUrl()
 	requestUrl := fmt.Sprintf("%s/querier/%s/%s/%s", BaseUrl,ac, nftAppCode,baseQueryString)
 	res, err := httpGetRequest(requestUrl)
 	if err != nil {
@@ -1036,7 +1087,8 @@ func queryByQuerier(queryString string) []map[string]string {
 
 func findNftInfoByNftId(cliCtx context.CLIContext, storeName, nftId string) (map[string]string, error) {
 	ac := getOracleAc()
-
+	nftAppCode := LoadNFTAppCode()
+	BaseUrl := LoadNFTBaseUrl()
 	queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftTable, nftId)
 	nftInfo, err := findRow(cliCtx, queryString)
 	if err !=nil || nftInfo == nil {

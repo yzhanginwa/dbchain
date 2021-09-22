@@ -61,7 +61,6 @@ func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router
     if ctx.HomeDir == os.ExpandEnv(CLIHome){
         rest.RegisterRoutes(ctx, rtr, StoreKey)
     }else{
-        oracle.LoadNFTConfig()
         oracle.RegisterRoutes(ctx, rtr, StoreKey)
     }
 }
