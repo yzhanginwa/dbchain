@@ -251,7 +251,7 @@ func nftFindLastestNft(cliCtx context.CLIContext, storeName string) http.Handler
 			return
 		}
 
-		queryString := `[{"method":"table","table":"nft_publish"},{"method":"select","fields":"id"}]`
+		queryString := `[{"method":"table","table":"nft_publish"},{"method":"select","fields":"id,created_at"}]`
 		ids := queryByQuerier(queryString)
 		if len(ids) == 0 {
 			generalResponse(w, map[string]string{
@@ -294,6 +294,7 @@ func nftFindLastestNft(cliCtx context.CLIContext, storeName string) http.Handler
 			ntfInfo["avatar"] = userInfo["avatar"]
 			ntfInfo["nickname"] = userInfo["nickname"]
 			ntfInfo["price"] = publishInfo["price"]
+			ntfInfo["published_at"] = validId["created_at"]
 			nfts = append(nfts, ntfInfo)
 		}
 
@@ -340,8 +341,10 @@ func nftFindNftDetails(cliCtx context.CLIContext, storeName string) http.Handler
 
 		if len(publishInfo) != 0 {
 			ntfInfo["publish"] = "true"
+			ntfInfo["published_at"] = publishInfo["created_at"]
 		} else {
 			ntfInfo["publish"] = "false"
+			ntfInfo["published_at"] = ""
 		}
 
 		ntfInfo["price"] = publishInfo["price"]
