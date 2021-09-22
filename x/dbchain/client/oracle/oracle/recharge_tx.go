@@ -74,7 +74,8 @@ func BuildAndSignBroadcastTxWithoutResult(cliCtx context.CLIContext, batch []Uni
 //       2: tx success
 //       3: tx fail
 func checkTxStatus(txHash string ) (int, string){
-	resp, err := http.Get(fmt.Sprintf("http://localhost:1317/txs/%s", txHash))
+	baseUrl := LoadNFTBaseUrl()
+	resp, err := http.Get(fmt.Sprintf("%stxs/%s", baseUrl ,txHash))
 	defer resp.Body.Close()
 	if err != nil {
 		return Undefined, err.Error()
