@@ -7,6 +7,9 @@ require (
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
 	github.com/dbchaincloud/cosmos-sdk v0.39.2-0.20210810072955-60a881428de1
 	github.com/dbchaincloud/tendermint v0.33.8-0.20210806024904-539c9974ac15
+	//github.com/alexedwards/scs/v2 v2.4.0
+	github.com/go-session/session v1.0.2-0.20210731003437-77451f66169e
+	github.com/google/uuid v1.1.2
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
 	github.com/ipfs/go-cid v0.0.1
@@ -22,6 +25,4 @@ require (
 	github.com/tendermint/go-amino v0.15.1
 	github.com/tendermint/tm-db v0.5.1
 	github.com/yuin/gopher-lua v0.0.0-20200816102855-ee81675732da
-	//github.com/alexedwards/scs/v2 v2.4.0
-	github.com/go-session/session v1.0.2-0.20210731003437-77451f66169e
 )

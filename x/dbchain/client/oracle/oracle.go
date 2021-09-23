@@ -2,11 +2,16 @@ package oracle
 
 import (
     "crypto/sha256"
+    "encoding/base64"
     "encoding/hex"
     "fmt"
+    "github.com/google/uuid"
     "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/cache"
     oerr "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/error"
     core "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/core"
+    "net/url"
+    "strings"
+
     //"strconv"
     "time"
     "errors"
@@ -48,15 +53,28 @@ type CorpInfo struct {
     CreditCode string `json:"credit_code"`
 }
 
-const AliyunSmsKey    = "aliyun-sms-key"
-const AliyunSmsSecret = "aliyun-sms-secret"
-const AliyunSkyEyeAppCode = "aliyun-sky-eye-appcode"
+
+const (
+    AliyunSmsKey    = "aliyun-sms-key"
+    AliyunSmsSecret = "aliyun-sms-secret"
+    AliyunSkyEyeAppCode = "aliyun-sky-eye-appcode"
+    //huawei sms
+    HuaweiSmsKey    = "huawei-sms-key"
+    HuaweiSmsSecret = "huawei-sms-secret"
+    HuaweiSmsTemplateId = "huawei-sms-template-id"
+    HuaweiSmsFrom = "huawei-sms-from"
+)
 
 var (
     associationMap = make(map[string]MobileVerfCode)
     aliyunSmsKey string
     aliyunSmsSecret string
     verifyTelCache *cache.MemoryCache
+    //huawei sms
+    huaweiSmsKey string
+    huaweiSmsSecret string
+    huaweiSmsTemplateId string
+    huaweiSmsFrom string
 )
 
 func init () {
@@ -108,7 +126,7 @@ func oracleSendVerfCode(cliCtx context.CLIContext, storeName string) http.Handle
         }
         verificationCode := utils.GenerateVerfCode(6)
         cacheMobileAndVerificationCode(mobile, mobile, verificationCode)
-        if sent := sendVerificationCode(mobile, verificationCode); !sent {
+        if sent := sendVerificationCodeByHuawei(mobile, verificationCode); !sent {
             generalResponse(w, map[string]string{
                 ErrInfo : "Failed to send sms",
                 ErrCode : oerr.UndefinedErrCode,
@@ -316,6 +334,14 @@ func LoadAliyunSmsKeyAndSecret() (string, string) {
     return key, secret
 }
 
+func loadHuaweiSmsData() (string, string, string, string) {
+    key := viper.GetString(HuaweiSmsKey)
+    secret := viper.GetString(HuaweiSmsSecret)
+    templateId := viper.GetString(HuaweiSmsTemplateId)
+    from := viper.GetString(HuaweiSmsFrom)
+    return key, secret, templateId, from
+}
+
 func cacheMobileAndVerificationCode(strAddr string, mobile string, verificationCode string) bool {
     mobileVerfCode := MobileVerfCode {
         Mobile: mobile,
@@ -352,6 +378,51 @@ func sendVerificationCode(mobile string, verificationCode string) bool {
     //TODO: use logger
     fmt.Printf("response is %#v\n", response)
     return true
+}
+
+func sendVerificationCodeByHuawei(mobile string, verificationCode string) bool {
+    signature := "一元"
+    if huaweiSmsKey == "" {
+        huaweiSmsKey, huaweiSmsSecret, huaweiSmsTemplateId, huaweiSmsFrom = loadHuaweiSmsData()
+    }
+    p := url.Values{}
+    p.Add("from", huaweiSmsFrom)
+    p.Add("to", "+86" + mobile)
+    p.Add("templateId", huaweiSmsTemplateId)
+    p.Add("templateParas", fmt.Sprintf("[\"%s\"]", verificationCode))
+    p.Add("signature", signature)
+
+    realUrl := `https://rtcsms.cn-north-1.myhuaweicloud.com:10743/sms/batchSendSms/v1`
+    req, _ := http.NewRequest("POST", realUrl, strings.NewReader(p.Encode()))
+    req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+    req.Header.Add("Authorization", `WSSE realm="SDP",profile="UsernameToken",type="Appkey"`)
+    req.Header.Add("X-WSSE", buildWsseHeader())
+
+    cli := http.Client{}
+    response, err := cli.Do(req)
+    if err != nil {
+        fmt.Println(err)
+        return false
+    }
+    //TODO: use logger
+    defer  response.Body.Close()
+    fmt.Printf("response is %#v\n", response)
+    return true
+}
+
+func buildWsseHeader() string {
+    appKey := `fgt467LJve698C3kZPdIp45gM3hn` //APP_Key
+    appSecret := `pOE27V86TPgt68M7puOZs0w1Oh5F` //APP_Secret
+    t := time.Now()
+    timeStr := t.Format("2006-01-02T15:04:05Z")
+    uu := uuid.New().String()
+    nonce := strings.Replace(uu,"-","", -1)
+    hashData := sha256.Sum256([]byte(nonce + timeStr + appSecret))
+    digestBase64 := base64.StdEncoding.EncodeToString(hashData[:])
+
+    wss :=  fmt.Sprintf("UsernameToken Username=\"%s\",PasswordDigest=\"%s\",Nonce=\"%s\",Created=\"%s\"", appKey, digestBase64, nonce, timeStr)
+    fmt.Println(wss)
+    return wss
 }
 
 func VerifyVerfCode(strAddr string , mobile string, verificationCode string) bool {
