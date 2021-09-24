@@ -851,6 +851,13 @@ func nftsOfUserMake(cliCtx context.CLIContext, storeName string) http.HandlerFun
 				}
 			}
 			denom["price"] = publish["price"]
+			remindNfts, _ := findByCoreIds(cliCtx, storeName, getOracleAc(), nftAppCode, nftTable, "denom_id", denomId)
+			if len(remindNfts) == 0 {
+				denom["sell_out"] = "true"
+			} else {
+				denom["sell_out"] = "false"
+			}
+
 			result = append(result, denom)
 
 		}
