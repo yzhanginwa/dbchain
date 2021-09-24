@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -173,16 +174,24 @@ func nftFindPopularAuthor(cliCtx context.CLIContext, storeName string) http.Hand
 			if _, ok := numAndUser[num]; !ok {
 				numAndUser[num] = user
 				nums = append(nums, num)
+			} else {
+				oldUser := numAndUser[num]
+				newUser := oldUser + "_" + user
+				numAndUser[num] = newUser
 			}
 		}
 		sort.Ints(nums)
-		popularAuthor := make([]string, 0)
-		if len(nums) > inumber {
-			nums = nums[len(nums) - inumber : ]
+		allAuthors := make([]string, 0)
+		for _, num := range nums {
+			userUnion := numAndUser[num]
+			users := strings.Split(userUnion, "_")
+			allAuthors = append(allAuthors, users...)
 		}
-		for i := len(nums) - 1; i >= 0; i-- {
-			num := nums[i]
-			popularAuthor = append(popularAuthor, numAndUser[num])
+		popularAuthor := make([]string, 0)
+		if len(allAuthors) > inumber {
+			popularAuthor = allAuthors[len(allAuthors) - inumber : ]
+		} else {
+			popularAuthor = allAuthors
 		}
 
 		//query popular
