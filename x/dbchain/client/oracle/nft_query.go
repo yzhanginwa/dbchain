@@ -254,10 +254,7 @@ func nftFindLastestNft(cliCtx context.CLIContext, storeName string) http.Handler
 		queryString := `[{"method":"table","table":"nft_publish"},{"method":"select","fields":"id,created_at"}]`
 		ids := queryByQuerier(queryString)
 		if len(ids) == 0 {
-			generalResponse(w, map[string]string{
-				ErrInfo : oerr.ErrDescription[oerr.UndefinedErrCode],
-				ErrCode : oerr.UndefinedErrCode,
-			})
+			successDataResponse(w, make([]map[string]string, 0))
 			return
 		}
 		var validIds []map[string]string
