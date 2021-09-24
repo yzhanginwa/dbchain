@@ -987,7 +987,7 @@ func nftBuyCore( cliCtx context.CLIContext, storeName string, nftId, addr, outTr
 		return
 	}
 	//update token for seller and buyer
-	sellerInfo := findAuthorInfoByNftId(cliCtx, storeName, nftId)
+	sellId := findAuthorIdByNftId(cliCtx, storeName, nftId)
 	ac := getOracleAc()
 	buyerInfo, err := findByCore(cliCtx, storeName, ac, nftAppCode, nftUserTable, "address", addr)
 	if err != nil {
@@ -996,7 +996,7 @@ func nftBuyCore( cliCtx context.CLIContext, storeName string, nftId, addr, outTr
 	}
 	imoney, _ := strconv.ParseFloat(money, 32)
 	if int(imoney) != 0 {
-		updateScoreCore(cliCtx, storeName, sellerInfo["user_id"], "+", int(imoney), "sell")
+		updateScoreCore(cliCtx, storeName, sellId, "+", int(imoney), "sell")
 		updateScoreCore(cliCtx, storeName, buyerInfo["id"], "+", int(imoney), "buy")
 	}
 

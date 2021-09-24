@@ -968,6 +968,23 @@ func findAuthorInfoByNftId(cliCtx context.CLIContext, storeName, nftId string) m
 	return userInfo
 }
 
+func findAuthorIdByNftId(cliCtx context.CLIContext, storeName, nftId string) string {
+	ac := getOracleAc()
+	nftAppCode := LoadNFTAppCode()
+	BaseUrl := LoadNFTBaseUrl()
+	queryString := fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, nftTable, nftId)
+	nftInfo, err := findRow(cliCtx, queryString)
+	if err != nil {
+		return ""
+	}
+	queryString = fmt.Sprintf("%s/find/%s/%s/%s/%s", BaseUrl, ac, nftAppCode, denomTable, nftInfo["denom_id"])
+	denomInfo, err := findRow(cliCtx, queryString)
+	if err != nil {
+		return ""
+	}
+	return denomInfo["user_id"]
+}
+
 func findAuthorInfoFromDenomId(cliCtx context.CLIContext, storeName, denomId string) map[string]string{
 	ac := getOracleAc()
 	nftAppCode := LoadNFTAppCode()
