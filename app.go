@@ -2,11 +2,16 @@ package app
 
 import (
     "encoding/json"
+    "errors"
+    "fmt"
+    sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
     "os"
+    "reflect"
+    "unsafe"
 
     abci "github.com/tendermint/tendermint/abci/types"
-    tmos "github.com/tendermint/tendermint/libs/os"
     "github.com/tendermint/tendermint/libs/log"
+    tmos "github.com/tendermint/tendermint/libs/os"
     tmtypes "github.com/tendermint/tendermint/types"
     dbm "github.com/tendermint/tm-db"
 
@@ -32,6 +37,9 @@ const (
 	OracleHome  = dbchain.OracleHome
 	CLIHome     = dbchain.CLIHome
 	NodeHome    = dbchain.NodeHome
+	dailyHeight = 17280
+	days        = 365
+	ValidBlockHeight = dailyHeight * days
 )
 
 var (
@@ -310,4 +318,53 @@ func (app *dbChainApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhite
     validators = staking.WriteValidators(ctx, app.stakingKeeper)
 
     return appState, validators, nil
+}
+
+func (app *dbChainApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
+    resp :=  app.BaseApp.CheckTx(req)
+    if ValidBlockHeight <= 0 {
+        return  resp
+    }
+    var ctx sdk.Context
+    baseApp := reflect.ValueOf(app.BaseApp).Elem()
+    for i := 0; i < baseApp.NumField(); i++ {
+        if baseApp.Type().Field(i).Name == "checkState" {
+            p := baseApp.Field(i).Pointer()
+            np := (*state)(unsafe.Pointer(p))
+            ctx = np.Context()
+            break
+        }
+    }
+
+    if ctx.IsZero() {
+        return resp
+    }
+
+    current := ctx.BlockHeader().Height
+    if current > ValidBlockHeight {
+        err := errors.New(fmt.Sprintf("current block height is %d", current))
+        ctx.Logger().Debug(err.Error())
+        return sdkerrors.ResponseCheckTx(err, uint64(resp.GasWanted), uint64(resp.GasUsed), false)
+    }
+    return resp
+}
+
+
+///////////////////////////
+//                       //
+//     help struct       //
+//                       //
+///////////////////////////
+
+type state struct {
+    ms  sdk.CacheMultiStore
+    ctx sdk.Context
+}
+
+func (st *state) CacheMultiStore() sdk.CacheMultiStore {
+    return st.ms.CacheMultiStore()
+}
+
+func (st *state) Context() sdk.Context {
+    return st.ctx
 }
