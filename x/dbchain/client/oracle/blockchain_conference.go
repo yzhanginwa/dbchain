@@ -38,22 +38,31 @@ const (
 )
 var cap *captcha.Captcha
 
-func init() {
+func loadCap() error {
 	OracleHome := "$HOME/.dbchainoracle"
 	DefaultOracleHome := os.ExpandEnv(OracleHome)
 	cap = captcha.New()
 	if err := cap.SetFont(DefaultOracleHome + "/config/comic.ttf"); err != nil {
-		panic(err.Error())
+		fmt.Println(err.Error())
+		return err
 	}
 	cap.SetSize(128, 64)
 	cap.SetDisturbance(captcha.NORMAL)
 	cap.SetFrontColor(color.RGBA{255, 255, 255, 255})
 	cap.SetBkgColor(color.RGBA{255, 0, 0, 255}, color.RGBA{0, 0, 255, 255}, color.RGBA{0, 153, 0, 255})
+	return nil
 }
 
 func oracleSendPictureVerifyCode(cliCtx context.CLIContext) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		if cap == nil {
+			err := loadCap()
+			if err != nil {
+				successResponse(w, nil)
+				return
+			}
+		}
 		img, str := cap.Create(4, captcha.UPPER)
 		buf := make([]byte,0 )
 		write := bytes.NewBuffer(buf)

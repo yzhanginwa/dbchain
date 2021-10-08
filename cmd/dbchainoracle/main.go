@@ -1,6 +1,7 @@
 package main
 
 import (
+    "fmt"
     "github.com/tendermint/go-amino"
     "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle"
     "os"
@@ -21,6 +22,7 @@ import (
 func main() {
     cobra.EnableCommandSorting = false
 
+    checkComicFile()
     cdc := app.MakeCodec()
 
     // Read in the configuration file for the sdk
@@ -98,4 +100,14 @@ func queryCmd(cdc *amino.Codec) *cobra.Command {
     )
 
     return queryCmd
+}
+
+func checkComicFile() {
+    OracleHome := "$HOME/.dbchainoracle"
+    DefaultOracleHome := os.ExpandEnv(OracleHome)
+    filePath := DefaultOracleHome + "/config/comic.ttf"
+    _, err := os.Stat(filePath)
+    if os.IsNotExist(err) {
+        fmt.Println(filePath + " not exit!!!")
+    }
 }
