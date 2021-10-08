@@ -50,7 +50,6 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/oracle/user/destroy", storeName), userDestoryCode(cliCtx)).Methods("POST")
 
     //world blockchain registration conference
-    r.HandleFunc(fmt.Sprintf("/%s/oracle/conference/get_verify_picture", storeName), oracleSendPictureVerifyCode(cliCtx)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/conference/register/personal/{%s}/{%s}/{%s}/{%s}/{%s}/{%s}/{%s}", storeName, "app_type", "wechat_id","name", "mobile", "verify_code", "ui_cardid_type","ui_cardid"), oracleConferencePersonalRegister(cliCtx)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/conference/register/company/{%s}/{%s}/{%s}/{%s}/{%s}/{%s}/{%s}/{%s}", storeName, "app_type", "wechat_id","company_name", "responsible","position","mobile", "inviter","verify_code"), oracleConferenceCorporateRegister(cliCtx)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/conference/registration_status_query/{%s}", storeName,"params"), showConferenceRegistrationStatus(cliCtx)).Methods("GET")

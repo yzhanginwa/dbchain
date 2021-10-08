@@ -3,11 +3,9 @@ package oracle
 import (
 	"bytes"
 	"crypto/rand"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/afocus/captcha"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
@@ -15,13 +13,10 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
-	"image/color"
-	"image/png"
 	"io/ioutil"
 	"math/big"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 )
@@ -36,37 +31,7 @@ const (
 	conferenceCompanyRegister = "conference_company_register"
 	euCodeOfPersonalRegister = "eucode_of_personal_register"
 )
-var cap *captcha.Captcha
 
-func init() {
-	OracleHome := "$HOME/.dbchainoracle"
-	DefaultOracleHome := os.ExpandEnv(OracleHome)
-	cap = captcha.New()
-	if err := cap.SetFont(DefaultOracleHome + "/config/comic.ttf"); err != nil {
-		panic(err.Error())
-	}
-	cap.SetSize(128, 64)
-	cap.SetDisturbance(captcha.NORMAL)
-	cap.SetFrontColor(color.RGBA{255, 255, 255, 255})
-	cap.SetBkgColor(color.RGBA{255, 0, 0, 255}, color.RGBA{0, 0, 255, 255}, color.RGBA{0, 153, 0, 255})
-}
-
-func oracleSendPictureVerifyCode(cliCtx context.CLIContext) http.HandlerFunc{
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		img, str := cap.Create(4, captcha.UPPER)
-		buf := make([]byte,0 )
-		write := bytes.NewBuffer(buf)
-		png.Encode(write, img)
-		baseStr := base64.StdEncoding.EncodeToString(write.Bytes())
-		cacheMobileAndVerificationCode(str, str, str)
-		result := map[string]string {
-			"picture" : baseStr,
-		}
-		re,_ := json.Marshal(result)
-		successResponse(w,re)
-	}
-}
 
 func oracleConferencePersonalRegister(cliCtx context.CLIContext) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
