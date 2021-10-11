@@ -1,6 +1,7 @@
 package types
 
 import (
+    "encoding/base64"
     sdk "github.com/cosmos/cosmos-sdk/types"
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -24,7 +25,7 @@ func NewMsgCreateApplication(owner sdk.AccAddress, name string, description stri
     return MsgCreateApplication {
         Owner: owner,
         Name: name,
-        Description: description,
+        Description: base64.StdEncoding.EncodeToString([]byte(description)),
         PermissionRequired: permissionRequired,
     }
 }

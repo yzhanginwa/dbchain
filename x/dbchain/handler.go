@@ -1,6 +1,7 @@
 package dbchain
 
 import (
+    "encoding/base64"
     "fmt"
     "strings"
     "bytes"
@@ -132,8 +133,13 @@ func handleMsgCreateApplication(ctx sdk.Context, keeper Keeper, msg MsgCreateApp
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 2 apps allowed")
         }
     }
+    bz, err := base64.StdEncoding.DecodeString(msg.Description)
+    if err != nil {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+        }
+    msg.Description = string(bz)
     // We use the term database for internal use. To outside we use application to make users understand easily
-    err := keeper.CreateDatabase(ctx, msg.Owner, msg.Name, msg.Description, msg.PermissionRequired, false)
+    err = keeper.CreateDatabase(ctx, msg.Owner, msg.Name, msg.Description, msg.PermissionRequired, false)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
     }
@@ -226,6 +232,17 @@ func handleMsgAddFunction(ctx sdk.Context, keeper Keeper, msg MsgAddFunction) (*
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 30 tables allowed")
         }
     }
+    bz , err := base64.StdEncoding.DecodeString(msg.Description)
+    if err != nil {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+    }
+    msg.Description = string(bz)
+    bz , err = base64.StdEncoding.DecodeString(msg.Body)
+    if err != nil {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+    }
+    msg.Body = string(bz)
+
     //TODO Does it need to be checked that if the function has been added
     err = keeper.AddFunction(ctx, appId, msg.FunctionName, msg.Description, msg.Body, msg.Owner, 0)
     if err != nil{
@@ -280,6 +297,16 @@ func handleMsgAddCustomQuerier(ctx sdk.Context, keeper Keeper, msg MsgAddCustomQ
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "No more than 30 tables allowed")
         }
     }
+    bz , err := base64.StdEncoding.DecodeString(msg.Description)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+    }
+    msg.Description = string(bz)
+    bz , err = base64.StdEncoding.DecodeString(msg.Body)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+    }
+    msg.Body = string(bz)
     //TODO Does it need to be checked that if the function has been added
     err = keeper.AddFunction(ctx, appId, msg.QuerierName, msg.Description, msg.Body, msg.Owner, 1)
     if err != nil{
@@ -484,6 +511,12 @@ func handleMsgAddInsertFilter(ctx sdk.Context, keeper Keeper, msg MsgAddInsertFi
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name does not exist!")
     }
 
+    bz ,err := base64.StdEncoding.DecodeString(msg.Filter)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+    }
+    msg.Filter = string(bz)
+
     if !keeper.AddInsertFilter(ctx, appId, msg.Owner, msg.TableName, msg.Filter) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid filter")
     }
@@ -524,6 +557,12 @@ func handleMsgAddTrigger(ctx sdk.Context, keeper Keeper, msg MsgAddTrigger) (*sd
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name does not exist!")
     }
 
+    bz, err := base64.StdEncoding.DecodeString(msg.Trigger)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+    }
+    msg.Trigger = string(bz)
+
     if !keeper.AddTrigger(ctx, appId, msg.Owner, msg.TableName, msg.Trigger) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid trigger")
     }
@@ -563,6 +602,12 @@ func handleMsgSetTableMemo(ctx sdk.Context, keeper Keeper, msg MsgSetTableMemo) 
     if !keeper.HasTable(ctx, appId, msg.TableName) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name does not exist!")
     }
+
+    bz ,err := base64.StdEncoding.DecodeString(msg.Memo)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+    }
+    msg.Memo = string(bz)
 
     if !keeper.SetTableMemo(ctx, appId, msg.TableName, msg.Memo, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Failed to drop trigger")
@@ -621,6 +666,12 @@ func handleMsgSetColumnMemo(ctx sdk.Context, keeper Keeper, msg MsgSetColumnMemo
     if !keeper.HasTable(ctx, appId, msg.TableName) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name does not exist!")
     }
+
+    bz ,err := base64.StdEncoding.DecodeString(msg.Memo)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+    }
+    msg.Memo = string(bz)
 
     if !keeper.SetColumnMemo(ctx, appId, msg.Owner, msg.TableName, msg.FieldName, msg.Memo) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Failed to set column memo!")
@@ -756,6 +807,12 @@ func handleMsgSetGroupMemo(ctx sdk.Context, keeper Keeper, msg MsgSetGroupMemo) 
     if !isAdmin(ctx, keeper, appId, msg.Owner) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Not authorized")
     }
+
+    bz ,err := base64.StdEncoding.DecodeString(msg.Memo)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,err.Error())
+    }
+    msg.Memo = string(bz)
 
     keeper.SetGroupMemo(ctx, appId, msg.Group, msg.Memo)
     return &sdk.Result{}, nil
