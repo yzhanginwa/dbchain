@@ -1,12 +1,12 @@
 package oracle
 
 import (
+    "github.com/dbchaincloud/tendermint/crypto"
     "encoding/hex"
     "encoding/json"
     "fmt"
     "github.com/dbchaincloud/cosmos-sdk/client/context"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
-    "github.com/dbchaincloud/tendermint/crypto/sm2"
     rpchttp "github.com/dbchaincloud/tendermint/rpc/client/http"
     "github.com/mr-tron/base58"
     "github.com/spf13/viper"
@@ -88,7 +88,7 @@ func txRunner(cliCtx context.CLIContext) {
     }
 }
 
-func executeTxs(cliCtx context.CLIContext, batch []UniversalMsg, privKey sm2.PrivKeySm2, oracleAccAddr sdk.AccAddress) error {
+func executeTxs(cliCtx context.CLIContext, batch []UniversalMsg, privKey crypto.PrivKey, oracleAccAddr sdk.AccAddress) error {
     accNum, seq, err := GetAccountInfo(oracleAccAddr.String())
     if err != nil {
         fmt.Println("Failed to load oracle's account info!!!")
@@ -115,7 +115,7 @@ func buildTxAndBroadcast(cliCtx context.CLIContext, msg UniversalMsg) {
     BuildTxsAndBroadcast(cliCtx, msgs)
 }
 
-func buildAndSignAndBuildTxBytes(cliCtx context.CLIContext, msgs []UniversalMsg, accNum uint64, seq uint64, privKey sm2.PrivKeySm2) ([]byte, error) {
+func buildAndSignAndBuildTxBytes(cliCtx context.CLIContext, msgs []UniversalMsg, accNum uint64, seq uint64, privKey crypto.PrivKey) ([]byte, error) {
     size := len(msgs)
 
     needFee , err := setStdFee(cliCtx, "dbchain", size)

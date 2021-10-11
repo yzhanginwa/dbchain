@@ -6,7 +6,6 @@ import (
 	"github.com/dbchaincloud/cosmos-sdk/client/context"
 	sdk "github.com/dbchaincloud/cosmos-sdk/types"
 	"github.com/dbchaincloud/tendermint/crypto"
-	"github.com/dbchaincloud/tendermint/crypto/sm2"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -31,8 +30,7 @@ func BuildAndSignBroadcastTx(cliCtx context.CLIContext, batch []UniversalMsg, pr
 		}
 	}
 
-	pk := privKey.(sm2.PrivKeySm2)
-	txBytes, err := buildAndSignAndBuildTxBytes(cliCtx, newBatch, accNum, seq, pk)
+	txBytes, err := buildAndSignAndBuildTxBytes(cliCtx, newBatch, accNum, seq, privKey)
 	if err != nil {
 		return "", Failed, err.Error()
 	}

@@ -2,6 +2,8 @@ package cli
 
 import (
     "errors"
+    "github.com/dbchaincloud/tendermint/crypto/algo"
+    "github.com/dbchaincloud/tendermint/crypto/secp256k1"
     "strconv"
     "time"
     "github.com/spf13/cobra"
@@ -60,10 +62,18 @@ func signForToken(kb cryptoKeys.Keybase, name string, str string) (string, bool)
         return "", false
     }
 
-    if pk, ok := pubKey.(sm2.PubKeySm2); ok {
-        out := base58.Encode(pk[:]) + ":" + str + ":" + base58.Encode(signature)
-        return out, true
-    } else {
-        return "", false
+    switch algo.Algo {
+    case algo.SM2:
+        if pk, ok := pubKey.(sm2.PubKeySm2); ok {
+            out := base58.Encode(pk[:]) + ":" + str + ":" + base58.Encode(signature)
+            return out, true
+        }
+    default:
+        if pk, ok := pubKey.(secp256k1.PubKeySecp256k1); ok {
+            out := base58.Encode(pk[:]) + ":" + str + ":" + base58.Encode(signature)
+            return out, true
+        }
+
     }
+    return "", false
 }

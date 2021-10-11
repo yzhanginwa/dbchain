@@ -12,6 +12,9 @@ import (
 	"fmt"
 	"github.com/dbchaincloud/cosmos-sdk/client/context"
 	"github.com/dbchaincloud/cosmos-sdk/types/rest"
+	"github.com/dbchaincloud/tendermint/crypto/algo"
+	"github.com/dbchaincloud/tendermint/crypto/secp256k1"
+	"github.com/dbchaincloud/tendermint/crypto/sm2"
 	qrcode "github.com/skip2/go-qrcode"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/authenticator"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
@@ -475,8 +478,16 @@ func getAesKey() ([]byte,error) {
 	if err != nil {
 		return nil, err
 	}
-	hashData := sha256.Sum256(privKey[:])
-	return hashData[:] ,nil
+	switch algo.Algo {
+	case algo.SM2:
+		pk := privKey.(sm2.PrivKeySm2)
+		hashData := sha256.Sum256(pk[:])
+		return hashData[:] ,nil
+	default:
+		pk := privKey.(secp256k1.PrivKeySecp256k1)
+		hashData := sha256.Sum256(pk[:])
+		return hashData[:] ,nil
+	}
 }
 
 func genQrCodeString(secretKey, organizationName ,userId string) (string,error) {

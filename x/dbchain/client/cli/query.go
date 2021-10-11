@@ -3,6 +3,8 @@ package cli
 import (
     "encoding/json"
     "fmt"
+    "github.com/dbchaincloud/tendermint/crypto/algo"
+    "github.com/dbchaincloud/tendermint/crypto/secp256k1"
     "github.com/mr-tron/base58"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/dbchaincloud/cosmos-sdk/client"
@@ -552,9 +554,18 @@ func GetCmdGetOracleInfo(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
             privKey, err := oracle.LoadPrivKey()
             if err != nil {
-                privKey := sm2.GenPrivKey()
-                base58Str := base58.Encode(privKey[:])
+                privKey := algo.GenPrivKey()
+                base58Str := ""
+                switch algo.Algo {
+                case algo.SM2:
+                    pk := privKey.(sm2.PrivKeySm2)
+                    base58Str = base58.Encode(pk[:])
+                default:
+                    pk := privKey.(secp256k1.PrivKeySecp256k1)
+                    base58Str = base58.Encode(pk[:])
+                }
                 return cliCtx.PrintOutput(fmt.Sprintf("%s: %s", oracle.OracleEncryptedPrivKey, base58Str))
+
             }
             accAddr := sdk.AccAddress(privKey.PubKey().Address())
             return cliCtx.PrintOutput(fmt.Sprintf("Address: %s", accAddr.String()))

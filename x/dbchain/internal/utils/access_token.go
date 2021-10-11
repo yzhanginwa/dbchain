@@ -2,11 +2,14 @@ package utils
 
 import (
     "fmt"
+    "github.com/dbchaincloud/tendermint/crypto/algo"
+    "github.com/dbchaincloud/tendermint/crypto/secp256k1"
     "strings"
     "strconv"
     "errors"
     "time"
     "github.com/mr-tron/base58"
+    "github.com/dbchaincloud/tendermint/crypto"
     "github.com/dbchaincloud/tendermint/crypto/sm2"
 
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
@@ -23,7 +26,7 @@ const (
 //              //
 //////////////////
 
-func MakeAccessCode(privKey sm2.PrivKeySm2) string {
+func MakeAccessCode(privKey crypto.PrivKey) string {
     now := time.Now().UnixNano() / 1000000
     timeStamp := strconv.Itoa(int(now))
 
@@ -33,11 +36,19 @@ func MakeAccessCode(privKey sm2.PrivKeySm2) string {
     }
 
     pubKey := privKey.PubKey()
-    pubKeyArray := pubKey.(sm2.PubKeySm2)
-
-    encodedPubKey := base58.Encode(pubKeyArray[:])
-    encodedSig    := base58.Encode(signature)
+    encodedPubKey, encodedSig := "", ""
+    switch algo.Algo {
+    case algo.SM2:
+        pubKeyArray := pubKey.(sm2.PubKeySm2)
+        encodedPubKey = base58.Encode(pubKeyArray[:])
+        encodedSig    = base58.Encode(signature)
+    default:
+        pubKeyArray := pubKey.(secp256k1.PubKeySecp256k1)
+        encodedPubKey = base58.Encode(pubKeyArray[:])
+        encodedSig    = base58.Encode(signature)
+    }
     return fmt.Sprintf("%s:%s:%s", encodedPubKey, timeStamp, encodedSig)
+
 }
 
 func VerifyAccessCode(accessCode string) (sdk.AccAddress, error) {
@@ -65,8 +76,17 @@ func VerifyAccessCodeWithoutTimeChecking(accessCode string) (sdk.AccAddress, int
     timeStamp      := parts[1]
     signature, _   := base58.Decode(parts[2])
 
-    var pubKey sm2.PubKeySm2
-    copy(pubKey[:], pubKeyBytes)
+    var pubKey crypto.PubKey
+    switch algo.Algo {
+    case algo.SM2:
+        pk := sm2.PubKeySm2{}
+        copy(pk[:], pubKeyBytes)
+        pubKey = pk
+    default:
+        pk := secp256k1.PubKeySecp256k1{}
+        copy(pk[:], pubKeyBytes)
+        pubKey = pk
+    }
 
     if ! pubKey.VerifyBytes([]byte(timeStamp), []byte(signature)) {
         return nil, 0,errors.New("Failed to verify signature")
@@ -85,8 +105,18 @@ func GetAddrFromAccessCode(accessCode string) (sdk.AccAddress, error) {
         return nil, errors.New("Wrong access code format")
     }
     pubKeyBytes, _ := base58.Decode(parts[0])
-    var pubKey sm2.PubKeySm2
-    copy(pubKey[:], pubKeyBytes)
+    var pubKey crypto.PubKey
+    switch algo.Algo {
+    case algo.SM2:
+        pk := sm2.PubKeySm2{}
+        copy(pk[:], pubKeyBytes)
+        pubKey = pk
+    default:
+        pk := secp256k1.PubKeySecp256k1{}
+        copy(pk[:], pubKeyBytes)
+        pubKey = pk
+    }
+
     address := sdk.AccAddress(pubKey.Address())
     return address, nil
 }
