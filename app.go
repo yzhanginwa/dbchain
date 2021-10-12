@@ -43,9 +43,6 @@ const (
     CLIHome     = dbchain.CLIHome
     NodeHome    = dbchain.NodeHome
     //define format of addr
-    // Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
-    Bech32MainPrefix = "dbchain"
-
     // PrefixValidator is the prefix for validator keys
     PrefixValidator = "val"
     // PrefixConsensus is the prefix for consensus keys
