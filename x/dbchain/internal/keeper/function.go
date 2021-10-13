@@ -131,6 +131,9 @@ func (k Keeper) DropFunction(ctx sdk.Context, appId uint, owner sdk.AccAddress, 
             break
         }
     }
+    if len(names) == 0 {
+        return nil
+    }
     bz = k.cdc.MustMarshalBinaryBare(names)
     err = store.Set([]byte(FunctionsKey), bz)
     if err != nil {
