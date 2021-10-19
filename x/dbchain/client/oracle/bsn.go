@@ -11,6 +11,7 @@ import (
 	sdk "github.com/dbchaincloud/cosmos-sdk/types"
 	"github.com/dbchaincloud/tendermint/crypto"
 	tmamino "github.com/dbchaincloud/tendermint/crypto/encoding/amino"
+	"github.com/dbchaincloud/tendermint/crypto/sm2"
 	"github.com/spf13/viper"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
@@ -27,12 +28,14 @@ func applyAccountInfo(cliCtx context.CLIContext) http.HandlerFunc {
 			generalResponse(w, map[string]string {"error " : "generate key pairs err"})
 			return
 		}
+		pk := priv.(sm2.PrivKeySm2)
+		pub := priv.PubKey().(sm2.PubKeySm2)
 
-		add := sdk.AccAddress(priv.PubKey().Address())
+		add := sdk.AccAddress(pub.Address())
 
 		data := map[string]string {
-			"publicKey" : hex.EncodeToString(priv.PubKey().Bytes()),
-			"privateKey" : hex.EncodeToString(priv.Bytes()),
+			"publicKey" : hex.EncodeToString(pub[:]),
+			"privateKey" : hex.EncodeToString(pk[:]),
 			"address" : add.String(),
 			"mnemonic" : secret,
 		}
