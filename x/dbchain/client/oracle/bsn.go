@@ -70,11 +70,13 @@ func applyAccountInfoByPublicKey() http.HandlerFunc {
 			generalResponse(w, map[string]string{"error" : err.Error()})
 			return
 		}
-		pubKey, err  := tmamino.PubKeyFromBytes(pubBytes)
-		if err != nil {
-			generalResponse(w, map[string]string{"error" : "Public key format should be hexadecimal string"})
+
+		if len(pubBytes) != 33 {
+			generalResponse(w, map[string]string{"error" : "publicKey length error"})
 			return
 		}
+		var pubKey sm2.PubKeySm2
+		copy(pubKey[:], pubBytes)
 
 		add := sdk.AccAddress(pubKey.Address())
 		data := map[string]string {
