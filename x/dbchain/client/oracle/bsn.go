@@ -10,7 +10,6 @@ import (
 	"github.com/dbchaincloud/cosmos-sdk/crypto/keys"
 	sdk "github.com/dbchaincloud/cosmos-sdk/types"
 	"github.com/dbchaincloud/tendermint/crypto"
-	tmamino "github.com/dbchaincloud/tendermint/crypto/encoding/amino"
 	"github.com/dbchaincloud/tendermint/crypto/sm2"
 	"github.com/spf13/viper"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
@@ -355,6 +354,10 @@ func loadUserPrivateKeyFromChain(cliCtx context.CLIContext, storeName, addr stri
 	}
 	pkStr := keyInfo["privateKey"]
 	pkBytes , _ := hex.DecodeString(pkStr)
-	private, _  := tmamino.PrivKeyFromBytes(pkBytes)
+	var private sm2.PrivKeySm2
+	if len(pkBytes) != 32 {
+		return nil, errors.New("private key length error")
+	}
+	copy(private[:], pkBytes[:])
 	return private, nil
 }
