@@ -2,12 +2,20 @@ package cli
 
 import (
     "bufio"
-    "fmt"
-    "errors"
-    "strings"
-    "strconv"
     "encoding/json"
+    "errors"
+    "fmt"
+    "github.com/dbchaincloud/tendermint/crypto/algo"
+    "github.com/dbchaincloud/tendermint/crypto/secp256k1"
+    "github.com/dbchaincloud/tendermint/crypto/sm2"
+    "github.com/mr-tron/base58"
     "github.com/spf13/cobra"
+    "github.com/spf13/viper"
+    "github.com/yzhanginwa/dbchain/x/bank"
+    "os"
+    "path"
+    "strconv"
+    "strings"
 
     "github.com/dbchaincloud/cosmos-sdk/client"
     "github.com/dbchaincloud/cosmos-sdk/client/context"
@@ -16,6 +24,7 @@ import (
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/dbchaincloud/cosmos-sdk/x/auth"
     "github.com/dbchaincloud/cosmos-sdk/x/auth/client/utils"
+    account "github.com/dbchaincloud/cosmos-sdk/x/auth/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
@@ -165,7 +174,7 @@ func GetCmdCreateSysDatabase(cdc *codec.Codec) *cobra.Command {
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
-            msgs, err := createSysDatabaseMsg(cliCtx.GetFromAddress())
+            msgs, err := createSysDatabaseMsg(cliCtx, cliCtx.GetFromAddress())
             if err != nil {
                 return err
             }
@@ -196,14 +205,26 @@ func GetCmdSetAppUserFileVolumeLimit(cdc *codec.Codec) *cobra.Command {
     }
 }
 
-func createSysDatabaseMsg(oracleAddr sdk.AccAddress)([]sdk.Msg, error) {
+func createSysDatabaseMsg(cliCtx context.CLIContext, adminAddr sdk.AccAddress)([]sdk.Msg, error) {
     msgs := make([]sdk.Msg, 0)
+
+    oracleAddr ,err := checkOracleInfo()
+    if err != nil {
+        return nil, err
+    }
+
+    if !checkAddrBalance(cliCtx, oracleAddr) {
+        sendMsg := sendOneCoins(adminAddr, oracleAddr)
+        msgs = append(msgs, sendMsg)
+    }
+
     var msg sdk.Msg
-    msg = types.NewMsgCreateSysDatabase(oracleAddr)
-    err := msg.ValidateBasic()
+    msg = types.NewMsgCreateSysDatabase(adminAddr)
+    err = msg.ValidateBasic()
     if err != nil {
        return nil, err
     }
+
     msgs = append(msgs, msg)
 
     tables := map[string][]string{
@@ -211,21 +232,81 @@ func createSysDatabaseMsg(oracleAddr sdk.AccAddress)([]sdk.Msg, error) {
         "order_receipt"  : []string{"appcode", "owner", "orderid", "amount", "expiration_date", "vendor", "vendor_payment_no"},
     }
     for tableName, fileds := range tables {
-        msg := types.NewMsgCreateTable(oracleAddr,"0000000001",tableName, fileds)
+        msg := types.NewMsgCreateTable(adminAddr,"0000000001",tableName, fileds)
         if err := msg.ValidateBasic(); err != nil {
             return nil, err
         }
         msgs = append(msgs, msg)
     }
-    msgs = append(msgs, types.NewMsgModifyColumnOption(oracleAddr, "0000000001", "order_receipt", "vendor_payment_no", "add", string(types.FLDOPT_UNIQUE)))
-    msgs = append(msgs, types.NewMsgModifyGroup("0000000001", "add", "oracle", oracleAddr))
-    msgs = append(msgs, types.NewMsgSetGroupMemo("0000000001","oracle","oracleOfThisChain",oracleAddr))
+    msgs = append(msgs, types.NewMsgModifyColumnOption(adminAddr, "0000000001", "order_receipt", "vendor_payment_no", "add", string(types.FLDOPT_UNIQUE)))
+    msgs = append(msgs, types.NewMsgModifyGroup("0000000001", "add", "oracle", adminAddr))
+    msgs = append(msgs, types.NewMsgModifyGroupMember("0000000001", "oracle", "add", oracleAddr, adminAddr))
+    msgs = append(msgs, types.NewMsgSetGroupMemo("0000000001","oracle","oracleOfThisChain",adminAddr))
     //add table option
-    msgs = append(msgs, types.NewMsgModifyOption(oracleAddr, "0000000001", "authentication", "add", "writable-by(oracle)" ))
-    msgs = append(msgs, types.NewMsgModifyOption(oracleAddr, "0000000001", "order_receipt", "add", "writable-by(oracle)" ))
+    msgs = append(msgs, types.NewMsgModifyOption(adminAddr, "0000000001", "authentication", "add", "writable-by(oracle)" ))
+    msgs = append(msgs, types.NewMsgModifyOption(adminAddr, "0000000001", "order_receipt", "add", "writable-by(oracle)" ))
     return msgs, nil
 
 }
+
+func checkOracleInfo() (sdk.AccAddress, error){
+    DefaultOracleHome := os.ExpandEnv(types.OracleHome)
+    tempViper := viper.New()
+
+    cfgFile := path.Join(DefaultOracleHome, "config", "config.toml")
+    if _, err := os.Stat(cfgFile); err != nil {
+        return nil, err
+    }
+    tempViper.SetConfigFile(cfgFile)
+    if err := tempViper.ReadInConfig(); err != nil {
+        return nil, err
+    }
+
+    oraclePrivKey := tempViper.GetString("oracle-encrypted-key")
+    if oraclePrivKey == "" {
+        fmt.Println(`please execute cmd : "dbchainoracle  query oracle-info " `)
+        fmt.Println(`then set it in the "`, cfgFile, `" like the following format :`)
+        fmt.Println(`oracle-encrypted-key = "you private key"`)
+        return nil, errors.New("oracle-encrypted-key not set")
+    }
+
+    pkBytes, err:= base58.Decode(oraclePrivKey)
+    if err != nil {
+        return nil, err
+    }
+    var addr sdk.AccAddress
+    switch algo.Algo {
+    case algo.SM2:
+        var privKey sm2.PrivKeySm2
+        copy(privKey[:], pkBytes)
+        addr = sdk.AccAddress(privKey.PubKeySm2().Address())
+    default:
+        var privKey secp256k1.PrivKeySecp256k1
+        copy(privKey[:], pkBytes)
+        addr = sdk.AccAddress(privKey.PubKey().Address())
+    }
+    return addr, nil
+}
+
+func checkAddrBalance(cliCtx context.CLIContext, addr sdk.AccAddress) bool {
+    accGetter := account.NewAccountRetriever(cliCtx)
+    acc , err := accGetter.GetAccount(addr)
+    if err != nil {
+        return false
+    }
+    coins := acc.GetCoins()
+    if coins.Empty() {
+        return false
+    }
+    return true
+}
+
+func sendOneCoins(from , to  sdk.AccAddress) sdk.Msg {
+    oneCoin := sdk.NewCoin("dbctoken", sdk.NewInt(1))
+    msg := bank.NewMsgSend(from, to, []sdk.Coin{oneCoin})
+    return msg
+}
+
 func GetCmdSetAppPermission(cdc * codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use:   "set-app-permission [database] [permission_required]",
