@@ -622,9 +622,9 @@ func getFieldValueMap(ctx sdk.Context, appId uint, keep Keeper, tableName string
 	}
 	rowFields := make(types.RowFields)
 	/*
-	表的前三个字段固定 由系统创建 id create_by create_at,如果有外键，外键为第一个字段，否则会添加数据出错
+	表的前4个字段固定 由系统创建 id create_by create_at,tx_hash 如果有外键，外键为第一个字段，否则会添加数据出错
 	*/
-	tbFields = tbFields[3:]
+	tbFields = tbFields[4:]
 	for i := 0; i < len(tbFields); i++ {
 		if i < len(values) {
 			field := tbFields[i]
