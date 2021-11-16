@@ -124,6 +124,28 @@ func (a Association)Equal(b Association) bool {
     return false
 }
 
+////////////////////////
+//                    //
+// table CounterCache //
+//                    //
+////////////////////////
+//associationTable, foreignKey, counterCacheField, limit
+type CounterCache struct {
+    AssociationTable string `json:"association_table"`
+    ForeignKey string `json:"foreign_key"`
+    CounterCacheField string `json:"counter_cache_field"`
+    Limit string `json:"limit"`
+}
+
+func (a CounterCache) Equal(b CounterCache) bool {
+    if a.Limit == b.Limit &&
+        a.CounterCacheField == b.CounterCacheField &&
+        a.ForeignKey == b.ForeignKey &&
+        a.AssociationTable == b.AssociationTable {
+        return true
+    }
+    return false
+}
 //////////////////////////
 //                      //
 // tx status            //

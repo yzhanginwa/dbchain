@@ -3,6 +3,7 @@ package keeper
 import (
     "errors"
     "fmt"
+    storeTypes "github.com/dbchaincloud/cosmos-sdk/store/types"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     shell "github.com/ipfs/go-ipfs-api"
     lua "github.com/yuin/gopher-lua"
@@ -13,7 +14,6 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "strconv"
     "strings"
-    storeTypes "github.com/dbchaincloud/cosmos-sdk/store/types"
 )
 
 const fileSizeGasRate = 10
@@ -100,6 +100,11 @@ func (k Keeper) Write(ctx sdk.Context, appId uint, tableName string, id uint, fi
         }
     }
 
+    err = k.updateCounterCache(ctx, store, appId, tableName, fields, 1)
+    if err != nil {
+        return 0, err
+    }
+
     return id, nil
 }
 
@@ -169,6 +174,14 @@ func (k Keeper) Freeze(ctx sdk.Context, appId uint, tableName string, id uint, o
     if err != nil {
         return 0, err
     }
+    fields, err := k.DoFind(ctx, appId, tableName, id)
+    if err != nil {
+        return 0, nil
+    }
+    err = k.updateCounterCache(ctx, store, appId, tableName,  fields, -1)
+    if err != nil {
+        return 0, err
+    }
     return id, nil
 }
 
@@ -192,6 +205,10 @@ func (k Keeper) PreInsertCheck(ctx sdk.Context, appId uint, tableName string, fi
 
     if(!k.preprocessPayment(ctx, appId, tableName, fields, owner)) {
         return 0, errors.New(fmt.Sprintf("Failed validation of record of payment table %s", tableName))
+    }
+
+    if (!k.checkCounterCache(ctx, appId, tableName, fields)) {
+        return 0, errors.New("check counter cache fail")
     }
 
     return 0, nil
@@ -275,6 +292,51 @@ func (k Keeper) validateInsertion(ctx sdk.Context, appId uint, tableName string,
         return false
     }
     return true
+}
+
+func (k Keeper) checkCounterCache(ctx sdk.Context, appId uint, tableName string, fields types.RowFields) bool {
+    counterCaches := k.GetCounterCache(ctx, appId, tableName)
+    for _, counterCache := range counterCaches {
+        fieldValue := fields[counterCache.ForeignKey]
+        id ,_ := strconv.Atoi(fieldValue)
+        result, err  := k.DoFind(ctx, appId, counterCache.AssociationTable, uint(id))
+        if err != nil {
+            return false
+        }
+        counter := result[counterCache.CounterCacheField]
+        iCounter , _ := strconv.Atoi(counter)
+        iLimit , _ := strconv.Atoi(counterCache.Limit)
+        if iLimit <= 0 {
+            continue
+        }
+        if iCounter >= iLimit {
+            return false
+        }
+    }
+    return true
+}
+
+func (k Keeper) updateCounterCache(ctx sdk.Context, store *SafeStore,appId uint, tableName string, fields types.RowFields, add int) error {
+    //update counter cache field
+    counterCaches := k.GetCounterCache(ctx, appId, tableName)
+    for _, counterCache := range counterCaches {
+        sid := fields[counterCache.ForeignKey]
+        id , _ := strconv.Atoi(sid)
+
+        key := getDataKeyBytes(appId, tableName, counterCache.CounterCacheField, uint(id))
+        bz, _ := store.Get(key)
+        if bz == nil {
+            return  errors.New("update counter cache err")
+        }
+        var oldCounters string
+        k.cdc.MustUnmarshalBinaryBare(bz, &oldCounters)
+        iOldCounters, _ := strconv.Atoi(oldCounters)
+        err := store.Set(key, []byte(strconv.Itoa(iOldCounters + add)))
+        if err != nil {
+            return  err
+        }
+    }
+    return nil
 }
 
 func (k Keeper) validateInsertionWithTableOptions(ctx sdk.Context, appId uint, tableName string, fields types.RowFields, owner sdk.AccAddress) bool {

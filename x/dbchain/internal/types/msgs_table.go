@@ -544,3 +544,76 @@ func (msg MsgModifyTableAssociation) GetSignBytes() []byte {
 func (msg MsgModifyTableAssociation) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
+
+///////////////////////////////
+//                           //
+// MsgEnableCountCache       //
+//                           //
+///////////////////////////////
+
+type MsgAddCounterCache struct {
+    AppCode string           `json:"app_code"`
+    TableName string         `json:"table_name"`
+    AssociationTable string  `json:"association_table"`
+    ForeignKey  string       `json:"foreign_key"`
+    CounterCacheField  string       `json:"counter_cache_field"`
+    Limit       string       `json:"limit"`
+
+    Owner sdk.AccAddress     `json:"owner"`
+}
+
+func NewMsgEnableCounterCache(appCode, tableName, associationTable , foreignKey , counterCacheField, limit string, owner sdk.AccAddress, ) MsgAddCounterCache {
+    return MsgAddCounterCache {
+        AppCode: appCode,
+        TableName: tableName,
+        AssociationTable: associationTable,
+        ForeignKey: foreignKey,
+        CounterCacheField: counterCacheField,
+        Limit: limit,
+        Owner: owner,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgAddCounterCache) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgAddCounterCache) Type() string { return "enable_count_cache" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgAddCounterCache) ValidateBasic() error {
+    if len(msg.AppCode) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "App code cannot be empty")
+    }
+    if len(msg.TableName) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "Table name cannot be empty")
+    }
+
+    if msg.AssociationTable == "" {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "AssociationTable name cannot be empty")
+    }
+
+    if msg.ForeignKey == "" {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "ForeignKey cannot be empty")
+    }
+
+    if msg.CounterCacheField == "" {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "CountCacheField name cannot be empty")
+    }
+
+
+    if msg.Owner.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgAddCounterCache) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgAddCounterCache) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
