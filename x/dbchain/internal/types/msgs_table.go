@@ -562,7 +562,7 @@ type MsgAddCounterCache struct {
     Owner sdk.AccAddress     `json:"owner"`
 }
 
-func NewMsgEnableCounterCache(appCode, tableName, associationTable , foreignKey , counterCacheField, limit string, owner sdk.AccAddress, ) MsgAddCounterCache {
+func NewMsgAddCounterCache(appCode, tableName, associationTable , foreignKey , counterCacheField, limit string, owner sdk.AccAddress, ) MsgAddCounterCache {
     return MsgAddCounterCache {
         AppCode: appCode,
         TableName: tableName,
