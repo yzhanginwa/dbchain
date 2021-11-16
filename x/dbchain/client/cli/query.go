@@ -35,6 +35,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdIndex(storeKey, cdc),
         GetCmdOption(storeKey, cdc),
         GetCmdAssociation(storeKey, cdc),
+        GetCmdCounterCache(storeKey, cdc),
         GetCmdColumnOption(storeKey, cdc),
         GetCmdColumnDataType(storeKey, cdc),
         GetCmdCanAddColumnOption(storeKey, cdc),
@@ -308,6 +309,30 @@ func GetCmdAssociation(queryRoute string, cdc *codec.Codec) *cobra.Command {
             appCode    := args[1]
             tableName  := args[2]
             res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/association/%s/%s/%s", queryRoute, accessCode, appCode, tableName), nil)
+            if err != nil {
+                fmt.Printf("could not get association of table %s", tableName)
+                return nil
+            }
+
+            var out []types.Association // QueryTables is a []string. It could be reused here
+            cdc.MustUnmarshalJSON(res, &out)
+            return cliCtx.PrintOutput(out)
+        },
+    }
+}
+
+func GetCmdCounterCache(queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "table-counter-cache",
+        Short: "show table counter cache info",
+        Args: cobra.ExactArgs(3),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            accessCode := args[0]
+            appCode    := args[1]
+            tableName  := args[2]
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/counter_cache/%s/%s/%s", queryRoute, accessCode, appCode, tableName), nil)
             if err != nil {
                 fmt.Printf("could not get association of table %s", tableName)
                 return nil

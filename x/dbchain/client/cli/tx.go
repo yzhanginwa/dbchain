@@ -43,6 +43,7 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdDropCustomQuerier(cdc),
         GetCmdCreateTable(cdc),
         GetCmdModifyTableAssociation(cdc),
+        GetCmdAddCounterCache(cdc),
         GetCmdDropTable(cdc),
         GetCmdAddColumn(cdc),
         GetCmdDropColumn(cdc),
@@ -321,6 +322,36 @@ func GetCmdModifyTableAssociation(cdc *codec.Codec) *cobra.Command {
 
 
             msg := types.NewMsgModifyTableAssociation(appCode,tableName,associationMode,associationTable,method,foreignKey,option,cliCtx.GetFromAddress())
+            err := msg.ValidateBasic()
+            if err != nil {
+                return err
+            }
+
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+func GetCmdAddCounterCache(cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "add-counter-cache [appCode] [tableName] [associationTable] [foreignKey] [counterCacheField] [limit]",
+        Short: "add a counter cache field for a table, foreignKey is a field of this table, counterCacheField is a new field which will be add to associationTable. when limit is 0 or " +
+            "negative , it means its no limit",
+        Args:  cobra.ExactArgs(6),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode := args[0]
+            tableName := args[1]
+            associationTable := args[2]
+            foreignKey := args[3]
+            counterCacheField := args[4]
+            limit := args[5]
+
+
+            msg := types.NewMsgEnableCounterCache(appCode, tableName, associationTable, foreignKey, counterCacheField, limit, cliCtx.GetFromAddress())
             err := msg.ValidateBasic()
             if err != nil {
                 return err
