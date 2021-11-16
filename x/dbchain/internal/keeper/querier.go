@@ -30,6 +30,7 @@ const (
     QueryIndex    = "index"
     QueryOption   = "option"
     QueryAssociation = "association"
+    QueryCounterCache = "counter_cache"
     QueryColumnOption   = "column_option"
     QueryColumnDataType = "column_data_type"
     QueryCanAddColumnOption = "can_add_column_option"
@@ -106,6 +107,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryOption(ctx, path[1:], req, keeper)
         case QueryAssociation:
             return queryAssociation(ctx, path[1:], req, keeper)
+        case QueryCounterCache:
+            return queryCounterCache(ctx, path[1:], req, keeper)
         case QueryColumnOption:
             return queryColumnOption(ctx, path[1:], req, keeper)
         case QueryColumnDataType:
@@ -533,6 +536,37 @@ func queryAssociation(ctx sdk.Context, path []string, req abci.RequestQuery, kee
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, associations)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryCounterCache(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    addr, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    if !keeper.isAdmin(ctx, appId, addr) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "permission forbidden")
+    }
+
+    tableName := path[2]
+    counterCache := keeper.GetCounterCache(ctx, appId, tableName)
+
+    if counterCache == nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Table %s does not have association",  tableName))
+    }
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, counterCache)
     if err != nil {
         panic("could not marshal result to JSON")
     }
