@@ -267,8 +267,6 @@ func querierSuperHandler(ctx sdk.Context, keeper Keeper, appId uint, querierObjs
             return nil, nil, err
         }
         builders[j].Select = table.Fields
-        counterCacheFields := keeper.GetCounterCacheFields(ctx, appId, builders[j].Table)
-        builders[j].Select = append(builders[j].Select, counterCacheFields...)
     }
 
     store := DbChainStore(ctx, keeper.storeKey)

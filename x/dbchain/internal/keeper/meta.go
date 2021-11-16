@@ -100,8 +100,6 @@ func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
                 //Drop column type and option first
                 tableFields , _ := k.getTableFields(ctx, appId, tableName)
                 //get counter cache field
-                counterCacheFields := k.GetCounterCacheFields(ctx, appId, tableName)
-                tableFields = append(tableFields, counterCacheFields...)
                 for _, field := range tableFields {
                     key := getColumnDataTypesKey(appId, tableName, field)
                     store.Delete([]byte(key))
@@ -139,12 +137,81 @@ func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
 
                 //Drop next_id key/value
                 dropNextId(k, ctx, appId, tableName)
+                //
+                k.DeleteCounterCache(ctx, appId, tableName)
 
                 break
             }
         }
     }
     cache.VoidTable(appId,tableName)
+}
+
+func (k Keeper) DeleteCounterCache(ctx sdk.Context, appId uint, tableName string) bool {
+    store := DbChainStore(ctx, k.storeKey)
+    //1、as a main table
+    counterCacheFields := k.GetCounterCacheFields(ctx, appId, tableName)
+    if len(counterCacheFields) != 0 {
+        key := getTableCounterCacheFieldKey(appId, tableName)
+        err := store.Delete([]byte(key))
+        if err != nil {
+            return false
+        }
+    }
+    for _, counterCacheField := range counterCacheFields {
+        counterCaches := k.GetCounterCache(ctx, appId, counterCacheField.AssociationTable)
+        exist := false
+        for i, counterCache := range counterCaches {
+            if counterCache.AssociationTable == tableName {
+                exist = true
+                counterCaches = append(counterCaches[: i], counterCaches[i+1 :]...)
+            }
+        }
+        if !exist {
+            continue
+        }
+        key := getTableCounterCacheInfoKey(appId, counterCacheField.AssociationTable)
+        if len(counterCaches) == 0 {
+            store.Delete([]byte(key))
+        } else {
+            bz := k.cdc.MustMarshalBinaryBare(counterCaches)
+            err := store.Set([]byte(key), bz)
+            if err != nil {
+                return false
+            }
+        }
+    }
+    //2、as a satellite table
+    counterCacheInfos := k.GetCounterCache(ctx, appId, tableName)
+    if len(counterCacheInfos) != 0 {
+        key := getTableCounterCacheInfoKey(appId, tableName)
+        err := store.Delete([]byte(key))
+        if err != nil {
+            return false
+        }
+    }
+    //
+    for _ , counterCacheInfo := range counterCacheInfos {
+        result, _ := k.DropColumn(ctx, appId, counterCacheInfo.AssociationTable, counterCacheInfo.CounterCacheField)
+        if !result {
+            return result
+        }
+        //delete association
+        counterCacheFields := k.GetCounterCacheFields(ctx, appId, counterCacheInfo.AssociationTable)
+        for i, counterCacheField := range counterCacheFields {
+            if counterCacheField.AssociationTable == tableName {
+                counterCacheFields = append(counterCacheFields[:i],counterCacheFields[i+1:]... )
+                key := getTableCounterCacheFieldKey(appId, counterCacheInfo.AssociationTable)
+                if len(counterCacheFields) != 0 {
+                    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(counterCacheFields))
+                } else {
+                    store.Delete([]byte(key))
+                }
+                break
+            }
+        }
+    }
+    return true
 }
 
 // Modify Table Association
@@ -218,8 +285,9 @@ func (k Keeper) AddCounterCache(ctx sdk.Context, appId uint, tableName, associat
         return err
     }
 
+    //save to associationTable
     newCounterCache := types.CounterCache{
-        AssociationTable: associationTable,
+        AssociationTable: tableName,
         ForeignKey: foreignKey,
         CounterCacheField: counterCacheField,
         Limit: limit,
@@ -227,7 +295,7 @@ func (k Keeper) AddCounterCache(ctx sdk.Context, appId uint, tableName, associat
 
     store := DbChainStore(ctx, k.storeKey)
     counterCaches := make([]types.CounterCache, 0)
-    key := getTableCounterCacheInfoKey(appId, tableName)
+    key := getTableCounterCacheInfoKey(appId, associationTable)
     bz , err := store.Get([]byte(key))
     if err != nil {
         return err
@@ -236,7 +304,7 @@ func (k Keeper) AddCounterCache(ctx sdk.Context, appId uint, tableName, associat
     if bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &counterCaches)
         for _, counterCache := range counterCaches {
-            if counterCache.Equal(newCounterCache) {
+            if counterCache.AssociationTable == tableName {
                 return errors.New("this item has been added")
             }
         }
@@ -248,49 +316,60 @@ func (k Keeper) AddCounterCache(ctx sdk.Context, appId uint, tableName, associat
         return err
     }
 
-    if !k.HasField(ctx, appId, tableName, foreignKey) {
-        return errors.New(fmt.Sprintf("Field %s of table %s exists already!", foreignKey, tableName))
+    if !k.HasField(ctx, appId, associationTable, foreignKey) {
+        return errors.New(fmt.Sprintf("Field %s of table %s not exists!", foreignKey, associationTable))
     }
 
     //add a new field for associationTable
     field := strings.ToLower(counterCacheField)
-    if k.HasField(ctx, appId, associationTable, field) {
-        return errors.New(fmt.Sprintf("Field %s of table %s exists already!", counterCacheField, associationTable))
+    if k.HasField(ctx, appId, tableName, field) {
+        return errors.New(fmt.Sprintf("Field %s of table %s exists already!", counterCacheField, tableName))
     }
-    _, err = k.AddColumn(ctx, appId, associationTable, counterCacheField)
+    _, err = k.AddColumn(ctx, appId, tableName, counterCacheField)
     if err != nil {
         return err
+    }
+    if !k.setCounterCacheColumnOption(ctx, appId, tableName, counterCacheField) {
+        return errors.New("setCounterCacheColumnOption err")
     }
 
 
     //save counterCacheField
-    counterCacheFields := make([]string, 0)
-    associationTableCounterCacheFieldKey := getTableCounterCacheFieldKey(appId, associationTable)
+    existCounterCacheFields := make([]types.CounterCacheField, 0)
+    associationTableCounterCacheFieldKey := getTableCounterCacheFieldKey(appId, tableName)
     bz, _ = store.Get([]byte(associationTableCounterCacheFieldKey))
     if bz != nil {
-        k.cdc.MustUnmarshalBinaryBare(bz, &counterCacheFields)
-        if utils.StringIncluded(counterCacheFields, counterCacheField) {
-            return errors.New("this counterCacheField has been added")
+        k.cdc.MustUnmarshalBinaryBare(bz, &existCounterCacheFields)
+
+        for _, existCounterCacheField := range existCounterCacheFields {
+            if existCounterCacheField.FieldName == counterCacheField {
+                return errors.New("this counterCacheField has been added")
+            }
         }
     }
-    counterCacheFields = append(counterCacheFields, counterCacheField)
-    store.Set([]byte(associationTableCounterCacheFieldKey), k.cdc.MustMarshalBinaryBare(counterCacheFields))
+
+    newCounterCacheFields := types.CounterCacheField{
+        AssociationTable: associationTable,
+        FieldName: counterCacheField,
+    }
+    existCounterCacheFields = append(existCounterCacheFields, newCounterCacheFields)
+    store.Set([]byte(associationTableCounterCacheFieldKey), k.cdc.MustMarshalBinaryBare(existCounterCacheFields))
 
 
     //update counter cache
-    ids := k.findAllWithoutCheckPermission(ctx, appId, associationTable)
+    ids := k.findAllWithoutCheckPermission(ctx, appId, tableName)
     for _, id := range ids {
         sid := fmt.Sprintf("%d", id)
-        counter := k.findByWithoutCheckPermission(ctx, appId, tableName, foreignKey, []string{ sid })
+        counter := k.findByWithoutCheckPermission(ctx, appId, associationTable, foreignKey, []string{ sid })
 
-        if len(counter) > iLimit {
+        if iLimit > 0 && len(counter) > iLimit {
             return errors.New("counter number bigger than limit")
         }
         // set counter
         key := getDataKeyBytes(appId, tableName, counterCacheField, id)
-        value := fmt.Sprintf("%d", counter)
+        value := fmt.Sprintf("%d", len(counter))
         err := store.Set(key, k.cdc.MustMarshalBinaryBare(value))
-        if err != nil{
+        if err != nil {
             return err
         }
 
@@ -300,22 +379,28 @@ func (k Keeper) AddCounterCache(ctx sdk.Context, appId uint, tableName, associat
 
 func (k Keeper)GetCounterCache(ctx sdk.Context, appId uint, tableName string) []types.CounterCache {
     store := DbChainStore(ctx, k.storeKey)
-    counterCaches := make([]types.CounterCache,0)
+    counterCaches := make([]types.CounterCache, 0)
     key := getTableCounterCacheInfoKey(appId, tableName)
     bz , err := store.Get([]byte(key))
     if err != nil {
+        return nil
+    }
+    if bz == nil{
         return nil
     }
     k.cdc.MustUnmarshalBinaryBare(bz, &counterCaches)
     return counterCaches
 }
 
-func (k Keeper)GetCounterCacheFields(ctx sdk.Context, appId uint, tableName string) []string {
+func (k Keeper)GetCounterCacheFields(ctx sdk.Context, appId uint, tableName string) []types.CounterCacheField {
     store := DbChainStore(ctx, k.storeKey)
-    counterCacheFields := make([]string,0)
+    counterCacheFields := make([]types.CounterCacheField, 0)
     key := getTableCounterCacheFieldKey(appId, tableName)
     bz , err := store.Get([]byte(key))
     if err != nil {
+        return nil
+    }
+    if bz == nil {
         return nil
     }
     k.cdc.MustUnmarshalBinaryBare(bz, &counterCacheFields)
@@ -684,6 +769,9 @@ func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAdd
                 if !k.validateOwnField(ctx, appId, tableName, fieldName) {
                     return false
                 }
+            case types.FLDOPT_COUNTER_CACHE:
+                return false
+
             }
             result = append(options, option)
         }
@@ -706,6 +794,17 @@ func (k Keeper) ModifyColumnOption(ctx sdk.Context, appId uint, owner sdk.AccAdd
         err = store.Delete([]byte(key))
     }
     if err != nil{
+        return false
+    }
+    return true
+}
+
+func (k Keeper) setCounterCacheColumnOption (ctx sdk.Context, appId uint,tableName string, fieldName string) bool {
+    store := DbChainStore(ctx, k.storeKey)
+    result := []string{ string(types.FLDOPT_COUNTER_CACHE) }
+    key := getColumnOptionsKey(appId, tableName, fieldName)
+    err := store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(result))
+    if err != nil {
         return false
     }
     return true
@@ -800,6 +899,31 @@ func (k Keeper) GetColumnOption(ctx sdk.Context, appId uint, tableName string, f
     var options []string
     k.cdc.MustUnmarshalBinaryBare(bz, &options)
     return options, nil
+}
+
+func (k Keeper) GetCounterInfo(ctx sdk.Context, appId uint, tableName string, fieldName string) (map[string]string, error) {
+
+    counterCacheFields := k.GetCounterCacheFields(ctx, appId, tableName)
+    associationTable := ""
+    for _, counterCacheField := range counterCacheFields {
+        if counterCacheField.FieldName == fieldName {
+            associationTable = counterCacheField.AssociationTable
+        }
+    }
+    if associationTable == "" {
+        return nil, nil
+    }
+    counterCacheInfos := k.GetCounterCache(ctx, appId, associationTable)
+    for _, counterCacheInfo := range counterCacheInfos {
+        if counterCacheInfo.AssociationTable == tableName {
+            return map[string]string{
+                "association_table" : associationTable,
+                "foreign_key" : counterCacheInfo.ForeignKey,
+                "limit" : counterCacheInfo.Limit,
+            }, nil
+        }
+    }
+    return nil, nil
 }
 
 func (k Keeper) GetColumnDataType(ctx sdk.Context, appId uint, tableName string, fieldName string) (string, error) {

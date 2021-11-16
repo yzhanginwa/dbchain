@@ -407,15 +407,6 @@ func handleMsgAddCountCache(ctx sdk.Context, keeper Keeper, msg MsgAddCounterCac
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table does not existed")
     }
 
-    AssociationTable, err := keeper.GetTable(ctx, appId, msg.AssociationTable)
-    if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
-    }
-    if !utils.StringIncluded(AssociationTable.Fields, msg.ForeignKey) {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "ForeignKey does not existed")
-    }
-
-
     err = keeper.AddCounterCache(ctx, appId, msg.TableName, msg.AssociationTable, msg.ForeignKey, msg.CounterCacheField, msg.Limit)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
