@@ -351,7 +351,7 @@ func GetCmdAddCounterCache(cdc *codec.Codec) *cobra.Command {
             limit := args[5]
 
 
-            msg := types.NewMsgEnableCounterCache(appCode, tableName, associationTable, foreignKey, counterCacheField, limit, cliCtx.GetFromAddress())
+            msg := types.NewMsgAddCounterCache(appCode, tableName, associationTable, foreignKey, counterCacheField, limit, cliCtx.GetFromAddress())
             err := msg.ValidateBasic()
             if err != nil {
                 return err
