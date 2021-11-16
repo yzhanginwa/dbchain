@@ -106,6 +106,14 @@ func GetTableOptionsKey(appId uint, tableName string) string {
 func GetTableAssociationsKey(appId uint, tableName string) string {
     return fmt.Sprintf("%s:%d:%s:association:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName)
 }
+//be used to save counterCache info, its a option of child table
+func GetTableCounterCacheInfoKey(appId uint, tableName string) string {
+    return fmt.Sprintf("%s:%d:%s:counter_cache_info:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName)
+}
+//be used to save counterCache field, its a option of parent table
+func GetTableCounterCacheFieldKey(appId uint, tableName string) string {
+    return fmt.Sprintf("%s:%d:%s:counter_cache_field:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName)
+}
 
 func GetColumnOptionsKey(appId uint, tableName string, fieldName string) string {
     return fmt.Sprintf("%s:%d:%s:fldopt:%s:%s", KeyPrefixDb, appId, KeyPrefixMeta, tableName, fieldName)

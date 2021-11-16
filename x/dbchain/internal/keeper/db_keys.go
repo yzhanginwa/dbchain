@@ -46,7 +46,9 @@ var (
     getTableOptionsKey = dbk.GetTableOptionsKey
 
     getTableAssociationsKey = dbk.GetTableAssociationsKey
-    
+    getTableCounterCacheInfoKey = dbk.GetTableCounterCacheInfoKey
+    getTableCounterCacheFieldKey = dbk.GetTableCounterCacheFieldKey
+
     getColumnOptionsKey = dbk.GetColumnOptionsKey
     getColumnDataTypesKey = dbk.GetColumnDataTypesKey
     

@@ -19,7 +19,8 @@ func (k Keeper) DoFind(ctx sdk.Context, appId uint, tableName string, id uint) (
     if err != nil {
         return nil, errors.New(fmt.Sprintf("Failed to get fields for table %s", tableName))
     }
-
+    counterCacheFields := k.GetCounterCacheFields(ctx, appId, tableName)
+    fieldNames = append(fieldNames, counterCacheFields...)
     if id == 0 {
         return nil, errors.New("Id cannot be 0")
     }
@@ -76,6 +77,17 @@ func (k Keeper) Find(ctx sdk.Context, appId uint, tableName string, id uint, use
 
 // Find by an attribute in the r.Fields
 func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field string,  values []string, user sdk.AccAddress) []uint {
+    results := k.findByWithoutCheckPermission(ctx, appId, tableName, field, values)
+
+    // if public table or auditor user, return all ids
+    if k.isTablePublic(ctx, appId, tableName) || k.isAuditor(ctx, appId, user) {
+        return results
+    } else {
+        return k.filterReadableIds(ctx, appId, tableName, results, user)
+    }
+}
+
+func (k Keeper) findByWithoutCheckPermission(ctx sdk.Context, appId uint, tableName string, field string,  values []string) []uint {
     store := DbChainStore(ctx, k.storeKey)
 
     hasIndex := false
@@ -102,11 +114,11 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
             if bz != nil {
                 k.cdc.MustUnmarshalBinaryBare(bz, &result)
                 for _, sId := range result {
-                   id , err := strconv.ParseUint(sId, 10, 32)
-                   if err != nil {
-                       continue
-                   }
-                   results = append(results, uint(id))
+                    id , err := strconv.ParseUint(sId, 10, 32)
+                    if err != nil {
+                        continue
+                    }
+                    results = append(results, uint(id))
                 }
             }
         }
@@ -131,13 +143,7 @@ func (k Keeper) FindBy(ctx sdk.Context, appId uint, tableName string, field stri
             }
         }
     }
-
-    // if public table or auditor user, return all ids
-    if k.isTablePublic(ctx, appId, tableName) || k.isAuditor(ctx, appId, user) {
-        return results
-    } else {
-        return k.filterReadableIds(ctx, appId, tableName, results, user)
-    }
+    return results
 }
 
 func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field string, operator string, value string, reg *regexp.Regexp, user sdk.AccAddress) []uint {
@@ -230,6 +236,16 @@ func (k Keeper) Where(ctx sdk.Context, appId uint, tableName string, field strin
 }
 
 func (k Keeper) FindAll(ctx sdk.Context, appId uint, tableName string, user sdk.AccAddress) []uint {
+    result := k.findAllWithoutCheckPermission(ctx, appId, tableName)
+
+    if k.isTablePublic(ctx, appId, tableName) || k.isAuditor(ctx, appId, user) {
+        return result
+    } else {
+        return k.filterReadableIds(ctx, appId, tableName, result, user)
+    }
+}
+
+func (k Keeper) findAllWithoutCheckPermission(ctx sdk.Context, appId uint, tableName string) []uint {
     store := DbChainStore(ctx, k.storeKey)
     var result []uint
 
@@ -247,12 +263,7 @@ func (k Keeper) FindAll(ctx sdk.Context, appId uint, tableName string, user sdk.
         }
         result = append(result, id)
     }
-
-    if k.isTablePublic(ctx, appId, tableName) || k.isAuditor(ctx, appId, user) {
-        return result
-    } else {
-        return k.filterReadableIds(ctx, appId, tableName, result, user)
-    }
+    return result
 }
 
 //////////////////

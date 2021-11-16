@@ -55,6 +55,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             result, err = handleMsgCreateTable(ctx, keeper, msg)
         case MsgModifyTableAssociation:
             result, err = handleMsgModifyTableAssociation(ctx, keeper, msg)
+        case MsgAddCounterCache:
+            result, err = handleMsgAddCountCache(ctx, keeper, msg)
         case MsgDropTable:
             result, err = handleMsgDropTable(ctx, keeper, msg)
         case MsgAddColumn:
@@ -385,6 +387,36 @@ func handleMsgModifyTableAssociation(ctx sdk.Context, keeper Keeper, msg MsgModi
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table does not existed")
     }
     err = keeper.ModifyTableAssociation(ctx, appId, msg.TableName, msg.Option, msg.AssociationMode, msg.AssociationTable, msg.ForeignKey, msg.Method)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+    }
+    return &sdk.Result{}, nil
+}
+
+func handleMsgAddCountCache(ctx sdk.Context, keeper Keeper, msg MsgAddCounterCache) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
+    if err != nil {
+        return nil, err
+    }
+
+    if !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
+    }
+
+    if !keeper.HasTable(ctx, appId, msg.TableName) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table does not existed")
+    }
+
+    AssociationTable, err := keeper.GetTable(ctx, appId, msg.AssociationTable)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+    }
+    if !utils.StringIncluded(AssociationTable.Fields, msg.ForeignKey) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "ForeignKey does not existed")
+    }
+
+
+    err = keeper.AddCounterCache(ctx, appId, msg.TableName, msg.AssociationTable, msg.ForeignKey, msg.CounterCacheField, msg.Limit)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
