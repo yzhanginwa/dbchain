@@ -131,7 +131,7 @@ func (a Association)Equal(b Association) bool {
 ////////////////////////
 //associationTable, foreignKey, counterCacheField, limit
 type CounterCache struct {
-    AssociationTable string `json:"association_table"`
+    AssociationTable  string `json:"association_table"`
     ForeignKey string `json:"foreign_key"`
     CounterCacheField string `json:"counter_cache_field"`
     Limit string `json:"limit"`
@@ -146,6 +146,26 @@ func (a CounterCache) Equal(b CounterCache) bool {
     }
     return false
 }
+
+//////////////////////////////
+//                          //
+// table CounterCacheFields //
+//                          //
+//////////////////////////////
+
+type CounterCacheField struct {
+    FieldName string    `json:"field_name"`
+    AssociationTable string     `json:"association_table"`
+}
+
+func (a CounterCacheField) Equal( b CounterCacheField) bool {
+    if a.AssociationTable == b.AssociationTable &&
+        a.FieldName == b.FieldName {
+        return true
+    }
+    return false
+}
+
 //////////////////////////
 //                      //
 // tx status            //
@@ -202,10 +222,11 @@ const (
 type FieldOption string
 
 const (
-    FLDOPT_NOTNULL    FieldOption = "not-null"
-    FLDOPT_UNIQUE     FieldOption = "unique"
-    FLDOPT_OWN        FieldOption = "own"
-    FLDOPT_READABLE   FieldOption = "readable"
+    FLDOPT_NOTNULL          FieldOption = "not-null"
+    FLDOPT_UNIQUE           FieldOption = "unique"
+    FLDOPT_OWN              FieldOption = "own"
+    FLDOPT_READABLE         FieldOption = "readable"
+    FLDOPT_COUNTER_CACHE    FieldOption = "counter-cache"
 )
 
 type FieldDataType string

@@ -89,8 +89,19 @@ func (k Keeper) Write(ctx sdk.Context, appId uint, tableName string, id uint, fi
     if id == 0 {
         return 0, errors.New(fmt.Sprintf("Id for table %s is invalid", tableName))
     }
+    counterCacheFields := k.GetCounterCacheFields(ctx, appId, tableName)
+     counterMap := make(map[string]types.CounterCacheField)
+    for _, counterCacheField := range counterCacheFields {
+        counterMap[counterCacheField.FieldName] = counterCacheField
+    }
 
     for _, fieldName := range fieldNames {
+        if _, ok := counterMap[fieldName]; ok {
+            if !k.InitCounterCache(ctx, appId, store, tableName, fieldName, counterMap[fieldName].AssociationTable, id) {
+                return 0, errors.New("InitCounterCache err")
+            }
+            continue
+        }
         if value, ok := fields[fieldName]; ok {
             key := getDataKeyBytes(appId, tableName, fieldName, id)
             err := store.Set(key, k.cdc.MustMarshalBinaryBare(value))
@@ -106,6 +117,25 @@ func (k Keeper) Write(ctx sdk.Context, appId uint, tableName string, id uint, fi
     }
 
     return id, nil
+}
+
+func (k Keeper) InitCounterCache(ctx sdk.Context, appId uint, store *SafeStore, tableName, fieldName, associationTable string, id uint) bool {
+    associationCounterCaches := k.GetCounterCache(ctx, appId, associationTable)
+    for _, associationCounterCache := range associationCounterCaches {
+        if associationCounterCache.AssociationTable != tableName {
+            continue
+        }
+        sId := fmt.Sprintf("%d", id)
+        counter := k.findByWithoutCheckPermission(ctx, appId, associationTable, associationCounterCache.ForeignKey, []string{ sId })
+        key := getDataKeyBytes(appId, tableName, fieldName, id)
+        sCounter := fmt.Sprintf("%d", len(counter))
+        err := store.Set(key, k.cdc.MustMarshalBinaryBare(sCounter))
+        if err != nil {
+           return false
+        }
+        return true
+    }
+    return true
 }
 
 func (k Keeper) Delete(ctx sdk.Context, appId uint, tableName string, id uint, owner sdk.AccAddress) (uint, error){
@@ -323,15 +353,18 @@ func (k Keeper) updateCounterCache(ctx sdk.Context, store *SafeStore,appId uint,
         sid := fields[counterCache.ForeignKey]
         id , _ := strconv.Atoi(sid)
 
-        key := getDataKeyBytes(appId, tableName, counterCache.CounterCacheField, uint(id))
+        key := getDataKeyBytes(appId, counterCache.AssociationTable, counterCache.CounterCacheField, uint(id))
         bz, _ := store.Get(key)
+        var oldCounters string
         if bz == nil {
             return  errors.New("update counter cache err")
         }
-        var oldCounters string
+
         k.cdc.MustUnmarshalBinaryBare(bz, &oldCounters)
         iOldCounters, _ := strconv.Atoi(oldCounters)
-        err := store.Set(key, []byte(strconv.Itoa(iOldCounters + add)))
+        iNewCounters := iOldCounters + add
+        sNewCounters := fmt.Sprintf("%d", iNewCounters)
+        err := store.Set(key, k.cdc.MustMarshalBinaryBare(sNewCounters))
         if err != nil {
             return  err
         }

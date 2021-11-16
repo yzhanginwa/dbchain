@@ -32,6 +32,7 @@ const (
     QueryAssociation = "association"
     QueryCounterCache = "counter_cache"
     QueryColumnOption   = "column_option"
+    QueryCounterInfo    = "counter_info"
     QueryColumnDataType = "column_data_type"
     QueryCanAddColumnOption = "can_add_column_option"
     QueryCanSetColumnDataType = "can_set_column_data_type"
@@ -111,6 +112,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryCounterCache(ctx, path[1:], req, keeper)
         case QueryColumnOption:
             return queryColumnOption(ctx, path[1:], req, keeper)
+        case QueryCounterInfo:
+            return queryCounterInfo(ctx, path[1:], req, keeper)
         case QueryColumnDataType:
             return queryColumnDataType(ctx, path[1:], req, keeper)
         case QueryCanAddColumnOption:
@@ -600,6 +603,39 @@ func queryColumnOption(ctx sdk.Context, path []string, req abci.RequestQuery, ke
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, options)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryCounterInfo(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    addr, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    if !keeper.isAdmin(ctx, appId, addr) {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Admin privilege is needed!")
+    }
+
+    tableName := path[2]
+    fieldName := path[3]
+
+    counterInfo, err := keeper.GetCounterInfo(ctx, appId, tableName, fieldName)
+
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s.%s does not exist",  tableName, fieldName))
+    }
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, counterInfo)
     if err != nil {
         panic("could not marshal result to JSON")
     }

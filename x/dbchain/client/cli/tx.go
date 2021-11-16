@@ -335,7 +335,7 @@ func GetCmdModifyTableAssociation(cdc *codec.Codec) *cobra.Command {
 func GetCmdAddCounterCache(cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
         Use:   "add-counter-cache [appCode] [tableName] [associationTable] [foreignKey] [counterCacheField] [limit]",
-        Short: "add a counter cache field for a table, foreignKey is a field of this table, counterCacheField is a new field which will be add to associationTable. when limit is 0 or " +
+        Short: "add a counter cache field for a table, foreignKey is a field of associationTable, counterCacheField is a new field which will be add to tableName. when limit is 0 or " +
             "negative , it means its no limit",
         Args:  cobra.ExactArgs(6),
         RunE: func(cmd *cobra.Command, args []string) error {

@@ -19,8 +19,6 @@ func (k Keeper) DoFind(ctx sdk.Context, appId uint, tableName string, id uint) (
     if err != nil {
         return nil, errors.New(fmt.Sprintf("Failed to get fields for table %s", tableName))
     }
-    counterCacheFields := k.GetCounterCacheFields(ctx, appId, tableName)
-    fieldNames = append(fieldNames, counterCacheFields...)
     if id == 0 {
         return nil, errors.New("Id cannot be 0")
     }
