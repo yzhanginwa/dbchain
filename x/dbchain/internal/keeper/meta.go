@@ -86,12 +86,12 @@ func (k Keeper) CreateTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, t
 
 
 // Remove a table
-func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string) {
+func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string) error {
     store := DbChainStore(ctx, k.storeKey)
     var tables []string
     bz, err :=store.Get([]byte(getTablesKey(appId)))
     if err != nil{
-        return
+        return err
     }
     if bz != nil {
         k.cdc.MustUnmarshalBinaryBare(bz, &tables)
@@ -120,7 +120,7 @@ func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
                 iter := store.Iterator([]byte(start), []byte(end))
                 for ; iter.Valid(); iter.Next() {
                     if iter.Error() != nil{
-                        continue
+                        return err
                     }
                     key := iter.Key()
                     id := getIdFromDataKey(key)
@@ -145,6 +145,7 @@ func (k Keeper) DropTable(ctx sdk.Context, appId uint, owner sdk.AccAddress, tab
         }
     }
     cache.VoidTable(appId,tableName)
+    return nil
 }
 
 func (k Keeper) DeleteCounterCache(ctx sdk.Context, appId uint, tableName string) bool {
