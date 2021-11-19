@@ -427,7 +427,10 @@ func handleMsgDropTable(ctx sdk.Context, keeper Keeper, msg MsgDropTable) (*sdk.
     if !keeper.HasTable(ctx, appId, msg.TableName) {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Table name does not exist!")
     }
-    keeper.DropTable(ctx, appId, msg.Owner, msg.TableName)
+    err = keeper.DropTable(ctx, appId, msg.Owner, msg.TableName)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+    }
     return &sdk.Result{}, nil
 }
 
