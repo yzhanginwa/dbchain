@@ -31,7 +31,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
     r.HandleFunc(fmt.Sprintf("/%s/tx-simple-result/{%s}/{%s}", storeName, "accessToken", "txHash"), showTxSimpleResultHandler(cliCtx, storeName)).Methods("GET")
 
     r.HandleFunc(fmt.Sprintf("/%s/column-options/{%s}/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "tableName", "fieldName"), showColumnOptionsHandler(cliCtx, storeName)).Methods("GET")
-    r.HandleFunc(fmt.Sprintf("/%s/counter_info/{%s}/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "tableName", "fieldName"), showCounterCacheHandler(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/counter_info/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "tableName"), showCounterCacheHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/column-data-type/{%s}/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "tableName", "fieldName"), showColumnDataTypeHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/can_add_column_option/{%s}/{%s}/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "tableName", "fieldName", "option"), showCanAddColumnOptionHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/can_set_column_data_type/{%s}/{%s}/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "tableName", "fieldName", "dataType"), showCanSetColumnDataTypeHandler(cliCtx, storeName)).Methods("GET")
