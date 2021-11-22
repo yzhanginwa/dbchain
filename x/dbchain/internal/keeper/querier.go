@@ -627,12 +627,11 @@ func queryCounterInfo(ctx sdk.Context, path []string, req abci.RequestQuery, kee
     }
 
     tableName := path[2]
-    fieldName := path[3]
 
-    counterInfo, err := keeper.GetCounterInfo(ctx, appId, tableName, fieldName)
+    counterInfo, err := keeper.GetCounterInfo(ctx, appId, tableName)
 
     if err != nil {
-        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s.%s does not exist",  tableName, fieldName))
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "find counter info err")
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, counterInfo)

@@ -902,29 +902,32 @@ func (k Keeper) GetColumnOption(ctx sdk.Context, appId uint, tableName string, f
     return options, nil
 }
 
-func (k Keeper) GetCounterInfo(ctx sdk.Context, appId uint, tableName string, fieldName string) (map[string]string, error) {
+func (k Keeper) GetCounterInfo(ctx sdk.Context, appId uint, tableName string) ([]map[string]string, error) {
 
     counterCacheFields := k.GetCounterCacheFields(ctx, appId, tableName)
-    associationTable := ""
-    for _, counterCacheField := range counterCacheFields {
-        if counterCacheField.FieldName == fieldName {
-            associationTable = counterCacheField.AssociationTable
-        }
-    }
-    if associationTable == "" {
+    if len(counterCacheFields) == 0 {
         return nil, nil
     }
-    counterCacheInfos := k.GetCounterCache(ctx, appId, associationTable)
-    for _, counterCacheInfo := range counterCacheInfos {
-        if counterCacheInfo.AssociationTable == tableName {
-            return map[string]string{
-                "association_table" : associationTable,
-                "foreign_key" : counterCacheInfo.ForeignKey,
-                "limit" : counterCacheInfo.Limit,
-            }, nil
+    result := make([]map[string]string, 0)
+    for _, counterCacheField := range counterCacheFields {
+
+        associationTable := counterCacheField.AssociationTable
+        counterCacheInfos := k.GetCounterCache(ctx, appId, associationTable)
+        for _, counterCacheInfo := range counterCacheInfos {
+            if counterCacheInfo.AssociationTable == tableName {
+                temp :=  map[string]string{
+                    "counter_field" : counterCacheField.FieldName,
+                    "association_table" : associationTable,
+                    "foreign_key" : counterCacheInfo.ForeignKey,
+                    "limit" : counterCacheInfo.Limit,
+                }
+                result = append(result, temp)
+                break
+            }
         }
     }
-    return nil, nil
+
+    return result, nil
 }
 
 func (k Keeper) GetColumnDataType(ctx sdk.Context, appId uint, tableName string, fieldName string) (string, error) {
