@@ -28,9 +28,7 @@ func getAppLuaHandle(ctx sdk.Context, appId uint, owner sdk.AccAddress, keeper K
 		})
 		openBase(luaHandle)
 		luaHandles[appId] = luaHandle
-		if handleType == QueryHandleType {
-			registerTableType(luaHandle, ctx , appId, keeper, owner)
-		}
+		registerTableType(luaHandle, ctx , appId, keeper, owner)
 		return luaHandle
 	}
 	return l
