@@ -118,6 +118,52 @@ func getGoExportFuncNew(ctx sdk.Context, appId uint, keeper Keeper, owner sdk.Ac
 			}
 			return 1
 		},
+		"findRow" : func(L *lua.LState) int {
+			gasNum := 1000
+			gas := storeTypes.Gas(int64(gasNum))
+			ctx.GasMeter().ConsumeGas(gas,"script consume")
+
+
+			res := make([]map[string]string, 0)
+			paramsNum := L.GetTop()
+			if paramsNum < 2 {
+				ud := setUserData(ctx, appId, keeper, owner, "", res, L)
+				L.Push(ud)
+				return 1
+			}
+
+			tableName := L.ToString(1)
+			sId := L.ToString(2)
+			Id , err := strconv.Atoi(sId)
+			if err != nil {
+				ud := setUserData(ctx, appId, keeper, owner, "", res, L)
+				L.Push(ud)
+				return 1
+			}
+			checkField := ""
+			if L.GetTop() > 2 {
+				checkField = L.ToString(3)
+			}
+
+			fields, err := keeper.queroerFind(ctx, appId, tableName, uint(Id), owner)
+			if err != nil {
+				ud := setUserData(ctx, appId, keeper, owner, tableName, res, L)
+				L.Push(ud)
+				return 1
+			}
+			if checkField != "" {
+				checkRes := checkTime(checkField, []map[string]string{fields})
+				if len(checkRes) > 0 {
+					res = append(res, fields)
+				}
+			} else {
+				res = append(res, fields)
+			}
+
+			ud := setUserData(ctx, appId, keeper, owner, tableName, res, L)
+			L.Push(ud)
+			return 1
+		},
 		//add other functions which need to be exported
 	}
 }
