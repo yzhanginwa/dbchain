@@ -8,18 +8,18 @@ import (
     "github.com/dbchaincloud/cosmos-sdk/server"
     "github.com/dbchaincloud/cosmos-sdk/x/auth/types"
     "github.com/spf13/viper"
+    "github.com/yzhanginwa/dbchain/address"
     "os"
     "reflect"
     "strings"
     "unsafe"
 
-
-    "github.com/yzhanginwa/dbchain/x/bank"
     abci "github.com/dbchaincloud/tendermint/abci/types"
-    tmos "github.com/dbchaincloud/tendermint/libs/os"
     "github.com/dbchaincloud/tendermint/libs/log"
+    tmos "github.com/dbchaincloud/tendermint/libs/os"
     tmtypes "github.com/dbchaincloud/tendermint/types"
     dbm "github.com/tendermint/tm-db"
+    "github.com/yzhanginwa/dbchain/x/bank"
 
     bam "github.com/dbchaincloud/cosmos-sdk/baseapp"
     "github.com/dbchaincloud/cosmos-sdk/codec"
@@ -53,17 +53,17 @@ const (
     PrefixOperator = "oper"
 
     // Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
-    Bech32PrefixAccAddr = Bech32MainPrefix
+    Bech32PrefixAccAddr = address.Bech32MainPrefix
     // Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
-    Bech32PrefixAccPub = Bech32MainPrefix + PrefixPublic
+    Bech32PrefixAccPub = address.Bech32MainPrefix + PrefixPublic
     // Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
-    Bech32PrefixValAddr = Bech32MainPrefix + PrefixValidator + PrefixOperator
+    Bech32PrefixValAddr = address.Bech32MainPrefix + PrefixValidator + PrefixOperator
     // Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
-    Bech32PrefixValPub = Bech32MainPrefix + PrefixValidator + PrefixOperator + PrefixPublic
+    Bech32PrefixValPub = address.Bech32MainPrefix + PrefixValidator + PrefixOperator + PrefixPublic
     // Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
-    Bech32PrefixConsAddr = Bech32MainPrefix + PrefixValidator + PrefixConsensus
+    Bech32PrefixConsAddr = address.Bech32MainPrefix + PrefixValidator + PrefixConsensus
     // Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
-    Bech32PrefixConsPub = Bech32MainPrefix + PrefixValidator + PrefixConsensus + PrefixPublic
+    Bech32PrefixConsPub = address.Bech32MainPrefix + PrefixValidator + PrefixConsensus + PrefixPublic
 )
 
 var (
