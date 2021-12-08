@@ -579,14 +579,13 @@ func GetCmdGetOracleInfo(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
             privKey, err := oracle.LoadPrivKey()
             if err != nil {
-                privKey := algo.GenPrivKey()
                 base58Str := ""
                 switch algo.Algo {
                 case algo.SM2:
-                    pk := privKey.(sm2.PrivKeySm2)
+                    pk := sm2.GenPrivKey()
                     base58Str = base58.Encode(pk[:])
                 default:
-                    pk := privKey.(secp256k1.PrivKeySecp256k1)
+                    pk := secp256k1.GenPrivKey()
                     base58Str = base58.Encode(pk[:])
                 }
                 return cliCtx.PrintOutput(fmt.Sprintf("%s: %s", oracle.OracleEncryptedPrivKey, base58Str))
