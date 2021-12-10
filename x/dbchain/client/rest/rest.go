@@ -50,5 +50,6 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) 
 
     r.HandleFunc(fmt.Sprintf("/%s/download_file/{%s}/{%s}/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "tableName", "id", "fieldName"), downloadFileHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/min_gas_prices/{%s}", storeName, "accessToken"), showCurrentMinGasPrices(cliCtx, storeName)).Methods("GET")
+    r.HandleFunc(fmt.Sprintf("/%s/limit_p2p_transfer_status/{%s}", storeName, "accessToken"), showLimitP2PTransferStatus(cliCtx, storeName)).Methods("GET")
 
 }
