@@ -215,6 +215,97 @@ func (k Keeper) DeleteCounterCache(ctx sdk.Context, appId uint, tableName string
     return true
 }
 
+func (k Keeper) DeleteCounterCacheField(ctx sdk.Context, appId uint, tableName,field string) bool {
+    store := DbChainStore(ctx, k.storeKey)
+    //1、as a main table
+    counterCacheFields := k.GetCounterCacheFields(ctx, appId, tableName)
+    var targetCounterCacheField  types.CounterCacheField
+    for i, counterCacheField := range counterCacheFields {
+        if counterCacheField.FieldName == field {
+            targetCounterCacheField = counterCacheField
+            counterCacheFields = append(counterCacheFields[:i], counterCacheFields[i+1:]...)
+        }
+    }
+    if len(counterCacheFields) == 0 {
+        key := getTableCounterCacheFieldKey(appId, tableName)
+        err := store.Delete([]byte(key))
+        if err != nil {
+            return false
+        }
+    } else {
+        bz := k.cdc.MustMarshalBinaryBare(counterCacheFields)
+        key := getTableCounterCacheFieldKey(appId, tableName)
+        err := store.Set([]byte(key),bz)
+        if err != nil {
+            return false
+        }
+    }
+
+    //for _, counterCacheField := range counterCacheFields {
+    counterCaches := k.GetCounterCache(ctx, appId, targetCounterCacheField.AssociationTable)
+    exist := false
+    for i, counterCache := range counterCaches {
+        if counterCache.AssociationTable == tableName {
+            exist = true
+            counterCaches = append(counterCaches[: i], counterCaches[i+1 :]...)
+        }
+    }
+    if exist {
+        key := getTableCounterCacheInfoKey(appId, targetCounterCacheField.AssociationTable)
+        if len(counterCaches) == 0 {
+            store.Delete([]byte(key))
+        } else {
+            bz := k.cdc.MustMarshalBinaryBare(counterCaches)
+            err := store.Set([]byte(key), bz)
+            if err != nil {
+                return false
+            }
+        }
+    }
+
+    //}
+    //2、as a satellite table
+    counterCacheInfos := k.GetCounterCache(ctx, appId, tableName)
+    var targetCounterCacheInfo types.CounterCache
+    for i, counterCacheInfo := range counterCacheInfos {
+        if counterCacheInfo.ForeignKey == field {
+            targetCounterCacheInfo = counterCacheInfo
+            counterCacheInfos = append(counterCacheInfos[:i], counterCacheInfos[i+1:]...)
+            break
+        }
+    }
+
+    if len(counterCacheInfos) == 0 {
+        key := getTableCounterCacheInfoKey(appId, tableName)
+        err := store.Delete([]byte(key))
+        if err != nil {
+            return false
+        }
+    } else {
+        bz := k.cdc.MustMarshalBinaryBare(counterCacheInfos)
+        key := getTableCounterCacheInfoKey(appId, tableName)
+        err := store.Set([]byte(key),bz)
+        if err != nil {
+            return false
+        }
+    }
+    //delete association
+    counterCacheFields = k.GetCounterCacheFields(ctx, appId, targetCounterCacheInfo.AssociationTable)
+    for i, counterCacheField := range counterCacheFields {
+        if counterCacheField.AssociationTable == tableName {
+            counterCacheFields = append(counterCacheFields[:i],counterCacheFields[i+1:]... )
+            key := getTableCounterCacheFieldKey(appId, targetCounterCacheInfo.AssociationTable)
+            if len(counterCacheFields) != 0 {
+                store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(counterCacheFields))
+            } else {
+                store.Delete([]byte(key))
+            }
+            break
+        }
+    }
+    return true
+}
+
 // Modify Table Association
 func (k Keeper) ModifyTableAssociation(ctx sdk.Context, appId uint, tableName, option, associationMode, associationTable, foreignKey, method string) error {
     store := DbChainStore(ctx, k.storeKey)
@@ -497,6 +588,11 @@ func (k Keeper) DropColumn(ctx sdk.Context, appId uint, tableName string, fieldN
     cache.VoidTable(appId,table.Name)
     // Remove data of this dropped column
     removeDataOfColumn(k, ctx, appId, tableName, fieldName)
+    // delete counterCache
+    delStatus := k.DeleteCounterCacheField(ctx, appId, tableName,fieldName)
+    if !delStatus {
+        return false, errors.New("del counter cache field fail")
+    }
     return true, nil
 }
 
