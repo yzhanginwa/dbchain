@@ -1027,6 +1027,9 @@ func (k Keeper) GetCounterInfo(ctx sdk.Context, appId uint, tableName string) ([
 }
 
 func (k Keeper) GetColumnDataType(ctx sdk.Context, appId uint, tableName string, fieldName string) (string, error) {
+    if fieldName == "id" {
+       return "int", nil
+    }
     store := DbChainStore(ctx, k.storeKey)
     key := getColumnDataTypesKey(appId, tableName, fieldName)
     bz, err := store.Get([]byte(key))
