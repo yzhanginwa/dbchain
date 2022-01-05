@@ -408,3 +408,51 @@ func (msg MsgSetAppUserFileVolumeLimit) GetSignBytes() []byte {
 func (msg MsgSetAppUserFileVolumeLimit) GetSigners() []sdk.AccAddress {
     return []sdk.AccAddress{msg.Owner}
 }
+
+
+////////////////////////////////////////
+//                                    //
+//    MsgSetDatabaseDataStatus        //
+//                                    //
+////////////////////////////////////////
+
+type MsgSetDatabaseDataStatus struct {
+    Owner sdk.AccAddress       `json:"owner"`
+    AppCode string             `json:"app_code"`
+    Status string              `json:"status"`
+}
+
+// NewMsgSetDatabasePermission is a constructor function for MsgCreatTable
+func NewMsgSetDatabaseDataStatus(owner sdk.AccAddress, appCode string) MsgSetDatabaseDataStatus {
+    return MsgSetDatabaseDataStatus {
+        Owner: owner,
+        AppCode: appCode,
+    }
+}
+
+// Route should return the name of the module
+func (msg MsgSetDatabaseDataStatus) Route() string { return RouterKey }
+
+// Type should return the action
+func (msg MsgSetDatabaseDataStatus) Type() string { return "freeze_app_data" }
+
+// ValidateBasic runs stateless checks on the message
+func (msg MsgSetDatabaseDataStatus) ValidateBasic() error {
+    if msg.Owner.Empty() {
+        return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Owner.String())
+    }
+    if len(msg.AppCode) == 0 {
+        return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Application Code cannot be empty")
+    }
+    return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgSetDatabaseDataStatus) GetSignBytes() []byte {
+    return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgSetDatabaseDataStatus) GetSigners() []sdk.AccAddress {
+    return []sdk.AccAddress{msg.Owner}
+}
