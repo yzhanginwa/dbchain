@@ -12,6 +12,7 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    qcache "github.com/yzhanginwa/dbchain/x/dbchain/internal/querier_cache"
     "strconv"
     "strings"
     "time"
@@ -815,14 +816,21 @@ func queryIdsBy(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
-    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    appCode   := path[1]
+    tableName := path[2]
+    fieldName := path[3]
+    value     := path[4]
+
+    appId, err := keeper.GetDatabaseId(ctx, appCode)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    tableName := path[2]
-    fieldName := path[3]
-    value := path[4]
+    result, err := qcache.GetIdsBy(addr, appId, tableName, fieldName, value)
+    if err == nil {
+        return result, nil
+    }
+
     ids := keeper.FindBy(ctx, appId, tableName, fieldName, []string{value}, addr)
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, ids)
@@ -830,6 +838,7 @@ func queryIdsBy(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
         panic("could not marshal result to JSON")
     }
 
+    qcache.SetIdsBy(addr, appId, tableName, fieldName, value, res)
     return res, nil
 }
 

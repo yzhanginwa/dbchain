@@ -8,6 +8,7 @@ import (
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    qcache "github.com/yzhanginwa/dbchain/x/dbchain/internal/querier_cache"
     "strings"
 )
 
@@ -283,8 +284,14 @@ func (k Keeper) isIndexField(ctx sdk.Context, appId uint, tableName, field strin
 }
 
 func (k Keeper) isTablePublic(ctx sdk.Context, appId uint, tableName string) bool {
+    result, err := qcache.GetIsTablePublic(appId, tableName)
+    if err == nil {
+        return result
+    }
     tableOptions, _ := k.GetOption(ctx, appId, tableName)
-    return utils.ItemExists(tableOptions, string(types.TBLOPT_PUBLIC))
+    result = utils.ItemExists(tableOptions, string(types.TBLOPT_PUBLIC))
+    qcache.SetIsTablePublic(appId, tableName, result)
+    return result
 }
 
 func (k Keeper) isReadableId(ctx sdk.Context, appId uint, tableName string, id uint, user sdk.AccAddress) bool{
