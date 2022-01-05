@@ -423,10 +423,11 @@ type MsgSetDatabaseDataStatus struct {
 }
 
 // NewMsgSetDatabasePermission is a constructor function for MsgCreatTable
-func NewMsgSetDatabaseDataStatus(owner sdk.AccAddress, appCode string) MsgSetDatabaseDataStatus {
+func NewMsgSetDatabaseDataStatus(owner sdk.AccAddress, appCode, status string) MsgSetDatabaseDataStatus {
     return MsgSetDatabaseDataStatus {
         Owner: owner,
         AppCode: appCode,
+        Status: status,
     }
 }
 

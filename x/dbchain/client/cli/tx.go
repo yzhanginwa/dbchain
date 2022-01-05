@@ -80,6 +80,8 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdRespondFriend(cdc),
         GetCmdFreezeSchema(cdc),
         GetCmdUnfreezeSchema(cdc),
+        GetCmdFreezeAppData(cdc),
+        GetCmdUnFreezeAppData(cdc),
         GetCmdResetTxTotalTxs(cdc),
         GetCmdModifyTokenKeepers(cdc),
         GetCmdModifyP2PTransferLimit(cdc),
@@ -1189,6 +1191,54 @@ func GetCmdUnfreezeSchema(cdc * codec.Codec) *cobra.Command {
 
             appCode := args[0]
             msg := types.NewMsgSetSchemaStatus(cliCtx.GetFromAddress(), appCode, "unfrozen" )
+            err := msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+////////////////////////////////
+//                            //
+// Freeze/Unfreeze  app data  //
+//                            //
+////////////////////////////////
+
+func GetCmdFreezeAppData(cdc * codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "freeze-app-data [database]",
+        Short: "Freeze the data of a database",
+        Args:  cobra.ExactArgs(1),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode := args[0]
+            msg := types.NewMsgSetDatabaseDataStatus(cliCtx.GetFromAddress(), appCode, "frozen")
+            err := msg.ValidateBasic()
+            if err != nil {
+                return errors.New(fmt.Sprintf("Error %s", err))
+            }
+            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+        },
+    }
+}
+
+func GetCmdUnFreezeAppData(cdc * codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use:   "unfreeze-app-data [database]",
+        Short: "Unfreeze the data of a database",
+        Args:  cobra.ExactArgs(1),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            inBuf := bufio.NewReader(cmd.InOrStdin())
+            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+
+            appCode := args[0]
+            msg := types.NewMsgSetDatabaseDataStatus(cliCtx.GetFromAddress(), appCode, "unfrozen" )
             err := msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))

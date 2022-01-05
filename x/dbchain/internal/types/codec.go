@@ -16,6 +16,7 @@ func RegisterCodec(cdc *codec.Codec) {
     cdc.RegisterConcrete(MsgCreateApplication{}, "dbchain/CreateApplication", nil)
     cdc.RegisterConcrete(MsgDropApplication{},"dbchain/DropApplication",nil)
     cdc.RegisterConcrete(MsgRecoverApplication{},"dbchain/RecoverApplication",nil)
+    cdc.RegisterConcrete(MsgSetDatabaseDataStatus{},"dbchain/SetDatabaseDataStatus",nil)
     cdc.RegisterConcrete(MsgCreateSysDatabase{}, "dbchain/CreateSysDatabase", nil)
     cdc.RegisterConcrete(MsgSetAppUserFileVolumeLimit{}, "dbchain/SetAppUserFileVolumeLimit", nil)
     cdc.RegisterConcrete(MsgSetSchemaStatus{}, "dbchain/SetSchemaStatus", nil)
