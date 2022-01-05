@@ -91,6 +91,28 @@ func (k Keeper) GetDatabaseIdNotFrozen(ctx sdk.Context, appCode string) (uint, e
     }
 }
 
+func (k Keeper) GetDatabaseIdDataNotFrozen(ctx sdk.Context, appCode string) (uint, error){
+    db, err := k.getDatabase(ctx, appCode)
+    if err != nil {
+        return 0, err
+    }  else if db.Deleted == true || db.DataFrozen == true {
+        return 0, errors.New("database has been deleted or data of database has been frozen")
+    } else {
+        return db.AppId, nil
+    }
+}
+
+func (k Keeper) GetDatabaseIdSchemaDataNotFrozen(ctx sdk.Context, appCode string) (uint, error){
+    db, err := k.getDatabase(ctx, appCode)
+    if err != nil {
+        return 0, err
+    }  else if db.Deleted == true || db.DataFrozen == true || db.SchemaFrozen == true {
+        return 0, errors.New("database has been deleted or frozen")
+    } else {
+        return db.AppId, nil
+    }
+}
+
 func (k Keeper) GetDatabaseIdWithoutCheck(ctx sdk.Context, appCode string) (uint, error){
     db, err := k.getDatabase(ctx, appCode)
     if err != nil {
@@ -454,6 +476,34 @@ func (k Keeper) SetSchemaStatus(ctx sdk.Context, owner sdk.AccAddress, appCode, 
     }
 
     database.SchemaFrozen = frozen_status
+    store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(database))
+    cache.VoidDatabase(appCode)
+    return nil
+}
+
+func (k Keeper) SetDatabaseDataStatus(ctx sdk.Context, owner sdk.AccAddress, appCode, status string) error {
+    frozen_status := true
+    if status == "unfrozen" {    // status must be either "frozen" or "unfrozen"
+        frozen_status = false
+    }
+
+    store := DbChainStore(ctx, k.storeKey)
+    key := getDatabaseKey(appCode)
+    bz, err := store.Get([]byte(key))
+    if err != nil{
+        return err
+    }
+    if bz == nil {
+        return errors.New(fmt.Sprintf("App code %s is invalid!", appCode))
+    }
+    var database types.Database
+    k.cdc.MustUnmarshalBinaryBare(bz, &database)
+
+    if database.DataFrozen == frozen_status {
+        return errors.New("No need to do anything!")
+    }
+
+    database.DataFrozen = frozen_status
     store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(database))
     cache.VoidDatabase(appCode)
     return nil

@@ -109,6 +109,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             result, err = handleMsgRespondFriend(ctx, keeper, msg)
         case MsgSetSchemaStatus:
             result, err = handleMsgSetSchemaStatus(ctx, keeper, msg)
+        case MsgSetDatabaseDataStatus:
+            result, err = handleMsgSetDatabaseDataStatus(ctx, keeper, msg)
         case MsgSetDatabasePermission:
             result, err = handleMsgSetDatabasePermission(ctx, keeper, msg)
         case MsgUpdateTotalTx:
@@ -262,9 +264,9 @@ func handleMsgAddFunction(ctx sdk.Context, keeper Keeper, msg MsgAddFunction) (*
 }
 
 func handleMsgCallFunction(ctx sdk.Context, keeper Keeper, msg MsgCallFunction) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdDataNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, err
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,err.Error())
     }
 
     err = keeper.CallFunction(ctx, appId, msg.Owner, msg.FunctionName, msg.Argument)
@@ -456,7 +458,7 @@ func handleMsgAddColumn(ctx sdk.Context, keeper Keeper, msg MsgAddColumn) (*sdk.
 }
 
 func handleMsgDropColumn(ctx sdk.Context, keeper Keeper, msg MsgDropColumn) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseIdNotFrozen(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdSchemaDataNotFrozen(ctx, msg.AppCode)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
@@ -731,9 +733,10 @@ func handleMsgSetColumnMemo(ctx sdk.Context, keeper Keeper, msg MsgSetColumnMemo
 }
 
 func handleMsgInsertRow(ctx sdk.Context, keeper Keeper, msg types.MsgInsertRow) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+
+    appId, err := keeper.GetDatabaseIdDataNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
     }
 
     if !keeper.HasTable(ctx, appId, msg.TableName) {
@@ -760,9 +763,9 @@ func handleMsgInsertRow(ctx sdk.Context, keeper Keeper, msg types.MsgInsertRow) 
 }
 
 func handleMsgUpdateRow(ctx sdk.Context, keeper Keeper, msg types.MsgUpdateRow) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdDataNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,err.Error())
     }
 
     if !keeper.HasTable(ctx, appId, msg.TableName) {
@@ -784,9 +787,9 @@ func handleMsgUpdateRow(ctx sdk.Context, keeper Keeper, msg types.MsgUpdateRow) 
 }
 
 func handleMsgDeleteRow(ctx sdk.Context, keeper Keeper, msg types.MsgDeleteRow) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdDataNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,err.Error())
     }
 
     if !keeper.HasTable(ctx, appId, msg.TableName) {
@@ -806,9 +809,9 @@ func handleMsgDeleteRow(ctx sdk.Context, keeper Keeper, msg types.MsgDeleteRow) 
 }
 
 func handleMsgFreezeRow(ctx sdk.Context, keeper Keeper, msg types.MsgFreezeRow) (*sdk.Result, error) {
-    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    appId, err := keeper.GetDatabaseIdDataNotFrozen(ctx, msg.AppCode)
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Invalid app code")
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,err.Error())
     }
 
     if !keeper.HasTable(ctx, appId, msg.TableName) {
@@ -926,6 +929,23 @@ func handleMsgSetSchemaStatus(ctx sdk.Context, keeper Keeper, msg MsgSetSchemaSt
     }
 
     err = keeper.SetSchemaStatus(ctx, msg.Owner, msg.AppCode, msg.Status)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
+    }
+    return &sdk.Result{}, nil
+}
+
+func handleMsgSetDatabaseDataStatus(ctx sdk.Context, keeper Keeper, msg MsgSetDatabaseDataStatus) (*sdk.Result, error) {
+    appId, err := keeper.GetDatabaseId(ctx, msg.AppCode)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Invalid app code")
+    }
+
+    if !isSysAdmin(ctx, keeper, msg.Owner) && !isAdmin(ctx, keeper, appId, msg.Owner) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Not authorized")
+    }
+
+    err = keeper.SetDatabaseDataStatus(ctx, msg.Owner, msg.AppCode, msg.Status)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,fmt.Sprintf("%v", err))
     }

@@ -31,6 +31,7 @@ type (
     MsgSetSchemaStatus   = types.MsgSetSchemaStatus
     MsgSetDatabasePermission = types.MsgSetDatabasePermission
     MsgModifyDatabaseUser    = types.MsgModifyDatabaseUser
+    MsgSetDatabaseDataStatus = types.MsgSetDatabaseDataStatus
     MsgAddFunction  = types.MsgAddFunction
     MsgCallFunction = types.MsgCallFunction
     MsgDropFunction = types.MsgDropFunction
