@@ -53,5 +53,7 @@ func SetIdsBy(address sdk.AccAddress, appId uint, tableName, fieldName, value st
     } else {
         key = fmt.Sprintf("GetIdsBy1:%s:%d:%s:%s:%s", address.String(), appId, tableName, fieldName, value)
     }
+
+    RegisterKeysOfTable(appId, tableName, key)
     return theCache.Set([]byte(key), []byte(toBeSaved), expiration)
 }

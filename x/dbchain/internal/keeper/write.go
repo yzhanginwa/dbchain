@@ -12,6 +12,7 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/eval"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    qcache "github.com/yzhanginwa/dbchain/x/dbchain/internal/querier_cache"
     "strconv"
     "strings"
 )
@@ -67,6 +68,10 @@ func (k Keeper) InsertCore(ctx sdk.Context, appId uint, tableName string, fields
     if ctx.GasMeter().IsOutOfGas() {
         return 0, errors.New("out of gas")
     }
+
+    // to notify querier-cache to invalidate related keys
+    qcache.NotifyTableExpiration(appId, tableName)
+
     return id, nil
 }
 // TODO: need to think over how and when to allow updating

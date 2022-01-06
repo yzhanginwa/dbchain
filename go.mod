@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.250
-	github.com/coocood/freecache v1.2.0 // indirect
+	github.com/coocood/freecache v1.2.0
 	github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d
 	github.com/dbchaincloud/cosmos-sdk v0.39.2-0.20211014092701-14d6ac4f2766
 	github.com/dbchaincloud/tendermint v0.33.8-0.20211014085806-8756578d0809
