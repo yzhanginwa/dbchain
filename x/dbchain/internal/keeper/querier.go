@@ -788,17 +788,20 @@ func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keep
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
-    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    appCode   := path[1]
+    tableName := path[2]
+    rowId     := path[3]
+
+    appId, err := keeper.GetDatabaseId(ctx, appCode)
     if  err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    tableName := path[2] 
-    u32, err := strconv.ParseUint(path[3], 10, 32)
+    u32, err := strconv.ParseUint(rowId, 10, 32)
     fields, err := keeper.Find(ctx, appId, tableName, uint(u32), addr)
 
     if err != nil {
-        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Table %s does not exist",  path[2]))
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Table %s does not exist", tableName))
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, fields)

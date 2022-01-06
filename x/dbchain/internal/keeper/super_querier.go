@@ -82,12 +82,15 @@ func queryQuerier(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
-    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    appCode        := path[1]
+    encodedQuerier := path[2]
+
+    appId, err := keeper.GetDatabaseId(ctx, appCode)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    querierObjJson, err := base58.Decode(path[2])
+    querierObjJson, err := base58.Decode(encodedQuerier)
     if err != nil {
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Querier object json string base58 encoding error!")
     }
