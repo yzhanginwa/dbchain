@@ -797,6 +797,11 @@ func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keep
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
+    result, err := qcache.GetFind(addr, appId, tableName, rowId)
+    if err == nil {
+        return result, nil
+    }
+
     u32, err := strconv.ParseUint(rowId, 10, 32)
     fields, err := keeper.Find(ctx, appId, tableName, uint(u32), addr)
 
@@ -809,6 +814,7 @@ func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keep
         panic("could not marshal result to JSON")
     }
 
+    qcache.SetFind(addr, appId, tableName, rowId, res)
     return res, nil
 }
 

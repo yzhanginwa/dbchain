@@ -58,6 +58,29 @@ func SetIdsBy(address sdk.AccAddress, appId uint, tableName, fieldName, value st
     return theCache.Set([]byte(key), []byte(toBeSaved), expiration)
 }
 
+func GetFind(address sdk.AccAddress, appId uint, tableName, rowId string) ([]byte, error) {
+    result, err := GetIsTablePublic(appId, tableName)
+    var key string
+    if err == nil && result {
+        key = getFindKey0(appId, tableName, rowId)
+    } else {
+        key = getFindKey1(address, appId, tableName, rowId)
+    }
+    return theCache.Get([]byte(key))
+}
+
+func SetFind(address sdk.AccAddress, appId uint, tableName, rowId string, toBeSaved []byte) (error) {
+    result, err := GetIsTablePublic(appId, tableName)
+    var key string
+    if err == nil && result {
+        key = getFindKey0(appId, tableName, rowId)
+    } else {
+        key = getFindKey1(address, appId, tableName, rowId)
+    }
+    // No need to be invalidated when table inserted or row frozen
+    return theCache.Set([]byte(key), toBeSaved, expiration * 10)
+}
+
 //////////////////////
 //                  //
 // Helper functions //
@@ -70,4 +93,12 @@ func getIdsByKey0(appId uint, tableName, fieldName, value string) string {
 
 func getIdsByKey1(address sdk.AccAddress, appId uint, tableName, fieldName, value string) string {
     return fmt.Sprintf("GetIdsBy1:%s:%d:%s:%s:%s", address.String(), appId, tableName, fieldName, value)
+}
+
+func getFindKey0(appId uint, tableName, rowId string) string {
+    return fmt.Sprintf("GetFind0:%d:%s:%s", appId, tableName, rowId)
+}
+
+func getFindKey1(address sdk.AccAddress, appId uint, tableName, rowId string) string {
+    return fmt.Sprintf("GetFind1:%s:%d:%s:%s", address.String(), appId, tableName, rowId)
 }
