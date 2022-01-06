@@ -14,6 +14,7 @@ import (
     "github.com/mr-tron/base58"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+    qcache "github.com/yzhanginwa/dbchain/x/dbchain/internal/querier_cache"
 )
 
 type Condition struct {
@@ -101,6 +102,11 @@ func queryQuerier(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Failed to parse querier objects!")
     }
 
+    result0, err0 := qcache.GetQuerier(addr, appId, querierObjs)
+    if err0 == nil {
+        return result0, nil
+    }
+
     result, _, err := querierSuperHandler(ctx, keeper, appId, querierObjs, addr)
     if err != nil {
         return nil, err
@@ -119,6 +125,8 @@ func queryQuerier(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
     if err != nil {
         panic("could not marshal result to JSON")
     }
+
+    qcache.SetQuerier(addr, appId, querierObjs, res)
     return res, nil
 }
 

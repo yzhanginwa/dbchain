@@ -2,6 +2,9 @@ package querier_cache
 
 import (
     "fmt"
+    "errors"
+    "strings"
+    "sort"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
 )
 
@@ -81,6 +84,45 @@ func SetFind(address sdk.AccAddress, appId uint, tableName, rowId string, toBeSa
     return theCache.Set([]byte(key), toBeSaved, expiration * 10)
 }
 
+func GetQuerier(address sdk.AccAddress, appId uint, querierObjs [](map[string]string)) ([]byte, error) {
+    tableName, err := findTableFromQuerierObjects(querierObjs)
+    if err != nil {
+        return []byte(""), nil
+    }
+
+    querierStr := querierObjectsToString(querierObjs)
+
+    result, err := GetIsTablePublic(appId, tableName)
+    var key string
+    if err == nil && result {
+        key = getQuerierKey0(appId, tableName, querierStr)
+    } else {
+        key = getQuerierKey1(address, appId, tableName, querierStr)
+    }
+
+    return theCache.Get([]byte(key))
+}
+
+func SetQuerier(address sdk.AccAddress, appId uint, querierObjs [](map[string]string), toBeSaved []byte) (error) {
+    tableName, err :=findTableFromQuerierObjects(querierObjs)
+    if err != nil {
+        return err
+    }
+
+    querierStr := querierObjectsToString(querierObjs)
+
+    result, err := GetIsTablePublic(appId, tableName)
+    var key string
+    if err == nil && result {
+        key = getQuerierKey0(appId, tableName, querierStr)
+    } else {
+        key = getQuerierKey1(address, appId, tableName, querierStr)
+    }
+
+    RegisterKeysOfTable(appId, tableName, key)
+    return theCache.Set([]byte(key), toBeSaved, expiration * 10)
+}
+
 //////////////////////
 //                  //
 // Helper functions //
@@ -101,4 +143,40 @@ func getFindKey0(appId uint, tableName, rowId string) string {
 
 func getFindKey1(address sdk.AccAddress, appId uint, tableName, rowId string) string {
     return fmt.Sprintf("GetFind1:%s:%d:%s:%s", address.String(), appId, tableName, rowId)
+}
+
+func getQuerierKey0(appId uint, tableName, querierStr string) string {
+    return fmt.Sprintf("GetQuerier0:%d:%s:%s", appId, tableName, querierStr)
+}
+
+func getQuerierKey1(address sdk.AccAddress, appId uint, tableName, querierStr string) string {
+    return fmt.Sprintf("GetQuerier1:%s:%d:%s:%s", address.String(), appId, tableName, querierStr)
+}
+
+func findTableFromQuerierObjects(querierObjs [](map[string]string)) (string, error) {
+    for _, item := range querierObjs {
+        if item["method"] == "table" {
+            return item["table"], nil
+        }
+    }
+    return "", errors.New("no table found in the querier")
+}
+
+func querierObjectsToString(querierObjs [](map[string]string)) string {
+    result := []string{}
+    for _, item := range querierObjs {
+        str := mapToString(item)
+        result = append(result, str)
+    }
+    sort.Strings(result)
+    return strings.Join(result, ":")
+}
+
+func mapToString(input map[string]string) string {
+    result := []string{}
+    for key, element := range input {
+       result = append(result, key + ":" + element)
+    }
+    sort.Strings(result)
+    return strings.Join(result, ":")
 }
