@@ -2,6 +2,7 @@ package querier_cache
 
 import (
     "fmt"
+    "time"
     "encoding/binary"
     "runtime/debug"
     "github.com/coocood/freecache"
@@ -69,6 +70,7 @@ func NotifyTableExpiration(appId uint, tableName string) {
 func handleTableExpiration() {
     for {
         oneTableId := <-theChannel
+        time.Sleep(2 * time.Second)     // just in case the message is in a bigger transaction
         appId := oneTableId.AppId
         tableName := oneTableId.TableName
         counterKey := getTableKeycounterKey(appId, tableName)
