@@ -34,12 +34,8 @@ func (k Keeper) GetAllAppCode(ctx sdk.Context) ([]string) {
         keyString := string(key)
         appCode := getAppCodeFromDatabaseKey(keyString)
         //
-        database, err := k.getDatabase(ctx, appCode)
+        _, err := k.getDatabase(ctx, appCode)
         if err != nil {
-            continue
-        }
-        if database.Deleted == true && database.Expiration <= time.Now().Unix(){
-            k.PurgeApplication(ctx, appCode)
             continue
         }
         result = append(result, appCode)
