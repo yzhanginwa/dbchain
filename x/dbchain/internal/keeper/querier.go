@@ -269,11 +269,6 @@ func queryApplication(ctx sdk.Context, path []string, req abci.RequestQuery, kee
     if err != nil {
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("AppCode %s does not exist", appCode))
     }
-    //if database expiration delete and return null
-    if database.Deleted == true && database.Expiration <= time.Now().Unix(){
-        keeper.PurgeApplication(ctx, appCode)
-        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("AppCode %s does not exist", appCode))
-    }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, database)
     if err != nil {
@@ -735,9 +730,15 @@ func queryCanAddColumnDataType(ctx sdk.Context, path []string, req abci.RequestQ
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
     }
 
-    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    appId, err := keeper.GetDatabaseIdDataNotFrozen(ctx, path[1])
     if err != nil {
-        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+        result := false
+        res, err := codec.MarshalJSONIndent(keeper.cdc, result)
+        if err != nil {
+            panic("could not marshal result to JSON")
+        }
+
+        return res, nil
     }
 
     tableName     := path[2]
