@@ -102,7 +102,8 @@ func queryQuerier(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest,"Failed to parse querier objects!")
     }
 
-    result0, err0 := qcache.GetQuerier(addr, appId, querierObjs)
+    isTablePublicCallback := GetQuerierCacheCallback1(ctx, keeper)
+    result0, err0 := qcache.GetQuerier(addr, appId, querierObjs, isTablePublicCallback)
     if err0 == nil {
         return result0, nil
     }
@@ -126,7 +127,7 @@ func queryQuerier(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
         panic("could not marshal result to JSON")
     }
 
-    qcache.SetQuerier(addr, appId, querierObjs, res)
+    qcache.SetQuerier(addr, appId, querierObjs, isTablePublicCallback, res)
     return res, nil
 }
 

@@ -797,7 +797,8 @@ func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keep
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    result, err := qcache.GetFind(addr, appId, tableName, rowId)
+    isTablePublicCallback := GetQuerierCacheCallback1(ctx, keeper)
+    result, err := qcache.GetFind(addr, appId, tableName, rowId, isTablePublicCallback)
     if err == nil {
         return result, nil
     }
@@ -814,7 +815,7 @@ func queryRow(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keep
         panic("could not marshal result to JSON")
     }
 
-    qcache.SetFind(addr, appId, tableName, rowId, res)
+    qcache.SetFind(addr, appId, tableName, rowId, isTablePublicCallback, res)
     return res, nil
 }
 
@@ -835,7 +836,8 @@ func queryIdsBy(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
 
-    result, err := qcache.GetIdsBy(addr, appId, tableName, fieldName, value)
+    isTablePublicCallback := GetQuerierCacheCallback1(ctx, keeper)
+    result, err := qcache.GetIdsBy(addr, appId, tableName, fieldName, value, isTablePublicCallback)
     if err == nil {
         return result, nil
     }
@@ -847,7 +849,7 @@ func queryIdsBy(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
         panic("could not marshal result to JSON")
     }
 
-    qcache.SetIdsBy(addr, appId, tableName, fieldName, value, res)
+    qcache.SetIdsBy(addr, appId, tableName, fieldName, value, isTablePublicCallback, res)
     return res, nil
 }
 

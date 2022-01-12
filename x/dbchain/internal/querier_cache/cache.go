@@ -14,7 +14,7 @@ const (
 )
 
 func GetIsTablePublic(appId uint, tableName string) (bool, error) {
-    key := fmt.Sprintf("GetIsTablePublic:%d:%s", appId, tableName)
+    key := getIsTablePublicKey(appId, tableName)
     result, err := theCache.Get([]byte(key))
     if err != nil {
         return false, err
@@ -27,7 +27,7 @@ func GetIsTablePublic(appId uint, tableName string) (bool, error) {
 }
 
 func SetIsTablePublic(appId uint, tableName string, result bool) (error) {
-    key := fmt.Sprintf("GetIsTablePublic:%d:%s", appId, tableName)
+    key := getIsTablePublicKey(appId, tableName)
     var resultBytes []byte
     if result {
         resultBytes = []byte(stringTrue)
@@ -37,10 +37,10 @@ func SetIsTablePublic(appId uint, tableName string, result bool) (error) {
     return theCache.Set([]byte(key), resultBytes, expiration)
 }
 
-func GetIdsBy(address sdk.AccAddress, appId uint, tableName, fieldName, value string) ([]byte, error) {
-    result, err := GetIsTablePublic(appId, tableName)
+func GetIdsBy(address sdk.AccAddress, appId uint, tableName, fieldName, value string, isTablePublic func(uint, string) bool) ([]byte, error) {
+    result := isTablePublic(appId, tableName)
     var key string
-    if err == nil && result {
+    if result {
         key = getIdsByKey0(appId, tableName, fieldName, value)
     } else {
         key = getIdsByKey1(address, appId, tableName, fieldName, value)
@@ -48,10 +48,10 @@ func GetIdsBy(address sdk.AccAddress, appId uint, tableName, fieldName, value st
     return theCache.Get([]byte(key))
 }
 
-func SetIdsBy(address sdk.AccAddress, appId uint, tableName, fieldName, value string, toBeSaved[]byte) (error) {
-    result, err := GetIsTablePublic(appId, tableName)
+func SetIdsBy(address sdk.AccAddress, appId uint, tableName, fieldName, value string, isTablePublic func(uint, string) bool, toBeSaved[]byte) (error) {
+    result := isTablePublic(appId, tableName)
     var key string
-    if err == nil && result {
+    if result {
         key = getIdsByKey0(appId, tableName, fieldName, value)
     } else {
         key = getIdsByKey1(address, appId, tableName, fieldName, value)
@@ -61,10 +61,10 @@ func SetIdsBy(address sdk.AccAddress, appId uint, tableName, fieldName, value st
     return theCache.Set([]byte(key), []byte(toBeSaved), expiration)
 }
 
-func GetFind(address sdk.AccAddress, appId uint, tableName, rowId string) ([]byte, error) {
-    result, err := GetIsTablePublic(appId, tableName)
+func GetFind(address sdk.AccAddress, appId uint, tableName, rowId string, isTablePublic func(uint, string) bool) ([]byte, error) {
+    result := isTablePublic(appId, tableName)
     var key string
-    if err == nil && result {
+    if result {
         key = getFindKey0(appId, tableName, rowId)
     } else {
         key = getFindKey1(address, appId, tableName, rowId)
@@ -72,10 +72,10 @@ func GetFind(address sdk.AccAddress, appId uint, tableName, rowId string) ([]byt
     return theCache.Get([]byte(key))
 }
 
-func SetFind(address sdk.AccAddress, appId uint, tableName, rowId string, toBeSaved []byte) (error) {
-    result, err := GetIsTablePublic(appId, tableName)
+func SetFind(address sdk.AccAddress, appId uint, tableName, rowId string, isTablePublic func(uint, string) bool, toBeSaved []byte) (error) {
+    result := isTablePublic(appId, tableName)
     var key string
-    if err == nil && result {
+    if result {
         key = getFindKey0(appId, tableName, rowId)
     } else {
         key = getFindKey1(address, appId, tableName, rowId)
@@ -84,7 +84,7 @@ func SetFind(address sdk.AccAddress, appId uint, tableName, rowId string, toBeSa
     return theCache.Set([]byte(key), toBeSaved, expiration * 10)
 }
 
-func GetQuerier(address sdk.AccAddress, appId uint, querierObjs [](map[string]string)) ([]byte, error) {
+func GetQuerier(address sdk.AccAddress, appId uint, querierObjs [](map[string]string), isTablePublic func(uint, string) bool) ([]byte, error) {
     tableName, err := findTableFromQuerierObjects(querierObjs)
     if err != nil {
         return []byte(""), nil
@@ -92,18 +92,17 @@ func GetQuerier(address sdk.AccAddress, appId uint, querierObjs [](map[string]st
 
     querierStr := querierObjectsToString(querierObjs)
 
-    result, err := GetIsTablePublic(appId, tableName)
+    result := isTablePublic(appId, tableName)
     var key string
-    if err == nil && result {
+    if result {
         key = getQuerierKey0(appId, tableName, querierStr)
     } else {
         key = getQuerierKey1(address, appId, tableName, querierStr)
     }
-
     return theCache.Get([]byte(key))
 }
 
-func SetQuerier(address sdk.AccAddress, appId uint, querierObjs [](map[string]string), toBeSaved []byte) (error) {
+func SetQuerier(address sdk.AccAddress, appId uint, querierObjs [](map[string]string), isTablePublic func(uint, string) bool, toBeSaved []byte) (error) {
     tableName, err :=findTableFromQuerierObjects(querierObjs)
     if err != nil {
         return err
@@ -111,9 +110,9 @@ func SetQuerier(address sdk.AccAddress, appId uint, querierObjs [](map[string]st
 
     querierStr := querierObjectsToString(querierObjs)
 
-    result, err := GetIsTablePublic(appId, tableName)
+    result := isTablePublic(appId, tableName)
     var key string
-    if err == nil && result {
+    if result {
         key = getQuerierKey0(appId, tableName, querierStr)
     } else {
         key = getQuerierKey1(address, appId, tableName, querierStr)
@@ -128,6 +127,10 @@ func SetQuerier(address sdk.AccAddress, appId uint, querierObjs [](map[string]st
 // Helper functions //
 //                  //
 //////////////////////
+
+func getIsTablePublicKey(appId uint, tableName string) string {
+    return fmt.Sprintf("GetIsTablePublic:%d:%s", appId, tableName)
+}
 
 func getIdsByKey0(appId uint, tableName, fieldName, value string) string {
     return fmt.Sprintf("GetIdsBy0:%d:%s:%s:%s", appId, tableName, fieldName, value)
