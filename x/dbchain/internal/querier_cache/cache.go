@@ -37,6 +37,11 @@ func SetIsTablePublic(appId uint, tableName string, result bool) (error) {
     return theCache.Set([]byte(key), resultBytes, expiration)
 }
 
+func VoidIsTablePublic(appId uint, tableName string) {
+    key := getIsTablePublicKey(appId, tableName)
+    theCache.Del([]byte(key))
+}
+
 func GetIdsBy(address sdk.AccAddress, appId uint, tableName, fieldName, value string, isTablePublic func(uint, string) bool) ([]byte, error) {
     result := isTablePublic(appId, tableName)
     var key string

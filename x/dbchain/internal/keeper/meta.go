@@ -9,6 +9,7 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "strconv"
     "strings"
+    qcache "github.com/yzhanginwa/dbchain/x/dbchain/internal/querier_cache"
 )
 
 /////////////////////////////
@@ -644,6 +645,8 @@ func (k Keeper) RenameColumn(ctx sdk.Context, appId uint, tableName string, oldF
 }
 
 func (k Keeper) ModifyOption(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, action string, option string) {
+    defer qcache.VoidIsTablePublic(appId, tableName)
+
     store := DbChainStore(ctx, k.storeKey)
     key := getTableOptionsKey(appId, tableName)
     var options []string
