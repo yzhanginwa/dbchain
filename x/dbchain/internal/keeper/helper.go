@@ -63,6 +63,9 @@ func (k Keeper) validateIntField(ctx sdk.Context, appId uint, tableName, fieldNa
         if iter.Error() != nil{
             return false
         }
+        if idOfFieldIsFrozen(store, appId, tableName, iter.Key()) {
+            continue
+        }
         val := iter.Value()
         k.cdc.MustUnmarshalBinaryBare(val, &mold)
         if _, err := strconv.Atoi(mold); err != nil {
@@ -82,6 +85,9 @@ func (k Keeper) validateTimeField(ctx sdk.Context, appId uint, tableName, fieldN
     for ; iter.Valid(); iter.Next() {
         if iter.Error() != nil{
             return false
+        }
+        if idOfFieldIsFrozen(store, appId, tableName, iter.Key()) {
+            continue
         }
         val := iter.Value()
         k.cdc.MustUnmarshalBinaryBare(val, &mold)
@@ -104,6 +110,9 @@ func (k Keeper) validateDecimalField(ctx sdk.Context, appId uint, tableName, fie
         if iter.Error() != nil{
             return false
         }
+        if idOfFieldIsFrozen(store, appId, tableName, iter.Key()) {
+            continue
+        }
         val := iter.Value()
         k.cdc.MustUnmarshalBinaryBare(val, &mold)
         if _, err := strconv.ParseFloat(mold,64); err != nil {
@@ -124,6 +133,9 @@ func (k Keeper) validateAddressField(ctx sdk.Context, appId uint, tableName, fie
         if iter.Error() != nil{
             return false
         }
+        if idOfFieldIsFrozen(store, appId, tableName, iter.Key()) {
+            continue
+        }
         val := iter.Value()
         k.cdc.MustUnmarshalBinaryBare(val, &mold)
         if _, err := sdk.AccAddressFromBech32(mold); err != nil {
@@ -143,6 +155,9 @@ func (k Keeper) validateFileField(ctx sdk.Context, appId uint, tableName, fieldN
     for ; iter.Valid(); iter.Next() {
         if iter.Error() != nil{
             return false
+        }
+        if idOfFieldIsFrozen(store, appId, tableName, iter.Key()) {
+            continue
         }
         val := iter.Value()
         k.cdc.MustUnmarshalBinaryBare(val, &mold)
@@ -213,4 +228,9 @@ func (k Keeper) hasForeignRecordOfOwn(ctx sdk.Context, appId uint, tableName, id
 
 func (k Keeper)GetCdc() *codec.Codec{
     return k.cdc
+}
+
+func idOfFieldIsFrozen(store *SafeStore, appId uint, tableName string, key []byte) bool {
+    id := getIdFromDataKey(key)
+    return isRowFrozen(store, appId, tableName, id)
 }
