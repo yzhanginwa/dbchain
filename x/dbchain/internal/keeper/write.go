@@ -37,7 +37,10 @@ func (k Keeper) InsertCore(ctx sdk.Context, appId uint, tableName string, fields
     }
 
     // as far the first go routine to be used
-    _, allUploadFileSize := k.tryToPinFile(ctx, appId, tableName, fields, owner)
+    pinResult, allUploadFileSize := k.tryToPinFile(ctx, appId, tableName, fields, owner)
+    if !pinResult {
+        return 0, errors.New("pin file failed")
+    }
     id, err = getNextId(k, ctx, appId, tableName)
     if err != nil {
         return 0, errors.New(fmt.Sprintf("Failed to get id for table %s", tableName))
@@ -658,8 +661,11 @@ func (k Keeper) tryToPinFile(ctx sdk.Context, appId uint, tableName string, fiel
         fieldDataType, _ := k.GetColumnDataType(ctx, appId, tableName, fieldName)
         if fieldDataType == string(types.FLDTYP_FILE) {
             if value, ok := fields[fieldName]; ok {
-                sh := shell.NewShell("localhost:5001")
-                size := getUploadFileSize(sh, value)
+                sh := utils.NewShellDbchain("localhost:5001")
+                size, err := getUploadFileSize(sh, value)
+                if err != nil {
+                    return false, 0
+                }
                 allUploadFileSize += size
                 k.UpdateAppUserUsedFileVolume(ctx, appId, owner.String(), fmt.Sprintf("%d", size))
                 go func(sh *shell.Shell, value string) {
@@ -732,10 +738,10 @@ func validateAmount(amount string) (int, bool) {
     }
 }
 
-func getUploadFileSize(sh *shell.Shell, cid string) uint64{
+func getUploadFileSize(sh *shell.Shell, cid string) (uint64,error){
     obj, err := sh.FileList(fmt.Sprintf("/ipfs/%s", cid))
     if err != nil {
-        return 0
+        return 0, err
     }
-    return obj.Size
+    return obj.Size, nil
 }

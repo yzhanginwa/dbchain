@@ -7,7 +7,6 @@ import (
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/dbchaincloud/cosmos-sdk/types/rest"
     "github.com/gorilla/mux"
-    shell "github.com/ipfs/go-ipfs-api"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "net/http"
     "strconv"
@@ -35,7 +34,7 @@ func uploadFileHandler(cliCtx context.CLIContext) http.HandlerFunc {
             return
         }
 
-        sh := shell.NewShell("localhost:5001")
+        sh := utils.NewShellDbchain("localhost:5001")
         cid, err := sh.Add(file)
         if err != nil {
             rest.WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("%s", err))
