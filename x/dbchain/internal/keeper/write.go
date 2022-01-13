@@ -217,6 +217,10 @@ func (k Keeper) Freeze(ctx sdk.Context, appId uint, tableName string, id uint, o
     if err != nil {
         return 0, err
     }
+
+    // to notify querier-cache to invalidate related keys
+    qcache.NotifyTableExpiration(appId, tableName)
+
     return id, nil
 }
 
