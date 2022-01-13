@@ -9,7 +9,7 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "strconv"
     "strings"
-    qcache "github.com/yzhanginwa/dbchain/x/dbchain/internal/querier_cache"
+    qcache "github.com/yzhanginwa/dbchain/x/dbchain/querier_cache"
 )
 
 /////////////////////////////

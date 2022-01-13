@@ -12,7 +12,7 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/eval"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
-    qcache "github.com/yzhanginwa/dbchain/x/dbchain/internal/querier_cache"
+    qcache "github.com/yzhanginwa/dbchain/x/dbchain/querier_cache"
     "strconv"
     "strings"
 )

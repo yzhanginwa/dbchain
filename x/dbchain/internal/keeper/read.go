@@ -8,7 +8,7 @@ import (
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
-    qcache "github.com/yzhanginwa/dbchain/x/dbchain/internal/querier_cache"
+    qcache "github.com/yzhanginwa/dbchain/x/dbchain/querier_cache"
     "strings"
 )
 

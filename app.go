@@ -35,6 +35,8 @@ import (
     "github.com/dbchaincloud/cosmos-sdk/x/supply"
 
     "github.com/yzhanginwa/dbchain/x/dbchain"
+     qcache "github.com/yzhanginwa/dbchain/x/dbchain/querier_cache"
+
 )
 
 const (
@@ -438,7 +440,9 @@ func (app *dbChainApp) SaveAddrTx(ctx sdk.Context ,resp abci.ResponseDeliverTx, 
 }
 
 func (app *dbChainApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-    return app.mm.EndBlock(ctx, req)
+    ret := app.mm.EndBlock(ctx, req)
+    qcache.NotifyTableExpiration(0, "")       // to notify querier cache to invalidate accumulated tables
+    return ret
 }
 func (app *dbChainApp) LoadHeight(height int64) error {
     return app.LoadVersion(height, app.keys[bam.MainStoreKey])
