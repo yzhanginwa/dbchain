@@ -2,7 +2,6 @@ package querier_cache
 
 import (
     "fmt"
-    "time"
     "encoding/binary"
     "runtime/debug"
     "github.com/coocood/freecache"
@@ -21,6 +20,7 @@ const (
 var (
     theCache *freecache.Cache 
     theChannel = make(chan tableId, 50)    
+    notificationBufferMap = make(map[uint]map[string]uint)
 )
 
 func init() {
@@ -64,13 +64,27 @@ func RegisterKeysOfTable(appId uint, tableName string, dataKey string) (error) {
 }
 
 func NotifyTableExpiration(appId uint, tableName string) {
-    theChannel <- tableId{appId, tableName} 
+    if appId == 0 {
+        for k1 := range notificationBufferMap {
+            v1 := notificationBufferMap[k1]
+            for k2 := range v1 {
+                theChannel <- tableId{k1, k2}         // k1: appId, k2: tableName 
+                delete(v1, k2)
+            }
+            delete(notificationBufferMap, k1)
+        }
+    } else {
+        if v, found := notificationBufferMap[appId]; found {
+            v[tableName] = 1
+        } else {
+            notificationBufferMap[appId] = map[string]uint{tableName: 1}
+        }
+    }
 }
 
 func handleTableExpiration() {
     for {
         oneTableId := <-theChannel
-        time.Sleep(2 * time.Second)     // just in case the message is in a bigger transaction
         appId := oneTableId.AppId
         tableName := oneTableId.TableName
         counterKey := getTableKeycounterKey(appId, tableName)

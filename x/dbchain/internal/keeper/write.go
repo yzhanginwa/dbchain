@@ -71,7 +71,7 @@ func (k Keeper) InsertCore(ctx sdk.Context, appId uint, tableName string, fields
 
     // to notify querier-cache to invalidate related keys
     qcache.NotifyTableExpiration(appId, tableName)
-
+    
     return id, nil
 }
 // TODO: need to think over how and when to allow updating
