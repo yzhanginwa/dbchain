@@ -8,7 +8,6 @@ import (
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
     "github.com/dbchaincloud/cosmos-sdk/types/rest"
     "github.com/dbchaincloud/cosmos-sdk/x/auth/client/utils"
-    shell "github.com/ipfs/go-ipfs-api"
     "github.com/mr-tron/base58"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     mutils "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
@@ -517,7 +516,7 @@ func downloadFileHandler(cliCtx context.CLIContext, storeName string) http.Handl
             return
         }
         //get file
-        sh := shell.NewShell("localhost:5001")
+        sh := mutils.NewShellDbchain("localhost:5001")
         w.Header().Set("Content-Type", "application/octet-stream")
         reader,_ := sh.Cat(cid)
         buf := make([]byte, 4096)

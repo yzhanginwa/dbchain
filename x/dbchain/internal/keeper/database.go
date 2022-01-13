@@ -6,11 +6,11 @@ import (
     "errors"
     "fmt"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
-    shell "github.com/ipfs/go-ipfs-api"
     "github.com/mr-tron/base58"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/other"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "strconv"
     "strings"
     "time"
@@ -360,9 +360,12 @@ func (k Keeper) RestoreVolume(ctx sdk.Context, appId uint, cids []string, user s
     k.cdc.MustUnmarshalBinaryBare(bz, &usedSize)
     iUsedSize, _ :=  strconv.ParseUint(usedSize, 10, 64)
 
-    sh := shell.NewShell("localhost:5001")
+    sh := utils.NewShellDbchain("localhost:5001")
     for _, cid := range cids {
-        size := getUploadFileSize(sh, cid)
+        size,err := getUploadFileSize(sh, cid)
+        if err != nil {
+            continue
+        }
         if iUsedSize > size {
             iUsedSize -= size
         }
