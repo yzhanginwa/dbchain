@@ -124,7 +124,7 @@ func SetQuerier(address sdk.AccAddress, appId uint, querierObjs [](map[string]st
     }
 
     RegisterKeysOfTable(appId, tableName, key)
-    return theCache.Set([]byte(key), toBeSaved, expiration * 10)
+    return theCache.Set([]byte(key), toBeSaved, expiration)
 }
 
 //////////////////////
