@@ -57,8 +57,8 @@ func NewHandler(keeper Keeper) sdk.Handler {
             result, err = handleMsgModifyTableAssociation(ctx, keeper, msg)
         case MsgAddCounterCache:
             result, err = handleMsgAddCountCache(ctx, keeper, msg)
-        case MsgDropTable:
-            result, err = handleMsgDropTable(ctx, keeper, msg)
+        //case MsgDropTable:
+        //    result, err = handleMsgDropTable(ctx, keeper, msg)
         case MsgAddColumn:
             result, err = handleMsgAddColumn(ctx, keeper, msg)
         case MsgDropColumn:
@@ -89,10 +89,10 @@ func NewHandler(keeper Keeper) sdk.Handler {
             result, err = handleMsgSetColumnMemo(ctx, keeper, msg)
         case MsgInsertRow:
             result, err = handleMsgInsertRow(ctx, keeper, msg)
-        case MsgUpdateRow:
-            result, err = handleMsgUpdateRow(ctx, keeper, msg)
-        case MsgDeleteRow:
-            result, err = handleMsgDeleteRow(ctx, keeper, msg)
+        //case MsgUpdateRow:
+        //    result, err = handleMsgUpdateRow(ctx, keeper, msg)
+        //case MsgDeleteRow:
+        //    result, err = handleMsgDeleteRow(ctx, keeper, msg)
         case MsgFreezeRow:
             result, err = handleMsgFreezeRow(ctx, keeper, msg)
         case MsgModifyGroup:
