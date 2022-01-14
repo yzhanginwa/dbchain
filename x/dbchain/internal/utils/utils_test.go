@@ -1,11 +1,11 @@
 package utils
 
 import (
-    "testing"
     "bytes"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
+    "github.com/dbchaincloud/tendermint/crypto/sm2"
     "github.com/stretchr/testify/require"
-    "github.com/dbchaincloud/tendermint/crypto/secp256k1"
+    "testing"
 )
 
 
@@ -96,7 +96,7 @@ func TestConvertIntToByteArray(t *testing.T) {
 }
 
 func TestAccessToken(t *testing.T) {
-    privKey := secp256k1.GenPrivKey()
+    privKey := sm2.GenPrivKey()
     accAddr := sdk.AccAddress(privKey.PubKey().Address())
 
     accessCode := MakeAccessCode(privKey)
