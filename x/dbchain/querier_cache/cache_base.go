@@ -2,6 +2,7 @@ package querier_cache
 
 import (
     "fmt"
+    "time"
     "encoding/binary"
     "runtime/debug"
     "github.com/coocood/freecache"
@@ -15,6 +16,7 @@ type tableId struct {
 const (
     theCacheSize = 500 * 1024 * 1024    // 500 MB
     expiration = 300                    // 300 seconds
+    extraWait = 500                     // 500 milliseconds
 )
 
 var (
@@ -65,6 +67,7 @@ func RegisterKeysOfTable(appId uint, tableName string, dataKey string) (error) {
 
 func NotifyTableExpiration(appId uint, tableName string) {
     if appId == 0 {
+        theChannel <- tableId{0, ""}
         for k1 := range notificationBufferMap {
             v1 := notificationBufferMap[k1]
             for k2 := range v1 {
@@ -86,6 +89,10 @@ func handleTableExpiration() {
     for {
         oneTableId := <-theChannel
         appId := oneTableId.AppId
+        if appId == 0 {
+            time.Sleep(extraWait * time.Millisecond)
+            continue
+        }
         tableName := oneTableId.TableName
         counterKey := getTableKeycounterKey(appId, tableName)
         val, err := theCache.Get([]byte(counterKey))
