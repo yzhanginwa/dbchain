@@ -300,6 +300,11 @@ func (k Keeper) DeleteCounterCacheField(ctx sdk.Context, appId uint, tableName,f
             } else {
                 store.Delete([]byte(key))
             }
+            //drop counter cache option
+            ok := k.ModifyColumnOption(ctx, appId, nil, targetCounterCacheInfo.AssociationTable, counterCacheField.FieldName, "remove", string(types.FLDOPT_COUNTER_CACHE))
+            if !ok {
+                return false
+            }
             break
         }
     }
@@ -1136,6 +1141,8 @@ func validateColumnOption(option string) bool {
     case types.FLDOPT_OWN:
         return true
     case types.FLDOPT_READABLE:
+        return true
+    case types.FLDOPT_COUNTER_CACHE:
         return true
     }
 
