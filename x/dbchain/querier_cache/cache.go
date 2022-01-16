@@ -15,7 +15,7 @@ const (
 
 func GetIsTablePublic(appId uint, tableName string) (bool, error) {
     key := getIsTablePublicKey(appId, tableName)
-    result, err := theCache.Get([]byte(key))
+    result, err := get([]byte(key))
     if err != nil {
         return false, err
     }
@@ -34,12 +34,12 @@ func SetIsTablePublic(appId uint, tableName string, result bool) (error) {
     } else {
         resultBytes = []byte(stringFalse)
     }
-    return theCache.Set([]byte(key), resultBytes, expiration)
+    return set([]byte(key), resultBytes, expiration)
 }
 
 func VoidIsTablePublic(appId uint, tableName string) {
     key := getIsTablePublicKey(appId, tableName)
-    theCache.Del([]byte(key))
+    del([]byte(key))
 }
 
 func GetIdsBy(address sdk.AccAddress, appId uint, tableName, fieldName, value string, isTablePublic func(uint, string) bool) ([]byte, error) {
@@ -50,7 +50,7 @@ func GetIdsBy(address sdk.AccAddress, appId uint, tableName, fieldName, value st
     } else {
         key = getIdsByKey1(address, appId, tableName, fieldName, value)
     }
-    return theCache.Get([]byte(key))
+    return get([]byte(key))
 }
 
 func SetIdsBy(address sdk.AccAddress, appId uint, tableName, fieldName, value string, isTablePublic func(uint, string) bool, toBeSaved[]byte) (error) {
@@ -63,7 +63,7 @@ func SetIdsBy(address sdk.AccAddress, appId uint, tableName, fieldName, value st
     }
 
     RegisterKeysOfTable(appId, tableName, key)
-    return theCache.Set([]byte(key), []byte(toBeSaved), expiration)
+    return set([]byte(key), []byte(toBeSaved), expiration)
 }
 
 func GetFind(address sdk.AccAddress, appId uint, tableName, rowId string, isTablePublic func(uint, string) bool) ([]byte, error) {
@@ -74,7 +74,7 @@ func GetFind(address sdk.AccAddress, appId uint, tableName, rowId string, isTabl
     } else {
         key = getFindKey1(address, appId, tableName, rowId)
     }
-    return theCache.Get([]byte(key))
+    return get([]byte(key))
 }
 
 func SetFind(address sdk.AccAddress, appId uint, tableName, rowId string, isTablePublic func(uint, string) bool, toBeSaved []byte) (error) {
@@ -86,7 +86,7 @@ func SetFind(address sdk.AccAddress, appId uint, tableName, rowId string, isTabl
         key = getFindKey1(address, appId, tableName, rowId)
     }
     // No need to be invalidated when table inserted or row frozen
-    return theCache.Set([]byte(key), toBeSaved, expiration * 10)
+    return set([]byte(key), toBeSaved, expiration * 10)
 }
 
 func GetQuerier(address sdk.AccAddress, appId uint, querierObjs [](map[string]string), isTablePublic func(uint, string) bool) ([]byte, error) {
@@ -104,7 +104,7 @@ func GetQuerier(address sdk.AccAddress, appId uint, querierObjs [](map[string]st
     } else {
         key = getQuerierKey1(address, appId, tableName, querierStr)
     }
-    return theCache.Get([]byte(key))
+    return get([]byte(key))
 }
 
 func SetQuerier(address sdk.AccAddress, appId uint, querierObjs [](map[string]string), isTablePublic func(uint, string) bool, toBeSaved []byte) (error) {
@@ -124,7 +124,7 @@ func SetQuerier(address sdk.AccAddress, appId uint, querierObjs [](map[string]st
     }
 
     RegisterKeysOfTable(appId, tableName, key)
-    return theCache.Set([]byte(key), toBeSaved, expiration)
+    return set([]byte(key), toBeSaved, expiration)
 }
 
 //////////////////////

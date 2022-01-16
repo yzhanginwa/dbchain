@@ -3,6 +3,7 @@ package querier_cache
 import (
     "fmt"
     "time"
+    "math/rand"
     "encoding/binary"
     "runtime/debug"
     "github.com/coocood/freecache"
@@ -23,6 +24,7 @@ var (
     theCache *freecache.Cache 
     theChannel = make(chan tableId, 50)    
     notificationBufferMap = make(map[uint]map[string]uint)
+    myRand = rand.New(rand.NewSource(time.Now().UnixNano()))
 )
 
 func init() {
@@ -31,15 +33,50 @@ func init() {
     go handleTableExpiration()
 }
 
-func Set(key, value []byte, expireSeconds int) (err error) {
-    return theCache.Set(key, value, expiration)
+// this function alleviates the "cache miss storm" problem
+// by using random expiration time
+func set(key, value []byte, expireSeconds int) (err error) {
+    var realExpiration = 5
+    if expireSeconds > 5 {
+        realExpiration = expiration + myRand.Intn(int(expiration * 0.2))
+    }
+    return theCache.Set([]byte(key), value, realExpiration)
 }
 
-func Get(key []byte) (value []byte, err error) {
-    return theCache.Get(key)
+// this function elimiates the "cache miss storm" problem in a different way.
+//
+// when some highly requested concurrent queries miss the cache, they would
+// make the same requests to query against the system before the first request
+// returns and populates the cache. When this happens, the system may become
+// very busy or unresponsive.
+//
+// This function lets the first request to get real data from system and pululate
+// the cache. In the meantime it lets the other requests to wait until the
+// cache is populated.
+func get(key []byte) (value []byte, err error) {
+    val1, err1 :=  theCache.Get(key)
+    if err1 == nil {
+        return val1,  err1
+    }
+
+    guardKey := []byte(fmt.Sprintf("gk_%s", key))
+    for i := 0; i < 4; i++  {
+        _, err2 :=  theCache.Get(guardKey)
+        if err2!= nil {
+            theCache.Set(guardKey, []byte("ANY"), 2)
+            return val1, err1
+        }
+        time.Sleep(500 * time.Millisecond)
+        val3, err3 := theCache.Get(key)
+        if err3 == nil {
+            return val3, err3
+        }
+    }
+
+    return val1, err1
 }
 
-func Del(key []byte) (affected bool) {
+func del(key []byte) (affected bool) {
     return theCache.Del(key)
 }
 
