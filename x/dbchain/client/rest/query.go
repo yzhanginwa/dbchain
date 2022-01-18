@@ -362,11 +362,30 @@ func showRowHandler(cliCtx context.CLIContext, storeName string) http.HandlerFun
 func showIdsByHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
-        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find_by/%s/%s/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["name"], vars["field"], vars["value"]), nil)
+        accessToken := vars["accessToken"]
+        appCode     := vars["appCode"]
+        tableName   := vars["name"]
+        fieldName   := vars["field"]
+        value       := vars["value"]
+
+        addr, err := mutils.VerifyAccessCode(accessToken)
         if err != nil {
             rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
             return
         }
+
+        res, err := qcache.GetIdsBy(addr, appCode, tableName, fieldName, value)
+        if err == nil {
+            rest.PostProcessResponse(w, cliCtx, res)
+            return
+        }
+
+        res, _, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find_by/%s/%s/%s/%s/%s", storeName, accessToken, appCode, tableName, fieldName, value), nil)
+        if err != nil {
+            rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+            return
+        }
+        qcache.SetIdsBy(addr, appCode, tableName, fieldName, value, res)
         rest.PostProcessResponse(w, cliCtx, res)
     }
 }
