@@ -139,6 +139,18 @@ func showTablesHandler(cliCtx context.CLIContext, storeName string) http.Handler
     }
 }
 
+func showTablesDetailHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        vars := mux.Vars(r)
+        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/tables_detail/%s/%s", storeName, vars["accessToken"], vars["appCode"]), nil)
+        if err != nil {
+            rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+            return
+        }
+        rest.PostProcessResponse(w, cliCtx, res)
+    }
+}
+
 func showTableHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)

@@ -27,6 +27,7 @@ const (
     QueryIsAppUser     = "is_app_user"
     QueryAdminApps     = "admin_apps"
     QueryTables   = "tables"
+    QueryTablesDetail   = "tables_detail"
     QueryTableDetail = "table_detail"
     QueryIndex    = "index"
     QueryOption   = "option"
@@ -105,6 +106,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             }
         case QueryTableDetail:
                 return queryTableDetail(ctx, path[1:], req, keeper)
+        case QueryTablesDetail:
+                return queryTablesDetail(ctx, path[1:], req, keeper)
         case QueryIndex:
             return queryIndex(ctx, path[1:], req, keeper)
         case QueryOption:
@@ -423,9 +426,33 @@ func queryTables(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
     if err != nil {
         return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
-
     tables := keeper.GetTables(ctx, appId)
     res, err := codec.MarshalJSONIndent(keeper.cdc, tables)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryTablesDetail(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    _, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+       return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    tables := keeper.GetTables(ctx, appId)
+    tablesDetail, err := keeper.GetTablesDetail(ctx, appId, tables)
+    if err != nil {
+        return []byte{}, err
+    }
+    res, err := json.Marshal(tablesDetail)
     if err != nil {
         panic("could not marshal result to JSON")
     }
