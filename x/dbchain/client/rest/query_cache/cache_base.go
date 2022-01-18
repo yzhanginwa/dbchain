@@ -35,7 +35,6 @@ var (
 
 
 func init() {
-    fmt.Println("create fifo in this executable")
     createFifo()
     // somehow the dbchaind includes this package and
     // the init() got invoked when it started.

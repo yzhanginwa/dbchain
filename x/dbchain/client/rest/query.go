@@ -342,7 +342,7 @@ func showRowHandler(cliCtx context.CLIContext, storeName string) http.HandlerFun
             return
         }
 
-        res, err := qcache.GetFind(addr, appCode, tableName, rowId)
+        res, err := qcache.GetFind(cliCtx, addr, appCode, tableName, rowId)
         if err == nil {
             rest.PostProcessResponse(w, cliCtx, res)
             return
@@ -354,7 +354,7 @@ func showRowHandler(cliCtx context.CLIContext, storeName string) http.HandlerFun
             rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
             return
         }
-        qcache.SetFind(addr, appCode, tableName, rowId, res)
+        qcache.SetFind(cliCtx, addr, appCode, tableName, rowId, res)
         rest.PostProcessResponse(w, cliCtx, res)
     }
 }
@@ -374,7 +374,7 @@ func showIdsByHandler(cliCtx context.CLIContext, storeName string) http.HandlerF
             return
         }
 
-        res, err := qcache.GetIdsBy(addr, appCode, tableName, fieldName, value)
+        res, err := qcache.GetIdsBy(cliCtx, addr, appCode, tableName, fieldName, value)
         if err == nil {
             rest.PostProcessResponse(w, cliCtx, res)
             return
@@ -385,7 +385,7 @@ func showIdsByHandler(cliCtx context.CLIContext, storeName string) http.HandlerF
             rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
             return
         }
-        qcache.SetIdsBy(addr, appCode, tableName, fieldName, value, res)
+        qcache.SetIdsBy(cliCtx, addr, appCode, tableName, fieldName, value, res)
         rest.PostProcessResponse(w, cliCtx, res)
     }
 }
@@ -501,7 +501,7 @@ func execQuerier(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
             return
         }
 
-        res, err := qcache.GetQuerier(addr, appCode, querierObjs)
+        res, err := qcache.GetQuerier(cliCtx, addr, appCode, querierObjs)
         if err == nil {
             rest.PostProcessResponse(w, cliCtx, res)
             return
@@ -512,7 +512,7 @@ func execQuerier(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
             rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
             return
         }
-        qcache.SetQuerier(addr, appCode, querierObjs, res)
+        qcache.SetQuerier(cliCtx, addr, appCode, querierObjs, res)
         rest.PostProcessResponse(w, cliCtx, res)
     }
 }

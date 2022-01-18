@@ -4,8 +4,10 @@ import (
     "fmt"
     "errors"
     "strings"
+    "encoding/json"
     "sort"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
+    "github.com/dbchaincloud/cosmos-sdk/client/context"
 )
 
 const (
@@ -42,8 +44,8 @@ func VoidIsTablePublic(appCode, tableName string) {
     del([]byte(key))
 }
 
-func GetIdsBy(address sdk.AccAddress, appCode, tableName, fieldName, value string) ([]byte, error) {
-    result := isTablePublic(appCode, tableName)
+func GetIdsBy(cliCtx context.CLIContext, address sdk.AccAddress, appCode, tableName, fieldName, value string) ([]byte, error) {
+    result := isTablePublic(cliCtx, appCode, tableName)
     var key string
     if result {
         key = getIdsByKey0(appCode, tableName, fieldName, value)
@@ -53,8 +55,8 @@ func GetIdsBy(address sdk.AccAddress, appCode, tableName, fieldName, value strin
     return get([]byte(key))
 }
 
-func SetIdsBy(address sdk.AccAddress, appCode, tableName, fieldName, value string, toBeSaved[]byte) (error) {
-    result := isTablePublic(appCode, tableName)
+func SetIdsBy(cliCtx context.CLIContext, address sdk.AccAddress, appCode, tableName, fieldName, value string, toBeSaved[]byte) (error) {
+    result := isTablePublic(cliCtx, appCode, tableName)
     var key string
     if result {
         key = getIdsByKey0(appCode, tableName, fieldName, value)
@@ -66,8 +68,8 @@ func SetIdsBy(address sdk.AccAddress, appCode, tableName, fieldName, value strin
     return set([]byte(key), []byte(toBeSaved), expiration)
 }
 
-func GetFind(address sdk.AccAddress, appCode, tableName, rowId string) ([]byte, error) {
-    result := isTablePublic(appCode, tableName)
+func GetFind(cliCtx context.CLIContext, address sdk.AccAddress, appCode, tableName, rowId string) ([]byte, error) {
+    result := isTablePublic(cliCtx, appCode, tableName)
     var key string
     if result {
         key = getFindKey0(appCode, tableName, rowId)
@@ -77,8 +79,8 @@ func GetFind(address sdk.AccAddress, appCode, tableName, rowId string) ([]byte, 
     return get([]byte(key))
 }
 
-func SetFind(address sdk.AccAddress, appCode, tableName, rowId string, toBeSaved []byte) (error) {
-    result := isTablePublic(appCode, tableName)
+func SetFind(cliCtx context.CLIContext, address sdk.AccAddress, appCode, tableName, rowId string, toBeSaved []byte) (error) {
+    result := isTablePublic(cliCtx, appCode, tableName)
     var key string
     if result {
         key = getFindKey0(appCode, tableName, rowId)
@@ -89,7 +91,7 @@ func SetFind(address sdk.AccAddress, appCode, tableName, rowId string, toBeSaved
     return set([]byte(key), toBeSaved, expiration * 10)
 }
 
-func GetQuerier(address sdk.AccAddress, appCode string, querierObjs [](map[string]string)) ([]byte, error) {
+func GetQuerier(cliCtx context.CLIContext, address sdk.AccAddress, appCode string, querierObjs [](map[string]string)) ([]byte, error) {
     tableName, err := findTableFromQuerierObjects(querierObjs)
     if err != nil {
         return []byte(""), nil
@@ -97,7 +99,7 @@ func GetQuerier(address sdk.AccAddress, appCode string, querierObjs [](map[strin
 
     querierStr := querierObjectsToString(querierObjs)
 
-    result := isTablePublic(appCode, tableName)
+    result := isTablePublic(cliCtx, appCode, tableName)
     var key string
     if result {
         key = getQuerierKey0(appCode, tableName, querierStr)
@@ -107,7 +109,7 @@ func GetQuerier(address sdk.AccAddress, appCode string, querierObjs [](map[strin
     return get([]byte(key))
 }
 
-func SetQuerier(address sdk.AccAddress, appCode string, querierObjs [](map[string]string), toBeSaved []byte) (error) {
+func SetQuerier(cliCtx context.CLIContext, address sdk.AccAddress, appCode string, querierObjs [](map[string]string), toBeSaved []byte) (error) {
     tableName, err :=findTableFromQuerierObjects(querierObjs)
     if err != nil {
         return err
@@ -115,7 +117,7 @@ func SetQuerier(address sdk.AccAddress, appCode string, querierObjs [](map[strin
 
     querierStr := querierObjectsToString(querierObjs)
 
-    result := isTablePublic(appCode, tableName)
+    result := isTablePublic(cliCtx, appCode, tableName)
     var key string
     if result {
         key = getQuerierKey0(appCode, tableName, querierStr)
@@ -133,8 +135,30 @@ func SetQuerier(address sdk.AccAddress, appCode string, querierObjs [](map[strin
 //                  //
 //////////////////////
 
-func isTablePublic(appCode, tableName string) bool {
-    return true
+func isTablePublic(cliCtx context.CLIContext, appCode, tableName string) bool {
+    ret, err := getIsTablePublic(appCode, tableName)
+    if err == nil {
+        return ret
+    }
+
+    res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/dbchain/table_option_for_internal/%s/%s", appCode, tableName), nil)
+    if err != nil {
+        return false
+    }
+
+    var options []string
+    json.Unmarshal(res, &options)
+
+    var result = false
+    for _, option := range options {
+        if option == "public" {
+            result = true
+            break
+        }
+    }
+
+    setIsTablePublic(appCode, tableName, result)
+    return result
 }
 
 func getIsTablePublicKey(appCode, tableName string) string {

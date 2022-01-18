@@ -29,6 +29,7 @@ const (
     QueryTables   = "tables"
     QueryIndex    = "index"
     QueryOption   = "option"
+    QueryOptionForInternal   = "table_option_for_internal"     // used for rest server to check if a table public
     QueryAssociation = "association"
     QueryCounterCache = "counter_cache"
     QueryColumnOption   = "column_option"
@@ -106,6 +107,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryIndex(ctx, path[1:], req, keeper)
         case QueryOption:
             return queryOption(ctx, path[1:], req, keeper)
+        case QueryOptionForInternal:
+            return queryTableOptionForInternal(ctx, path[1:], req, keeper)
         case QueryAssociation:
             return queryAssociation(ctx, path[1:], req, keeper)
         case QueryCounterCache:
@@ -505,6 +508,27 @@ func queryOption(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
     }
 
     tableName := path[2]
+    options, err := keeper.GetOption(ctx, appId, tableName)
+
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Table %s does not exist",  tableName))
+    }
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, options)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryTableOptionForInternal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    appId, err := keeper.GetDatabaseId(ctx, path[0])
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    tableName := path[1]
     options, err := keeper.GetOption(ctx, appId, tableName)
 
     if err != nil {
