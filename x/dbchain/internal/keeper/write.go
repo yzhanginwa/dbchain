@@ -12,6 +12,8 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/super_script/eval"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
+    qch "github.com/yzhanginwa/dbchain/x/dbchain/query_cache_helper"
     "strconv"
     "strings"
 )
@@ -67,6 +69,11 @@ func (k Keeper) InsertCore(ctx sdk.Context, appId uint, tableName string, fields
     if ctx.GasMeter().IsOutOfGas() {
         return 0, errors.New("out of gas")
     }
+
+    // to notify querier-cache to invalidate related keys
+    appCode, _ := cache.GetAppCodeById(appId)
+    qch.NotifyTableExpiration(appCode, tableName)
+
     return id, nil
 }
 // TODO: need to think over how and when to allow updating
@@ -212,6 +219,11 @@ func (k Keeper) Freeze(ctx sdk.Context, appId uint, tableName string, id uint, o
     if err != nil {
         return 0, err
     }
+
+    // to notify querier-cache to invalidate related keys
+    appCode, _ := cache.GetAppCodeById(appId)
+    qch.NotifyTableExpiration(appCode, tableName)
+
     return id, nil
 }
 

@@ -20,6 +20,7 @@ import (
     tmtypes "github.com/dbchaincloud/tendermint/types"
     dbm "github.com/tendermint/tm-db"
     "github.com/yzhanginwa/dbchain/x/bank"
+    qch "github.com/yzhanginwa/dbchain/x/dbchain/query_cache_helper"
 
     bam "github.com/dbchaincloud/cosmos-sdk/baseapp"
     "github.com/dbchaincloud/cosmos-sdk/codec"
@@ -438,7 +439,9 @@ func (app *dbChainApp) SaveAddrTx(ctx sdk.Context ,resp abci.ResponseDeliverTx, 
 }
 
 func (app *dbChainApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-    return app.mm.EndBlock(ctx, req)
+    ret := app.mm.EndBlock(ctx, req)
+    qch.NotifyTableExpiration("", "")       // to notify querier cache to invalidate accumulated tables
+    return ret
 }
 func (app *dbChainApp) LoadHeight(height int64) error {
     return app.LoadVersion(height, app.keys[bam.MainStoreKey])

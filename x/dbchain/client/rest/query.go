@@ -12,6 +12,7 @@ import (
     "github.com/mr-tron/base58"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     mutils "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    qcache "github.com/yzhanginwa/dbchain/x/dbchain/client/rest/query_cache"
     "net/http"
     "strconv"
     "strings"
@@ -330,11 +331,30 @@ func showCanInsertRowHandler(cliCtx context.CLIContext, storeName string) http.H
 func showRowHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
-        res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["name"], vars["id"]), nil)
+        accessToken := vars["accessToken"]
+        appCode     := vars["appCode"]
+        tableName   := vars["name"]
+        rowId       := vars["id"]
+
+        addr, err := mutils.VerifyAccessCode(accessToken)
         if err != nil {
             rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
             return
         }
+
+        res, err := qcache.GetFind(addr, appCode, tableName, rowId)
+        if err == nil {
+            rest.PostProcessResponse(w, cliCtx, res)
+            return
+        }
+
+        res, _, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, accessToken, appCode, tableName, rowId), nil)
+
+        if err != nil {
+            rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+            return
+        }
+        qcache.SetFind(addr, appCode, tableName, rowId, res)
         rest.PostProcessResponse(w, cliCtx, res)
     }
 }
