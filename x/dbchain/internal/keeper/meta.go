@@ -4,6 +4,7 @@ import (
     "errors"
     "fmt"
     sdk "github.com/cosmos/cosmos-sdk/types"
+    sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
@@ -218,6 +219,33 @@ func (k Keeper)GetTable(ctx sdk.Context, appId uint, tableName string) (types.Ta
     }
     cache.SetTable(appId, tableName, table)
     return table, nil
+}
+
+func (k Keeper)GetTableDetail(ctx sdk.Context,appId uint,table types.Table) (types.TableDetail, error){
+    var fieldsDetail []map[string]interface{}
+
+    for i,fieldName := range table.Fields{
+        fieldDetail := make(map[string]interface{})
+        options, err := k.GetColumnOption(ctx, appId, table.Name, fieldName)
+        if err != nil {
+            return types.TableDetail{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s.%s does not exist",  table.Name, fieldName))
+        }
+        dataType, err := k.GetColumnDataType(ctx, appId, table.Name, fieldName)
+        if err != nil {
+            return types.TableDetail{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Field %s.%s does not exist", table.Name, fieldName))
+        }
+        isIndex := k.isIndexField(ctx, appId, table.Name, fieldName)
+        fieldDetail["name"] = fieldName
+        fieldDetail["options"] = options
+        fieldDetail["type"] = dataType
+        fieldDetail["isIndex"] = isIndex
+        fieldDetail["memo"] = table.Memos[i]
+        fieldsDetail = append(fieldsDetail, fieldDetail)
+    }
+
+    tableDetail := fillTableDataToDetail(table)
+    tableDetail.FieldsDetail = fieldsDetail
+    return tableDetail, nil
 }
 
 // Get a table 
@@ -879,4 +907,14 @@ func isRowFrozen(store *SafeStore, appId uint, tableName string, id uint) bool {
         return true
     }
     return false
+}
+
+func fillTableDataToDetail(table types.Table)types.TableDetail{
+    tableDetail := types.TableDetail{}
+    tableDetail.Owner = table.Owner
+    tableDetail.Name = table.Name
+    tableDetail.Memo = table.Memo
+    tableDetail.Filter = table.Filter
+    tableDetail.Trigger = table.Trigger
+    return tableDetail
 }

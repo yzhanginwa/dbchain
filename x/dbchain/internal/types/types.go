@@ -2,8 +2,8 @@ package types
 
 import (
     "fmt"
-    "strings"
     sdk "github.com/cosmos/cosmos-sdk/types"
+    "strings"
 )
 
 type RowFields map[string]string
@@ -91,6 +91,16 @@ type Table struct {
     Trigger string            `json:"trigger"`
     Memo string               `json:"memo"`
 }
+
+type TableDetail struct {
+    Owner sdk.AccAddress      `json:"owner"`
+    Name string               `json:"name"`
+    Filter string             `json:"filter"`
+    Trigger string            `json:"trigger"`
+    Memo string               `json:"memo"`
+    FieldsDetail []map[string]interface{}           `json:"fields_detail"`
+}
+
 
 func NewTable() Table {
     return Table {}

@@ -27,6 +27,7 @@ const (
     QueryIsAppUser     = "is_app_user"
     QueryAdminApps     = "admin_apps"
     QueryTables   = "tables"
+    QueryTableDetail = "table_detail"
     QueryIndex    = "index"
     QueryOption   = "option"
     QueryAssociation = "association"
@@ -98,6 +99,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             } else {
                 return queryTables(ctx, path[1:], req, keeper)
             }
+        case QueryTableDetail:
+                return queryTableDetail(ctx, path[1:], req, keeper)
         case QueryIndex:
             return queryIndex(ctx, path[1:], req, keeper)
         case QueryOption:
@@ -446,6 +449,40 @@ func queryTable(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
     }
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, table)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryTableDetail(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    addr, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+       return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    if !keeper.isAdmin(ctx, appId, addr) {
+       return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Admin privilege is needed!")
+    }
+
+    table, err := keeper.GetTable(ctx, appId, path[2])
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Table %s does not exist",  table))
+    }
+
+    tableDetail, err := keeper.GetTableDetail(ctx, appId, table)
+    if err != nil{
+        return []byte{}, err
+    }
+
+    res, err := json.Marshal(tableDetail)
     if err != nil {
         panic("could not marshal result to JSON")
     }
