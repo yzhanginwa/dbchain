@@ -190,6 +190,9 @@ func handleTableExpiration() {
             time.Sleep(extraWait * time.Millisecond)
             continue
         }
+
+        voidIsTablePublic(appCode, tableName)     // this may come from "ModifyOption"
+
         counterKey := getTableKeyCounterKey(appCode, tableName)
         val, err := theCache.Get([]byte(counterKey))
         if err != nil {

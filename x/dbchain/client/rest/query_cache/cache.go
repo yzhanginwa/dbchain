@@ -39,7 +39,7 @@ func setIsTablePublic(appCode, tableName string, result bool) (error) {
     return set([]byte(key), resultBytes, expiration)
 }
 
-func VoidIsTablePublic(appCode, tableName string) {
+func voidIsTablePublic(appCode, tableName string) {
     key := getIsTablePublicKey(appCode, tableName)
     del([]byte(key))
 }

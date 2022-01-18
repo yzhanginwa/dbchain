@@ -9,6 +9,7 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "strconv"
     "strings"
+    qch "github.com/yzhanginwa/dbchain/x/dbchain/query_cache_helper"
 )
 
 /////////////////////////////
@@ -644,6 +645,9 @@ func (k Keeper) RenameColumn(ctx sdk.Context, appId uint, tableName string, oldF
 }
 
 func (k Keeper) ModifyOption(ctx sdk.Context, appId uint, owner sdk.AccAddress, tableName string, action string, option string) {
+    appCode, _ := cache.GetAppCodeById(appId)    // it should always ok
+    qch.NotifyTableExpiration(appCode, tableName)
+
     store := DbChainStore(ctx, k.storeKey)
     key := getTableOptionsKey(appId, tableName)
     var options []string
