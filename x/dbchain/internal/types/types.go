@@ -92,6 +92,16 @@ type Table struct {
     Memo string               `json:"memo"`
 }
 
+type TableDetail struct {
+    Owner sdk.AccAddress      `json:"owner"`
+    Name string               `json:"name"`
+    Filter string             `json:"filter"`
+    Trigger string            `json:"trigger"`
+    Memo string               `json:"memo"`
+    FieldsDetail []map[string]interface{}           `json:"fields_detail"`
+}
+
+
 func NewTable() Table {
     return Table {}
 }
