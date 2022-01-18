@@ -248,6 +248,23 @@ func (k Keeper)GetTableDetail(ctx sdk.Context,appId uint,table types.Table) (typ
     return tableDetail, nil
 }
 
+func (k Keeper)GetTablesDetail(ctx sdk.Context,appId uint,tables[]string) ([]map[string]interface{}, error){
+    var tablesDetail []map[string]interface{}
+    for _,tableName := range tables {
+        table, err := k.GetTable(ctx, appId, tableName)
+        if err != nil {
+            return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Table %s does not exist",  table))
+        }
+        options, _ := k.GetOption(ctx, appId, tableName)
+        tableDetail := make(map[string]interface{})
+        tableDetail["name"] = tableName
+        tableDetail["memo"] = table.Memo
+        tableDetail["options"] = options
+        tablesDetail = append(tablesDetail, tableDetail)
+    }
+    return tablesDetail,nil
+}
+
 // Get a table 
 func (k Keeper) RawGetTable(ctx sdk.Context, appId uint, tableName string) (types.Table, error) {
     store := DbChainStore(ctx, k.storeKey)
