@@ -1,10 +1,10 @@
 package keeper
 
 import (
-    "fmt"
-    "errors"
     "bytes"
     sdk "github.com/dbchaincloud/cosmos-sdk/types"
+    "errors"
+    "fmt"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
 )
@@ -210,4 +210,19 @@ func (k Keeper) getGroups(ctx sdk.Context, appId uint) []string {
     var groups []string
     k.cdc.MustUnmarshalBinaryBare(bz, &groups)
     return groups
+}
+
+func (k Keeper) getGroupsDetail(ctx sdk.Context, appId uint) []map[string]interface{} {
+    var groupsDetail []map[string]interface{}
+    groups := k.getGroups(ctx, appId)
+    for _,groupName := range groups {
+        groupDetail := make(map[string]interface{})
+        members := k.getGroupMembers(ctx, appId, groupName)
+        memo := k.getGroupMembersMemo(ctx, appId, groupName)
+        groupDetail["group_name"] = groupName
+        groupDetail["group_members"] = members
+        groupDetail["group_memo"] = memo
+        groupsDetail = append(groupsDetail, groupDetail)
+    }
+    return  groupsDetail
 }
