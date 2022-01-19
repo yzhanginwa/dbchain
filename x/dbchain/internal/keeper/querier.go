@@ -41,6 +41,7 @@ const (
     QueryIdsBy    = "find_by"
     QueryAllIds   = "find_all"
     QueryGroups   = "groups"
+    QueryGroupsDetail = "groups_detail"
     QueryGroup    = "group"
     QueryGroupMemo = "group_memo"
     QueryFriends  = "friends"
@@ -128,6 +129,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryAllIds(ctx, path[1:], req, keeper)
         case QueryGroups:
             return queryGroups(ctx, path[1:], req, keeper)
+        case QueryGroupsDetail:
+            return queryGroupsDetail(ctx, path[1:], req, keeper)
         case QueryGroup:
             return queryGroup(ctx, path[1:], req, keeper)
         case QueryGroupMemo:
@@ -905,6 +908,28 @@ func queryGroups(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
     groups := keeper.getGroups(ctx, appId)
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, groups)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryGroupsDetail(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    _, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+       return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    groupsDetail := keeper.getGroupsDetail(ctx, appId)
+
+    res, err := json.Marshal(groupsDetail)
     if err != nil {
         panic("could not marshal result to JSON")
     }
