@@ -6,11 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cosmos/go-bip39"
-	"github.com/dbchaincloud/cosmos-sdk/client/context"
-	"github.com/dbchaincloud/cosmos-sdk/crypto/keys"
-	sdk "github.com/dbchaincloud/cosmos-sdk/types"
-	"github.com/dbchaincloud/tendermint/crypto"
-	tmamino "github.com/dbchaincloud/tendermint/crypto/encoding/amino"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto"
+	tmamino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/spf13/viper"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
@@ -22,7 +22,7 @@ import (
 func applyAccountInfo(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		priv, secret, err := CreateMnemonic(keys.Sm2)
+		priv, secret, err := CreateMnemonic(keys.Secp256k1)
 		if err != nil {
 			generalResponse(w, map[string]string {"error " : "generate key pairs err"})
 			return

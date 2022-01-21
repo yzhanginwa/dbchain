@@ -2,10 +2,10 @@ package oracle
 
 import (
     amino "github.com/tendermint/go-amino"
-    cryptoamino "github.com/dbchaincloud/tendermint/crypto/encoding/amino"
-    sdk "github.com/dbchaincloud/cosmos-sdk/types"
-    "github.com/dbchaincloud/cosmos-sdk/x/auth/exported"
-    authtypes "github.com/dbchaincloud/cosmos-sdk/x/auth/types"
+    cryptoamino "github.com/tendermint/tendermint/crypto/encoding/amino"
+    sdk "github.com/cosmos/cosmos-sdk/types"
+    "github.com/cosmos/cosmos-sdk/x/auth/exported"
+    authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 

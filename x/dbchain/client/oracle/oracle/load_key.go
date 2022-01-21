@@ -1,12 +1,12 @@
 package oracle
 
 import (
-    "github.com/dbchaincloud/tendermint/crypto"
-    "github.com/dbchaincloud/tendermint/crypto/algo"
-    "github.com/dbchaincloud/tendermint/crypto/secp256k1"
+    "github.com/tendermint/tendermint/crypto"
+    //"github.com/tendermint/tendermint/crypto/algo"
+    "github.com/tendermint/tendermint/crypto/secp256k1"
     "github.com/spf13/viper"
     "github.com/mr-tron/base58"
-    "github.com/dbchaincloud/tendermint/crypto/sm2"
+    //"github.com/tendermint/tendermint/crypto/sm2"
 )
 
 const OracleEncryptedPrivKey = "oracle-encrypted-key"
@@ -25,18 +25,11 @@ func LoadPrivKey() (crypto.PrivKey, error) {
     if err != nil {
         return nil, err
     }
-    switch algo.Algo {
-    case algo.SM2:
-        var privKey sm2.PrivKeySm2
-        copy(privKey[:], pkBytes)
-        oraclePrivKeyLoaded = true
-        oraclePrivKey       = privKey
-        return privKey, nil
-    default:
-        var privKey secp256k1.PrivKeySecp256k1
-        copy(privKey[:], pkBytes)
-        oraclePrivKeyLoaded = true
-        oraclePrivKey       = privKey
-        return privKey, nil
-    }
+
+    var privKey secp256k1.PrivKeySecp256k1
+    copy(privKey[:], pkBytes)
+    oraclePrivKeyLoaded = true
+    oraclePrivKey       = privKey
+    return privKey, nil
+
 }

@@ -2,17 +2,15 @@ package utils
 
 import (
     "fmt"
-    "github.com/dbchaincloud/tendermint/crypto/algo"
-    "github.com/dbchaincloud/tendermint/crypto/secp256k1"
+    "github.com/tendermint/tendermint/crypto/secp256k1"
     "strings"
     "strconv"
     "errors"
     "time"
     "github.com/mr-tron/base58"
-    "github.com/dbchaincloud/tendermint/crypto"
-    "github.com/dbchaincloud/tendermint/crypto/sm2"
+    "github.com/tendermint/tendermint/crypto"
 
-    sdk "github.com/dbchaincloud/cosmos-sdk/types"
+    sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -37,16 +35,9 @@ func MakeAccessCode(privKey crypto.PrivKey) string {
 
     pubKey := privKey.PubKey()
     encodedPubKey, encodedSig := "", ""
-    switch algo.Algo {
-    case algo.SM2:
-        pubKeyArray := pubKey.(sm2.PubKeySm2)
-        encodedPubKey = base58.Encode(pubKeyArray[:])
-        encodedSig    = base58.Encode(signature)
-    default:
-        pubKeyArray := pubKey.(secp256k1.PubKeySecp256k1)
-        encodedPubKey = base58.Encode(pubKeyArray[:])
-        encodedSig    = base58.Encode(signature)
-    }
+    pubKeyArray := pubKey.(secp256k1.PubKeySecp256k1)
+    encodedPubKey = base58.Encode(pubKeyArray[:])
+    encodedSig    = base58.Encode(signature)
     return fmt.Sprintf("%s:%s:%s", encodedPubKey, timeStamp, encodedSig)
 
 }
@@ -77,16 +68,9 @@ func VerifyAccessCodeWithoutTimeChecking(accessCode string) (sdk.AccAddress, int
     signature, _   := base58.Decode(parts[2])
 
     var pubKey crypto.PubKey
-    switch algo.Algo {
-    case algo.SM2:
-        pk := sm2.PubKeySm2{}
-        copy(pk[:], pubKeyBytes)
-        pubKey = pk
-    default:
-        pk := secp256k1.PubKeySecp256k1{}
-        copy(pk[:], pubKeyBytes)
-        pubKey = pk
-    }
+    pk := secp256k1.PubKeySecp256k1{}
+    copy(pk[:], pubKeyBytes)
+    pubKey = pk
 
     if ! pubKey.VerifyBytes([]byte(timeStamp), []byte(signature)) {
         return nil, 0,errors.New("Failed to verify signature")
@@ -106,16 +90,10 @@ func GetAddrFromAccessCode(accessCode string) (sdk.AccAddress, error) {
     }
     pubKeyBytes, _ := base58.Decode(parts[0])
     var pubKey crypto.PubKey
-    switch algo.Algo {
-    case algo.SM2:
-        pk := sm2.PubKeySm2{}
-        copy(pk[:], pubKeyBytes)
-        pubKey = pk
-    default:
-        pk := secp256k1.PubKeySecp256k1{}
-        copy(pk[:], pubKeyBytes)
-        pubKey = pk
-    }
+    pk := secp256k1.PubKeySecp256k1{}
+    copy(pk[:], pubKeyBytes)
+    pubKey = pk
+
 
     address := sdk.AccAddress(pubKey.Address())
     return address, nil

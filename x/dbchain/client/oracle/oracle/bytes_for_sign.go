@@ -2,7 +2,7 @@ package oracle
 
 import (
     "encoding/json"
-    sdk "github.com/dbchaincloud/cosmos-sdk/types"
+    sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func GetSignBytes(msg UniversalMsg) []byte {

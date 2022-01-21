@@ -2,8 +2,8 @@ package cli
 
 import (
     "fmt"
-    "github.com/dbchaincloud/cosmos-sdk/client/context"
-    "github.com/dbchaincloud/cosmos-sdk/codec"
+    "github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/codec"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/spf13/cobra"
 )

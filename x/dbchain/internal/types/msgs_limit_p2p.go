@@ -1,8 +1,8 @@
 package types
 
 import (
-	sdk "github.com/dbchaincloud/cosmos-sdk/types"
-	sdkerrors "github.com/dbchaincloud/cosmos-sdk/types/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 ///////////////////////////////

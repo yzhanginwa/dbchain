@@ -1,13 +1,13 @@
 package oracle
 
 import (
-    "github.com/dbchaincloud/tendermint/crypto"
+    "github.com/tendermint/tendermint/crypto"
     "encoding/hex"
     "encoding/json"
     "fmt"
-    "github.com/dbchaincloud/cosmos-sdk/client/context"
-    sdk "github.com/dbchaincloud/cosmos-sdk/types"
-    rpchttp "github.com/dbchaincloud/tendermint/rpc/client/http"
+    "github.com/cosmos/cosmos-sdk/client/context"
+    sdk "github.com/cosmos/cosmos-sdk/types"
+    rpchttp "github.com/tendermint/tendermint/rpc/client/http"
     "github.com/mr-tron/base58"
     "github.com/spf13/viper"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"

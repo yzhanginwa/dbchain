@@ -9,9 +9,9 @@ import (
     "encoding/json"
     "github.com/gorilla/mux"
     "github.com/spf13/viper"
-    "github.com/dbchaincloud/cosmos-sdk/client/context"
-    "github.com/dbchaincloud/cosmos-sdk/types/rest"
-    sdk "github.com/dbchaincloud/cosmos-sdk/types"
+    "github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/types/rest"
+    sdk "github.com/cosmos/cosmos-sdk/types"
 
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"

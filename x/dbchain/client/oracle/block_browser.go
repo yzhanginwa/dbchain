@@ -3,9 +3,9 @@ package oracle
 import (
 	"encoding/hex"
 	"encoding/json"
-	"github.com/dbchaincloud/cosmos-sdk/client/context"
-	sdk "github.com/dbchaincloud/cosmos-sdk/types"
-	"github.com/dbchaincloud/cosmos-sdk/types/rest"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/gorilla/mux"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"

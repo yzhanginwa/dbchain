@@ -3,13 +3,13 @@ package keeper
 import (
     "encoding/hex"
     "fmt"
-    "github.com/dbchaincloud/cosmos-sdk/codec"
-    sdk "github.com/dbchaincloud/cosmos-sdk/types"
-    "github.com/dbchaincloud/cosmos-sdk/x/auth"
-    "github.com/dbchaincloud/cosmos-sdk/x/auth/exported"
-    "github.com/dbchaincloud/tendermint/crypto/tmhash"
+    "github.com/cosmos/cosmos-sdk/codec"
+    sdk "github.com/cosmos/cosmos-sdk/types"
+    "github.com/cosmos/cosmos-sdk/x/auth"
+    "github.com/cosmos/cosmos-sdk/x/auth/exported"
+    "github.com/tendermint/tendermint/crypto/tmhash"
     "github.com/yzhanginwa/dbchain/x/bank"
-    "github.com/dbchaincloud/tendermint/libs/log"
+    "github.com/tendermint/tendermint/libs/log"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 

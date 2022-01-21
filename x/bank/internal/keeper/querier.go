@@ -1,11 +1,11 @@
 package keeper
 
 import (
-	abci "github.com/dbchaincloud/tendermint/abci/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/dbchaincloud/cosmos-sdk/codec"
-	sdk "github.com/dbchaincloud/cosmos-sdk/types"
-	sdkerrors "github.com/dbchaincloud/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/yzhanginwa/dbchain/x/bank/internal/types"
 )
 

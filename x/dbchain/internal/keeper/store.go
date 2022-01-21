@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"errors"
-	"github.com/dbchaincloud/cosmos-sdk/store/gaskv"
-	sdk "github.com/dbchaincloud/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/gaskv"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"reflect"
 )
 

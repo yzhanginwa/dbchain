@@ -3,9 +3,9 @@ package oracle
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dbchaincloud/cosmos-sdk/client/context"
-	sdk "github.com/dbchaincloud/cosmos-sdk/types"
-	"github.com/dbchaincloud/tendermint/crypto"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto"
 	"io/ioutil"
 	"net/http"
 	"time"

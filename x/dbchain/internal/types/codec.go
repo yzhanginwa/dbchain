@@ -1,7 +1,7 @@
 package types
 
 import (
-    "github.com/dbchaincloud/cosmos-sdk/codec"
+    "github.com/cosmos/cosmos-sdk/codec"
 )
 
 // ModuleCdc is the codec for the module

@@ -3,7 +3,7 @@ package types
 import (
     "strings"
     "fmt"
-    sdk "github.com/dbchaincloud/cosmos-sdk/types"
+    sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 /////////////////

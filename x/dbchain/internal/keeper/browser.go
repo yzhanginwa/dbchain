@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	sdk "github.com/dbchaincloud/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k Keeper) UpdateTotalTx(ctx sdk.Context, data string)  error {

@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"encoding/json"
-	storeTypes "github.com/dbchaincloud/cosmos-sdk/store/types"
-	sdk "github.com/dbchaincloud/cosmos-sdk/types"
+	storeTypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	lua "github.com/yuin/gopher-lua"
 	"strconv"
 	"time"

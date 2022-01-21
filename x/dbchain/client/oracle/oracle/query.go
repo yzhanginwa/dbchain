@@ -3,7 +3,7 @@ package oracle
 import (
     "encoding/json"
     "fmt"
-    "github.com/dbchaincloud/cosmos-sdk/x/auth/exported"
+    "github.com/cosmos/cosmos-sdk/x/auth/exported"
     "io/ioutil"
     "net/http"
     "time"

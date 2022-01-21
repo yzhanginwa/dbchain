@@ -5,13 +5,13 @@ import (
     "bytes"
     "github.com/spf13/cobra"
     "github.com/spf13/viper"
-    "github.com/dbchaincloud/tendermint/libs/cli"
-    "github.com/dbchaincloud/cosmos-sdk/client/keys"
+    "github.com/tendermint/tendermint/libs/cli"
+    "github.com/cosmos/cosmos-sdk/client/keys"
 
-    "github.com/dbchaincloud/cosmos-sdk/codec"
-    "github.com/dbchaincloud/cosmos-sdk/server"
-    sdk "github.com/dbchaincloud/cosmos-sdk/types"
-    "github.com/dbchaincloud/cosmos-sdk/x/genutil"
+    "github.com/cosmos/cosmos-sdk/codec"
+    "github.com/cosmos/cosmos-sdk/server"
+    sdk "github.com/cosmos/cosmos-sdk/types"
+    "github.com/cosmos/cosmos-sdk/x/genutil"
 
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )

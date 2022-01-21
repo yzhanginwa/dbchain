@@ -3,12 +3,12 @@ package rest
 import (
     "net/http"
 
-    "github.com/dbchaincloud/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/client/context"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 
-    sdk "github.com/dbchaincloud/cosmos-sdk/types"
-    "github.com/dbchaincloud/cosmos-sdk/types/rest"
-    "github.com/dbchaincloud/cosmos-sdk/x/auth/client/utils"
+    sdk "github.com/cosmos/cosmos-sdk/types"
+    "github.com/cosmos/cosmos-sdk/types/rest"
+    "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 )
 
 type createTableReq struct  {

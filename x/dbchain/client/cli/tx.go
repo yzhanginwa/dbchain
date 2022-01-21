@@ -5,9 +5,9 @@ import (
     "encoding/json"
     "errors"
     "fmt"
-    "github.com/dbchaincloud/tendermint/crypto/algo"
-    "github.com/dbchaincloud/tendermint/crypto/secp256k1"
-    "github.com/dbchaincloud/tendermint/crypto/sm2"
+    //"github.com/tendermint/tendermint/crypto/algo"
+    "github.com/tendermint/tendermint/crypto/secp256k1"
+    //"github.com/tendermint/tendermint/crypto/sm2"
     "github.com/mr-tron/base58"
     "github.com/spf13/cobra"
     "github.com/spf13/viper"
@@ -17,14 +17,14 @@ import (
     "strconv"
     "strings"
 
-    "github.com/dbchaincloud/cosmos-sdk/client"
-    "github.com/dbchaincloud/cosmos-sdk/client/context"
-    "github.com/dbchaincloud/cosmos-sdk/client/flags"
-    "github.com/dbchaincloud/cosmos-sdk/codec"
-    sdk "github.com/dbchaincloud/cosmos-sdk/types"
-    "github.com/dbchaincloud/cosmos-sdk/x/auth"
-    "github.com/dbchaincloud/cosmos-sdk/x/auth/client/utils"
-    account "github.com/dbchaincloud/cosmos-sdk/x/auth/types"
+    "github.com/cosmos/cosmos-sdk/client"
+    "github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/client/flags"
+    "github.com/cosmos/cosmos-sdk/codec"
+    sdk "github.com/cosmos/cosmos-sdk/types"
+    "github.com/cosmos/cosmos-sdk/x/auth"
+    "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+    account "github.com/cosmos/cosmos-sdk/x/auth/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
@@ -278,16 +278,10 @@ func checkOracleInfo() (sdk.AccAddress, error){
         return nil, err
     }
     var addr sdk.AccAddress
-    switch algo.Algo {
-    case algo.SM2:
-        var privKey sm2.PrivKeySm2
-        copy(privKey[:], pkBytes)
-        addr = sdk.AccAddress(privKey.PubKeySm2().Address())
-    default:
-        var privKey secp256k1.PrivKeySecp256k1
-        copy(privKey[:], pkBytes)
-        addr = sdk.AccAddress(privKey.PubKey().Address())
-    }
+    var privKey secp256k1.PrivKeySecp256k1
+    copy(privKey[:], pkBytes)
+    addr = sdk.AccAddress(privKey.PubKey().Address())
+
     return addr, nil
 }
 

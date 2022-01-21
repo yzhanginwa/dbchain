@@ -2,21 +2,21 @@ package cli
 
 import (
     "errors"
-    "github.com/dbchaincloud/tendermint/crypto/algo"
-    "github.com/dbchaincloud/tendermint/crypto/secp256k1"
+    //"github.com/tendermint/tendermint/crypto/algo"
+    "github.com/tendermint/tendermint/crypto/secp256k1"
     "strconv"
     "time"
     "github.com/spf13/cobra"
     "github.com/spf13/viper"
-    sdk "github.com/dbchaincloud/cosmos-sdk/types"
-    "github.com/dbchaincloud/cosmos-sdk/client/context"
-    "github.com/dbchaincloud/cosmos-sdk/codec"
-    "github.com/dbchaincloud/cosmos-sdk/client/flags"
-    "github.com/dbchaincloud/cosmos-sdk/client/keys"
-    cryptoKeys "github.com/dbchaincloud/cosmos-sdk/crypto/keys"
+    sdk "github.com/cosmos/cosmos-sdk/types"
+    "github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/codec"
+    "github.com/cosmos/cosmos-sdk/client/flags"
+    "github.com/cosmos/cosmos-sdk/client/keys"
+    cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
     "github.com/mr-tron/base58"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
-    "github.com/dbchaincloud/tendermint/crypto/sm2"
+    //"github.com/tendermint/tendermint/crypto/sm2"
 )
 
 func GetCmdGetAccessCode(queryRoute string, cdc *codec.Codec) *cobra.Command {
@@ -49,7 +49,7 @@ func GetCmdGetAccessCode(queryRoute string, cdc *codec.Codec) *cobra.Command {
         },
     }
 
-    // borrowed from github.com/dbchaincloud/cosmos-sdk/client/keys/root.go
+    // borrowed from github.com/cosmos/cosmos-sdk/client/keys/root.go
     resultCmd.PersistentFlags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
     viper.BindPFlag(flags.FlagKeyringBackend, resultCmd.Flags().Lookup(flags.FlagKeyringBackend))
 
@@ -62,18 +62,10 @@ func signForToken(kb cryptoKeys.Keybase, name string, str string) (string, bool)
         return "", false
     }
 
-    switch algo.Algo {
-    case algo.SM2:
-        if pk, ok := pubKey.(sm2.PubKeySm2); ok {
-            out := base58.Encode(pk[:]) + ":" + str + ":" + base58.Encode(signature)
-            return out, true
-        }
-    default:
-        if pk, ok := pubKey.(secp256k1.PubKeySecp256k1); ok {
-            out := base58.Encode(pk[:]) + ":" + str + ":" + base58.Encode(signature)
-            return out, true
-        }
-
+    if pk, ok := pubKey.(secp256k1.PubKeySecp256k1); ok {
+        out := base58.Encode(pk[:]) + ":" + str + ":" + base58.Encode(signature)
+        return out, true
     }
+
     return "", false
 }

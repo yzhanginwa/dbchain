@@ -3,16 +3,16 @@ package cli
 import (
     "encoding/json"
     "fmt"
-    "github.com/dbchaincloud/tendermint/crypto/algo"
-    "github.com/dbchaincloud/tendermint/crypto/secp256k1"
+    //"github.com/tendermint/tendermint/crypto/algo"
+    "github.com/tendermint/tendermint/crypto/secp256k1"
     "github.com/mr-tron/base58"
-    sdk "github.com/dbchaincloud/cosmos-sdk/types"
-    "github.com/dbchaincloud/cosmos-sdk/client"
-    "github.com/dbchaincloud/cosmos-sdk/client/context"
-    "github.com/dbchaincloud/cosmos-sdk/client/flags"
-    "github.com/dbchaincloud/cosmos-sdk/codec"
+    sdk "github.com/cosmos/cosmos-sdk/types"
+    "github.com/cosmos/cosmos-sdk/client"
+    "github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/client/flags"
+    "github.com/cosmos/cosmos-sdk/codec"
     "github.com/spf13/cobra"
-    "github.com/dbchaincloud/tendermint/crypto/sm2"
+    //"github.com/tendermint/tendermint/crypto/sm2"
     "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "strings"
@@ -579,15 +579,8 @@ func GetCmdGetOracleInfo(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
             privKey, err := oracle.LoadPrivKey()
             if err != nil {
-                base58Str := ""
-                switch algo.Algo {
-                case algo.SM2:
-                    pk := sm2.GenPrivKey()
-                    base58Str = base58.Encode(pk[:])
-                default:
-                    pk := secp256k1.GenPrivKey()
-                    base58Str = base58.Encode(pk[:])
-                }
+                pk := secp256k1.GenPrivKey()
+                base58Str := base58.Encode(pk[:])
                 return cliCtx.PrintOutput(fmt.Sprintf("%s: %s", oracle.OracleEncryptedPrivKey, base58Str))
 
             }
