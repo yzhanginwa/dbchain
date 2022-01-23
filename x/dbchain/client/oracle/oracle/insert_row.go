@@ -3,7 +3,10 @@ package oracle
 import (
     "fmt"
     "encoding/json"
-    "github.com/cosmos/cosmos-sdk/client/context"
+
+    //"github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/client"
+
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
@@ -38,14 +41,14 @@ func GetInsertRowMsgs(appCode string, tableName string, rowFieldss []types.RowFi
     return msgs
 }
 
-func InsertRows(cliCtx context.CLIContext, appCode string, tableName string, rowFieldss []types.RowFields) {
+func InsertRows(cliCtx client.Context, appCode string, tableName string, rowFieldss []types.RowFields) {
     msgs := GetInsertRowMsgs(appCode, tableName, rowFieldss)
     if len(msgs) > 0 {
         BuildTxsAndBroadcast(cliCtx, msgs)
     }
 }
 
-func InsertRow(cliCtx context.CLIContext, appCode string, tableName string, rowFields types.RowFields) {
+func InsertRow(cliCtx client.Context, appCode string, tableName string, rowFields types.RowFields) {
     rowFieldss := []types.RowFields{rowFields}
     InsertRows(cliCtx, appCode, tableName, rowFieldss)
 }

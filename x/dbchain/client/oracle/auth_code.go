@@ -10,7 +10,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/context"
+
+	//"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
+
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	//"github.com/tendermint/tendermint/crypto/algo"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -33,7 +36,7 @@ const (
 	secretKeyAuth = "secret_key_authentication"
 )
 
-func organizationGetSecretKey(cliCtx context.CLIContext) http.HandlerFunc{
+func organizationGetSecretKey(cliCtx client.Context) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		r.ParseForm()
@@ -75,7 +78,7 @@ func organizationGetSecretKey(cliCtx context.CLIContext) http.HandlerFunc{
 }
 
 //
-func userGetSecretKey(cliCtx context.CLIContext) http.HandlerFunc{
+func userGetSecretKey(cliCtx client.Context) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		organizationId := r.Form.Get("organization_id")
@@ -149,7 +152,7 @@ func userGetSecretKey(cliCtx context.CLIContext) http.HandlerFunc{
 	}
 }
 
-func organizationVerify(cliCtx context.CLIContext) http.HandlerFunc {
+func organizationVerify(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		state := r.Form.Get("state")
@@ -203,7 +206,7 @@ func organizationVerify(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 
-func userVerifyCode(cliCtx context.CLIContext, enableAuth bool) http.HandlerFunc {
+func userVerifyCode(cliCtx client.Context, enableAuth bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		state := r.Form.Get("state")
@@ -284,7 +287,7 @@ func userVerifyCode(cliCtx context.CLIContext, enableAuth bool) http.HandlerFunc
 	}
 }
 
-func userDestoryCode(cliCtx context.CLIContext) http.HandlerFunc {
+func userDestoryCode(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		organizationId := r.Form.Get("organization_id")
@@ -369,7 +372,7 @@ func userDestoryCode(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-func queryTxResult(cliCtx context.CLIContext, storeName, appcode, tableName string , fieldValue map[string]string) bool {
+func queryTxResult(cliCtx client.Context, storeName, appcode, tableName string , fieldValue map[string]string) bool {
 	for i := 0; i < 10; i++ {
 		time.Sleep(1 * time.Second)
 		secrets, _ := queryByWhere(cliCtx, storeName, appcode, tableName, fieldValue)
@@ -380,7 +383,7 @@ func queryTxResult(cliCtx context.CLIContext, storeName, appcode, tableName stri
 	return false
 }
 
-func generateSecretKey(cliCtx context.CLIContext) (string,string, error) {
+func generateSecretKey(cliCtx client.Context) (string,string, error) {
 	for i := 0; i < 10; i++ {
 		ga := authenticator.NewGAuth()
 		secret , err := ga.CreateSecret(32)
@@ -517,7 +520,7 @@ func successResponse(w http.ResponseWriter, data []byte) {
 	_, _ = w.Write(data)
 }
 
-func queryFreezeResult(cliCtx context.CLIContext, storeName, appcode, tableName string , fieldValue map[string]string ) bool {
+func queryFreezeResult(cliCtx client.Context, storeName, appcode, tableName string , fieldValue map[string]string ) bool {
 	for i := 0; i < 10; i++ {
 		time.Sleep(1 * time.Second)
 		auth, err := queryByWhere(cliCtx, storeName, appcode, tableName, fieldValue)
@@ -532,7 +535,7 @@ func queryFreezeResult(cliCtx context.CLIContext, storeName, appcode, tableName 
 
 }
 
-func isAuthentication( cliCtx context.CLIContext, ID string) bool {
+func isAuthentication( cliCtx client.Context, ID string) bool {
 	queryAuth := map[string]string {
 		"organization_user_secret_key_id" : ID,
 	}

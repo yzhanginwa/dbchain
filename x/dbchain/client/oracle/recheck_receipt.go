@@ -1,7 +1,9 @@
 package oracle
 
 import (
-	"github.com/cosmos/cosmos-sdk/client/context"
+	//"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
+
 	"sync"
 	"time"
 )
@@ -56,7 +58,7 @@ var unVerifyAppleReceiptBuf = make(chan unVerifyAppleReceiptData, 100)
 var recheckAppleReceiptBuf = make(chan unVerifyAppleReceiptData, 100)
 
 
-func checkAppleReceiptRunner(cliCtx context.CLIContext) {
+func checkAppleReceiptRunner(cliCtx client.Context) {
 	receiptPoolCache := newReceiptPool()
 	go func() {
 		for {

@@ -9,7 +9,10 @@ import (
     "encoding/json"
     "github.com/gorilla/mux"
     "github.com/spf13/viper"
-    "github.com/cosmos/cosmos-sdk/client/context"
+
+    //"github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/client"
+
     "github.com/cosmos/cosmos-sdk/types/rest"
     sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -73,7 +76,7 @@ func newCorpInfo(corpName, regNumber, creditCode string) CorpInfo {
     }
 }
 
-func oracleSendVerfCode(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func oracleSendVerfCode(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         accessCode := vars["accessToken"]
@@ -95,7 +98,7 @@ func oracleSendVerfCode(cliCtx context.CLIContext, storeName string) http.Handle
     }
 }
 
-func oracleVerifyVerfCode(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func oracleVerifyVerfCode(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         accessCode      := vars["accessToken"]
@@ -117,7 +120,7 @@ func oracleVerifyVerfCode(cliCtx context.CLIContext, storeName string) http.Hand
     }
 }
 
-func oracleVerifyNameAndIdNumber(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func oracleVerifyNameAndIdNumber(cliCtx clietn.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         accessCode := vars["accessToken"]
@@ -139,7 +142,7 @@ func oracleVerifyNameAndIdNumber(cliCtx context.CLIContext, storeName string) ht
     }
 }
 
-func oracleVerifyCorpInfo(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func oracleVerifyCorpInfo(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         accessCode := vars["accessToken"]
@@ -169,7 +172,7 @@ func oracleVerifyCorpInfo(cliCtx context.CLIContext, storeName string) http.Hand
 }
 
 
-func appNewOneCoin(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func appNewOneCoin(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         accessCode      := vars["accessToken"]
@@ -266,7 +269,7 @@ func VerifyVerfCode(strAddr string , mobile string, verificationCode string) boo
     return false
 }
 
-func saveToAuthTable(cliCtx context.CLIContext, addr sdk.AccAddress, authType string, value interface{}) {
+func saveToAuthTable(cliCtx client.Context, addr sdk.AccAddress, authType string, value interface{}) {
     rowFields := make(types.RowFields)
     rowFields["address"] = addr.String()
     rowFields["type"]    = authType

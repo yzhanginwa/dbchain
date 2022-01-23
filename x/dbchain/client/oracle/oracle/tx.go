@@ -5,7 +5,10 @@ import (
     "encoding/hex"
     "encoding/json"
     "fmt"
-    "github.com/cosmos/cosmos-sdk/client/context"
+
+    //"github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/client"
+
     sdk "github.com/cosmos/cosmos-sdk/types"
     rpchttp "github.com/tendermint/tendermint/rpc/client/http"
     "github.com/mr-tron/base58"
@@ -28,7 +31,7 @@ var (
     runnerIsRunning = false
 )
 
-func BuildTxsAndBroadcast(cliCtx context.CLIContext, msgs []UniversalMsg) {
+func BuildTxsAndBroadcast(cliCtx client.Context, msgs []UniversalMsg) {
     if !runnerIsRunning {
         runnerIsRunning = true
         go txRunner(cliCtx)
@@ -36,7 +39,7 @@ func BuildTxsAndBroadcast(cliCtx context.CLIContext, msgs []UniversalMsg) {
     messageChannel <- msgs
 }
 
-func txRunner(cliCtx context.CLIContext) {
+func txRunner(cliCtx client.Context) {
     privKey, err := LoadPrivKey()
     if err != nil {
         fmt.Println("Failed to load oracle's private key!!!")
@@ -88,7 +91,7 @@ func txRunner(cliCtx context.CLIContext) {
     }
 }
 
-func executeTxs(cliCtx context.CLIContext, batch []UniversalMsg, privKey crypto.PrivKey, oracleAccAddr sdk.AccAddress) error {
+func executeTxs(cliCtx client.Context, batch []UniversalMsg, privKey crypto.PrivKey, oracleAccAddr sdk.AccAddress) error {
     accNum, seq, err := GetAccountInfo(oracleAccAddr.String())
     if err != nil {
         fmt.Println("Failed to load oracle's account info!!!")
@@ -110,12 +113,12 @@ func executeTxs(cliCtx context.CLIContext, batch []UniversalMsg, privKey crypto.
     return nil
 }
 
-func buildTxAndBroadcast(cliCtx context.CLIContext, msg UniversalMsg) {
+func buildTxAndBroadcast(cliCtx client.Context, msg UniversalMsg) {
     msgs := []UniversalMsg{msg}
     BuildTxsAndBroadcast(cliCtx, msgs)
 }
 
-func buildAndSignAndBuildTxBytes(cliCtx context.CLIContext, msgs []UniversalMsg, accNum uint64, seq uint64, privKey crypto.PrivKey) ([]byte, error) {
+func buildAndSignAndBuildTxBytes(cliCtx client.Context, msgs []UniversalMsg, accNum uint64, seq uint64, privKey crypto.PrivKey) ([]byte, error) {
     size := len(msgs)
 
     needFee , err := setStdFee(cliCtx, "dbchain", size)
@@ -182,7 +185,7 @@ func makeBatches(msgs []UniversalMsg, batchSize int) [][]UniversalMsg {
     return result
 }
 
-func checkCanInsertRow(cliCtx context.CLIContext, msg UniversalMsg) bool {
+func checkCanInsertRow(cliCtx client.Context, msg UniversalMsg) bool {
     insertRow , ok := msg.(types.MsgInsertRow)
     if !ok {
         return true
@@ -233,7 +236,7 @@ func getMsgKey(msg UniversalMsg) string {
     return vendor_payment_no
 }
 
-func getCurrentMinGasPrices(cliCtx context.CLIContext, storeName string) (sdk.DecCoins, error){
+func getCurrentMinGasPrices(cliCtx client.Context, storeName string) (sdk.DecCoins, error){
     res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/current_min_gas_prices", storeName), nil)
     if err != nil {
         return nil, err
@@ -246,7 +249,7 @@ func getCurrentMinGasPrices(cliCtx context.CLIContext, storeName string) (sdk.De
     return decCoins, nil
 }
 
-func setStdFee(cliCtx context.CLIContext, storeName string, size int)  (sdk.Coins, error) {
+func setStdFee(cliCtx client.Context, storeName string, size int)  (sdk.Coins, error) {
     minGasPrices , err := getCurrentMinGasPrices(cliCtx, "dbchain")
     if err != nil {
         return nil, err

@@ -3,7 +3,10 @@ package oracle
 import (
     "encoding/json"
     "fmt"
-    "github.com/cosmos/cosmos-sdk/client/context"
+
+    //"github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/client"
+
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/cosmos/cosmos-sdk/types/rest"
     "github.com/gorilla/mux"
@@ -12,7 +15,7 @@ import (
     "strconv"
 )
 
-func uploadFileHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func uploadFileHandler(cliCtx client.Context) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         accessToken := vars["accessToken"]
@@ -46,7 +49,7 @@ func uploadFileHandler(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 
-func checkAppUserFileVolumeLimit(cliCtx context.CLIContext, accessToken, appCode string, owner sdk.AccAddress) bool {
+func checkAppUserFileVolumeLimit(cliCtx client.Context, accessToken, appCode string, owner sdk.AccAddress) bool {
 
     //1、get App user file volume limit
     res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/application_user_file_volume_limit/%s/%s", "dbchain", accessToken, appCode), nil)

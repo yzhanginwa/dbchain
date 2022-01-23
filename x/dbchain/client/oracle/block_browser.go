@@ -3,7 +3,10 @@ package oracle
 import (
 	"encoding/hex"
 	"encoding/json"
-	"github.com/cosmos/cosmos-sdk/client/context"
+
+	//"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/gorilla/mux"
@@ -31,7 +34,7 @@ func init(){
 	exp, _ = regexp.Compile(regExpression)
 }
 
-func showCurrentDayTxsNum(cliCtx context.CLIContext) http.HandlerFunc{
+func showCurrentDayTxsNum(cliCtx client.Context) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
 		TxsStatistic := loadTxStatistic(cliCtx)
 		txs, _ := getOneDayTxs(cliCtx, 0, false, TxsStatistic)
@@ -40,7 +43,7 @@ func showCurrentDayTxsNum(cliCtx context.CLIContext) http.HandlerFunc{
 	}
 }
 
-func showRecentDaysTxsNum(cliCtx context.CLIContext) http.HandlerFunc{
+func showRecentDaysTxsNum(cliCtx client.Context) http.HandlerFunc{
 	return func(w http.ResponseWriter, r *http.Request) {
 		TxsStatistic := loadTxStatistic(cliCtx)
 
@@ -100,7 +103,7 @@ func showRecentDaysTxsNum(cliCtx context.CLIContext) http.HandlerFunc{
 	}
 }
 
-func showTotalTxsNum(cliCtx context.CLIContext) http.HandlerFunc {
+func showTotalTxsNum(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//excluding data of the day
 
@@ -148,7 +151,7 @@ func showTotalTxsNum(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-func showBlockTxsHash(cliCtx context.CLIContext) http.HandlerFunc {
+func showBlockTxsHash(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		vars := mux.Vars(r)
@@ -178,7 +181,7 @@ func showBlockTxsHash(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-func showAllAccounts(cliCtx context.CLIContext) http.HandlerFunc {
+func showAllAccounts(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, _, err := cliCtx.QueryWithData("custom/dbchain/allAccounts", nil)
 		if err != nil {
@@ -189,7 +192,7 @@ func showAllAccounts(cliCtx context.CLIContext) http.HandlerFunc {
 	}
 }
 
-func showAllApplications(cliCtx context.CLIContext) http.HandlerFunc {
+func showAllApplications(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, _, err := cliCtx.QueryWithData("custom/dbchain/application_browser", nil)
 		if err != nil {
@@ -201,7 +204,7 @@ func showAllApplications(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 //From the current time to a certain day
-func getOneDayTxs(cliCtx context.CLIContext, daysAgo int, upDateCache bool, txsStatistic *txStatistic) (int,int64) {
+func getOneDayTxs(cliCtx client.Context, daysAgo int, upDateCache bool, txsStatistic *txStatistic) (int,int64) {
 	txs := 0
 	//get from cache first
 	startTimeStamp := getStartTimeStamp(daysAgo)
@@ -409,7 +412,7 @@ func (total *totalStatistic)getTotalTxs()int{
 }
 
 
-func loadTotalStatistic(cliCtx context.CLIContext) *totalStatistic{
+func loadTotalStatistic(cliCtx client.Context) *totalStatistic{
 	TotalTxs := NewTotalStatistic()
 	out := queryTotalTxs(cliCtx)
 	if out == nil {
@@ -420,7 +423,7 @@ func loadTotalStatistic(cliCtx context.CLIContext) *totalStatistic{
 	return TotalTxs
 }
 
-func loadTxStatistic(cliCtx context.CLIContext) *txStatistic{
+func loadTxStatistic(cliCtx client.Context) *txStatistic{
 	var TxStatistic = NewTxStatistic()
 
 	out := queryTxStatistic(cliCtx)
@@ -433,7 +436,7 @@ func loadTxStatistic(cliCtx context.CLIContext) *txStatistic{
 
 
 
-func endProcessing(cliCtx context.CLIContext, data interface{}) {
+func endProcessing(cliCtx client.Context, data interface{}) {
 	priv, _  := oracle.LoadPrivKey()
 	var oracleAddr = sdk.AccAddress(priv.PubKey().Address())
 	msgs := make([]oracle.UniversalMsg, 0)
@@ -468,7 +471,7 @@ func marshalTxsStatistic(txsStatistic *txStatistic) string {
 	return string(bz)
 }
 
-func queryTxStatistic(cliCtx context.CLIContext)  map[int64]int {
+func queryTxStatistic(cliCtx client.Context)  map[int64]int {
 	res, _, err := cliCtx.QueryWithData("custom/dbchain/dbchainRecentTxNum", nil)
 	if err != nil {
 		return nil
@@ -481,7 +484,7 @@ func queryTxStatistic(cliCtx context.CLIContext)  map[int64]int {
 	return out
 }
 
-func queryTotalTxs(cliCtx context.CLIContext)  map[string]int64 {
+func queryTotalTxs(cliCtx client.Context)  map[string]int64 {
 	res, _, err := cliCtx.QueryWithData("custom/dbchain/dbchainTxNum", nil)
 	if err != nil {
 		return nil

@@ -4,7 +4,10 @@ import (
     "encoding/hex"
     "encoding/json"
     "fmt"
-    "github.com/cosmos/cosmos-sdk/client/context"
+
+    //"github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/client"
+
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/cosmos/cosmos-sdk/types/rest"
     "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
@@ -19,7 +22,7 @@ import (
     "github.com/gorilla/mux"
 )
 
-func showCheckChainIdHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showCheckChainIdHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/check_chain_id/%s/%s", storeName, vars["accessToken"], vars["chainId"]), nil)
@@ -31,7 +34,7 @@ func showCheckChainIdHandler(cliCtx context.CLIContext, storeName string) http.H
     }
 }
 
-func showIsSysAdminHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showIsSysAdminHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/is_sys_admin/%s", storeName, vars["accessToken"]), nil)
@@ -43,7 +46,7 @@ func showIsSysAdminHandler(cliCtx context.CLIContext, storeName string) http.Han
     }
 }
 
-func showApplicationsHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showApplicationsHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/application/%s", storeName, vars["accessToken"]), nil)
@@ -55,7 +58,7 @@ func showApplicationsHandler(cliCtx context.CLIContext, storeName string) http.H
     }
 }
 
-func showApplicationHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showApplicationHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/application/%s/%s", storeName, vars["accessToken"], vars["appCode"]), nil)
@@ -67,7 +70,7 @@ func showApplicationHandler(cliCtx context.CLIContext, storeName string) http.Ha
     }
 }
 
-func showApplicationUserFileVolumeLimit(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showApplicationUserFileVolumeLimit(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/application_user_file_volume_limit/%s/%s", storeName, vars["accessToken"], vars["appCode"]), nil)
@@ -79,7 +82,7 @@ func showApplicationUserFileVolumeLimit(cliCtx context.CLIContext, storeName str
     }
 }
 
-func showApplicationUserUsedFileVolume(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showApplicationUserUsedFileVolume(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/application_user_used_file_volume/%s/%s", storeName, vars["accessToken"], vars["appCode"]), nil)
@@ -91,7 +94,7 @@ func showApplicationUserUsedFileVolume(cliCtx context.CLIContext, storeName stri
     }
 }
 
-func showAdminAppsHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showAdminAppsHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/admin_apps/%s", storeName, vars["accessToken"]), nil)
@@ -103,7 +106,7 @@ func showAdminAppsHandler(cliCtx context.CLIContext, storeName string) http.Hand
     }
 }
 
-func showIsAppUserHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showIsAppUserHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/is_app_user/%s/%s", storeName, vars["accessToken"], vars["appCode"]), nil)
@@ -115,7 +118,7 @@ func showIsAppUserHandler(cliCtx context.CLIContext, storeName string) http.Hand
     }
 }
 
-func showAppUsersHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showAppUsersHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/app_users/%s/%s", storeName, vars["accessToken"], vars["appCode"]), nil)
@@ -127,7 +130,7 @@ func showAppUsersHandler(cliCtx context.CLIContext, storeName string) http.Handl
     }
 }
 
-func showTablesHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showTablesHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/tables/%s/%s", storeName, vars["accessToken"], vars["appCode"]), nil)
@@ -139,7 +142,7 @@ func showTablesHandler(cliCtx context.CLIContext, storeName string) http.Handler
     }
 }
 
-func showTableHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showTableHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/tables/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["tableName"]), nil)
@@ -151,7 +154,7 @@ func showTableHandler(cliCtx context.CLIContext, storeName string) http.HandlerF
     }
 }
 
-func showFunctionsHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showFunctionsHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/functions/%s/%s", storeName, vars["accessToken"], vars["appCode"]), nil)
@@ -164,7 +167,7 @@ func showFunctionsHandler(cliCtx context.CLIContext, storeName string) http.Hand
     }
 }
 
-func showFunctionInfoHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showFunctionInfoHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/functionInfo/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["functionName"]), nil)
@@ -176,7 +179,7 @@ func showFunctionInfoHandler(cliCtx context.CLIContext, storeName string) http.H
     }
 }
 
-func showCustomQueriersHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showCustomQueriersHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/customQueriers/%s/%s", storeName, vars["accessToken"], vars["appCode"]), nil)
@@ -188,7 +191,7 @@ func showCustomQueriersHandler(cliCtx context.CLIContext, storeName string) http
     }
 }
 
-func showCustomQuerierInfoHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showCustomQuerierInfoHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/customQuerierInfo/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["querierName"]), nil)
@@ -200,7 +203,7 @@ func showCustomQuerierInfoHandler(cliCtx context.CLIContext, storeName string) h
     }
 }
 
-func showCallCustomQuerierHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showCallCustomQuerierHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         r.ParseForm()
@@ -216,7 +219,7 @@ func showCallCustomQuerierHandler(cliCtx context.CLIContext, storeName string) h
     }
 }
 
-func showCallDynamicScriptHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showCallDynamicScriptHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/dynamic_script/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["script"]), nil)
@@ -228,7 +231,7 @@ func showCallDynamicScriptHandler(cliCtx context.CLIContext, storeName string) h
     }
 }
 
-func showTableOptionsHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showTableOptionsHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/option/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["tableName"]), nil)
@@ -240,7 +243,7 @@ func showTableOptionsHandler(cliCtx context.CLIContext, storeName string) http.H
     }
 }
 
-func showTableAssociationsHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showTableAssociationsHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/association/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["tableName"]), nil)
@@ -252,7 +255,7 @@ func showTableAssociationsHandler(cliCtx context.CLIContext, storeName string) h
     }
 }
 
-func showColumnOptionsHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showColumnOptionsHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/column_option/%s/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["tableName"], vars["fieldName"]), nil)
@@ -264,7 +267,7 @@ func showColumnOptionsHandler(cliCtx context.CLIContext, storeName string) http.
     }
 }
 
-func showCounterCacheHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showCounterCacheHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/counter_info/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["tableName"]), nil)
@@ -277,7 +280,7 @@ func showCounterCacheHandler(cliCtx context.CLIContext, storeName string) http.H
 }
 
 
-func showColumnDataTypeHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showColumnDataTypeHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/column_data_type/%s/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["tableName"], vars["fieldName"]), nil)
@@ -289,7 +292,7 @@ func showColumnDataTypeHandler(cliCtx context.CLIContext, storeName string) http
     }
 }
 
-func showCanAddColumnOptionHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showCanAddColumnOptionHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/can_add_column_option/%s/%s/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["tableName"], vars["fieldName"], vars["option"]), nil)
@@ -301,7 +304,7 @@ func showCanAddColumnOptionHandler(cliCtx context.CLIContext, storeName string) 
     }
 }
 
-func showCanSetColumnDataTypeHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showCanSetColumnDataTypeHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/can_set_column_data_type/%s/%s/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["tableName"], vars["fieldName"], vars["dataType"]), nil)
@@ -313,7 +316,7 @@ func showCanSetColumnDataTypeHandler(cliCtx context.CLIContext, storeName string
     }
 }
 
-func showCanInsertRowHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showCanInsertRowHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         rowFieldsJson := vars["rowFieldsJsonBase58"]
@@ -326,7 +329,7 @@ func showCanInsertRowHandler(cliCtx context.CLIContext, storeName string) http.H
     }
 }
 
-func showRowHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showRowHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["name"], vars["id"]), nil)
@@ -338,7 +341,7 @@ func showRowHandler(cliCtx context.CLIContext, storeName string) http.HandlerFun
     }
 }
 
-func showIdsByHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showIdsByHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find_by/%s/%s/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["name"], vars["field"], vars["value"]), nil)
@@ -350,7 +353,7 @@ func showIdsByHandler(cliCtx context.CLIContext, storeName string) http.HandlerF
     }
 }
 
-func showAllIdsHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showAllIdsHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/find_all/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["name"]), nil)
@@ -362,7 +365,7 @@ func showAllIdsHandler(cliCtx context.CLIContext, storeName string) http.Handler
     }
 }
 
-func showFriends(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showFriends(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/friends/%s", storeName, vars["accessToken"]), nil)
@@ -374,7 +377,7 @@ func showFriends(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     }
 }
 
-func showPendingFriends(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showPendingFriends(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/pending_friends/%s", storeName, vars["accessToken"]), nil)
@@ -386,7 +389,7 @@ func showPendingFriends(cliCtx context.CLIContext, storeName string) http.Handle
     }
 }
 
-func showGroups(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showGroups(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/groups/%s/%s", storeName, vars["accessToken"], vars["appCode"]), nil)
@@ -398,7 +401,7 @@ func showGroups(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     }
 }
 
-func showGroupMembers(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showGroupMembers(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/group/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["groupName"]), nil)
@@ -410,7 +413,7 @@ func showGroupMembers(cliCtx context.CLIContext, storeName string) http.HandlerF
     }
 }
 
-func showGroupMemo(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showGroupMemo(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/group_memo/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["groupName"]), nil)
@@ -422,7 +425,7 @@ func showGroupMemo(cliCtx context.CLIContext, storeName string) http.HandlerFunc
     }
 }
 
-func showIndex(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showIndex(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/index/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["tableName"]), nil)
@@ -434,7 +437,7 @@ func showIndex(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     }
 }
 
-func execQuerier(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func execQuerier(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/querier/%s/%s/%s", storeName, vars["accessToken"], vars["appCode"], vars["querierBase58"]), nil)
@@ -446,7 +449,7 @@ func execQuerier(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     }
 }
 
-func showTxSimpleResultHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showTxSimpleResultHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/txSimpleResult/%s/%s", storeName, vars["accessToken"], vars["txHash"]), nil)
@@ -458,7 +461,7 @@ func showTxSimpleResultHandler(cliCtx context.CLIContext, storeName string) http
     }
 }
 
-func downloadFileHandler(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func downloadFileHandler(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         accessToken := vars["accessToken"]
@@ -540,7 +543,7 @@ func downloadFileHandler(cliCtx context.CLIContext, storeName string) http.Handl
 }
 
 //add for bsn
-func showAccountTxs(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showAccountTxs(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         r.ParseForm()
@@ -558,7 +561,7 @@ func showAccountTxs(cliCtx context.CLIContext, storeName string) http.HandlerFun
     }
 }
 
-func showTokenKeepers(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showTokenKeepers(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/token_keepers/%s", storeName, vars["accessToken"]), nil)
@@ -570,7 +573,7 @@ func showTokenKeepers(cliCtx context.CLIContext, storeName string) http.HandlerF
     }
 }
 
-func showLimitP2PTransferStatus(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showLimitP2PTransferStatus(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/limit_p2p_transfer_status/%s", storeName, vars["accessToken"]), nil)
@@ -582,7 +585,7 @@ func showLimitP2PTransferStatus(cliCtx context.CLIContext, storeName string) htt
     }
 }
 
-func showAllTxs(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showAllTxs(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
 
         vars := mux.Vars(r)
@@ -639,7 +642,7 @@ func showAllTxs(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
     }
 }
 
-func showCurrentMinGasPrices(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func showCurrentMinGasPrices(cliCtx client.Context, storeName string) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         vars := mux.Vars(r)
         ac := vars["accessToken"]

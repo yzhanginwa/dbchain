@@ -6,7 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cosmos/go-bip39"
-	"github.com/cosmos/cosmos-sdk/client/context"
+
+	//"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -19,7 +22,7 @@ import (
 	"strconv"
 )
 
-func applyAccountInfo(cliCtx context.CLIContext) http.HandlerFunc {
+func applyAccountInfo(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		priv, secret, err := CreateMnemonic(keys.Secp256k1)
@@ -84,7 +87,7 @@ func applyAccountInfoByPublicKey() http.HandlerFunc {
 	}
 }
 
-func rechargeTx(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func rechargeTx(cliCtx client.Context, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := readBodyData(r)
 		if err != nil {
@@ -103,7 +106,7 @@ func rechargeTx(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
 	}
 }
 
-func getAccountTxByTimeOrByHeight(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func getAccountTxByTimeOrByHeight(cliCtx client.Context, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := readBodyData(r)
 		if err != nil {
@@ -146,7 +149,7 @@ func getAccountTxByTimeOrByHeight(cliCtx context.CLIContext, storeName string) h
 	}
 }
 
-func getQueryDate(cliCtx context.CLIContext, data map[string]string) (string, string) {
+func getQueryDate(cliCtx client.Context, data map[string]string) (string, string) {
 	startHeight := data["startBlockHeight"]
 	endHeight := data["endBlockHeight"]
 	if startHeight == "" || endHeight == "" {
@@ -234,7 +237,7 @@ func readBodyData(r *http.Request) (map[string]string, error) {
 	return postData, nil
 }
 
-func sendFromBsnAddressToUserAddress(cliCtx context.CLIContext, storeName, bsnAddress, userAccountAddress, rechargeGas string) (string, int, string){
+func sendFromBsnAddressToUserAddress(cliCtx client.Context, storeName, bsnAddress, userAccountAddress, rechargeGas string) (string, int, string){
 	from, err  := sdk.AccAddressFromBech32(bsnAddress)
 	if err != nil {
 		return "", oracle.Failed, err.Error()
@@ -261,7 +264,7 @@ func sendFromBsnAddressToUserAddress(cliCtx context.CLIContext, storeName, bsnAd
 	return txHash, status, errInfo
 }
 
-func saveByOracle( cliCtx context.CLIContext, data map[string]string ) error {
+func saveByOracle( cliCtx client.Context, data map[string]string ) error {
 
 	pk , err := loadOraclePrivateKey()
 	if err != nil {
@@ -324,7 +327,7 @@ func loadAesEncryptKey() ([]byte, error) {
 	return secret, nil
 }
 
-func loadUserPrivateKeyFromChain(cliCtx context.CLIContext, storeName, addr string) (crypto.PrivKey, error) {
+func loadUserPrivateKeyFromChain(cliCtx client.Context, storeName, addr string) (crypto.PrivKey, error) {
 
 	res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/get_user_private_key/%s", storeName, addr), nil)
 	if err != nil {

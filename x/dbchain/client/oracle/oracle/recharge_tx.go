@@ -3,7 +3,10 @@ package oracle
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/context"
+
+	//"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"io/ioutil"
@@ -17,7 +20,7 @@ const (
 	Failed    = 3
 
 )
-func BuildAndSignBroadcastTx(cliCtx context.CLIContext, batch []UniversalMsg, privKey crypto.PrivKey, oracleAccAddr sdk.AccAddress) (string, int, string) {
+func BuildAndSignBroadcastTx(cliCtx client.Context, batch []UniversalMsg, privKey crypto.PrivKey, oracleAccAddr sdk.AccAddress) (string, int, string) {
 	accNum, seq, err := GetAccountInfo(oracleAccAddr.String())
 	if err != nil {
 		fmt.Println("Failed to load oracle's account info!!!")

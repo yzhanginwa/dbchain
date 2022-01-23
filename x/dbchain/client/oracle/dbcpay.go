@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/context"
+
+	//"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/gorilla/mux"
@@ -77,7 +80,7 @@ const (
 //	//need create table buyerorder and orderinfo
 //}
 
-func oracleRecipientAddress(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func oracleRecipientAddress(cliCtx client.Context, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		accessCode      		:= vars["accessToken"]
@@ -99,7 +102,7 @@ func oracleRecipientAddress(cliCtx context.CLIContext, storeName string) http.Ha
 		rest.PostProcessResponse(w, cliCtx, bz)
 	}
 }
-func oracleCallDbcPay(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func oracleCallDbcPay(cliCtx client.Context, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		accessCode      := vars["accessToken"]
@@ -176,7 +179,7 @@ func oracleCallDbcPay(cliCtx context.CLIContext, storeName string) http.HandlerF
 	}
 }
 
-func oracleApplepay(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func oracleApplepay(cliCtx client.Context, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		accessCode := vars["accessToken"]
@@ -196,7 +199,7 @@ func oracleApplepay(cliCtx context.CLIContext, storeName string) http.HandlerFun
 	}
 }
 
-func internalPurchase(cliCtx context.CLIContext, storeName, OutTradeNo, tableName, receiptData, paymentId, vendor string , buyer sdk.AccAddress, w http.ResponseWriter) {
+func internalPurchase(cliCtx client.Context, storeName, OutTradeNo, tableName, receiptData, paymentId, vendor string , buyer sdk.AccAddress, w http.ResponseWriter) {
 	if !checkAppleUnverifyReceipt {
 		go checkAppleReceiptRunner(cliCtx)
 		checkAppleUnverifyReceipt = true
@@ -240,7 +243,7 @@ func internalPurchase(cliCtx context.CLIContext, storeName, OutTradeNo, tableNam
 	return
 }
 
-func callDbcTokenPay(cliCtx context.CLIContext, storeName, appcode, tableName ,paymentId string) ([]byte, error){
+func callDbcTokenPay(cliCtx client.Context, storeName, appcode, tableName ,paymentId string) ([]byte, error){
 	//check
 	//comfirm table has payment option
 	hasPaymentOption := checkTableOption(cliCtx, storeName, appcode, tableName, types.TBLOPT_PAYMENT)
@@ -286,7 +289,7 @@ func callDbcTokenPay(cliCtx context.CLIContext, storeName, appcode, tableName ,p
 	return bz, nil
 }
 
-func checkTableOption(cliCtx context.CLIContext, storeName, appcode, tableName string, TableOption types.TableOption ) bool {
+func checkTableOption(cliCtx client.Context, storeName, appcode, tableName string, TableOption types.TableOption ) bool {
 	ac := getOracleAc()
 	//comfirm table has payment option
 	options, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/option/%s/%s/%s", storeName, ac, appcode, tableName), nil)
@@ -305,7 +308,7 @@ func checkTableOption(cliCtx context.CLIContext, storeName, appcode, tableName s
 	}
 	return hasPaymentOption
 }
-func getOrderMoney(cliCtx context.CLIContext, storeName, appcode, sellableid, buyer string) (map[string]string,error) {
+func getOrderMoney(cliCtx client.Context, storeName, appcode, sellableid, buyer string) (map[string]string,error) {
 
 	sellableResult, err := getSellableInfo(cliCtx, storeName, appcode, sellableid)
 	if err != nil {
@@ -343,7 +346,7 @@ func getOrderMoney(cliCtx context.CLIContext, storeName, appcode, sellableid, bu
 	return sellableResult, nil
 }
 
-func getSellableInfo(cliCtx context.CLIContext, storeName, appcode, sellableid string ) (map[string]string, error){
+func getSellableInfo(cliCtx client.Context, storeName, appcode, sellableid string ) (map[string]string, error){
 	tableName := "sellable"
 	fieldName := "code"
 	value := sellableid
@@ -364,14 +367,14 @@ func getSellableInfo(cliCtx context.CLIContext, storeName, appcode, sellableid s
 	return oracleQueryUserTable(cliCtx, queryString)
 }
 
-func getOrderReceiptInfo(cliCtx context.CLIContext, storeName string, fieldValue map[string]string) ([]map[string]string, error){
+func getOrderReceiptInfo(cliCtx client.Context, storeName string, fieldValue map[string]string) ([]map[string]string, error){
 	appCode := "0000000001"
 	tableName := "order_receipt"
 
 	return queryByWhere(cliCtx, storeName, appCode, tableName, fieldValue)
 }
 
-func queryByWhere(cliCtx context.CLIContext, storeName, appCode, tableName string, fieldValue map[string]string) ([]map[string]string, error) {
+func queryByWhere(cliCtx client.Context, storeName, appCode, tableName string, fieldValue map[string]string) ([]map[string]string, error) {
 	querierObjs := []map[string]string{}
 	var ent map[string]string
 	ent = map[string]string{
@@ -393,7 +396,7 @@ func queryByWhere(cliCtx context.CLIContext, storeName, appCode, tableName strin
 }
 
 
-func querierQuery(cliCtx context.CLIContext, storeName , appCode string, querierObjs []map[string]string, ) ([]map[string]string, error){
+func querierQuery(cliCtx client.Context, storeName , appCode string, querierObjs []map[string]string, ) ([]map[string]string, error){
 	bz , err := json.Marshal(querierObjs)
 	if err != nil {
 		return nil, err
@@ -420,7 +423,7 @@ func querierQuery(cliCtx context.CLIContext, storeName , appCode string, querier
 	return orderReceipt, nil
 }
 
-func getOrderInfo(cliCtx context.CLIContext, storeName, appcode, id string) (map[string]string, error) {
+func getOrderInfo(cliCtx client.Context, storeName, appcode, id string) (map[string]string, error) {
 	ac := getOracleAc()
 	queryString := fmt.Sprintf("custom/%s/find/%s/%s/%s/%s", storeName, ac, appcode, "order", id)
 	return oracleQueryUserTable(cliCtx, queryString)
@@ -435,7 +438,7 @@ func getOracleAc() string {
 	return ac
 }
 
-func oracleQueryUserTable(cliCtx context.CLIContext, query string) (map[string]string, error) {
+func oracleQueryUserTable(cliCtx client.Context, query string) (map[string]string, error) {
 	res, _, err := cliCtx.QueryWithData(query, nil)
 	if err != nil {
 		return nil, err
@@ -479,7 +482,7 @@ func oracleAppPay(Money , OutTradeNo string) (string, error) {
 }
 
 
-func oracleQueryPayStatus(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func oracleQueryPayStatus(cliCtx client.Context, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		outTradeNo := r.Form.Get("out_trade_no")
@@ -530,7 +533,7 @@ func oracleQueryPayStatus(cliCtx context.CLIContext, storeName string) http.Hand
 }
 
 
-func oracleSavePayStatus(cliCtx context.CLIContext, storeName string) http.HandlerFunc {
+func oracleSavePayStatus(cliCtx client.Context, storeName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 
@@ -551,7 +554,7 @@ func oracleSavePayStatus(cliCtx context.CLIContext, storeName string) http.Handl
 	}
 }
 
-func newOrderReceiptData(cliCtx context.CLIContext, storeName , out_trade_no, total_amount, trade_no string)map[string]string{
+func newOrderReceiptData(cliCtx client.Context, storeName , out_trade_no, total_amount, trade_no string)map[string]string{
 	outTradeNo := out_trade_no
 	info := strings.Split(outTradeNo,"-")
 	//TODO GetOwner
@@ -580,7 +583,7 @@ func newOrderReceiptDataCore(appcode, orderid, owner, amount, expiration_date, v
 
 }
 
-func calcExpirationDate(cliCtx context.CLIContext, storeName string, appcode ,owner ,sellableid string) string{
+func calcExpirationDate(cliCtx client.Context, storeName string, appcode ,owner ,sellableid string) string{
 	//当前购买套餐
 	sellableInfo ,err := getSellableInfo(cliCtx, storeName, appcode, sellableid)
 	if err != nil || sellableInfo["term_days"] == ""{
@@ -644,7 +647,7 @@ func OracleQueryAliOrder(outTradeNo string) (map[string]string, error){
 	return result, nil
 }
 
-func SaveToOrderInfoTable(cliCtx context.CLIContext, oracleAddr sdk.AccAddress,  row map[string]string, tableName string) error{
+func SaveToOrderInfoTable(cliCtx client.Context, oracleAddr sdk.AccAddress,  row map[string]string, tableName string) error{
 	//write to buyerorder table
 	rowFields := make(types.RowFields)
 	for k, v := range row {

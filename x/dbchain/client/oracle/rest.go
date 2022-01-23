@@ -2,12 +2,13 @@ package oracle
 
 import (
     "fmt"
-    "github.com/cosmos/cosmos-sdk/client/context"
+    //"github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/client"
     "github.com/gorilla/mux"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, storeName string) {
+func RegisterRoutes(cliCtx client.Context, r *mux.Router, storeName string) {
     r.HandleFunc(fmt.Sprintf("/%s/upload/{%s}/{%s}", storeName, "accessToken", "appCode"), uploadFileHandler(cliCtx)).Methods("POST")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/send_verf_code/{%s}/{%s}", storeName, "accessToken", "mobile"), oracleSendVerfCode(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/oracle/verify_verf_code/{%s}/{%s}/{%s}", storeName, "accessToken", "mobile", "verificationCode"), oracleVerifyVerfCode(cliCtx, storeName)).Methods("GET")

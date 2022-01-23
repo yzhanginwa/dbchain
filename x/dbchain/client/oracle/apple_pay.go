@@ -18,7 +18,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/context"
+
+	//"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
+
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
 	"net/http"
 	"strconv"
@@ -105,7 +108,7 @@ const (
 	applePayProduct = "applePayProduction"
 )
 
-func verifyApplePay(cliCtx context.CLIContext, storeName, outTradeNo, buyer string, receiptData string) (string,string,error) {
+func verifyApplePay(cliCtx client.Context, storeName, outTradeNo, buyer string, receiptData string) (string,string,error) {
 
 	postUrl := productUrl
 	applePayType := applePayProduct
@@ -176,7 +179,7 @@ func verifyApplePay(cliCtx context.CLIContext, storeName, outTradeNo, buyer stri
 	return appleTransactionId, applePayType, nil
 }
 
-func callDbcApplePay(cliCtx context.CLIContext, storeName, outTradeNo,  appleTransactionId, applePayType string) ([]byte, error){
+func callDbcApplePay(cliCtx client.Context, storeName, outTradeNo,  appleTransactionId, applePayType string) ([]byte, error){
 	appCodeAndOrderId := strings.Split(outTradeNo,"-")
 	appcode := appCodeAndOrderId[0]
 	orderId := appCodeAndOrderId[1]

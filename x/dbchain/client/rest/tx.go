@@ -3,7 +3,9 @@ package rest
 import (
     "net/http"
 
-    "github.com/cosmos/cosmos-sdk/client/context"
+    //"github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/client"
+
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 
     sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,7 +21,7 @@ type createTableReq struct  {
     Fields  []string       `json:"fields"`
 }
 
-func createTableHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func createTableHandler(cliCtx client.Context) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         var req createTableReq
 
