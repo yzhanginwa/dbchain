@@ -9,7 +9,10 @@ import (
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/cosmos/cosmos-sdk/x/auth"
-    "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+
+    //"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+   "github.com/cosmos/cosmos-sdk/client/tx"
+
     "github.com/spf13/cobra"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
@@ -26,8 +29,8 @@ func GetCmdAddFunction(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode   := args[0]
             funcName  := args[1]
@@ -57,8 +60,8 @@ func GetCmdCallFunction(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode  := args[0]
             funcName := args[1]
@@ -86,8 +89,8 @@ func GetCmdDropFunction(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode  := args[0]
             funcName := args[1]
@@ -114,8 +117,8 @@ func GetCmdAddCustomQuerier(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode      := args[0]
             querierName  := args[1]
@@ -146,8 +149,8 @@ func GetCmdDropCustomQuerier(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode      := args[0]
             querierName  := args[1]

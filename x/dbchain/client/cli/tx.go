@@ -23,11 +23,15 @@ import (
     "github.com/cosmos/cosmos-sdk/client"
     //"github.com/cosmos/cosmos-sdk/client/context"
 
+    "github.com/cosmos/cosmos-sdk/client/tx"
+
     "github.com/cosmos/cosmos-sdk/client/flags"
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/cosmos/cosmos-sdk/x/auth"
-    "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+
+    //"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+
     account "github.com/cosmos/cosmos-sdk/x/auth/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
@@ -115,8 +119,8 @@ func GetCmdCreateApplication() *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             name := args[0]
             description := args[1]
@@ -124,13 +128,15 @@ func GetCmdCreateApplication() *cobra.Command {
             if args[2] == "no" || args[2] == "false" {
                 permissionRequired = false
             }
+
             msg := types.NewMsgCreateApplication(cliCtx.GetFromAddress(), name, description, permissionRequired)
             err := msg.ValidateBasic()
             if err != nil {
                 return err
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -149,8 +155,8 @@ func GetCmdDropApplication() *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
             msg := types.NewMsgDropApplication(cliCtx.GetFromAddress(), appCode)
@@ -159,7 +165,8 @@ func GetCmdDropApplication() *cobra.Command {
                 return err
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -179,8 +186,8 @@ func GetCmdRecoverApplication() *cobra.Command {
                         }
 
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
             msg := types.NewMsgRecoverApplication(cliCtx.GetFromAddress(), appCode)
@@ -189,7 +196,8 @@ func GetCmdRecoverApplication() *cobra.Command {
                 return err
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -206,14 +214,15 @@ func GetCmdCreateSysDatabase(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             msgs, err := createSysDatabaseMsg(cliCtx, cliCtx.GetFromAddress())
             if err != nil {
                 return err
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, msgs)
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, msgs)
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -230,8 +239,8 @@ func GetCmdSetAppUserFileVolumeLimit(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
             size    := args[1]
@@ -240,7 +249,8 @@ func GetCmdSetAppUserFileVolumeLimit(cdc *codec.Codec) *cobra.Command {
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -353,8 +363,8 @@ func GetCmdSetAppPermission(cdc * codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode            := args[0]
             permissionRequired := args[1]
@@ -363,7 +373,8 @@ func GetCmdSetAppPermission(cdc * codec.Codec) *cobra.Command {
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -380,8 +391,8 @@ func GetCmdModifyAppUser(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
             action  := args[1]   // action has to be either 'add' or 'drop'
@@ -397,7 +408,8 @@ func GetCmdModifyAppUser(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -414,8 +426,8 @@ func GetCmdCreateTable(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
             name := args[1]
@@ -426,7 +438,8 @@ func GetCmdCreateTable(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -443,8 +456,8 @@ func GetCmdModifyTableAssociation(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
             option := args[1]
@@ -461,7 +474,8 @@ func GetCmdModifyTableAssociation(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -479,8 +493,8 @@ func GetCmdAddCounterCache(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
             tableName := args[1]
@@ -496,7 +510,8 @@ func GetCmdAddCounterCache(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -513,8 +528,8 @@ func GetCmdDropTable(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
             name := args[1]
@@ -524,7 +539,8 @@ func GetCmdDropTable(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -541,8 +557,8 @@ func GetCmdAddColumn(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode:= args[0]
             name   := args[1]
@@ -553,7 +569,8 @@ func GetCmdAddColumn(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -570,8 +587,8 @@ func GetCmdDropColumn(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
             name    := args[1]
@@ -582,7 +599,8 @@ func GetCmdDropColumn(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -599,8 +617,8 @@ func GetCmdRenameColumn(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode  := args[0]
             name     := args[1]
@@ -612,7 +630,8 @@ func GetCmdRenameColumn(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -630,8 +649,8 @@ func GetCmdCreateIndex(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode   := args[0]
             tableName := args[1]
@@ -642,7 +661,8 @@ func GetCmdCreateIndex(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -659,8 +679,8 @@ func GetCmdDropIndex(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode   := args[0]
             tableName := args[1]
@@ -671,7 +691,8 @@ func GetCmdDropIndex(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -688,8 +709,8 @@ func GetCmdModifyOption(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode   := args[0]
             tableName := args[1]
@@ -702,7 +723,8 @@ func GetCmdModifyOption(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -725,8 +747,8 @@ func GetCmdSetTableMemo(cdc * codec.Codec) *cobra.Command {
               return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode   := args[0]
             tableName := args[1]
@@ -737,7 +759,9 @@ func GetCmdSetTableMemo(cdc * codec.Codec) *cobra.Command {
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -755,8 +779,8 @@ func GetCmdModifyColumnOption(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode   := args[0]
             tableName := args[1]
@@ -770,7 +794,8 @@ func GetCmdModifyColumnOption(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -787,8 +812,8 @@ func GetCmdSetColumnDataType(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode   := args[0]
             tableName := args[1]
@@ -801,7 +826,8 @@ func GetCmdSetColumnDataType(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -824,8 +850,8 @@ func GetCmdSetColumnMemo(cdc * codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode   := args[0]
             tableName := args[1]
@@ -837,7 +863,9 @@ func GetCmdSetColumnMemo(cdc * codec.Codec) *cobra.Command {
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -860,8 +888,8 @@ func GetCmdAddInsertFilter(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode   := args[0]
             tableName := args[1]
@@ -873,7 +901,8 @@ func GetCmdAddInsertFilter(cdc *codec.Codec) *cobra.Command {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -890,8 +919,8 @@ func GetCmdDropInsertFilter(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode   := args[0]
             tableName := args[1]
@@ -902,7 +931,8 @@ func GetCmdDropInsertFilter(cdc *codec.Codec) *cobra.Command {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -925,8 +955,8 @@ func GetCmdAddTrigger(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode   := args[0]
             tableName := args[1]
@@ -938,7 +968,8 @@ func GetCmdAddTrigger(cdc *codec.Codec) *cobra.Command {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -955,8 +986,8 @@ func GetCmdDropTrigger(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode   := args[0]
             tableName := args[1]
@@ -967,7 +998,8 @@ func GetCmdDropTrigger(cdc *codec.Codec) *cobra.Command {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -990,8 +1022,8 @@ func GetCmdInsertRow(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
             name    := args[1]
@@ -1013,7 +1045,8 @@ func GetCmdInsertRow(cdc *codec.Codec) *cobra.Command {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -1030,8 +1063,8 @@ func GetCmdUpdateRow(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
             name    := args[1]
@@ -1057,7 +1090,8 @@ func GetCmdUpdateRow(cdc *codec.Codec) *cobra.Command {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -1074,8 +1108,8 @@ func GetCmdDeleteRow(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
             name    := args[1]
@@ -1090,7 +1124,8 @@ func GetCmdDeleteRow(cdc *codec.Codec) *cobra.Command {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -1107,8 +1142,8 @@ func GetCmdFreezeRow(cdc *codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
             tableName    := args[1]
@@ -1123,7 +1158,8 @@ func GetCmdFreezeRow(cdc *codec.Codec) *cobra.Command {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
 
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -1147,8 +1183,8 @@ func GetCmdModifyGroupMember(cdc * codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode       := args[0]
             groupName     := args[1]
@@ -1165,7 +1201,9 @@ func GetCmdModifyGroupMember(cdc * codec.Codec) *cobra.Command {
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -1188,8 +1226,8 @@ func GetCmdModifyGroup(cdc * codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode   := args[0]
             action    := args[1]
@@ -1200,7 +1238,9 @@ func GetCmdModifyGroup(cdc * codec.Codec) *cobra.Command {
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -1223,8 +1263,8 @@ func GetCmdSetGroupMemo(cdc * codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode   := args[0]
             groupName := args[1]
@@ -1235,7 +1275,8 @@ func GetCmdSetGroupMemo(cdc * codec.Codec) *cobra.Command {
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -1258,8 +1299,8 @@ func GetCmdAddFriend(cdc * codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             ownerName := args[0]
             address   := args[1]
@@ -1269,7 +1310,8 @@ func GetCmdAddFriend(cdc * codec.Codec) *cobra.Command {
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -1292,8 +1334,8 @@ func GetCmdDropFriend(cdc * codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             address   := args[0]
             msg := types.NewMsgDropFriend(cliCtx.GetFromAddress(), address)
@@ -1301,7 +1343,8 @@ func GetCmdDropFriend(cdc * codec.Codec) *cobra.Command {
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -1318,8 +1361,8 @@ func GetCmdRespondFriend(cdc * codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             address := args[0]
             action  := args[1]
@@ -1328,7 +1371,8 @@ func GetCmdRespondFriend(cdc * codec.Codec) *cobra.Command {
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -1351,8 +1395,8 @@ func GetCmdFreezeSchema(cdc * codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
             msg := types.NewMsgSetSchemaStatus(cliCtx.GetFromAddress(), appCode, "frozen")
@@ -1360,7 +1404,8 @@ func GetCmdFreezeSchema(cdc * codec.Codec) *cobra.Command {
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -1377,8 +1422,8 @@ func GetCmdUnfreezeSchema(cdc * codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
             msg := types.NewMsgSetSchemaStatus(cliCtx.GetFromAddress(), appCode, "unfrozen" )
@@ -1386,7 +1431,8 @@ func GetCmdUnfreezeSchema(cdc * codec.Codec) *cobra.Command {
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -1409,8 +1455,8 @@ func GetCmdFreezeAppData(cdc * codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
             msg := types.NewMsgSetDatabaseDataStatus(cliCtx.GetFromAddress(), appCode, "frozen")
@@ -1418,7 +1464,8 @@ func GetCmdFreezeAppData(cdc * codec.Codec) *cobra.Command {
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -1435,8 +1482,8 @@ func GetCmdUnFreezeAppData(cdc * codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             appCode := args[0]
             msg := types.NewMsgSetDatabaseDataStatus(cliCtx.GetFromAddress(), appCode, "unfrozen" )
@@ -1444,7 +1491,8 @@ func GetCmdUnFreezeAppData(cdc * codec.Codec) *cobra.Command {
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -1461,8 +1509,8 @@ func GetCmdResetTxTotalTxs(cdc * codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             data := map[string]int64 {
                 "txNum" : 0,
@@ -1474,7 +1522,8 @@ func GetCmdResetTxTotalTxs(cdc * codec.Codec) *cobra.Command {
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -1494,8 +1543,8 @@ func GetCmdModifyTokenKeepers(cdc * codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             action := args[0]
             address, err  := sdk.AccAddressFromBech32(args[1])
@@ -1507,7 +1556,8 @@ func GetCmdModifyTokenKeepers(cdc * codec.Codec) *cobra.Command {
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
@@ -1524,8 +1574,8 @@ func GetCmdModifyP2PTransferLimit(cdc * codec.Codec) *cobra.Command {
                 return err
             }
 
-            inBuf := bufio.NewReader(cmd.InOrStdin())
-            txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+            //inBuf := bufio.NewReader(cmd.InOrStdin())
+            //txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
             limitStr := args[0]
             var limit = false
@@ -1537,7 +1587,8 @@ func GetCmdModifyP2PTransferLimit(cdc * codec.Codec) *cobra.Command {
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
-            return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            //return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+            return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
         },
     }
 }
