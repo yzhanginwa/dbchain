@@ -20,7 +20,7 @@ func RegisterRoutes(cliCtx client.Context, r *mux.Router, storeName string) {
     r.HandleFunc(fmt.Sprintf("/%s/admin_apps/{%s}", storeName, "accessToken"), showAdminAppsHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/is_app_user/{%s}/{%s}", storeName, "accessToken", "appCode"), showIsAppUserHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/app_users/{%s}/{%s}", storeName, "accessToken", "appCode"), showAppUsersHandler(cliCtx, storeName)).Methods("GET")
-    r.HandleFunc(fmt.Sprintf("/%s/tables", storeName), createTableHandler(cliCtx)).Methods("POST")
+    //r.HandleFunc(fmt.Sprintf("/%s/tables", storeName), createTableHandler(cliCtx)).Methods("POST")
     r.HandleFunc(fmt.Sprintf("/%s/tables/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "tableName"), showTableHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/tables/{%s}/{%s}", storeName, "accessToken", "appCode"), showTablesHandler(cliCtx, storeName)).Methods("GET")
     r.HandleFunc(fmt.Sprintf("/%s/table-options/{%s}/{%s}/{%s}", storeName, "accessToken", "appCode", "tableName"), showTableOptionsHandler(cliCtx, storeName)).Methods("GET")
