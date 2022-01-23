@@ -8,7 +8,10 @@ import (
     "github.com/cosmos/cosmos-sdk/codec"
 
     sdk "github.com/cosmos/cosmos-sdk/types"
-    "github.com/cosmos/cosmos-sdk/x/auth/exported"
+
+    //"github.com/cosmos/cosmos-sdk/x/auth/exported"
+    authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
     authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
@@ -28,8 +31,8 @@ func init () {
     cryptoamino.RegisterAmino(aminoCdc)
 
     //authtypes.RegisterCodec(aminoCdc)
-    aminoCdc.RegisterInterface((*exported.GenesisAccount)(nil), nil)
-    aminoCdc.RegisterInterface((*exported.Account)(nil), nil)
+    aminoCdc.RegisterInterface((*authtypes.GenesisAccount)(nil), nil)
+    aminoCdc.RegisterInterface((*authtypes.Account)(nil), nil)
     aminoCdc.RegisterConcrete(&authtypes.BaseAccount{}, "cosmos-sdk/Account", nil)
     aminoCdc.RegisterConcrete(StdTx{}, "cosmos-sdk/StdTx", nil)
 

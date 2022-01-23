@@ -3,7 +3,8 @@ package oracle
 import (
     "encoding/json"
     "fmt"
-    "github.com/cosmos/cosmos-sdk/x/auth/exported"
+    //"github.com/cosmos/cosmos-sdk/x/auth/exported"
+    authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
     "io/ioutil"
     "net/http"
     "time"
@@ -20,7 +21,7 @@ func GetAccountInfo(address string) (uint64, uint64, error) {
 
     type MyAccount struct {
       Height string            `json:"height"`
-      Result exported.Account  `json:"result"`
+      Result authtypes.Account  `json:"result"`
     }
 
     var account MyAccount
