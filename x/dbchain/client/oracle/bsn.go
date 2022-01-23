@@ -10,10 +10,15 @@ import (
 	//"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	//"github.com/cosmos/cosmos-sdk/crypto/keys"
+        "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
-	tmamino "github.com/tendermint/tendermint/crypto/encoding/amino"
+
+	//tmamino "github.com/tendermint/tendermint/crypto/encoding/amino"
+        "github.com/cosmos/cosmos-sdk/codec/legacy"
+
 	"github.com/spf13/viper"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
@@ -25,7 +30,7 @@ import (
 func applyAccountInfo(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		priv, secret, err := CreateMnemonic(keys.Secp256k1)
+		priv, secret, err := CreateMnemonic()
 		if err != nil {
 			generalResponse(w, map[string]string {"error " : "generate key pairs err"})
 			return
@@ -70,7 +75,7 @@ func applyAccountInfoByPublicKey() http.HandlerFunc {
 			generalResponse(w, map[string]string{"error" : err.Error()})
 			return
 		}
-		pubKey, err  := tmamino.PubKeyFromBytes(pubBytes)
+		pubKey, err  := legacy.PubKeyFromBytes(pubBytes)
 		if err != nil {
 			generalResponse(w, map[string]string{"error" : "Public key format should be hexadecimal string"})
 			return
@@ -209,16 +214,11 @@ func CreateMnemonic(algo keys.SigningAlgo) (crypto.PrivKey, string, error) {
 		return nil, "", err
 	}
 
-	//
-	derivedPriv, err := keys.StdDeriveKey(mnemonic, keys.DefaultBIP39Passphrase, sdk.GetConfig().GetFullFundraiserPath(), algo)
-	if err != nil {
-		return nil, "", err
-	}
+        seed := bip39.NewSeed(mnemonic, "")
 
-	privKey, err := keys.StdPrivKeyGen(derivedPriv, algo)
-	if err != nil {
-		return nil, "", err
-	}
+        master, ch := hd.ComputeMastersFromSeed(seed)
+        priv, err := hd.DerivePrivateKeyForPath(master, ch, "m/44'/118'/0'/0/0")
+        privKey := &secp256k1.PrivKey{Key: priv}
 
 	return privKey, mnemonic, nil
 }
@@ -353,6 +353,6 @@ func loadUserPrivateKeyFromChain(cliCtx client.Context, storeName, addr string) 
 	}
 	pkStr := keyInfo["privateKey"]
 	pkBytes , _ := hex.DecodeString(pkStr)
-	private, _  := tmamino.PrivKeyFromBytes(pkBytes)
+	private, _  := legacy.PrivKeyFromBytes(pkBytes)
 	return private, nil
 }

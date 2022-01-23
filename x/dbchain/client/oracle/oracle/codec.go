@@ -1,15 +1,20 @@
 package oracle
 
 import (
-    amino "github.com/tendermint/go-amino"
-    cryptoamino "github.com/tendermint/tendermint/crypto/encoding/amino"
+    //amino "github.com/tendermint/go-amino"
+    //cryptoamino "github.com/tendermint/tendermint/crypto/encoding/amino"
+    cryptoamino "github.com/cosmos/cosmos-sdk/crypto/ledger"
+
+    "github.com/cosmos/cosmos-sdk/codec"
+
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/cosmos/cosmos-sdk/x/auth/exported"
     authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
-var aminoCdc = amino.NewCodec()
+var amino    = codec.NewLegacyAmino()
+var aminoCdc = codec.NewAminoCodec(amino)
 
 func init () {
     aminoCdc.RegisterInterface((*sdk.Msg)(nil), nil)
