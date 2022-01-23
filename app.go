@@ -32,7 +32,7 @@ import (
     "github.com/cosmos/cosmos-sdk/x/params"
     "github.com/cosmos/cosmos-sdk/x/slashing"
     "github.com/cosmos/cosmos-sdk/x/staking"
-    "github.com/cosmos/cosmos-sdk/x/supply"
+    //"github.com/cosmos/cosmos-sdk/x/supply"
 
     "github.com/yzhanginwa/dbchain/x/dbchain"
 )
@@ -85,7 +85,7 @@ var (
         distr.AppModuleBasic{},
         params.AppModuleBasic{},
         slashing.AppModuleBasic{},
-        supply.AppModuleBasic{},
+        //supply.AppModuleBasic{},
 
         dbchain.AppModule{},
     )
@@ -93,8 +93,8 @@ var (
     maccPerms = map[string][]string{
         auth.FeeCollectorName:     nil,
         distr.ModuleName:          nil,
-        staking.BondedPoolName:    {supply.Burner, supply.Staking},
-        staking.NotBondedPoolName: {supply.Burner, supply.Staking},
+        //staking.BondedPoolName:    {supply.Burner, supply.Staking},
+        //staking.NotBondedPoolName: {supply.Burner, supply.Staking},
     }
 )
 
@@ -121,7 +121,7 @@ type dbChainApp struct {
     stakingKeeper  staking.Keeper
     slashingKeeper slashing.Keeper
     distrKeeper    distr.Keeper
-    supplyKeeper   supply.Keeper
+    //supplyKeeper   supply.Keeper
     paramsKeeper   params.Keeper
     dbChainKeeper dbchain.Keeper
 
@@ -147,8 +147,11 @@ func NewDbChainApp(
 
     bApp.SetAppVersion(version.Version)
 
+    //keys := sdk.NewKVStoreKeys(bam.MainStoreKey, auth.StoreKey, staking.StoreKey,
+    //    supply.StoreKey, distr.StoreKey, slashing.StoreKey, params.StoreKey, dbchain.StoreKey)
+
     keys := sdk.NewKVStoreKeys(bam.MainStoreKey, auth.StoreKey, staking.StoreKey,
-        supply.StoreKey, distr.StoreKey, slashing.StoreKey, params.StoreKey, dbchain.StoreKey)
+        distr.StoreKey, slashing.StoreKey, params.StoreKey, dbchain.StoreKey)
 
     tkeys := sdk.NewTransientStoreKeys(staking.TStoreKey, params.TStoreKey)
 
@@ -186,19 +189,19 @@ func NewDbChainApp(
     )
 
     // The SupplyKeeper collects transaction fees and renders them to the fee distribution module
-    app.supplyKeeper = supply.NewKeeper(
-        app.cdc,
-        keys[supply.StoreKey],
-        app.accountKeeper,
-        app.bankKeeper,
-        maccPerms,
-    )
+//    app.supplyKeeper = supply.NewKeeper(
+//        app.cdc,
+//        keys[supply.StoreKey],
+//        app.accountKeeper,
+//        app.bankKeeper,
+//        maccPerms,
+//    )
 
     // The staking keeper
     stakingKeeper := staking.NewKeeper(
         app.cdc,
         keys[staking.StoreKey],
-        app.supplyKeeper,
+        app.bankKeeper,
         stakingSubspace,
     )
 
@@ -207,7 +210,7 @@ func NewDbChainApp(
         keys[distr.StoreKey],
         distrSubspace,
         &stakingKeeper,
-        app.supplyKeeper,
+        app.bankKeeper,
         auth.FeeCollectorName,
         app.ModuleAccountAddrs(),
     )
@@ -241,10 +244,10 @@ func NewDbChainApp(
         auth.NewAppModule(app.accountKeeper),
         bank.NewAppModule(app.bankKeeper, app.accountKeeper),
         dbchain.NewAppModule(app.dbChainKeeper, app.bankKeeper),
-        supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
+        //supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
         distr.NewAppModule(app.distrKeeper, app.accountKeeper, app.supplyKeeper, app.stakingKeeper),
         slashing.NewAppModule(app.slashingKeeper, app.accountKeeper, app.stakingKeeper),
-        staking.NewAppModule(app.stakingKeeper, app.accountKeeper, app.supplyKeeper),
+        staking.NewAppModule(app.stakingKeeper, app.accountKeeper, app.bankKeeper),
     )
 
     app.mm.SetOrderBeginBlockers(distr.ModuleName, slashing.ModuleName, dbchain.ModuleName)
@@ -260,7 +263,7 @@ func NewDbChainApp(
         bank.ModuleName,
         slashing.ModuleName,
         dbchain.ModuleName,
-        supply.ModuleName,
+        //supply.ModuleName,
         genutil.ModuleName,
     )
 
@@ -276,7 +279,7 @@ func NewDbChainApp(
     app.SetAnteHandler(
         auth.NewAnteHandler(
             app.accountKeeper,
-            app.supplyKeeper,
+            app.bankKeeper,
             auth.DefaultSigVerificationGasConsumer,
         ),
     )
@@ -376,7 +379,7 @@ func (app *dbChainApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliver
     //return extra fees
     if len(requiredFees) > 0 {
         feePayer := stdTx.FeePayer()
-        err = app.supplyKeeper.SendCoinsFromModuleToAccount(ctx, types.FeeCollectorName,feePayer, requiredFees)
+        err = app.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.FeeCollectorName,feePayer, requiredFees)
         if err != nil {
             fmt.Println(err)
         }
@@ -448,7 +451,7 @@ func (app *dbChainApp) LoadHeight(height int64) error {
 func (app *dbChainApp) ModuleAccountAddrs() map[string]bool {
     modAccAddrs := make(map[string]bool)
     for acc := range maccPerms {
-        modAccAddrs[supply.NewModuleAddress(acc).String()] = true
+        modAccAddrs[types.NewModuleAddress(acc).String()] = true
     }
 
     return modAccAddrs
