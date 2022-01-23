@@ -19,9 +19,12 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain/client/rest"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/other"
 
-    "github.com/cosmos/cosmos-sdk/client/context"
+    //"github.com/cosmos/cosmos-sdk/client/context"
+
     sdk "github.com/cosmos/cosmos-sdk/types"
     abci "github.com/tendermint/tendermint/abci/types"
+
+    "github.com/cosmos/cosmos-sdk/client"
 )
 
 // type check to ensure the interface is properly implemented
@@ -60,11 +63,11 @@ func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
 }
 
 // Register rest routes
-func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-    if ctx.HomeDir == os.ExpandEnv(CLIHome){
-        rest.RegisterRoutes(ctx, rtr, StoreKey)
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
+    if clientCtx.HomeDir == os.ExpandEnv(CLIHome){
+        rest.RegisterRoutes(clientCtx, rtr, StoreKey)
     }else{
-        oracle.RegisterRoutes(ctx, rtr, StoreKey)
+        oracle.RegisterRoutes(clientCtx, rtr, StoreKey)
     }
 }
 
