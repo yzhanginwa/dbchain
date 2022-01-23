@@ -1,6 +1,7 @@
 package rest
 
 import (
+    "context"
     "encoding/hex"
     "encoding/json"
     "fmt"
@@ -12,7 +13,7 @@ import (
     "github.com/cosmos/cosmos-sdk/types/rest"
 
     //"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
-    authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+    authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
     "github.com/mr-tron/base58"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
@@ -622,10 +623,10 @@ func showAllTxs(cliCtx client.Context, storeName string) http.HandlerFunc {
             generalResponse(w,map[string]string { "error" : "GetNode err : " + err.Error()})
             return
         }
-        result := make([]sdk.TxResponse,0)
+        result := make([]*sdk.TxResponse,0)
         for i := start ; i <= end; i++ {
             height := int64(i)
-            block, err := node.Block(&height)
+            block, err := node.Block(context.Background(), &height)
             if err != nil {
                 rest.WriteErrorResponse(w, http.StatusBadRequest, "get block err : " + err.Error())
                 return
@@ -633,7 +634,7 @@ func showAllTxs(cliCtx client.Context, storeName string) http.HandlerFunc {
             Txs := block.Block.Txs
             for _,tx := range Txs {
                 txha := hex.EncodeToString(tx.Hash())
-                out, err := authclient.QueryTx(cliCtx,txha)
+                out, err := authtx.QueryTx(cliCtx,txha)
                 if err != nil {
                     continue
                 }

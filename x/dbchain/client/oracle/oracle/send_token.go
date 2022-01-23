@@ -2,6 +2,7 @@ package oracle
 
 import (
     "fmt"
+    "encoding/json"
     "errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -20,7 +21,11 @@ func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) MsgSend {
 }
 
 func (msg MsgSend) GetSignBytes() []byte {
-    return sdk.MustSortJSON(aminoCdc.MustMarshalJSON(msg))
+    jsonEncodedMsg, err := json.Marshal(msg)
+    if err != nil {
+        return []byte{}
+    }
+    return sdk.MustSortJSON(jsonEncodedMsg)
 }
 
 // Route Implements Msg.

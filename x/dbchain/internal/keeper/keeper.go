@@ -8,7 +8,7 @@ import (
     "github.com/cosmos/cosmos-sdk/x/auth"
 
     //"github.com/cosmos/cosmos-sdk/x/auth/exported"
-    "github.com/cosmos/cosmos-sdk/x/auth/types"
+    authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
     "github.com/tendermint/tendermint/crypto/tmhash"
 
@@ -45,7 +45,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetAllAccounts returns all accounts in the accountKeeper.
-func (k Keeper) GetAllAccounts(ctx sdk.Context) (accounts []authtypes.Account) {
+func (k Keeper) GetAllAccounts(ctx sdk.Context) (accounts []authtypes.AccountI) {
     accounts = k.AccountKeeper.GetAllAccounts(ctx)
     return accounts
 }

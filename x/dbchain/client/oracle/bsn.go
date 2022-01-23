@@ -19,6 +19,8 @@ import (
 	//tmamino "github.com/tendermint/tendermint/crypto/encoding/amino"
         "github.com/cosmos/cosmos-sdk/codec/legacy"
 
+        "github.com/cosmos/cosmos-sdk/crypto/hd"
+
 	"github.com/spf13/viper"
 	"github.com/yzhanginwa/dbchain/x/dbchain/client/oracle/oracle"
 	"github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
@@ -246,7 +248,7 @@ func sendFromBsnAddressToUserAddress(cliCtx client.Context, storeName, bsnAddres
 	if err != nil {
 		return "", oracle.Failed, err.Error()
 	}
-	coins, err := sdk.ParseCoins(rechargeGas)
+	coins, err := sdk.ParseCoinsNormalized(rechargeGas)
 	if err != nil {
 		return "", oracle.Failed, err.Error()
 	}

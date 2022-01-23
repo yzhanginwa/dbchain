@@ -6,7 +6,11 @@ import (
 )
 
 func GetSignBytes(msg UniversalMsg) []byte {
-    return sdk.MustSortJSON(aminoCdc.MustMarshalJSON(msg))
+    jsonEncodedMsg, err := json.Marshal(msg)
+    if err != nil {
+        return []byte{}
+    }
+    return sdk.MustSortJSON([]byte(jsonEncodedMsg))
 }
 
 func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, msgs []UniversalMsg, memo string) []byte {
@@ -14,7 +18,7 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
     for _, msg := range msgs {
         msgsBytes = append(msgsBytes, json.RawMessage(GetSignBytes(msg)))
     }
-    bz, err := aminoCdc.MarshalJSON(StdSignDoc{
+    bz, err := json.Marshal(StdSignDoc{
         AccountNumber: accnum,
         ChainID:       chainID,
         Fee:           json.RawMessage(fee.Bytes()),

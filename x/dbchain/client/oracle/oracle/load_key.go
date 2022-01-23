@@ -26,7 +26,7 @@ func LoadPrivKey() (crypto.PrivKey, error) {
         return nil, err
     }
 
-    var privKey secp256k1.PrivKeySecp256k1
+    var privKey secp256k1.PrivKey
     copy(privKey[:], pkBytes)
     oraclePrivKeyLoaded = true
     oraclePrivKey       = privKey

@@ -32,7 +32,7 @@ func (fee StdFee) Bytes() []byte {
     if len(fee.Amount) == 0 {
             fee.Amount = sdk.NewCoins()
     }
-    bz, err := aminoCdc.MarshalJSON(fee) // TODO
+    bz, err := json.Marshal(fee) // TODO
     if err != nil {
             panic(err)
     }

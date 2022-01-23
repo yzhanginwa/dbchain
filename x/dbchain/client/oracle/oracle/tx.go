@@ -1,6 +1,7 @@
 package oracle
 
 import (
+    "context"
     "github.com/tendermint/tendermint/crypto"
     "encoding/hex"
     "encoding/json"
@@ -142,7 +143,7 @@ func buildAndSignAndBuildTxBytes(cliCtx client.Context, msgs []UniversalMsg, acc
     }
 
     newStdTx := NewStdTx(msgs, stdFee, []StdSignature{stdSignature}, "")
-    txBytes, err := aminoCdc.MarshalBinaryLengthPrefixed(newStdTx)
+    txBytes, err := amino.MarshalLengthPrefixed(newStdTx)
     if err != nil {
         fmt.Println("Oracle: Failed to marshal StdTx!!!")
         return nil, err
@@ -158,7 +159,7 @@ func broadcastTxBytes(txBytes []byte) string {
         return ""
     }
 
-    resp, err := rpc.BroadcastTxAsync(txBytes)
+    resp, err := rpc.BroadcastTxAsync(context.Background(), txBytes)
     if err != nil {
         fmt.Printf("failted to broadcast transaction: %v\n", err)
         return ""
@@ -242,7 +243,7 @@ func getCurrentMinGasPrices(cliCtx client.Context, storeName string) (sdk.DecCoi
         return nil, err
     }
     var decCoins sdk.DecCoins
-    err = cliCtx.Codec.UnmarshalJSON(res, &decCoins)
+    err = json.Unmarshal(res, &decCoins)
     if err != nil {
         return nil, err
     }

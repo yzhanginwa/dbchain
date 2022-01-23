@@ -5,14 +5,14 @@ import (
 )
 
 // ModuleCdc is the codec for the module
-var ModuleCdc = codec.New()
+var ModuleCdc = codec.NewLegacyAmino()
 
 func init() {
     RegisterCodec(ModuleCdc)
 }
 
 // RegisterCodec registers concrete types on the Amino codec
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.LegacyAmino) {
     cdc.RegisterConcrete(MsgCreateApplication{}, "dbchain/CreateApplication", nil)
     cdc.RegisterConcrete(MsgDropApplication{},"dbchain/DropApplication",nil)
     cdc.RegisterConcrete(MsgRecoverApplication{},"dbchain/RecoverApplication",nil)

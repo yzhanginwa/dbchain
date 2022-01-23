@@ -35,7 +35,7 @@ func MakeAccessCode(privKey crypto.PrivKey) string {
 
     pubKey := privKey.PubKey()
     encodedPubKey, encodedSig := "", ""
-    pubKeyArray := pubKey.(secp256k1.PubKeySecp256k1)
+    pubKeyArray := pubKey.(secp256k1.PubKey)
     encodedPubKey = base58.Encode(pubKeyArray[:])
     encodedSig    = base58.Encode(signature)
     return fmt.Sprintf("%s:%s:%s", encodedPubKey, timeStamp, encodedSig)
@@ -68,11 +68,11 @@ func VerifyAccessCodeWithoutTimeChecking(accessCode string) (sdk.AccAddress, int
     signature, _   := base58.Decode(parts[2])
 
     var pubKey crypto.PubKey
-    pk := secp256k1.PubKeySecp256k1{}
+    pk := secp256k1.PubKey{}
     copy(pk[:], pubKeyBytes)
     pubKey = pk
 
-    if ! pubKey.VerifyBytes([]byte(timeStamp), []byte(signature)) {
+    if ! pubKey.VerifySignature([]byte(timeStamp), []byte(signature)) {
         return nil, 0,errors.New("Failed to verify signature")
     }
 
@@ -90,7 +90,7 @@ func GetAddrFromAccessCode(accessCode string) (sdk.AccAddress, error) {
     }
     pubKeyBytes, _ := base58.Decode(parts[0])
     var pubKey crypto.PubKey
-    pk := secp256k1.PubKeySecp256k1{}
+    pk := secp256k1.PubKey{}
     copy(pk[:], pubKeyBytes)
     pubKey = pk
 

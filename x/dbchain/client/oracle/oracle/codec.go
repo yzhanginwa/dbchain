@@ -12,7 +12,6 @@ import (
     //"github.com/cosmos/cosmos-sdk/x/auth/exported"
     authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-    authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
 )
 
@@ -28,11 +27,11 @@ func init () {
     aminoCdc.RegisterConcrete(types.MsgUpdateTxStatistic{}, "dbchain/UpdateTxStatistic", nil)
     aminoCdc.RegisterConcrete(types.MsgFreezeRow{}, "dbchain/FreezeRow", nil)
     aminoCdc.RegisterConcrete(types.MsgSaveUserPrivateKey{}, "dbchain/SaveUserPrivateKey", nil)
-    cryptoamino.RegisterAmino(aminoCdc)
+    cryptoamino.RegisterAmino(amino)
 
     //authtypes.RegisterCodec(aminoCdc)
     aminoCdc.RegisterInterface((*authtypes.GenesisAccount)(nil), nil)
-    aminoCdc.RegisterInterface((*authtypes.Account)(nil), nil)
+    aminoCdc.RegisterInterface((*authtypes.AccountI)(nil), nil)
     aminoCdc.RegisterConcrete(&authtypes.BaseAccount{}, "cosmos-sdk/Account", nil)
     aminoCdc.RegisterConcrete(StdTx{}, "cosmos-sdk/StdTx", nil)
 

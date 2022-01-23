@@ -20,12 +20,12 @@ func GetAccountInfo(address string) (uint64, uint64, error) {
     body, err := ioutil.ReadAll(resp.Body)
 
     type MyAccount struct {
-      Height string            `json:"height"`
-      Result authtypes.Account  `json:"result"`
+      Height string              `json:"height"`
+      Result authtypes.AccountI  `json:"result"`
     }
 
     var account MyAccount
-    if err := aminoCdc.UnmarshalJSON(body, &account); err != nil {
+    if err := json.Unmarshal(body, &account); err != nil {
         fmt.Printf("failted to broadcast unmarshal account body\n")
         return 0, 0, err
     }
