@@ -10,7 +10,10 @@ import (
 
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/cosmos/cosmos-sdk/types/rest"
-    "github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+
+    //"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+    authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
+
     "github.com/mr-tron/base58"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     mutils "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
@@ -630,7 +633,7 @@ func showAllTxs(cliCtx client.Context, storeName string) http.HandlerFunc {
             Txs := block.Block.Txs
             for _,tx := range Txs {
                 txha := hex.EncodeToString(tx.Hash())
-                out, err := utils.QueryTx(cliCtx,txha)
+                out, err := authclient.QueryTx(cliCtx,txha)
                 if err != nil {
                     continue
                 }
