@@ -19,7 +19,9 @@ import (
     tmos "github.com/tendermint/tendermint/libs/os"
     tmtypes "github.com/tendermint/tendermint/types"
     dbm "github.com/tendermint/tm-db"
-    "github.com/yzhanginwa/dbchain/x/bank"
+
+    //"github.com/yzhanginwa/dbchain/x/bank"
+    "github.com/cosmos/cosmos-sdk/x/bank"
 
     bam "github.com/cosmos/cosmos-sdk/baseapp"
     "github.com/cosmos/cosmos-sdk/codec"

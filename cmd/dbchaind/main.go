@@ -15,7 +15,10 @@ import (
     "github.com/cosmos/cosmos-sdk/x/auth"
     genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
     app "github.com/yzhanginwa/dbchain"
-    bankmodule "github.com/yzhanginwa/dbchain/x/bank"
+
+    //bankmodule "github.com/yzhanginwa/dbchain/x/bank"
+    bankmodule "github.com/cosmos/cosmos-sdk/x/bank"
+
     dbcmodule "github.com/yzhanginwa/dbchain/x/dbchain"
     dbchaincli "github.com/yzhanginwa/dbchain/x/dbchain/client/cli"
 

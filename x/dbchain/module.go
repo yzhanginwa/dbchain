@@ -11,7 +11,10 @@ import (
 
     "github.com/cosmos/cosmos-sdk/codec"
     "github.com/cosmos/cosmos-sdk/types/module"
-    "github.com/yzhanginwa/dbchain/x/bank"
+
+    //"github.com/yzhanginwa/dbchain/x/bank"
+    "github.com/cosmos/cosmos-sdk/x/bank"
+
     "github.com/yzhanginwa/dbchain/x/dbchain/client/cli"
     "github.com/yzhanginwa/dbchain/x/dbchain/client/rest"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/other"

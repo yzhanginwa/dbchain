@@ -11,7 +11,10 @@ import (
     "github.com/mr-tron/base58"
     "github.com/spf13/cobra"
     "github.com/spf13/viper"
-    "github.com/yzhanginwa/dbchain/x/bank"
+
+    //"github.com/yzhanginwa/dbchain/x/bank"
+    "github.com/cosmos/cosmos-sdk/x/bank"
+
     "os"
     "path"
     "strconv"
