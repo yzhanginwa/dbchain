@@ -8,7 +8,10 @@ import (
     "github.com/mr-tron/base58"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/cosmos/cosmos-sdk/client"
-    "github.com/cosmos/cosmos-sdk/client/context"
+
+    //"github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/client"
+
     "github.com/cosmos/cosmos-sdk/client/flags"
     "github.com/cosmos/cosmos-sdk/codec"
     "github.com/spf13/cobra"
@@ -71,7 +74,11 @@ func GetCmdIsSysAdmin(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "check whether user is system administrator",
         Args: cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
 
             accessCode := args[0]
             res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/is_sys_admin/%s", queryRoute, accessCode), nil)
@@ -93,7 +100,12 @@ func GetCmdApplication(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "query applications",
         Args: cobra.MinimumNArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             var path string
             // args[0] is the access token.
@@ -128,7 +140,12 @@ func GetCmdAppUserFileVolumeLimit(queryRoute string, cdc *codec.Codec) *cobra.Co
         Short: "show application user file volume limit",
         Args: cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode   := args[1]
@@ -151,7 +168,12 @@ func GetCmdAppUserUsedFileVolume(queryRoute string, cdc *codec.Codec) *cobra.Com
         Short: "show application user file volume limit",
         Args: cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode   := args[1]
@@ -174,7 +196,12 @@ func GetCmdAppUsers(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "show app users",
         Args: cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode   := args[1]
@@ -197,7 +224,12 @@ func GetCmdIsAppUser(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "check whether user is allowed for app",
         Args: cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode   := args[1]
@@ -221,7 +253,12 @@ func GetCmdTable(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "query tables",
         Args: cobra.MaximumNArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             var path string
             if len(args) == 3 {
                 path = fmt.Sprintf("custom/%s/tables/%s/%s/%s", queryRoute, args[0], args[1], args[2])
@@ -257,7 +294,12 @@ func GetCmdIndex(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "show index",
         Args: cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode   := args[1]
@@ -281,7 +323,12 @@ func GetCmdOption(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "show table options",
         Args: cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode    := args[1]
@@ -305,7 +352,12 @@ func GetCmdAssociation(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "show table options",
         Args: cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode    := args[1]
@@ -329,7 +381,12 @@ func GetCmdCounterCache(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "show table counter cache info",
         Args: cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode    := args[1]
@@ -353,7 +410,12 @@ func GetCmdColumnOption(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "show column options",
         Args: cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode    := args[1]
@@ -378,7 +440,12 @@ func GetCmdColumnDataType(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "show column data type",
         Args: cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode    := args[1]
@@ -403,7 +470,12 @@ func GetCmdCanAddColumnOption (queryRoute string, cdc *codec.Codec) *cobra.Comma
         Short: "test whether field option can be added",
         Args: cobra.ExactArgs(5),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode    := args[1]
@@ -430,7 +502,12 @@ func GetCmdCanSetColumnDataType (queryRoute string, cdc *codec.Codec) *cobra.Com
         Short: "test whether field data type can be set",
         Args: cobra.ExactArgs(5),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode    := args[1]
@@ -457,7 +534,12 @@ func GetCmdCanInsertRow(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "test whether row can be inserted without violating any column option restricts",
         Args: cobra.ExactArgs(5),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode    := args[1]
@@ -497,7 +579,12 @@ func GetCmdFindRow(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "find row",
         Args: cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode    := args[1]
@@ -522,7 +609,12 @@ func GetCmdFindIdsBy(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "find by",
         Args: cobra.ExactArgs(5),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode    := args[1]
@@ -550,7 +642,12 @@ func GetCmdFindAllIds(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "find all",
         Args: cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode    := args[1]
@@ -575,7 +672,12 @@ func GetCmdGetOracleInfo(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "show oracle info",
         Args: cobra.ExactArgs(0),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             privKey, err := oracle.LoadPrivKey()
             if err != nil {
@@ -596,7 +698,12 @@ func GetCmdExportDatabase (queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "export database schema",
         Args: cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             appCode    := args[0]
             res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/export_database/%s", queryRoute, appCode), nil)
@@ -622,7 +729,12 @@ func GetCmdFunction (queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "query functions",
         Args: cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode    := args[1]
@@ -645,7 +757,12 @@ func GetCmdFunctionInfo (queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "query function specific information",
         Args: cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode   := args[0]
             appCode      := args[1]
@@ -669,7 +786,12 @@ func GetCmdCustomQuerier (queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "query queriers",
         Args: cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode := args[0]
             appCode    := args[1]
@@ -692,7 +814,12 @@ func GetCmdCustomQuerierInfo (queryRoute string, cdc *codec.Codec) *cobra.Comman
         Short: "query querier specific information",
         Args: cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode   := args[0]
             appCode      := args[1]
@@ -716,7 +843,12 @@ func GetCmdTxSimpleResult (queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "query whether the tx is successful",
         Args: cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode   := args[0]
             txHash      := args[1]
@@ -740,7 +872,12 @@ func GetCmdCallCustomQuerier (queryRoute string, cdc *codec.Codec) *cobra.Comman
         Short: "call custom querier to query data",
         Args: cobra.MinimumNArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode   := args[0]
             appCode      := args[1]
@@ -769,7 +906,12 @@ func GetCmdTokenKeepers (queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "query all token keepers. only token keepers can get data",
         Args: cobra.MinimumNArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode   := args[0]
 
@@ -792,7 +934,12 @@ func GetCmdLimitP2PTransferStatus (queryRoute string, cdc *codec.Codec) *cobra.C
         Short: "get current limit p2p transfer status",
         Args: cobra.MinimumNArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
 
             accessCode   := args[0]
 

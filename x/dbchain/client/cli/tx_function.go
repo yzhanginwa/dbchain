@@ -2,7 +2,10 @@ package cli
 
 import (
     "bufio"
-    "github.com/cosmos/cosmos-sdk/client/context"
+
+    //"github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/client"
+
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
     "github.com/cosmos/cosmos-sdk/x/auth"
@@ -17,7 +20,12 @@ func GetCmdAddFunction(cdc *codec.Codec) *cobra.Command {
         Short: "add a function",
         Args:  cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -43,7 +51,12 @@ func GetCmdCallFunction(cdc *codec.Codec) *cobra.Command {
         Short: "call a function",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -67,7 +80,12 @@ func GetCmdDropFunction(cdc *codec.Codec) *cobra.Command {
         Short: "drop a function",
         Args:  cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -90,7 +108,12 @@ func GetCmdAddCustomQuerier(cdc *codec.Codec) *cobra.Command {
         Short: "add a function",
         Args:  cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -117,7 +140,12 @@ func GetCmdDropCustomQuerier(cdc *codec.Codec) *cobra.Command {
         Short: "add a function",
         Args:  cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 

@@ -21,7 +21,8 @@ import (
     "strings"
 
     "github.com/cosmos/cosmos-sdk/client"
-    "github.com/cosmos/cosmos-sdk/client/context"
+    //"github.com/cosmos/cosmos-sdk/client/context"
+
     "github.com/cosmos/cosmos-sdk/client/flags"
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
@@ -99,13 +100,21 @@ func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
 //                //
 ////////////////////
 
-func GetCmdCreateApplication(cdc *codec.Codec) *cobra.Command {
+//func GetCmdCreateApplication(cdc *codec.Codec) *cobra.Command {
+func GetCmdCreateApplication() *cobra.Command {
+
     return &cobra.Command{
         Use:   "create-application",
         Short: "create a new application",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -126,13 +135,20 @@ func GetCmdCreateApplication(cdc *codec.Codec) *cobra.Command {
     }
 }
 
-func GetCmdDropApplication(cdc *codec.Codec) *cobra.Command {
+//func GetCmdDropApplication(cdc *codec.Codec) *cobra.Command {
+func GetCmdDropApplication() *cobra.Command {
     return &cobra.Command{
         Use:   "drop-application",
         Short: "drop a application",
         Args:  cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -148,13 +164,21 @@ func GetCmdDropApplication(cdc *codec.Codec) *cobra.Command {
     }
 }
 
-func GetCmdRecoverApplication(cdc *codec.Codec) *cobra.Command {
+//func GetCmdRecoverApplication(cdc *codec.Codec) *cobra.Command {
+func GetCmdRecoverApplication() *cobra.Command {
     return &cobra.Command{
         Use:   "recover-application",
         Short: "recover a application",
         Args:  cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+                        if err != nil {
+                                return err
+                        }
+
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -176,7 +200,12 @@ func GetCmdCreateSysDatabase(cdc *codec.Codec) *cobra.Command {
         Short: "create a system database",
         Args:  cobra.ExactArgs(0),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -195,7 +224,12 @@ func GetCmdSetAppUserFileVolumeLimit(cdc *codec.Codec) *cobra.Command {
         Short: "set application user file volume limit. Uint of size is byte. when size was set 0 or negative, it means no limit",
         Args:  cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -211,7 +245,7 @@ func GetCmdSetAppUserFileVolumeLimit(cdc *codec.Codec) *cobra.Command {
     }
 }
 
-func createSysDatabaseMsg(cliCtx context.CLIContext, adminAddr sdk.AccAddress)([]sdk.Msg, error) {
+func createSysDatabaseMsg(cliCtx client.Context, adminAddr sdk.AccAddress)([]sdk.Msg, error) {
     msgs := make([]sdk.Msg, 0)
 
     oracleAddr ,err := checkOracleInfo()
@@ -288,7 +322,7 @@ func checkOracleInfo() (sdk.AccAddress, error){
     return addr, nil
 }
 
-func checkAddrBalance(cliCtx context.CLIContext, addr sdk.AccAddress) bool {
+func checkAddrBalance(cliCtx client.Context, addr sdk.AccAddress) bool {
     accGetter := account.NewAccountRetriever(cliCtx)
     acc , err := accGetter.GetAccount(addr)
     if err != nil {
@@ -313,7 +347,12 @@ func GetCmdSetAppPermission(cdc * codec.Codec) *cobra.Command {
         Short: "Set the permission_required status of database",
         Args:  cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -335,7 +374,12 @@ func GetCmdModifyAppUser(cdc *codec.Codec) *cobra.Command {
         Short: "modify application user",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -364,7 +408,12 @@ func GetCmdCreateTable(cdc *codec.Codec) *cobra.Command {
         Short: "create a new table",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -388,7 +437,12 @@ func GetCmdModifyTableAssociation(cdc *codec.Codec) *cobra.Command {
         Short: "add or drop table association a new table",
         Args:  cobra.ExactArgs(7),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -419,7 +473,12 @@ func GetCmdAddCounterCache(cdc *codec.Codec) *cobra.Command {
             "negative , it means its no limit",
         Args:  cobra.ExactArgs(6),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -448,7 +507,12 @@ func GetCmdDropTable(cdc *codec.Codec) *cobra.Command {
         Short: "drop a table",
         Args:  cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -471,7 +535,12 @@ func GetCmdAddColumn(cdc *codec.Codec) *cobra.Command {
         Short: "add a new column onto a table",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -495,7 +564,12 @@ func GetCmdDropColumn(cdc *codec.Codec) *cobra.Command {
         Short: "drop a column from a table",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -519,7 +593,12 @@ func GetCmdRenameColumn(cdc *codec.Codec) *cobra.Command {
         Short: "rename a column in a table",
         Args:  cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -545,7 +624,12 @@ func GetCmdCreateIndex(cdc *codec.Codec) *cobra.Command {
         Short: "create a new index",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -569,7 +653,12 @@ func GetCmdDropIndex(cdc *codec.Codec) *cobra.Command {
         Short: "drop an index",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -593,7 +682,12 @@ func GetCmdModifyOption(cdc *codec.Codec) *cobra.Command {
         Short: "modify table options",
         Args:  cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -625,7 +719,12 @@ func GetCmdSetTableMemo(cdc * codec.Codec) *cobra.Command {
         Short: "set table memo",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+              return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -650,7 +749,12 @@ func GetCmdModifyColumnOption(cdc *codec.Codec) *cobra.Command {
         Short: "modify column options",
         Args:  cobra.ExactArgs(5),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -677,7 +781,12 @@ func GetCmdSetColumnDataType(cdc *codec.Codec) *cobra.Command {
         Short: "modify column data type, support int , file ,decimal",
         Args:  cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -709,7 +818,12 @@ func GetCmdSetColumnMemo(cdc * codec.Codec) *cobra.Command {
         Short: "set column memo",
         Args:  cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -740,7 +854,12 @@ func GetCmdAddInsertFilter(cdc *codec.Codec) *cobra.Command {
         Short: "add an insert filter",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -765,7 +884,12 @@ func GetCmdDropInsertFilter(cdc *codec.Codec) *cobra.Command {
         Short: "drop an insert filter",
         Args:  cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -795,7 +919,12 @@ func GetCmdAddTrigger(cdc *codec.Codec) *cobra.Command {
         Short: "add a trigger",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -820,7 +949,12 @@ func GetCmdDropTrigger(cdc *codec.Codec) *cobra.Command {
         Short: "drop a trigger",
         Args:  cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -850,7 +984,12 @@ func GetCmdInsertRow(cdc *codec.Codec) *cobra.Command {
         Short: "create a new row",
         Args:  cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -885,7 +1024,12 @@ func GetCmdUpdateRow(cdc *codec.Codec) *cobra.Command {
         Short: "update a row",
         Args:  cobra.ExactArgs(5),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -924,7 +1068,12 @@ func GetCmdDeleteRow(cdc *codec.Codec) *cobra.Command {
         Short: "delete a row",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -952,7 +1101,12 @@ func GetCmdFreezeRow(cdc *codec.Codec) *cobra.Command {
         Short: "freeze a row",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -987,7 +1141,12 @@ func GetCmdModifyGroupMember(cdc * codec.Codec) *cobra.Command {
         Short: "add/drop account into/from a group",
         Args:  cobra.ExactArgs(4),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -1023,7 +1182,12 @@ func GetCmdModifyGroup(cdc * codec.Codec) *cobra.Command {
         Short: "add/drop group for a database",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -1053,7 +1217,12 @@ func GetCmdSetGroupMemo(cdc * codec.Codec) *cobra.Command {
         Short: "set group memo",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -1083,7 +1252,12 @@ func GetCmdAddFriend(cdc * codec.Codec) *cobra.Command {
         Short: "add a friend ",
         Args:  cobra.ExactArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -1112,7 +1286,12 @@ func GetCmdDropFriend(cdc * codec.Codec) *cobra.Command {
         Short: "drop a friend ",
         Args:  cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -1133,7 +1312,12 @@ func GetCmdRespondFriend(cdc * codec.Codec) *cobra.Command {
         Short: "Respond a friend. The action could be delete, accept, reject.",
         Args:  cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -1161,7 +1345,12 @@ func GetCmdFreezeSchema(cdc * codec.Codec) *cobra.Command {
         Short: "Freeze the schma of a database",
         Args:  cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -1182,7 +1371,12 @@ func GetCmdUnfreezeSchema(cdc * codec.Codec) *cobra.Command {
         Short: "Unfreeze the schma of a database",
         Args:  cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -1209,7 +1403,12 @@ func GetCmdFreezeAppData(cdc * codec.Codec) *cobra.Command {
         Short: "Freeze the data of a database",
         Args:  cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -1230,7 +1429,12 @@ func GetCmdUnFreezeAppData(cdc * codec.Codec) *cobra.Command {
         Short: "Unfreeze the data of a database",
         Args:  cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -1251,7 +1455,12 @@ func GetCmdResetTxTotalTxs(cdc * codec.Codec) *cobra.Command {
         Short: "reset total txs statistics which is used for block browser",
         Args:  cobra.ExactArgs(0),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -1279,7 +1488,12 @@ func GetCmdModifyTokenKeepers(cdc * codec.Codec) *cobra.Command {
         Short: "add or remove token keeper, need two agrs : address, action",
         Args:  cobra.ExactArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
@@ -1304,7 +1518,12 @@ func GetCmdModifyP2PTransferLimit(cdc * codec.Codec) *cobra.Command {
         Short: "limit p2p transfer or not, set true of false, only token keeper can submit this tx successfully",
         Args:  cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
             inBuf := bufio.NewReader(cmd.InOrStdin())
             txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 

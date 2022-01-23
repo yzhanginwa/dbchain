@@ -2,7 +2,10 @@ package cli
 
 import (
     "fmt"
-    "github.com/cosmos/cosmos-sdk/client/context"
+
+    //"github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/client"
+
     "github.com/cosmos/cosmos-sdk/codec"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/spf13/cobra"
@@ -14,7 +17,11 @@ func GetCmdShowGroup(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "show group",
         Args: cobra.MinimumNArgs(2),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+               return err
+            }
 
             accessCode := args[0]
             appCode    := args[1]
@@ -49,7 +56,11 @@ func GetCmdShowGroupMemo(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "show group memo",
         Args: cobra.MinimumNArgs(3),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+               return err
+            }
 
             accessCode := args[0]
             appCode    := args[1]

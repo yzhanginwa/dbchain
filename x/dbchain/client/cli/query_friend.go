@@ -2,7 +2,8 @@ package cli
 
 import (
     "fmt"
-    "github.com/cosmos/cosmos-sdk/client/context"
+    //"github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/client"
     "github.com/cosmos/cosmos-sdk/codec"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/spf13/cobra"
@@ -14,7 +15,11 @@ func GetCmdShowFriends(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "show friends",
         Args: cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
 
             accessCode := args[0]
             res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/friends/%s", queryRoute, accessCode), nil)
@@ -36,7 +41,11 @@ func GetCmdShowPendingFriends(queryRoute string, cdc *codec.Codec) *cobra.Comman
         Short: "show pending friends",
         Args: cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
 
             accessCode := args[0]
             res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/pending_friends/%s", queryRoute, accessCode), nil)

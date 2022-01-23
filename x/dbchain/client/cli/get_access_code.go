@@ -9,7 +9,10 @@ import (
     "github.com/spf13/cobra"
     "github.com/spf13/viper"
     sdk "github.com/cosmos/cosmos-sdk/types"
-    "github.com/cosmos/cosmos-sdk/client/context"
+
+    //"github.com/cosmos/cosmos-sdk/client/context"
+    "github.com/cosmos/cosmos-sdk/client"
+
     "github.com/cosmos/cosmos-sdk/codec"
     "github.com/cosmos/cosmos-sdk/client/flags"
     "github.com/cosmos/cosmos-sdk/client/keys"
@@ -25,7 +28,13 @@ func GetCmdGetAccessCode(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Short: "show access code",
         Args: cobra.MinimumNArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
-            cliCtx := context.NewCLIContext().WithCodec(cdc)
+            //cliCtx := context.NewCLIContext().WithCodec(cdc)
+            cliCtx, err := client.GetClientTxContext(cmd)
+            if err != nil {
+                return err
+            }
+
+
             kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
             if err != nil {
                 return err
