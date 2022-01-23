@@ -13,7 +13,7 @@ import (
     "github.com/cosmos/cosmos-sdk/codec"
     "github.com/cosmos/cosmos-sdk/client/flags"
     "github.com/cosmos/cosmos-sdk/client/keys"
-    cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+    "github.com/cosmos/cosmos-sdk/crypto/keyring"
     "github.com/mr-tron/base58"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     //"github.com/tendermint/tendermint/crypto/sm2"
@@ -26,7 +26,7 @@ func GetCmdGetAccessCode(queryRoute string, cdc *codec.Codec) *cobra.Command {
         Args: cobra.MinimumNArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {
             cliCtx := context.NewCLIContext().WithCodec(cdc)
-            kb, err := cryptoKeys.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
+            kb, err := keyring.NewKeyring(sdk.KeyringServiceName(), viper.GetString(flags.FlagKeyringBackend), viper.GetString(flags.FlagHome), cmd.InOrStdin())
             if err != nil {
                 return err
             }
@@ -56,7 +56,7 @@ func GetCmdGetAccessCode(queryRoute string, cdc *codec.Codec) *cobra.Command {
     return resultCmd
 }
 
-func signForToken(kb cryptoKeys.Keybase, name string, str string) (string, bool) {
+func signForToken(kb keyring.LegacyKeybase, name string, str string) (string, bool) {
     signature, pubKey, err := kb.Sign(name, keys.DefaultKeyPass, []byte(str))
     if err != nil {
         return "", false
