@@ -130,7 +130,7 @@ func GetCmdCreateApplication() *cobra.Command {
             }
 
             msg := types.NewMsgCreateApplication(cliCtx.GetFromAddress(), name, description, permissionRequired)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return err
             }
@@ -160,7 +160,7 @@ func GetCmdDropApplication() *cobra.Command {
 
             appCode := args[0]
             msg := types.NewMsgDropApplication(cliCtx.GetFromAddress(), appCode)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return err
             }
@@ -191,7 +191,7 @@ func GetCmdRecoverApplication() *cobra.Command {
 
             appCode := args[0]
             msg := types.NewMsgRecoverApplication(cliCtx.GetFromAddress(), appCode)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return err
             }
@@ -245,7 +245,7 @@ func GetCmdSetAppUserFileVolumeLimit(cdc *codec.Codec) *cobra.Command {
             appCode := args[0]
             size    := args[1]
             msg := types.NewMsgSetAppUserFileVolumeLimit(cliCtx.GetFromAddress(), appCode, size)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
@@ -283,7 +283,7 @@ func createSysDatabaseMsg(cliCtx client.Context, adminAddr sdk.AccAddress)([]sdk
     }
     for tableName, fileds := range tables {
         msg := types.NewMsgCreateTable(adminAddr,"0000000001",tableName, fileds)
-        if err := msg.ValidateBasic(); err != nil {
+        if err = msg.ValidateBasic(); err != nil {
             return nil, err
         }
         msgs = append(msgs, msg)
@@ -369,7 +369,7 @@ func GetCmdSetAppPermission(cdc * codec.Codec) *cobra.Command {
             appCode            := args[0]
             permissionRequired := args[1]
             msg := types.NewMsgSetDatabasePermission(cliCtx.GetFromAddress(), appCode, permissionRequired)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
@@ -433,7 +433,7 @@ func GetCmdCreateTable(cdc *codec.Codec) *cobra.Command {
             name := args[1]
             fields := strings.Split(args[2], ",")
             msg := types.NewMsgCreateTable(cliCtx.GetFromAddress(), appCode, name, fields)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return err
             }
@@ -469,7 +469,7 @@ func GetCmdModifyTableAssociation(cdc *codec.Codec) *cobra.Command {
 
 
             msg := types.NewMsgModifyTableAssociation(appCode,tableName,associationMode,associationTable,method,foreignKey,option,cliCtx.GetFromAddress())
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return err
             }
@@ -505,7 +505,7 @@ func GetCmdAddCounterCache(cdc *codec.Codec) *cobra.Command {
 
 
             msg := types.NewMsgAddCounterCache(appCode, tableName, associationTable, foreignKey, counterCacheField, limit, cliCtx.GetFromAddress())
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return err
             }
@@ -534,7 +534,7 @@ func GetCmdDropTable(cdc *codec.Codec) *cobra.Command {
             appCode := args[0]
             name := args[1]
             msg := types.NewMsgDropTable(cliCtx.GetFromAddress(), appCode, name)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return err
             }
@@ -564,7 +564,7 @@ func GetCmdAddColumn(cdc *codec.Codec) *cobra.Command {
             name   := args[1]
             field  := args[2]
             msg := types.NewMsgAddColumn(cliCtx.GetFromAddress(), appCode, name, field)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return err
             }
@@ -594,7 +594,7 @@ func GetCmdDropColumn(cdc *codec.Codec) *cobra.Command {
             name    := args[1]
             field   := args[2]
             msg := types.NewMsgDropColumn(cliCtx.GetFromAddress(), appCode, name, field)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return err
             }
@@ -625,7 +625,7 @@ func GetCmdRenameColumn(cdc *codec.Codec) *cobra.Command {
             oldField := args[2]
             newField := args[3]
             msg := types.NewMsgRenameColumn(cliCtx.GetFromAddress(), appCode, name, oldField, newField)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return err
             }
@@ -686,7 +686,7 @@ func GetCmdDropIndex(cdc *codec.Codec) *cobra.Command {
             tableName := args[1]
             field     := args[2]
             msg := types.NewMsgDropIndex(cliCtx.GetFromAddress(), appCode, tableName, field)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return err
             }
@@ -718,7 +718,7 @@ func GetCmdModifyOption(cdc *codec.Codec) *cobra.Command {
             option    := args[3]
 
             msg := types.NewMsgModifyOption(cliCtx.GetFromAddress(), appCode, tableName, action, option)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return err
             }
@@ -755,7 +755,7 @@ func GetCmdSetTableMemo(cdc * codec.Codec) *cobra.Command {
             memo      := args[2]
 
             msg := types.NewMsgSetTableMemo(appCode, tableName, memo, cliCtx.GetFromAddress())
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
@@ -789,7 +789,7 @@ func GetCmdModifyColumnOption(cdc *codec.Codec) *cobra.Command {
             option    := args[4]
 
             msg := types.NewMsgModifyColumnOption(cliCtx.GetFromAddress(), appCode, tableName, fieldName, action, option)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return err
             }
@@ -821,7 +821,7 @@ func GetCmdSetColumnDataType(cdc *codec.Codec) *cobra.Command {
             dataType  := args[3]
 
             msg := types.NewMsgSetColumnDataType(cliCtx.GetFromAddress(), appCode, tableName, fieldName, dataType)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return err
             }
@@ -859,7 +859,7 @@ func GetCmdSetColumnMemo(cdc * codec.Codec) *cobra.Command {
             memo      := args[3]
 
             msg := types.NewMsgSetColumnMemo(appCode, tableName, fieldName, memo, cliCtx.GetFromAddress())
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
@@ -896,7 +896,7 @@ func GetCmdAddInsertFilter(cdc *codec.Codec) *cobra.Command {
             filter    := args[2]
 
             msg := types.NewMsgAddInsertFilter(cliCtx.GetFromAddress(), appCode, tableName, filter)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
@@ -926,7 +926,7 @@ func GetCmdDropInsertFilter(cdc *codec.Codec) *cobra.Command {
             tableName := args[1]
 
             msg := types.NewMsgDropInsertFilter(cliCtx.GetFromAddress(), appCode, tableName)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
@@ -963,7 +963,7 @@ func GetCmdAddTrigger(cdc *codec.Codec) *cobra.Command {
             trigger   := args[2]
 
             msg := types.NewMsgAddTrigger(cliCtx.GetFromAddress(), appCode, tableName, trigger)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
@@ -993,7 +993,7 @@ func GetCmdDropTrigger(cdc *codec.Codec) *cobra.Command {
             tableName := args[1]
 
             msg := types.NewMsgDropTrigger(cliCtx.GetFromAddress(), appCode, tableName)
-            err := msg.ValidateBasic()
+            err = msg.ValidateBasic()
             if err != nil {
                 return errors.New(fmt.Sprintf("Error %s", err))
             }
