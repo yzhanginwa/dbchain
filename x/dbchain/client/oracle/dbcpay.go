@@ -110,6 +110,8 @@ func oracleCallDbcPay(cliCtx context.CLIContext, storeName string) http.HandlerF
 
 		buyer, err := utils.VerifyAccessCode(accessCode)
 		if err != nil {
+			fmt.Println("*******************************************")
+			fmt.Println("verify ac failed : ", err)
 			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return
 		}
@@ -213,6 +215,8 @@ func internalPurchase(cliCtx context.CLIContext, storeName, OutTradeNo, tableNam
 	if vendor == DbcToken {
 		bz , err := callDbcTokenPay(cliCtx, storeName, appcode, tableName, paymentId)
 		if err != nil {
+			fmt.Println("*******************************************")
+			fmt.Println("call dbchain pay by dbctoken failed : ", err)
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -259,6 +263,9 @@ func callDbcTokenPay(cliCtx context.CLIContext, storeName, appcode, tableName ,p
 	}
 	//TODO need a special address
 	privKey, err := oracle.LoadPrivKey()
+	if err != nil {
+		return nil, err
+	}
 	recipientAddress := sdk.AccAddress(privKey.PubKey().Address())
 	if paymentInfo["recipient"]  != recipientAddress.String() {
 		return  nil, errors.New("invalid recipient address")
