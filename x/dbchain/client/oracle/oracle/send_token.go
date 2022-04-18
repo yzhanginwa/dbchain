@@ -29,7 +29,7 @@ func GetSendTokenMsg(addr sdk.AccAddress) (UniversalMsg, error) {
     }
     oracleAccAddr := sdk.AccAddress(privKey.PubKey().Address())
 
-    oneCoin := sdk.NewCoin("dbctoken", sdk.NewInt(1))
-    msg := NewMsgSend(oracleAccAddr, addr, []sdk.Coin{oneCoin})
+    fourCoins := sdk.NewCoin("dbctoken", sdk.NewInt(4))
+    msg := NewMsgSend(oracleAccAddr, addr, []sdk.Coin{fourCoins})
     return msg, nil
 }
