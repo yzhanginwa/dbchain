@@ -949,6 +949,10 @@ func (k Keeper) SetColumnDataType(ctx sdk.Context, appId uint, owner sdk.AccAddr
         if !k.validateTimeField(ctx, appId, tableName, fieldName) {
             return false
         }
+    case types.FLDTYP_GEOLOCATION:
+        if !k.validateGeolocationField(ctx, appId, tableName, fieldName) {
+            return false
+        }
     }
 
     err = store.Set([]byte(key), k.cdc.MustMarshalBinaryBare(dataType))
@@ -1088,6 +1092,10 @@ func (k Keeper) GetCanSetColumnDataType(ctx sdk.Context, appId uint, tableName, 
             if !k.validateTimeField(ctx, appId, tableName, fieldName) {
                 return false
             }
+        case types.FLDTYP_GEOLOCATION:
+            if !k.validateGeolocationField(ctx, appId, tableName, fieldName) {
+                return false
+            }
         default:
             return false
     }
@@ -1149,7 +1157,7 @@ func validateColumnOption(option string) bool {
 func validateColumnDataType(dataType string) bool {
     switch types.FieldDataType(dataType) {
     case types.FLDTYP_STRING, types.FLDTYP_INT, types.FLDTYP_FILE, types.FLDTYP_DECIMAL, types.FLDTYP_ADDRESS,
-    types.FLDTYP_TIME:
+    types.FLDTYP_TIME, types.FLDTYP_GEOLOCATION:
         return true
     }
 

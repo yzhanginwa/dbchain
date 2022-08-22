@@ -238,4 +238,5 @@ const (
     FLDTYP_DECIMAL    FieldDataType = "decimal"
     FLDTYP_ADDRESS    FieldDataType = "address"
     FLDTYP_TIME       FieldDataType = "time"
+    FLDTYP_GEOLOCATION FieldDataType = "geolocation"
 )

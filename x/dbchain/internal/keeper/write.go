@@ -489,6 +489,12 @@ func (k Keeper) validateInsertionWithFieldDataType(ctx sdk.Context, appId uint, 
                     return false
                 }
             }
+        } else if fieldDataType == string(types.FLDTYP_GEOLOCATION) {
+            if value, ok := fields[fieldName]; ok {
+                if !utils.ValidateGeolocationValue(value) {
+                    return false
+                }
+            }
         }
     }
     return true
