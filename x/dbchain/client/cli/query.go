@@ -42,6 +42,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdFindRow(storeKey, cdc),
         GetCmdFindIdsBy(storeKey, cdc),
         GetCmdFindAllIds(storeKey, cdc),
+        GetCmdGetMaxId(storeKey, cdc),
         GetCmdShowGroup(storeKey, cdc),
         GetCmdShowGroupMemo(storeKey, cdc),
         GetCmdShowFriends(storeKey, cdc),
@@ -509,6 +510,31 @@ func GetCmdFindAllIds(queryRoute string, cdc *codec.Codec) *cobra.Command {
             }
 
             var out types.QuerySliceOfString
+            cdc.MustUnmarshalJSON(res, &out)
+            return cliCtx.PrintOutput(out)
+        },
+    }
+}
+
+func GetCmdGetMaxId(queryRoute string, cdc *codec.Codec) *cobra.Command {
+    return &cobra.Command{
+        Use: "get-table-max-id",
+        Short: "get the max id of a table",
+        Args: cobra.ExactArgs(3),
+        RunE: func(cmd *cobra.Command, args []string) error {
+            cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+            accessCode := args[0]
+            appCode    := args[1]
+            tableName  := args[2]
+
+            res, _, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/max_id/%s/%s/%s", queryRoute, accessCode, appCode, tableName), nil)
+            if err != nil {
+                fmt.Printf("could not find ids")
+                return nil
+            }
+
+            var out int
             cdc.MustUnmarshalJSON(res, &out)
             return cliCtx.PrintOutput(out)
         },

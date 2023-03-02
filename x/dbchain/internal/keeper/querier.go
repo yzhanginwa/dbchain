@@ -37,6 +37,7 @@ const (
     QueryRow      = "find"
     QueryIdsBy    = "find_by"
     QueryAllIds   = "find_all"
+    QueryMaxId    = "max_id"
     QueryGroups   = "groups"
     QueryGroup    = "group"
     QueryGroupMemo = "group_memo"
@@ -110,6 +111,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryIdsBy(ctx, path[1:], req, keeper)
         case QueryAllIds:
             return queryAllIds(ctx, path[1:], req, keeper)
+        case QueryMaxId:
+            return queryMaxId(ctx, path[1:], req, keeper)
         case QueryGroups:
             return queryGroups(ctx, path[1:], req, keeper)
         case QueryGroup:
@@ -714,6 +717,36 @@ func queryAllIds(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
     ids := keeper.FindAll(ctx, appId, tableName, addr)
 
     res, err := codec.MarshalJSONIndent(keeper.cdc, ids)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+
+    return res, nil
+}
+
+func queryMaxId(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    _, err := utils.VerifyAccessCode(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    appId, err := keeper.GetDatabaseId(ctx, path[1])
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+
+    var tableName = path[2]
+    nextId, _ := keeper.PeekNextId(ctx, appId, tableName)
+
+    var maxId int
+    if nextId > 0 {
+        maxId = int(nextId) - 1
+    } else {
+        maxId = 0
+    }
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, maxId)
     if err != nil {
         panic("could not marshal result to JSON")
     }
