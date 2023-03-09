@@ -18,7 +18,18 @@ func (k Keeper) PeekNextId(ctx sdk.Context, appId uint, tableName string) (uint,
     if nextId, found = NextIds[nextIdKey]; found {
         return nextId, nil
     } else {
-        return 0, nil
+        store := DbChainStore(ctx, k.storeKey)
+        mutex.Lock()
+        defer mutex.Unlock()
+
+        bz, _ := store.Get([]byte(nextIdKey))
+        if bz != nil {
+            k.cdc.MustUnmarshalBinaryBare(bz, &nextId)
+            NextIds[nextIdKey] = nextId
+            return nextId, nil
+        } else {
+            return 0, fmt.Errorf("Failed to peek next id for table %s\n", tableName)
+        }
     }
 }
 
