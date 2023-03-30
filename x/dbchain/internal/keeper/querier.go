@@ -12,6 +12,7 @@ import (
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/cache"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/types"
     "github.com/yzhanginwa/dbchain/x/dbchain/internal/utils"
+    "github.com/yzhanginwa/dbchain/x/dbchain/internal/keeper/import_export"
     "strconv"
     "strings"
     "time"
@@ -874,77 +875,104 @@ func queryGroupMemo(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
 
 func queryExportDatabase (ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
     appCode := path[0]
-    result := []string{}
-
     appId, err := keeper.GetDatabaseId(ctx, appCode)
     if err != nil {
         return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
     }
-
-    // handle groups
-    groups := keeper.getGroups(ctx, appId)
-    result = append(result, "Groups:")
-    for _, group := range groups {
-        result = append(result, fmt.Sprintf("\t%s", group))
-        groupMembers := keeper.getGroupMembers(ctx, appId, group)
-        for _, groupMember := range groupMembers {
-            result = append(result, fmt.Sprintf("\t\t%s", groupMember.String()))
-        }
+    
+    ieDatabase := import_export.Database{}
+    ieDatabase.Appcode = appCode
+    database, err := keeper.getDatabaseById(ctx, appId)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Failed to get database by id")
     }
+    ieDatabase.Name = database.Name
+    ieDatabase.Memo = database.Description
 
-    // handle tables
-    tables := keeper.GetTables(ctx, appId)
-    result = append(result, "Tables:")
-    for _, table := range tables {
-        tableOptions, err := keeper.GetOption(ctx, appId, table)
+    ieTables := []import_export.Table{}
+
+    tableNames := keeper.GetTables(ctx, appId)
+    for _, tableName := range tableNames {
+        ieTable := import_export.Table{}
+        ieTable.Name = tableName
+     
+        tableOptions, err := keeper.GetOption(ctx, appId, tableName)
         if err != nil {
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Failed to get table options")
         }
 
-        result = append(result, "")
-        if len(tableOptions) > 0 {
-            result = append(result, fmt.Sprintf("\t%s (%s)", table, strings.Join(tableOptions, ", ")))
-        } else {
-            result = append(result, fmt.Sprintf("\t%s", table))
-        }
+        ieTable.Options = tableOptions
 
-        tableObj, err := keeper.GetTable(ctx, appId, table)
+        tableObj, err := keeper.GetTable(ctx, appId, tableName)
         if err != nil {
             return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Failed to get table columns")
         }
 
-        if len(tableObj.Filter) > 0 {
-            result = append(result, fmt.Sprintf("\t%s", "Filter:"))
-            result = append(result, fmt.Sprintf("\t\t%s", tableObj.Filter))
-        }
-
-        if len(tableObj.Trigger) > 0 {
-            result = append(result, fmt.Sprintf("\t%s", "Trigger:"))
-            result = append(result, fmt.Sprintf("\t\t%s", tableObj.Trigger))
-        }
+        ieTable.Filter = tableObj.Filter
+        ieTable.Trigger = tableObj.Trigger
+        ieTable.Memo = tableObj.Memo
+        ieFields := []import_export.Field{}
 
         // handle fields
-        for _, field := range tableObj.Fields {
-            fieldOptions, err := keeper.GetColumnOption(ctx, appId, table, field)
+        for index, fieldName := range tableObj.Fields {
+            if fieldName == "id" || fieldName == "created_by" || fieldName == "created_at" || fieldName == "tx_hash" {
+                continue
+            }
+            ieField := import_export.Field{}
+            ieField.Name = fieldName
+
+            fieldOptions, err := keeper.GetColumnOption(ctx, appId, tableName, fieldName)
             if err != nil {
-                return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Failed to get table columns")
+                return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Failed to get table column options")
+            }
+            ieField.PropertyArr = fieldOptions
+
+            fieldDataType, err := keeper.GetColumnDataType(ctx, appId, tableName, fieldName)
+            if err != nil {
+                return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Failed to get table column data type")
+            }
+            ieField.FieldType = fieldDataType
+
+            if len(tableObj.Memos) > index {
+                ieField.Memo = tableObj.Memos[index]
             }
 
-            if len(fieldOptions) > 0 {
-                result = append(result, fmt.Sprintf("\t\t%s (%s)", field, strings.Join(fieldOptions, ", ")))
-            } else {
-                result = append(result, fmt.Sprintf("\t\t%s", field))
-            }
+            ieFields = append(ieFields, ieField)
         }
+        ieTable.Fields = ieFields
+        ieTables = append(ieTables, ieTable)
     }
+    ieDatabase.Tables = ieTables
 
-    res, err := codec.MarshalJSONIndent(keeper.cdc, result)
+    ieFuncs := _generateImportExportFuncs(ctx, keeper, appId, 0)
+    ieDatabase.CustomFns = ieFuncs
+
+    ieQueriers := _generateImportExportFuncs(ctx, keeper, appId, 1)
+    ieDatabase.CustomQueriers = ieQueriers
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, ieDatabase)
     if err != nil {
         panic("could not marshal result to JSON")
     }
 
     return res, nil
 }
+
+func _generateImportExportFuncs(ctx sdk.Context, keeper Keeper, appId uint, funcOrQuerier int) []import_export.CustomFn {
+    funcNames := keeper.GetFunctions(ctx, appId, funcOrQuerier)
+    ieFuncs := []import_export.CustomFn{}
+    for _, funcName := range funcNames {
+        functionInfo := keeper.GetFunctionInfo(ctx, appId, funcName, funcOrQuerier)
+        ieFunc := import_export.CustomFn{}
+        ieFunc.Name = functionInfo.Name
+        ieFunc.Owner = functionInfo.Owner.String()
+        ieFunc.Description = functionInfo.Description
+        ieFunc.Body = functionInfo.Body
+        ieFuncs = append(ieFuncs, ieFunc)
+    }
+    return ieFuncs
+}
+
 /////////////////////
 //                 //
 // query functions //
