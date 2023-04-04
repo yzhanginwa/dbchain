@@ -46,6 +46,7 @@ const (
     QueryPendingFriends  = "pending_friends"
     QueryQuerier  = "querier"
     QueryExportDB = "export_database"
+    QueryExportTableRows = "export_table_rows"
     QueryFunctions = "functions"
     QueryFunctionInfo = "functionInfo"
     QueryCustomQueriers  = "customQueriers"
@@ -128,6 +129,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
             return queryQuerier(ctx, path[1:], req, keeper)
         case QueryExportDB:
             return queryExportDatabase(ctx, path[1:], req, keeper)
+        case QueryExportTableRows:
+            return queryExportTableRows(ctx, path[1:], req, keeper)
         case QueryFunctions:
             return queryFunctions(ctx, path[1:], req, keeper)
         case QueryFunctionInfo:
@@ -970,7 +973,44 @@ func _generateImportExportFuncs(ctx sdk.Context, keeper Keeper, appId uint, func
         ieFunc.Body = functionInfo.Body
         ieFuncs = append(ieFuncs, ieFunc)
     }
+
     return ieFuncs
+}
+
+///////////////////////
+//                   //
+// export table rows //
+//                   //
+///////////////////////
+
+func queryExportTableRows(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+    accessCode:= path[0]
+    addr, _, err := utils.VerifyAccessCodeWithoutTimeChecking(accessCode)
+    if err != nil {
+        return []byte{}, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Access code is not valid!")
+    }
+
+    appCode := path[1]
+    appId, err := keeper.GetDatabaseId(ctx, appCode)
+    if err != nil {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Invalid app code")
+    }
+    tableName := path[2]
+    rows := make([]map[string]string, 0)
+    ids := keeper.FindAll(ctx, appId, tableName, addr)
+    for _, id := range ids {
+        row, err := keeper.Find(ctx, appId, tableName, id, addr)
+        if err != nil {
+            return nil, err
+        }
+        rows = append(rows, map[string]string(row))
+    }
+
+    res, err := codec.MarshalJSONIndent(keeper.cdc, rows)
+    if err != nil {
+        panic("could not marshal result to JSON")
+    }
+    return res, nil
 }
 
 /////////////////////

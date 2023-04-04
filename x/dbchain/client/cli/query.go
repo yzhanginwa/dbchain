@@ -50,6 +50,7 @@ func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
         GetCmdGetAccessCode(storeKey, cdc),
         GetCmdGetOracleInfo(storeKey, cdc),
         GetCmdExportDatabase(storeKey, cdc),
+        GetCmdExportTableRows(storeKey, cdc),
         GetCmdFunction(storeKey,cdc),
         GetCmdFunctionInfo(storeKey,cdc),
         GetCmdCustomQuerier(storeKey,cdc),
