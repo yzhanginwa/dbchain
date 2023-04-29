@@ -63,7 +63,7 @@ func GetCmdImportDatabase(cdc *codec.Codec) *cobra.Command {
 func databaseToMsgs(ownerAddr sdk.AccAddress, appCode string, database *import_export.Database) ([]sdk.Msg, error) {
     msgs := make([]sdk.Msg, 0)
     for _, table := range database.Tables {
-        msgs, err := importTableMsg(ownerAddr, appCode, table)
+        err := importTableMsg(ownerAddr, appCode, table, &msgs)
         if err != nil {
             return msgs, err
          }
@@ -80,8 +80,7 @@ func databaseToMsgs(ownerAddr sdk.AccAddress, appCode string, database *import_e
     return msgs, nil
 }
 
-func importTableMsg(ownerAddr sdk.AccAddress, appCode string, table import_export.Table)([]sdk.Msg, error) {
-    msgs := make([]sdk.Msg, 0)
+func importTableMsg(ownerAddr sdk.AccAddress, appCode string, table import_export.Table, msgs *[]sdk.Msg) error {
 
     var fieldNames []string
     for _, field := range table.Fields {
@@ -89,45 +88,45 @@ func importTableMsg(ownerAddr sdk.AccAddress, appCode string, table import_expor
     }
     msg := types.NewMsgCreateTable(ownerAddr, appCode, table.Name, fieldNames)
     if err := msg.ValidateBasic(); err != nil {
-        return nil, err
+        return err
     }
-    msgs = append(msgs, msg)
+    *msgs = append(*msgs, msg)
 
     for _, tableOption := range table.Options {
-        msgs = append(msgs, types.NewMsgModifyOption(ownerAddr, appCode, table.Name, "add", tableOption))
+        *msgs = append(*msgs, types.NewMsgModifyOption(ownerAddr, appCode, table.Name, "add", tableOption))
     }
 
     if len(table.Filter) > 0 {
-        msgs = append(msgs, types.NewMsgAddInsertFilter(ownerAddr, appCode, table.Name, table.Filter))
+        *msgs = append(*msgs, types.NewMsgAddInsertFilter(ownerAddr, appCode, table.Name, table.Filter))
     }
 
     if len(table.Trigger) > 0 {
-        msgs = append(msgs, types.NewMsgAddTrigger(ownerAddr, appCode, table.Name, table.Trigger))
+        *msgs = append(*msgs, types.NewMsgAddTrigger(ownerAddr, appCode, table.Name, table.Trigger))
     }
 
     if len(table.Memo) > 0 {
-        msgs = append(msgs, types.NewMsgSetTableMemo(appCode, table.Name, table.Memo, ownerAddr))
+        *msgs = append(*msgs, types.NewMsgSetTableMemo(appCode, table.Name, table.Memo, ownerAddr))
     }
 
     for _, field := range table.Fields {
         if field.FieldType != "string" {
-            msgs = append(msgs, types.NewMsgSetColumnDataType(ownerAddr, appCode, table.Name, field.Name, field.FieldType))
+            *msgs = append(*msgs, types.NewMsgSetColumnDataType(ownerAddr, appCode, table.Name, field.Name, field.FieldType))
         }
 
         for _, attr := range field.PropertyArr {
-            msgs = append(msgs, types.NewMsgModifyColumnOption(ownerAddr, appCode, table.Name, field.Name, "add", attr))
+            *msgs = append(*msgs, types.NewMsgModifyColumnOption(ownerAddr, appCode, table.Name, field.Name, "add", attr))
         }
 
         if field.IsIndex {
-            msgs = append(msgs, types.NewMsgCreateIndex(ownerAddr, appCode, table.Name, field.Name))
+            *msgs = append(*msgs, types.NewMsgCreateIndex(ownerAddr, appCode, table.Name, field.Name))
         }
 
         if len(field.Memo) > 0 {
-            msgs = append(msgs, types.NewMsgSetColumnMemo(appCode, table.Name, field.Name, field.Memo, ownerAddr))
+            *msgs = append(*msgs, types.NewMsgSetColumnMemo(appCode, table.Name, field.Name, field.Memo, ownerAddr))
         }
     }
 
-    return msgs, nil
+    return nil
 }
 
 func getDatabaseFromJsonFile(filename string) (*import_export.Database, error) {
