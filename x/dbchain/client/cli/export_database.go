@@ -9,7 +9,7 @@ import (
 
 func GetCmdExportDatabase (queryRoute string, cdc *codec.Codec) *cobra.Command {
     return &cobra.Command{
-        Use: "export-db",
+        Use: "export-database",
         Short: "export database schema",
         Args: cobra.ExactArgs(1),
         RunE: func(cmd *cobra.Command, args []string) error {

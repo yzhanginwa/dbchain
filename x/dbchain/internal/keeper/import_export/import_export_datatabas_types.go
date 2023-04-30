@@ -26,7 +26,7 @@ type Field struct {
     Memo string          `json:"memo"`
     FieldType string     `json:"fieldType"`
     PropertyArr []string `json:"propertyArr"`
-    IsIndex bool         `json:"inIndex"`
+    IsIndex bool         `json:"isIndex"`
 }
 
 type CustomFn struct {
