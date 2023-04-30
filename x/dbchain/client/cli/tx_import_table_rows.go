@@ -55,6 +55,13 @@ func GetCmdImportTableRows(cdc *codec.Codec) *cobra.Command {
                 if err != nil {
                     return err
                 }
+
+                // // We need to wait for the above trasaction to be finished before handling the next one.
+                // // Otherwise the next transaction would have the same sequnce number.
+                err = waitUntilNextBlock()
+                if err != nil {
+                        return err
+                }
             }
             return nil
         },
