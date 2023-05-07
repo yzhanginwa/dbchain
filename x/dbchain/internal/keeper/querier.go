@@ -741,6 +741,9 @@ func queryMaxId(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
     }
 
     var tableName = path[2]
+    if !keeper.HasTable(ctx, appId, tableName) {
+        return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Table %s does not exist", tableName))
+    }
     nextId, _ := keeper.PeekNextId(ctx, appId, tableName)
 
     var maxId int
