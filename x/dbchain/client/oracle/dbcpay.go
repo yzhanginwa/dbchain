@@ -286,7 +286,15 @@ func callDbcTokenPay(cliCtx context.CLIContext, storeName, appcode, tableName ,p
 	}
 	//save to order_receipt
 	amount := paymentInfo["amount"]
-	owner := orderInfo["created_by"]
+
+        // since the biofi-daemon needs to pay usb service for biofi users
+        // we need the owner in the order_receipt table to be the biofi user's dbchain address
+        //
+        // for original users, since the created_by of order table and sender of payment table
+        // are the same, so this change won't affect the normal user's subscription process.
+        //
+	// owner := orderInfo["created_by"]
+	owner := paymentInfo["sender"]
 	expiration_date := calcExpirationDate(cliCtx, storeName, appcode, owner ,orderInfo["sellable_id"])
 
 	res := newOrderReceiptDataCore(appcode, orderId, owner, amount, expiration_date, DbcToken, paymentId)
