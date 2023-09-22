@@ -38,7 +38,7 @@ const (
 	CLIHome     = dbchain.CLIHome
 	NodeHome    = dbchain.NodeHome
 	dailyHeight = 17280
-	days        = 265 * 2
+	days        = 365 * 3
 	ValidBlockHeight = dailyHeight * days
 )
 
