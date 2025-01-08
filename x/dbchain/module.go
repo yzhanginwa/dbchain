@@ -2,6 +2,7 @@ package dbchain
 
 import (
     "github.com/yzhanginwa/dbchain/x/dbchain/client/oracle"
+    "github.com/yzhanginwa/dbchain/x/dao"
     "os"
     "time"
     "encoding/json"
@@ -78,15 +79,17 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 type AppModule struct {
     AppModuleBasic
     keeper     Keeper
+    daoKeeper  dao.Keeper
     coinKeeper bank.Keeper
 }
 
 // NewAppModule creates a new AppModule Object
-func NewAppModule(k Keeper, bankKeeper bank.Keeper) AppModule {
+func NewAppModule(k Keeper, bankKeeper bank.Keeper, daoKeeper dao.Keeper) AppModule {
     return AppModule{
         AppModuleBasic: AppModuleBasic{},
         keeper:         k,
         coinKeeper:     bankKeeper,
+        daoKeeper:      daoKeeper,
     }
 }
 
